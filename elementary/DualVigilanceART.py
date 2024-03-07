@@ -42,6 +42,7 @@ class DualVigilanceART(BaseART):
 
     def validate_data(self, X: np.ndarray):
         self.base_module.validate_data(X)
+        self.check_dimensions(X)
 
     @staticmethod
     def validate_params(params: dict):

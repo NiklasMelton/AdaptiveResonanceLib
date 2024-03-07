@@ -52,7 +52,7 @@ class FuzzyART(BaseART):
         assert np.all(X >= 0), "Data has not been normalized"
         assert np.all(X <= 1.0), "Data has not been normalized"
         assert np.all(abs(np.sum(X, axis=1) - float(X.shape[1]/2)) <= 0.01), "Data has not been compliment coded"
-        return X
+        self.check_dimensions(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         return l1norm(fuzzy_and(i, w)) / (params["alpha"] + l1norm(w)), None

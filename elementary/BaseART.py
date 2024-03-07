@@ -21,15 +21,16 @@ class BaseART(BaseEstimator, ClusterMixin):
     def validate_params(params: dict):
         raise NotImplementedError
 
-    def validate_data(self, X: np.ndarray):
-        assert np.all(X >= 0), "Data has not been normalized"
-        assert np.all(X <= 1.0), "Data has not been normalized"
-
     def check_dimensions(self, X: np.ndarray):
         if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
         else:
             assert X.shape[1] == self.dim_
+
+    def validate_data(self, X: np.ndarray):
+        assert np.all(X >= 0), "Data has not been normalized"
+        assert np.all(X <= 1.0), "Data has not been normalized"
+        self.check_dimensions(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         raise NotImplementedError

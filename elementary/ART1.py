@@ -22,6 +22,7 @@ class ART1(BaseART):
 
     def validate_data(self, X: np.ndarray):
         assert ((X == 0) | (X == 1)), "ART1 only supports binary data"
+        self.check_dimensions(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         w_bu = w[:self.dim_]

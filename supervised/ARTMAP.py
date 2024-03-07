@@ -92,6 +92,7 @@ class SimpleARTMAP(BaseARTMAP):
             self.labels_[j:] = y
             self.module_a.labels_ = np.pad(self.module_a.labels_, [(0, X.shape[0])], mode='constant')
         for i, (x, c_b) in enumerate(zip(X, y)):
+            self.module_a.pre_step_fit(X)
             c_a = self.step_fit(x, c_b)
             self.module_a.labels_[i+j] = c_a
         return self

@@ -80,6 +80,10 @@ class BaseART(BaseEstimator, ClusterMixin):
         c_ = int(np.argmax(T))
         return c_
 
+    def pre_step_fit(self, X: np.ndarray):
+        # this is where pruning steps can go
+        pass
+
 
     def fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, max_iter=1):
         self.validate_data(X)
@@ -89,6 +93,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.labels_ = np.zeros((X.shape[0], ))
         for _ in range(max_iter):
             for i, x in enumerate(X):
+                self.pre_step_fit(X)
                 c = self.step_fit(x, match_reset_func=match_reset_func)
                 self.labels_[i] = c
         return self

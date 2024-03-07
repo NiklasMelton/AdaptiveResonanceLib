@@ -13,6 +13,10 @@ from hierarchical.SMART import SMART
 
 from fusion.FusionART import FusionART
 
+from biclustering import BARTMAP
+
+from topological import TopoART
+
 __all__ = [
     "BaseART",
     "ART1",
@@ -25,5 +29,7 @@ __all__ = [
     "ARTMAP",
     "SimpleARTMAP",
     "SMART",
-    "FusionART"
+    "FusionART",
+    "BARTMAP",
+    "TopoART",
 ]

@@ -13,7 +13,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         u, inv = np.unique(y_a, return_inverse=True)
         return np.array([self.map[x] for x in u])[inv].reshape(y_a.shape)
 
-    def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def validate_data(self, X: np.ndarray, y: np.ndarray):
         raise NotImplementedError
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
@@ -49,7 +49,7 @@ class SimpleARTMAP(BaseARTMAP):
 
     def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         X, y = check_X_y(X, y)
-        X = self.module_a.validate_data(X)
+        self.module_a.validate_data(X)
         return X, y
 
     def step_fit(self, x: np.ndarray, c_b: int) -> int:
@@ -65,7 +65,7 @@ class SimpleARTMAP(BaseARTMAP):
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
         # Check that X and y have correct shape
-        X, y = self.validate_data(X, y)
+        self.validate_data(X, y)
         # Store the classes seen during fit
         self.classes_ = unique_labels(y)
         self.labels_ = y
@@ -80,7 +80,7 @@ class SimpleARTMAP(BaseARTMAP):
         return self
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
-        X, y = self.validate_data(X, y)
+        self.validate_data(X, y)
         if not hasattr(self, 'labels_'):
             self.labels_ = y
             self.module_a.W = []

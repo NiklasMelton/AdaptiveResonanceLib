@@ -86,6 +86,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         for _ in range(max_iter):
             for k in range(n):
+                self.module_a.pre_step_fit(X)
                 c_a = self.step_fit(X, k)
                 self.module_a.labels_[k] = c_a
 

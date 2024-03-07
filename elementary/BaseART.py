@@ -10,6 +10,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.validate_params(params)
         self.params = params
 
+    @property
+    def n_clusters(self) -> int:
+        if hasattr(self, "W"):
+            return len(self.W)
+        else:
+            return 0
+
     @staticmethod
     def validate_params(params: dict):
         raise NotImplementedError

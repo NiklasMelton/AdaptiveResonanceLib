@@ -53,8 +53,8 @@ class SimpleARTMAP(BaseARTMAP):
         return X, y
 
     def step_fit(self, x: np.ndarray, c_b: int) -> int:
-        match_reset_func = lambda i, w, cluster, params: self.match_reset_func(
-            i, w, cluster, params=params, extra={"cluster_b": c_b}
+        match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
+            i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
         )
         c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func)
         if c_a not in self.map:

@@ -37,11 +37,11 @@ class FuzzyART(BaseART):
         assert "alpha" in params
         assert "beta" in params
         assert 1.0 >= params["rho"] >= 0.
-        assert params["alpha"] > 0.
+        assert params["alpha"] >= 0.
         assert 1.0 >= params["beta"] > 0.
 
     def check_dimensions(self, X: np.ndarray):
-        if not self.dim_:
+        if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
             self.dim_original = int(self.dim_//2)
         else:

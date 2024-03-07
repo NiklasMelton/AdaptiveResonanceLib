@@ -50,9 +50,37 @@ class TopoART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         self.adjacency = np.pad(self.adjacency, ((0, 1), (0, 1)), "constant")
-        self._counter = np.pad(self._counter, (0, 1), "constant")
+        self._counter = np.pad(self._counter, (0, 1), "constant", constant_values=(1,))
         self._permanent_mask = np.pad(self._permanent_mask, (0, 1), "constant")
         return self.new_weight(i, params)
+
+
+    def prune(self, X: np.ndarray):
+        self._permanent_mask += (self._counter >= self.params["phi"])
+        perm_labels = np.where(self._permanent_mask)[0]
+        self.W = [w for w, pm in zip(self.W, self._permanent_mask) if pm]
+        self._counter = self._counter[perm_labels]
+
+        label_map = {
+            label: np.where(perm_labels == label)[0][0]
+            for label in np.unique(self.labels_)
+            if label in perm_labels
+        }
+
+        for i, x in enumerate(X):
+            if self.labels_[i] in label_map:
+                self.labels_[i] = label_map[self.labels_[i]]
+            else:
+                T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+                T = np.array(T_values)
+                new_label = np.argmax(T)
+                self.labels_[i] = new_label
+                self._counter[new_label] += 1
+
+    def step_prune(self, X: np.ndarray):
+        sum_counter = sum(self._counter)
+        if sum_counter > 0 and sum_counter % self.params["tau"] == 0:
+            self.prune(X)
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         resonant_c: int = -1
@@ -60,7 +88,7 @@ class TopoART(BaseART):
         if len(self.W) == 0:
             self.W.append(self.new_weight(x, self.params))
             self.adjacency = np.zeros((1, 1), dtype=int)
-            self._counter = np.zeros((1, ), dtype=int)
+            self._counter = np.ones((1, ), dtype=int)
             self._permanent_mask = np.zeros((1, ), dtype=bool)
             return 0
         else:

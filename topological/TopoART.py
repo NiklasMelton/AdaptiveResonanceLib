@@ -129,3 +129,17 @@ class TopoART(BaseART):
                 return c_new
 
             return resonant_c
+
+
+    def fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, max_iter=1):
+        self.validate_data(X)
+        self.check_dimensions(X)
+
+        self.W: list[np.ndarray] = []
+        self.labels_ = np.zeros((X.shape[0], ))
+        for _ in range(max_iter):
+            for i, x in enumerate(X):
+                self.step_prune(X)
+                c = self.step_fit(x, match_reset_func=match_reset_func)
+                self.labels_[i] = c
+        return self

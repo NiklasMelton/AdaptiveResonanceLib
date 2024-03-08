@@ -1,4 +1,5 @@
 from common.BaseART import BaseART
+from common.BaseARTMAP import BaseARTMAP
 from elementary.ART1 import ART1
 from elementary.ART2 import ART2A
 from elementary.BayesianART import BayesianART
@@ -23,6 +24,7 @@ from topological import TopoART
 
 __all__ = [
     "BaseART",
+    "BaseARTMAP",
     "ART1",
     "ART2A",
     "BayesianART",

@@ -1,6 +1,6 @@
 import numpy as np
 
-from elementary.BaseART import BaseART
+from common.BaseART import BaseART
 from typing import Union, Type, Optional
 from hierarchical.DeepARTMAP import DeepARTMAP
 

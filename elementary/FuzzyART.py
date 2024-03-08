@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
-from elementary.BaseART import BaseART
-from art_utils.utils import normalize, compliment_code, l1norm, fuzzy_and
+from common.BaseART import BaseART
+from common.utils import normalize, compliment_code, l1norm, fuzzy_and
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
     normalized = normalize(data)

@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Optional, Union
-from elementary.BaseART import BaseART
+from common.BaseART import BaseART
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
     positions = []

@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Optional, Callable
-from elementary.BaseART import BaseART
+from common.BaseART import BaseART
 
 
 class DualVigilanceART(BaseART):

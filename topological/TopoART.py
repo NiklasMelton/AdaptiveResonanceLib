@@ -136,7 +136,7 @@ class TopoART(BaseART):
         self.check_dimensions(X)
 
         self.W: list[np.ndarray] = []
-        self.labels_ = np.zeros((X.shape[0], ))
+        self.labels_ = np.zeros((X.shape[0], ), dtype=int)
         for _ in range(max_iter):
             for i, x in enumerate(X):
                 self.step_prune(X)

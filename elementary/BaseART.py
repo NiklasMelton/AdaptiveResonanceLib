@@ -106,7 +106,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         if not hasattr(self, 'W'):
             self.W: list[np.ndarray] = []
-            self.labels_ = np.zeros((X.shape[0], ))
+            self.labels_ = np.zeros((X.shape[0], ), dtype=int)
             j = 0
         else:
             j = len(self.labels_)
@@ -122,7 +122,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.validate_data(X)
         self.check_dimensions(X)
 
-        y = np.zeros((X.shape[0],))
+        y = np.zeros((X.shape[0],), dtype=int)
         for i, x in enumerate(X):
             c = self.step_pred(x)
             y[i] = c

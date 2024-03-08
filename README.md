@@ -38,7 +38,7 @@ To install AdaptiveResonanceLib, simply use pip:
 pip install pip@git+https://github.com/NiklasMelton/AdaptiveResonanceLib
 ```
 
-Ensure you have Python 3.10 or newer installed.
+Ensure you have Python 3.9 or newer installed.
 
 ## Quick Start
 

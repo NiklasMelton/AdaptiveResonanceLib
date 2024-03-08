@@ -54,7 +54,7 @@ def cluster_blobs():
             if j == 0:
                 layer_colors.append(colors[k])
             else:
-                layer_colors.append(colors[cls.layers[j-1].map_a2b(k)])
+                layer_colors.append(colors[cls.map_deep(j-1, k)])
         cls.modules[j].plot_bounding_boxes(ax, layer_colors)
 
     plt.show()

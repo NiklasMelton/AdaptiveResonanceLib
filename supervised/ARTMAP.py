@@ -13,7 +13,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         if isinstance(y_a, int):
             return self.map[y_a]
         u, inv = np.unique(y_a, return_inverse=True)
-        return np.array([self.map[x] for x in u])[inv].reshape(y_a.shape)
+        return np.array([self.map[x] for x in u], dtype=int)[inv].reshape(y_a.shape)
 
     def validate_data(self, X: np.ndarray, y: np.ndarray):
         raise NotImplementedError
@@ -73,7 +73,7 @@ class SimpleARTMAP(BaseARTMAP):
         self.labels_ = y
         # init module A
         self.module_a.W = []
-        self.module_a.labels_ = np.zeros((X.shape[0],))
+        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         for _ in range(max_iter):
             for i, (x, c_b) in enumerate(zip(X, y)):
@@ -86,7 +86,7 @@ class SimpleARTMAP(BaseARTMAP):
         if not hasattr(self, 'labels_'):
             self.labels_ = y
             self.module_a.W = []
-            self.module_a.labels_ = np.zeros((X.shape[0],))
+            self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
             j = 0
         else:
             j = len(self.labels_)
@@ -119,8 +119,8 @@ class SimpleARTMAP(BaseARTMAP):
 
     def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         check_is_fitted(self)
-        y_a = np.zeros((X.shape[0],))
-        y_b = np.zeros((X.shape[0],))
+        y_a = np.zeros((X.shape[0],), dtype=int)
+        y_b = np.zeros((X.shape[0],), dtype=int)
         for i, x in enumerate(X):
             c_a, c_b = self.step_pred(x)
             y_a[i] = c_a

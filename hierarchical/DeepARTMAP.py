@@ -17,12 +17,24 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return self.layers[0].labels_
 
     @property
+    def labels_deep_(self):
+        return np.concatenate([layer.labels_ for layer in self.layers]+[self.layers[-1].labels_a])
+
+    @property
     def n_modules(self):
         return len(self.modules)
 
     @property
     def n_layers(self):
         return len(self.layers)
+
+    def map_deep(self, level: int, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
+        y_b = self.layers[level].map_a2b(y_a)
+        if level > 0:
+            return self.map_deep(level-1, y_b)
+        else:
+            return y_b
+
 
     def validate_data(
             self,
@@ -53,7 +65,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             self.layers[0] = self.layers[0].fit(X[1], X[0], max_iter=max_iter)
 
         for art_i in range(1, self.n_layers):
-            y_i = self.layers[art_i-1].labels_
+            y_i = self.layers[art_i-1].labels_a
             self.layers[art_i] = self.layers[art_i].fit(X[art_i], y_i, max_iter=max_iter)
 
         return self

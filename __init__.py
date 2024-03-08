@@ -1,4 +1,4 @@
-from elementary.BaseART import BaseART
+from common.BaseART import BaseART
 from elementary.ART1 import ART1
 from elementary.ART2 import ART2A
 from elementary.BayesianART import BayesianART

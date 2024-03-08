@@ -2,7 +2,7 @@ import numpy as np
 
 from elementary.BaseART import BaseART
 from typing import Union, Type, Optional
-from DeepARTMAP import DeepARTMAP
+from hierarchical.DeepARTMAP import DeepARTMAP
 
 class SMART(DeepARTMAP):
 
@@ -18,9 +18,9 @@ class SMART(DeepARTMAP):
         super().__init__(layers)
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1):
-        X_list = [X]*self.n
+        X_list = [X]*self.n_modules
         return super().fit(X_list, max_iter=max_iter)
 
     def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None):
-        X_list = [X] * self.n
+        X_list = [X] * self.n_modules
         return self.partial_fit(X_list)

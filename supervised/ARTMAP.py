@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional
+from typing import Optional, Union
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
 from elementary.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted, check_X_y
@@ -9,7 +9,9 @@ from sklearn.utils.multiclass import unique_labels
 class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     map: dict[int, int]
 
-    def map_a2b(self, y_a: np.ndarray) -> np.ndarray:
+    def map_a2b(self, y_a: Union[np.ndarray, int]) -> np.ndarray:
+        if isinstance(y_a, int):
+            return self.map[y_a]
         u, inv = np.unique(y_a, return_inverse=True)
         return np.array([self.map[x] for x in u])[inv].reshape(y_a.shape)
 
@@ -156,8 +158,7 @@ class ARTMAP(BaseARTMAP):
     def labels_ab(self):
         return {"A": self.labels_a, "B": self.labels_}
 
-    def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        X, y = check_X_y(X, y)
+    def validate_data(self, X: np.ndarray, y: np.ndarray):
         self.module_a.validate_data(X)
         self.module_b.validate_data(y)
 

@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Optional
-from elementary.BaseART import BaseART
+from common.BaseART import BaseART
 from sklearn.base import BaseEstimator, BiclusterMixin
 from scipy.stats import pearsonr
 
@@ -82,7 +82,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         # init module A
         self.module_a.W = []
-        self.module_a.labels_ = np.zeros((X.shape[0],))
+        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         for _ in range(max_iter):
             for k in range(n):

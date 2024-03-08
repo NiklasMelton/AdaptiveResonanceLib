@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Optional
-from BaseART import BaseART
+from common.BaseART import BaseART
 
 class GaussianART(BaseART):
     # implementation of GaussianART

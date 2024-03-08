@@ -1,8 +1,7 @@
 import numpy as np
 from typing import Optional, Callable
-from elementary.BaseART import BaseART
-from sklearn.utils.validation import check_is_fitted, check_X_y
-from sklearn.utils.multiclass import unique_labels
+from common.BaseART import BaseART
+
 
 class TopoART(BaseART):
 

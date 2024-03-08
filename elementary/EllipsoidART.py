@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional
-from BaseART import BaseART
-from art_utils.utils import l2norm2
+from common.BaseART import BaseART
+from common.utils import l2norm2
 
 class EllipsoidART(BaseART):
     # implementation of EllipsoidART

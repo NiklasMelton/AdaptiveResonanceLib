@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
-from elementary.BaseART import BaseART
+from common.BaseART import BaseART
 from typing import Optional, cast, Union
 from supervised.ARTMAP import SimpleARTMAP, ARTMAP, BaseARTMAP
 

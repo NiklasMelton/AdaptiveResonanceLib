@@ -14,7 +14,7 @@ print(directory.parent)
 sys.path.append(directory.parent.parent)
 
 from elementary.FuzzyART import FuzzyART, prepare_data
-from supervised.ARTMAP import SimpleARTMAP
+from supervised.SimpleARTMAP import SimpleARTMAP
 
 def cluster_iris():
     from sklearn.model_selection import train_test_split

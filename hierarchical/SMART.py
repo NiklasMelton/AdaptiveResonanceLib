@@ -1,7 +1,7 @@
 import numpy as np
-
+from typing import Union, Type, Optional, Iterable
+from matplotlib.axes import Axes
 from common.BaseART import BaseART
-from typing import Union, Type, Optional
 from hierarchical.DeepARTMAP import DeepARTMAP
 
 class SMART(DeepARTMAP):
@@ -24,3 +24,34 @@ class SMART(DeepARTMAP):
     def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None):
         X_list = [X] * self.n_modules
         return self.partial_fit(X_list)
+
+    def visualize(
+            self,
+            X: np.ndarray,
+            y: np.ndarray,
+            ax: Optional[Axes] = None,
+            marker_size: int = 10,
+            linewidth: int = 1,
+            colors: Optional[Iterable] = None
+    ):
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        if colors is None:
+            from matplotlib.pyplot import cm
+            colors = cm.rainbow(np.linspace(0, 1, self.modules[0].n_clusters))
+
+        for k, col in enumerate(colors):
+            cluster_data = y == k
+            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+
+        for j in range(len(self.modules)):
+            layer_colors = []
+            for k in range(self.modules[j].n_clusters):
+                if j == 0:
+                    layer_colors.append(colors[k])
+                else:
+                    layer_colors.append(colors[self.map_deep(j - 1, k)])
+            self.modules[j].plot_bounding_boxes(ax, layer_colors, linewidth)

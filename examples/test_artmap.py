@@ -1,11 +1,6 @@
 import numpy as np
 from sklearn.datasets import load_iris, make_blobs
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-import umap
-import umap.plot
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
 
 
 import path
@@ -22,6 +17,9 @@ from elementary.FuzzyART import FuzzyART, prepare_data
 from supervised.ARTMAP import SimpleARTMAP
 
 def cluster_iris():
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report
+    import umap.plot
     data, target = load_iris(return_X_y=True)
     print("Data has shape:", data.shape)
 
@@ -61,7 +59,7 @@ def cluster_blobs():
     print("Prepared data has shape:", X.shape)
 
     params = {
-        "rho": 0.8,
+        "rho": 0.9,
         "alpha": 0.0,
         "beta": 1.0
     }
@@ -70,27 +68,18 @@ def cluster_blobs():
     cls = SimpleARTMAP(art)
 
     cls = cls.fit(X, target)
-    y = cls.labels_a
+    y = cls.labels_
 
-    n = len(np.unique(y))
+    print(f"{cls.module_a.n_clusters} clusters found")
 
-    print(f"{n} clusters found")
-
-    fig, ax = plt.subplots()
-    colors = cm.rainbow(np.linspace(0, 1, n))
-
-    for k, col in enumerate(colors):
-        cluster_data = y == k
-        plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=10)
-
-    cls.module_a.plot_bounding_boxes(ax, colors)
+    cls.visualize(X, y)
 
     plt.show()
 
 
 def main():
-    cluster_iris()
-    # cluster_blobs()
+    # cluster_iris()
+    cluster_blobs()
 
 
 

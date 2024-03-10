@@ -1,5 +1,6 @@
 import numpy as np
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterable
+from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -127,6 +128,18 @@ class BaseART(BaseEstimator, ClusterMixin):
             c = self.step_pred(x)
             y[i] = c
         return y
+
+    def visualize(
+            self,
+            X: np.ndarray,
+            y: np.ndarray,
+            ax: Optional[Axes] = None,
+            marker_size: int = 10,
+            linewidth: int = 1,
+            colors: Optional[Iterable] = None
+    ):
+        raise NotImplementedError
+
 
 
 

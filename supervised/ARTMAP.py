@@ -1,5 +1,6 @@
 import numpy as np
-from typing import Optional
+from typing import Optional, Iterable
+from matplotlib.axes import Axes
 from common.BaseART import BaseART
 from common.BaseARTMAP import BaseARTMAP
 from sklearn.utils.validation import check_is_fitted, check_X_y
@@ -90,6 +91,18 @@ class SimpleARTMAP(BaseARTMAP):
     def labels_ab(self):
         return {"A": self.labels_a, "B": self.labels_}
 
+    @property
+    def n_clusters(self):
+        return self.module_a.n_clusters
+
+    @property
+    def n_clusters_a(self):
+        return self.n_clusters
+
+    @property
+    def n_clusters_b(self):
+        return len(set(c for c in self.map.values()))
+
     def step_pred(self, x: np.ndarray) -> tuple[int, int]:
         c_a = self.module_a.step_pred(x)
         c_b = self.map[c_a]
@@ -105,6 +118,34 @@ class SimpleARTMAP(BaseARTMAP):
             y_a[i] = c_a
             y_b[i] = c_b
         return y_a, y_b
+
+    def visualize(
+            self,
+            X: np.ndarray,
+            y: np.ndarray,
+            ax: Optional[Axes] = None,
+            marker_size: int = 10,
+            linewidth: int = 1,
+            colors: Optional[Iterable] = None
+    ):
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        if colors is None:
+            from matplotlib.pyplot import cm
+            colors = cm.rainbow(np.linspace(0, 1, self.n_clusters_b))
+
+        for k_b, col in enumerate(colors):
+            cluster_data = y == k_b
+            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+
+        colors_a = []
+        for k_a in range(self.n_clusters):
+            colors_a.append(colors[self.map[k_a]])
+
+        self.module_a.plot_bounding_boxes(ax, colors_a, linewidth)
 
 
 

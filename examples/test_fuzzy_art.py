@@ -1,11 +1,5 @@
-import numpy as np
-from sklearn.datasets import load_iris, make_blobs
-import umap
-import umap.plot
+from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
-
-
 import path
 import sys
 
@@ -17,29 +11,6 @@ print(directory.parent)
 sys.path.append(directory.parent.parent)
 
 from elementary.FuzzyART import FuzzyART, prepare_data
-
-def cluster_iris():
-    data, target = load_iris(return_X_y=True)
-    print("Data has shape:", data.shape)
-
-    X = prepare_data(data)
-    print("Prepared data has shape:", X.shape)
-
-    params = {
-        "rho": 0.75,
-        "alpha": 0.0,
-        "beta": 1.0
-    }
-    cls = FuzzyART(params)
-
-    y = cls.fit_predict(X)
-
-    print(f"{len(np.unique(y))} clusters found")
-
-    mapper = umap.UMAP().fit(data)
-
-    umap.plot.points(mapper, labels=y, color_key_cmap='Paired', background='black')
-    umap.plot.plt.show()
 
 
 def cluster_blobs():
@@ -55,30 +26,13 @@ def cluster_blobs():
         "beta": 1.0
     }
     cls = FuzzyART(params)
-
     y = cls.fit_predict(X)
 
-    n = len(np.unique(y))
+    print(f"{cls.n_clusters} clusters found")
 
-    print(f"{n} clusters found")
-
-    fig, ax = plt.subplots()
-    colors = cm.rainbow(np.linspace(0, 1, n))
-
-    for k, col in enumerate(colors):
-        cluster_data = y == k
-        plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=10)
-
-    cls.plot_bounding_boxes(ax, colors)
-
+    cls.visualize(X, y)
     plt.show()
 
 
-def main():
-    # cluster_iris()
-    cluster_blobs()
-
-
-
 if __name__ == "__main__":
-    main()
+    cluster_blobs()

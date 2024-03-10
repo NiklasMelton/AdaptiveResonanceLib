@@ -2,7 +2,9 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
 from common.BaseART import BaseART
 from typing import Optional, cast, Union
-from supervised.ARTMAP import SimpleARTMAP, ARTMAP, BaseARTMAP
+from common.BaseARTMAP import BaseARTMAP
+from supervised.SimpleARTMAP import SimpleARTMAP
+from supervised.ARTMAP import ARTMAP
 
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 

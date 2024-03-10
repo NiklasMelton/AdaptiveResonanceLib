@@ -1,3 +1,8 @@
+"""
+Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
+Dual vigilance fuzzy adaptive resonance theory.
+Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+"""
 import numpy as np
 from typing import Optional, Callable
 from common.BaseART import BaseART

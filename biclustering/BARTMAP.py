@@ -1,3 +1,15 @@
+"""
+Xu, R., & Wunsch II, D. C. (2011).
+BARTMAP: A viable structure for biclustering.
+Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
+
+Xu, R., Wunsch II, D. C., & Kim, S. (2012).
+Methods and systems for biclustering algorithm.
+U.S. Patent 9,043,326 Filed January 28, 2012,
+claiming priority to Provisional U.S. Patent Application,
+January 28, 2011, issued May 26, 2015.
+"""
+
 import numpy as np
 from typing import Optional
 from common.BaseART import BaseART

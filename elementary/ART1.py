@@ -1,3 +1,9 @@
+"""
+Carpenter, G. A., & Grossberg, S. (1987a).
+A massively parallel architecture for a self-organizing neural pattern recognition machine.
+Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+"""
+
 import numpy as np
 from typing import Optional
 from common.BaseART import BaseART

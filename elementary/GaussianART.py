@@ -1,3 +1,9 @@
+"""
+Williamson, J. R. (1996).
+Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps.
+Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
+"""
+
 import numpy as np
 from typing import Optional
 from common.BaseART import BaseART

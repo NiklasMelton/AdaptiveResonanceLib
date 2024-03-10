@@ -1,3 +1,8 @@
+"""
+Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
+Fuzzy ART: Fast stable learning and categorization of analog patterns by an adaptive resonance system.
+Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
+"""
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes

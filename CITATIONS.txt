@@ -1,0 +1,374 @@
+Amis, G. P., & Carpenter, G. A. (2007). Default ARTMAP 2. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 777–782). doi:10.1109/IJCNN.2007.4371056.
+
+Amis, G. P., & Carpenter, G. A. (2010). Self-supervised ARTMAP. Neural Networks, 23, 265 – 282. doi:10.1016/j.neunet.2009.07.026.
+
+Amorim, D. G., Delgado, M. F., Ameneiro, S. B., & Amorim, R. R. (2011). Evolu ̧c ̃ao das Redes ART e suas Funcionalidades. Revista OPARA, 1, 40 – 59.
+
+Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a). Ellipsoid ART and ARTMAP for incremental clus- tering and classification. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
+
+Anagnostopoulos, G. C., & Georgiopoulos, M. (2001b). Ellipsoid ART and ARTMAP for incremental unsupervised and supervised learning. In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304). International Society for Optics and Photonics. doi:10.1117/12.421180.
+
+Anagnostopoulos, G. C., & Georgiopoulos, M. (2002). Category regions as new geometrical concepts in Fuzzy- ART and Fuzzy-ARTMAP. Neural Networks, 15, 1205 – 1221. doi:10.1016/S0893-6080(02)00063-1.
+
+Anagnostopoulos, G. C., & Georgiopoulos, M. (2003). Putting the Utility of Match Tracking in Fuzzy ARTMAP Training to the Test. In V. Palade, R. J. Howlett, & L. Jain (Eds.), Knowledge-Based Intelligent Information and Engineering Systems (pp. 1–6). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10. 1007/978-3-540-45226-3_1.
+
+Anagnostopoulos, G. C., & Georgiopulos, M. (2000). Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
+
+Andonie, R. (1990). A Converse H-theorem for Inductive Processes. Comput. Artif. Intell., 9, 161–167. Andonie, R., & Sasu, L. (2003). A Fuzzy ARTMAP Probability Estimator with Relevance Factor. In Proc.
+of the 11th European Symposium on Artificial Neural Networks (ESANN) (pp. 367–372).
+
+Andonie, R., & Sasu, L. (2006). Fuzzy ARTMAP with input relevances. IEEE Transactions on Neural
+Networks, 17, 929–941. doi:10.1109/TNN.2006.875988. 55
+
+Andonie, R., Sasu, L., & Beiu, V. (2003). A Modified Fuzzy ARTMAP Architecture for Incremental Learning Function Approximation. In Proc. IASTED Int. Conf. Neural Networks and Computational Intelligence (NCI) (pp. 124–129).
+
+Andonie, R., Sasu, L., & Beiu, V. (2003). Fuzzy ARTMAP with relevance factor. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1975–1980). volume 3. doi:10.1109/IJCNN.2003. 1223710.
+
+Asfour, Y. R., Carpenter, G. A., Grossberg, S., & Lesher, G. W. (1993). Fusion ARTMAP: an adaptive fuzzy network for multi-channel classification. In Proc. Third International Conference on Industrial Fuzzy Control and Intelligent Systems (pp. 155–160). doi:10.1109/IFIS.1993.324195.
+
+Baek, J., Lee, H., Lee, B., Lee, H., & Kim, E. (2014). An efficient genetic selection of the presentation order in simplified fuzzy ARTMAP patterns. Applied Soft Computing, 22, 101–107. doi:10.1016/j.asoc.2014. 03.026.
+
+Bain, L. J., & Engelhardt, M. (1992). Introduction to Probability and Mathematical Statistics. (2nd ed.). Brooks/Cole, Cengage Learning.
+
+Bartfai, G. (1994). Hierarchical clustering with ART neural networks. In Proc. IEEE International Confer- ence on Neural Networks (ICNN) (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307.
+
+Bartfai, G. (1995). A comparison of two ART-based neural networks for hierarchical clustering. In Proc. Sec- ond New Zealand International Two-Stream Conference on Artificial Neural Networks and Expert Systems (pp. 83–86). doi:10.1109/ANNES.1995.499445.
+
+Bartfai, G. (1996). An ART-based modular architecture for learning hierarchical clusterings. Neurocomput- ing, 13, 31 – 45. doi:10.1016/0925-2312(95)00077-1.
+
+Bartfai, G., & White, R. (1997a). A fuzzy ART-based modular neuro-fuzzy architecture for learning hi- erarchical clusterings. In Proc. 6th International Fuzzy Systems Conference (pp. 1713–1718). volume 3. doi:10.1109/FUZZY.1997.619798.
+
+Bartfai, G., & White, R. (1997b). Adaptive Resonance Theory-based Modular Networks for Incremental Learning of Hierarchical Clusterings. Connection Science, 9, 87–112. doi:10.1080/095400997116757.
+
+Bartfai, G., & White, R. (1998). Learning and optimisation of hierarchical clusterings with ART-based modular networks. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2352–2356). volume 3. doi:10.1109/IJCNN.1998.687229.
+
+Bezdek, J. C. (2017). A Primer on Cluster Analysis: 4 Basic Methods that (usually) Work. First Edition Design Publishing.
+
+Bezdek, J. C., & Hathaway, R. J. (2002). VAT: a tool for visual assessment of (cluster) tendency. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2225–2230). volume 3. doi:10.1109/IJCNN.2002.1007487.
+
+Blume, M., & Esener, S. (1995). Optoelectronic Fuzzy ARTMAP processor. Optical Computing, 10, 213–215.
+
+Brannon, N., Conrad, G., Draelos, T., Seiffertt, J., & Wunsch II, D. C. (2006). Information Fusion and Situation Awareness using ARTMAP and Partially Observable Markov Decision Processes. In Proc. IEEE International Joint Conference on Neural Network (IJCNN) (pp. 2023–2030). doi:10.1109/IJCNN.2006. 246950.
+
+Brannon, N., Seiffertt, J., Draelos, T., & Wunsch II, D. C. (2009). Coordinated machine learning and decision support for situation awareness. Neural Networks, 22, 316 – 325. doi:10.1016/j.neunet.2009.03.013. Goal-Directed Neural Systems.
+
+Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2018). Distributed dual vigilance fuzzy adaptive resonance theory learns online, retrieves arbitrarily-shaped clusters, and mitigates order dependence. arXiv e-prints, . arXiv:1901.00794. ArXiv:1901.00794[cs.NE].
+
+Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy adaptive resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+
+Brito da Silva, L. E., & Wunsch II, D. C. (2017). Validity Index-based Vigilance Test in Adaptive Resonance Theory Neural Networks. In Proc. IEEE Symposium Series on Computational Intelligence (SSCI) (pp. 1–8). doi:10.1109/SSCI.2017.8285206.
+
+Brito da Silva, L. E., & Wunsch II, D. C. (2018). A study on exploiting VAT to mitigate ordering effects in Fuzzy ART. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2351–2358). doi:10.1109/IJCNN.2018.8489724.
+
+Cacoullos, T. (1966). Estimation of a multivariate density. Annals of the Institute of Statistical Mathematics, 18, 179–189. doi:10.1007/BF02869528.
+
+Carpenter, G. A. (1994). A distributed outstar network for spatial pattern learning. Neural Networks, 7, 159 – 168. doi:10.1016/0893-6080(94)90064-7.
+
+Carpenter, G. A. (1996a). Distributed activation, search, and learning by ART and ARTMAP neural networks. In Proc. International Conference on Neural Networks (ICNN) (pp. 244–249).
+
+Carpenter, G. A. (1996b). Distributed ART networks for learning, recognition, and prediction. In Proc. World Congress on Neural Networks (WCNN) (pp. 333 – 344).
+
+Carpenter, G. A. (1997). Distributed Learning, Recognition, and Prediction by ART and ARTMAP Neural Networks. Neural Networks, 10, 1473 – 1494. doi:10.1016/S0893-6080(97)00004-X.
+
+Carpenter, G. A. (2003). Default ARTMAP. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1396–1401). volume 2. doi:10.1109/IJCNN.2003.1223900.
+
+Carpenter, G. A., & Gaddam, S. C. (2010). Biased ART: A neural architecture that shifts attention toward previously disregarded features following an incorrect prediction. Neural Networks, 23, 435 – 451. doi:10. 1016/j.neunet.2009.07.025.
+
+Carpenter, G. A., & Gjaja, M. N. (1994). Fuzzy ART Choice Functions. Proc. World Congress on Neural Networks (WCNN), (pp. 713–722).
+
+Carpenter, G. A., & Grossberg, S. (1987a). A massively parallel architecture for a self-organizing neural pattern recognition machine. Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+
+Carpenter, G. A., & Grossberg, S. (1987b). ART 2: self-organization of stable category recognition codes for analog input patterns. Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
+
+Carpenter, G. A., & Grossberg, S. (1990). ART 3: Hierarchical search using chemical transmitters in self- organizing pattern recognition architectures. Neural Networks, 3, 129–152. doi:10.1016/0893-6080(90) 90085-Y.
+
+Carpenter, G. A., Grossberg, S., Markuzon, N., Reynolds, J. H., & Rosen, D. B. (1992). Fuzzy ARTMAP: A neural network architecture for incremental supervised learning of analog multidimensional maps. IEEE Transactions on Neural Networks, 3, 698–713. doi:10.1109/72.159059.
+
+Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a). ARTMAP: Supervised real-time learning and classification of nonstationary data by a self-organizing neural network. Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+
+Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1995). A fuzzy ARTMAP nonparametric probability estimator for nonstationary pattern recognition problems. IEEE Transactions on Neural Networks, 6, 1330–1336. doi:10.1109/72.471374.
+
+Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b). ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition. Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+
+Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c). Fuzzy ART: Fast stable learning and cat- egorization of analog patterns by an adaptive resonance system. Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
+
+Carpenter, G. A., & Markuzon, N. (1998). ARTMAP-IC and medical diagnosis: Instance counting and inconsistent cases. Neural Networks, 11, 323 – 336. doi:10.1016/S0893-6080(97)00067-1.
+
+Carpenter, G. A., Milenova, B. L., & Noeske, B. W. (1998). Distributed ARTMAP: a neural network for fast distributed supervised learning. Neural Networks, 11, 793 – 813. doi:10.1016/S0893-6080(98)00019-7.
+
+Carpenter, G. A., & Ross, W. D. (1995). ART-EMAP: A neural network architecture for object recognition by evidence accumulation. IEEE Transactions on Neural Networks, 6, 805–818. doi:10.1109/72.392245.
+
+Carpenter, G. A., & Tan, A.-H. (1995). Rule extraction: From neural architecture to symbolic representation. Connection Science, 7, 3–27. doi:10.1080/09540099508915655.
+
+Caudell, T. P. (1992). Hybrid optoelectronic adaptive resonance theory neural processor, ART1. Appl. Opt., 31, 6220–6229. doi:10.1364/AO.31.006220.
+
+Chin, W. H., Loo, C. K., Seera, M., Kubota, N., & Toda, Y. (2016). Multi-channel Bayesian Adaptive Resonance Associate Memory for on-line topological map building. Applied Soft Computing, 38, 269 – 280. doi:10.1016/j.asoc.2015.09.031.
+
+da Silva, A. R., & Goes, L. F. W. (2018). HearthBot: An Autonomous Agent Based on Fuzzy ART Adaptive Neural Networks for the Digital Collectible Card Game HearthStone. IEEE Transactions on Games, 10, 170–181. doi:10.1109/TCIAIG.2017.2743347.
+
+Dagher, I., Georgiopoulos, M., Heileman, G. L., & Bebis, G. (1998). Ordered fuzzy ARTMAP: a fuzzy ARTMAP algorithm with a fixed order of pattern presentation. In Proc. IEEE International Joint Con- ference on Neural Networks (IJCNN) (pp. 1717–1722). volume 3. doi:10.1109/IJCNN.1998.687115.
+
+Dagher, I., Georgiopoulos, M., Heileman, G. L., & Bebis, G. (1999). An ordering algorithm for pattern presentation in fuzzy ARTMAP that tends to improve generalization performance. IEEE Transactions on Neural Networks, 10, 768–778. doi:10.1109/72.774217.
+
+DeClaris, N., & Su, M.-C. (1991). A novel class of neural networks with quadratic junctions. In Proc. IEEE International Conference on Systems, Man, and Cybernetics (pp. 1557–1562). volume 3. doi:10.1109/ ICSMC.1991.169910.
+
+DeClaris, N., & Su, M.-C. (1992). Introduction to the theory and applications of neural networks with quadratic junctions. In Proc. IEEE International Conference on Systems, Man, and Cybernetics (pp. 1320–1325). volume 2. doi:10.1109/ICSMC.1992.271603.
+
+Du, K.-L. (2010). Clustering: A neural network approach. Neural Networks, 23, 89 – 107. doi:10.1016/j. neunet.2009.08.007.
+
+Duda, R. O., Hart, P. E., & Stork, D. G. (2000). Pattern Classification. (2nd ed.). John Wiley & Sons.
+
+Eiben, A. E., & Smith, J. E. (2015). Introduction to Evolutionary Computing. (2nd ed.). Springer Publishing Company, Incorporated.
+
+Elnabarawy, I., Tauritz, D. R., & Wunsch II, D. C. (2017). Evolutionary Computation for the Automated Design of Category Functions for Fuzzy ART: An Initial Exploration. In Proc. Genetic and Evolutionary Computation Conference Companion (GECCO) GECCO’17 (pp. 1133–1140). New York, NY, USA: ACM. doi:10.1145/3067695.3082056.
+
+Elnabarawy, I., Wunsch II, D. C., & Abdelbar, A. M. (2016). Biclustering ARTMAP Collaborative Filtering Recommender System. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2986–2991). doi:10.1109/IJCNN.2016.7727578.
+
+Furao, S., & Hasegawa, O. (2006). An incremental network for on-line unsupervised classification and topology learning. Neural Networks, 19, 90 – 106. doi:10.1016/j.neunet.2005.04.006.
+
+Georgiopoulos, M., Fernlund, H., Bebis, G., & Heileman, G. L. (1996). Order of Search in Fuzzy ART and Fuzzy ARTMAP: Effect of the Choice Parameter. Neural Networks, 9, 1541 – 1559. doi:10.1016/ S0893-6080(96)00018-4.
+
+Gomez-Sanchez, E., Dimitriadis, Y. A., Cano-Izquierdo, J. M., & Lopez-Coronado, J. (2001). Safe- μARTMAP: a new solution for reducing category proliferation in fuzzy ARTMAP. In Proc. International Joint Conference on Neural Networks (IJCNN) (pp. 1197–1202). volume 2. doi:10.1109/IJCNN.2001. 939531.
+
+Gomez-Sanchez, E., Dimitriadis, Y. A., Cano-Izquierdo, J. M., & Lopez-Coronado, J. (2002). μARTMAP: use of mutual information for category reduction in Fuzzy ARTMAP. IEEE Transactions on Neural Networks, 13, 58–69. doi:10.1109/72.977271.
+
+Granger, E., Savaria, Y., Lavoie, P., & Cantin, M.-A. (1998). A comparison of self-organizing neural networks for fast clustering of radar pulses. Signal Processing, 64, 249 – 269. doi:10.1016/S0165-1684(97)00194-1.
+
+Grossberg, S. (1968). A prediction theory for some nonlinear functional-differential equations i. learning of lists. Journal of Mathematical Analysis and Applications, 21, 643 – 694. doi:10.1016/0022-247X(68) 90269-2.
+
+Grossberg, S. (1969). Some networks that can learn, remember, and reproduce any number of complicated space-time patterns, i. Journal of Mathematics and Mechanics, 19, 53–91.
+
+Grossberg, S. (1972). Neural expectation: cerebellar and retinal analogs of cells fired by learnable or un- learned pattern classes. Kybernetik, 10, 49–57. doi:10.1007/BF00288784.
+
+Grossberg, S. (1976a). Adaptive pattern classification and universal recoding: I. Parallel development and coding of neural feature detectors. Biological Cybernetics, 23, 121–134. doi:10.1007/BF00344744.
+
+Grossberg, S. (1976b). Adaptive pattern classification and universal recoding: II. Feedback, expectation, olfaction, illusions. Biological Cybernetics, 23, 187–202. doi:10.1007/BF00340335.
+
+Grossberg, S. (1980). How does a brain build a cognitive code? Psychological Review, 87, 1–51. doi:10. 1037/0033-295X.87.1.1.
+
+Grossberg, S. (2013). Adaptive Resonance Theory: how a brain learns to consciously attend, learn, and recognize a changing world. Neural networks, 37, 1–47. doi:10.1016/j.neunet.2012.09.017.
+
+Healy, M. J., & Caudell, T. P. (1998). Guaranteed two-pass convergence for supervised and inferential learning. IEEE Transactions on Neural Networks, 9, 195–204. doi:10.1109/72.655041.
+
+Healy, M. J., & Caudell, T. P. (2006). Ontologies and Worlds in Category Theory: Implications for Neural Systems. Axiomathes, 16, 165–214. doi:10.1007/s10516-005-5474-1.
+
+Healy, M. J., Caudell, T. P., & Smith, S. D. G. (1993). A neural architecture for pattern sequence verification through inferencing. IEEE Transactions on Neural Networks, 4, 9–20. doi:10.1109/72.182691.
+
+Ho, C. S., Liou, J. J., Georgiopoulos, M., Heileman, G. L., & Christodoulou, C. (1994). Analogue circuit design and implementation of an adaptive resonance theory (ART) neural network architecture. Interna- tional Journal of Electronics, 76, 271–291. doi:10.1080/00207219408925926.
+
+Isawa, H., Matsushita, H., & Nishio, Y. (2008a). Fuzzy Adaptive Resonance Theory Combining Over- lapped Category in consideration of connections. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 3595–3600). doi:10.1109/IJCNN.2008.4634312.
+
+Isawa, H., Matsushita, H., & Nishio, Y. (2008b). Improved Fuzzy Adaptive Resonance Theory Combining Overlapped Category in Consideration of Connections. In IEEE Workshop on Nonlinear Circuit Networks (NCN) (pp. 8–11).
+
+Isawa, H., Matsushita, H., & Nishio, Y. (2009). Fuzzy ART Combining Overlapped Categories Using Variable Vigilance Parameters. In Proc. International Workshop on Nonlinear Circuits and Signal Processing (NCSP) (pp. 661–664).
+
+Isawa, H., Tomita, M., Matsushita, H., & Nishio, Y. (2007). Fuzzy Adaptive Resonance Theory with Group Learning and its Applications. In Proc. International Symposium on Nonlinear Theory and its Applications (NOLTA) (pp. 292–295).
+
+Ishihara, S., Hatamoto, K., Nagamachi, M., & Matsubara, Y. (1993). ART1.5SSS for Kansei engineering expert system. In Proc. International Conference on Neural Networks (IJCNN) (pp. 2512–2515). volume 3. doi:10.1109/IJCNN.1993.714235.
+
+Ishihara, S., Ishihara, K., Nagamachi, M., & Matsubara, Y. (1995). arboART: ART based hierarchical clustering and its application to questionnaire data analysis. In Proc. IEEE International Conference on Neural Networks (ICNN) (pp. 532–537). volume 1. doi:10.1109/ICNN.1995.488234.
+
+Izquierdo, J. M. C., Almonacid, M., Pinzolas, M., & Ibarrola, J. (2009). dFasArt: Dynamic neural processing in FasArt model. Neural Networks, 22, 479 – 487. doi:10.1016/j.neunet.2008.09.018.
+
+Izquierdo, J. M. C., Dimitriadis, Y. A., Arau ́zo, M., & Coronado, J. L. (1996). FasArt: A New Neuro-Fuzzy Architecture for Incremental Learning in System Identification. In IFAC Proceedings Volumes (pp. 2532 – 2537). volume 29. doi:10.1016/S1474-6670(17)58055-6.
+
+Izquierdo, J. M. C., Dimitriadis, Y. A., & Coronado, J. L. (1997). FasBack: matching-error based learning for automatic generation of fuzzy logic systems. In Proc. International Fuzzy Systems Conference (pp. 1561–1566). volume 3. doi:10.1109/FUZZY.1997.619774.
+
+Izquierdo, J. M. C., Dimitriadis, Y. A., S ́anchez, E. G., & Coronado, J. L. (2001). Learning from noisy information in FasArt and FasBack neuro-fuzzy systems. Neural Networks, 14, 407 – 425. doi:10.1016/ S0893-6080(01)00031-4.
+
+Jain, L. C., Seera, M., Lim, C. P., & Balasubramaniam, P. (2014). A review of online learning in supervised neural networks. Neural Computing and Applications, 25, 491–509. doi:10.1007/s00521-013-1534-4.
+
+Kasuba, T. (1993). Simplified Fuzzy ARTMAP. AI Expert, 8, 18–25.
+
+Kennedy, J., & Eberhart, R. (1995). Particle swarm optimization. In Proc. International Conference on
+Neural Networks (ICNN) (pp. 1942–1948). volume 4. doi:10.1109/ICNN.1995.488968.
+
+Kim, S. (2016). Novel approaches to clustering , biclustering algorithms based on adaptive resonance theory
+and intelligent control. Ph.D. thesis Missouri University of Science and Technology.
+
+Kim, S., & Wunsch II, D. C. (2011). A GPU based Parallel Hierarchical Fuzzy ART clustering. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2778–2782). doi:10.1109/IJCNN. 2011.6033584.
+
+Knuth, D. E. (1964). Backus Normal Form vs. Backus Naur Form. Communications of the ACM , 7 , 735–736. doi:10.1145/355588.365140.
+
+Koltchinskii, V. (2001). Rademacher penalties and structural risk minimization. IEEE Transactions on Information Theory, 47, 1902–1914. doi:10.1109/18.930926.
+
+Lam, D., Wei, M., & Wunsch II, D. C. (2015). Clustering Data of Mixed Categorical and Numerical Type With Unsupervised Feature Learning. IEEE Access, 3, 1605–1613. doi:10.1109/ACCESS.2015.2477216.
+
+Lavoie, P. (1999). Choosing a choice function: granting new capabilities to ART. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1988–1993). volume 3. doi:10.1109/IJCNN.1999. 832689.
+
+Levine, D. S., & Penz, P. A. (1990). ART 1.5–A simplified adaptive resonance network for classifying low-dimensional analog data. In Proc. of International Conference on Neural Networks (IJCNN) (pp. 639–642). volume 2.
+
+Lim, C. P., & Harrison, R. F. (1997a). An Incremental Adaptive Network for On-line Supervised Learning and Probability Estimation. Neural Networks, 10, 925 – 939. doi:10.1016/S0893-6080(96)00123-2.
+
+Lim, C. P., & Harrison, R. F. (1997b). Modified Fuzzy ARTMAP Approaches Bayes Optimal Classification Rates: An Empirical Demonstration. Neural Networks, 10, 755 – 774. doi:10.1016/S0893-6080(96) 00112-8.
+
+Lim, C. P., & Harrison, R. F. (2000a). ART-Based Autonomous Learning Systems: Part I — Architectures and Algorithms. In L. C. Jain, B. Lazzerini, & U. Halici (Eds.), Innovations in ART Neural Networks (pp. 133–166). Heidelberg: Physica-Verlag HD. doi:10.1007/978-3-7908-1857-4_6.
+
+Lim, C. P., & Harrison, R. F. (2000b). ART-Based Autonomous Learning Systems: Part II — Applications. In L. C. Jain, B. Lazzerini, & U. Halici (Eds.), Innovations in ART Neural Networks (pp. 167–188). Heidelberg: Physica-Verlag HD. doi:10.1007/978-3-7908-1857-4_7.
+
+Lughofer, E. (2008). Extensions of vector quantization for incremental clustering. Pattern Recognition, 41, 995 – 1011. doi:10.1016/j.patcog.2007.07.019.
+
+MacQueen, J. B. (1967). Some Methods for Classification and Analysis of MultiVariate Observations. In L. M. L. Cam, & J. Neyman (Eds.), Proc. of the fifth Berkeley Symposium on Mathematical Statistics and Probability (pp. 281–297). University of California Press volume 1.
+
+Majeed, S., Gupta, A., Raj, D., & Rhee, F. C.-H. (2018). Uncertain fuzzy self-organization based clustering: interval type-2 fuzzy approach to adaptive resonance theory. Information Sciences, 424, 69 – 90. doi:10. 1016/j.ins.2017.09.062.
+
+Marriott, S., & Harrison, R. F. (1995). A modified fuzzy ARTMAP architecture for the approximation of noisy mappings. Neural Networks, 8, 619 – 641. doi:10.1016/0893-6080(94)00110-8.
+
+Martinetz, T., & Schulten, K. (1994). Topology representing networks. Neural Networks, 7, 507 – 522. doi:10.1016/0893-6080(94)90109-0.
+
+Martinetz, T. M., & Shulten, K. J. (1991). A “Neural-Gas” Network Learns Topologies. In T. Kohonen, K. M ̈akisara, O. Simula, & J. Kangas (Eds.), Artificial Neural Networks (pp. 397–402).
+
+Mart ́ınez-Zarzuela, M., D ́ıaz Pernas, F. J., D ́ıez Higuera, J. F., & Rodr ́ıguez, M. A. (2007). Fuzzy ART Neural Network Parallel Computing on the GPU. In F. Sandoval, A. Prieto, J. Cabestany, & M. Gran ̃a (Eds.), Computational and Ambient Intelligence (pp. 463–470). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/978-3-540-73007-1_57.
+
+Mart ́ınez-Zarzuela, M., D ́ıaz-Pernas, F. J., de Pablos, A. T., Perozo-Rond ́on, F., Ant ́on-Rodr ́ıguez, M., & Gonz ́alez-Ortega, D. (2011). Fuzzy ARTMAP Based Neural Networks on the GPU for High-Performance Pattern Recognition. In J. M. Ferr ́andez, J. R. A ́lvarez S ́anchez, F. de la Paz, & F. J. Toledo (Eds.), New Challenges on Bioinspired Applications (pp. 343–352). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/978-3-642-21326-7_37.
+
+Mart ́ınez-Zarzuela, M., Pernas, F. J. D., de Pablos, A. T., Rodr ́ıguez, M. A., Higuera, J. F. D., Giralda, D. B., & Ortega, D. G. (2009). Adaptative Resonance Theory Fuzzy Networks Parallel Computation Using CUDA. In J. Cabestany, F. Sandoval, A. Prieto, & J. M. Corchado (Eds.), Bio-Inspired Systems: Computational and Ambient Intelligence (pp. 149–156). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/978-3-642-02478-8_19.
+
+Massey, L. (2009). Discovery of hierarchical thematic structure in text collections with adaptive resonance theory. Neural Computing and Applications, 18, 261–273. doi:10.1007/s00521-008-0178-2.
+
+Meng, L., & Tan, A. H. (2012). Heterogeneous Learning of Visual and Textual Features for Social Web Image Co-Clustering. Technical Report School of Computer Engineering, Nanyang Technological University.
+
+Meng, L., Tan, A.-H., & Wunsch II, D. (2013). Vigilance adaptation in adaptive resonance theory. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1–7). doi:10.1109/IJCNN.2013. 6706857.
+
+Meng, L., Tan, A.-H., & Wunsch II, D. C. (2016). Adaptive scaling of cluster boundaries for large-scale social media data clustering. IEEE Transactions on Neural Networks and Learning Systems, 27, 2656– 2669. doi:10.1109/TNNLS.2015.2498625.
+
+Meng, L., Tan, A. H., & Xu, D. (2014). Semi-Supervised Heterogeneous Fusion for Multimedia Data Co- Clustering. IEEE Transactions on Knowledge and Data Engineering, 26, 2293–2306. doi:10.1109/TKDE. 2013.47.
+
+Meuth, R. J. (2009). Meta-Learning Computational Intelligence Architectures. Ph.D. thesis Missouri Uni- versity of Science and Technology.
+
+Moore, B. (1989). Art 1 and pattern clustering. In Proceedings of the 1988 connectionist models summer school (pp. 174–185). Morgan Kaufmann Publishers San Mateo, CA.
+
+Nooralishahi, P., Loo, C. K., & Seera, M. (2018). Semi-supervised topo-Bayesian ARTMAP for noisy data. Applied Soft Computing, 62, 134 – 147. doi:10.1016/j.asoc.2017.10.011.
+
+Oong, T. H., & Isa, N. A. M. (2014). Feature-Based Ordering Algorithm for Data Presentation of Fuzzy ARTMAP Ensembles. IEEE Transactions on Neural Networks and Learning Systems , 25 , 812–819. doi:10. 1109/TNNLS.2013.2280579.
+
+Palaniappan, R., & Eswaran, C. (2009). Using genetic algorithm to select the presentation order of training patterns that improves simplified fuzzy ARTMAP classification performance. Applied Soft Computing, 9, 100–106. doi:10.1016/j.asoc.2008.03.003.
+
+Palmero, G. I. S., Dimitriadis, Y. A., Izquierdo, J. M. C., S ́anchez, E. G., & Hern ́andez, E. P. (2000). ART- Based Model Set for Pattern Recognition: FasArt Family. In H. Bunke, & A. Kandel (Eds.), Neuro-Fuzzy Pattern Recognition (pp. 145–175). World Scientific. doi:10.1142/9789812792204_0007.
+
+Parrado-Hern ́andez, E., G ́omez-S ́anchez, E., & Dimitriadis, Y. A. (2003). Study of distributed learning as a solution to category proliferation in Fuzzy ARTMAP based neural systems. Neural Networks, 16, 1039 – 1057. doi:10.1016/S0893-6080(03)00009-1.
+
+Parzen, E. (1962). On Estimation of a Probability Density Function and Mode. The Annals of Mathematical Statistics, 33, 1065–1076.
+
+Raijmakers, M. E., & Molenaar, P. C. (1997). Exact ART: A Complete Implementation of an ART Network. Neural Networks, 10, 649 – 669. doi:10.1016/S0893-6080(96)00111-6.
+
+RamaKrishna, K., Ramam, V. A., & Rao, R. S. (2014). Mathematical Neural Network (MaNN) Models Part III: ART and ARTMAP in OMNI METRICS. Journal of Applicable Chemistry, 3, 919 – 989.
+
+Rummery, G. A., & Niranjan, M. (1994). On-line Q-learning using connectionist systems. Technical Report CUED/F-INFENG/TR 166 Engineering Department, Cambridge University.
+
+Sanchez, E. G., Dimitriadis, Y. A., Cano-Izquierdo, J. M., & Coronado, J. L. (2000). MicroARTMAP: use of mutual information for category reduction in fuzzy ARTMAP. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 47–52). volume 6. doi:10.1109/IJCNN.2000.859371.
+
+Sasu, L. M., & Andonie, R. (2012). Function Approximation with ARTMAP Architectures. International Journal of Computers, Communications & Control, 7, 957–967. doi:10.15837/ijccc.2012.5.1355.
+
+Sasu, L. M., & Andonie, R. (2013). Bayesian ARTMAP for regression. Neural Networks, 46, 23 – 31. doi:10.1016/j.neunet.2013.04.006.
+
+Schapire, R. E. (1990). The strength of weak learnability. Machine Learning, 5, 197–227. doi:10.1007/ BF00116037.
+
+Seiffertt, J., & Wunsch II, D. C. (2010). Unified Computational Intelligence for Complex Systems volume 6 of Evolutionary Learning and Optimization. Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/ 978-3-642-03180-9.
+
+Serrano-Gotarredona, T., & Linares-Barranco, B. (1996). A Modified ART 1 Algorithm more Suitable for VLSI Implementations. Neural Networks, 9, 1025 – 1043. doi:10.1016/0893-6080(95)00145-X.
+
+Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998). Adaptive Resonance Theory Microchips: Circuit Design Techniques. Norwell, MA, USA: Kluwer Academic Publishers.
+
+Simpson, P. K. (1992). Fuzzy min-max neural networks. i. classification. IEEE Transactions on Neural Networks, 3, 776–786. doi:10.1109/72.159066.
+
+Simpson, P. K. (1993). Fuzzy min-max neural networks - part 2: Clustering. IEEE Transactions on Fuzzy Systems, 1, 32–. doi:10.1109/TFUZZ.1993.390282.
+
+Smith, C., & Wunsch II, D. C. (2015). Particle Swarm Optimization in an adaptive resonance framework. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1–4). doi:10.1109/IJCNN. 2015.7280585.
+
+Specht, D. F. (1990). Probabilistic neural networks. Neural Networks, 3, 109 – 118. doi:10.1016/ 0893-6080(90)90049-Q.
+
+Specht, D. F. (1991). A general regression neural network. IEEE Transactions on Neural Networks, 2, 568–576. doi:10.1109/72.97934.
+
+Srinivasa, N. (1997). Learning and generalization of noisy mappings using a modified probart neural network. IEEE Transactions on Signal Processing, 45, 2533–2550. doi:10.1109/78.640717.
+
+Su, M.-C., DeClaris, N., & Liu, T.-K. (1997). Application of neural networks in cluster analysis. In Proc. IEEE International Conference on Systems, Man, and Cybernetics (pp. 1–6). volume 1. doi:10.1109/ ICSMC.1997.625709.
+
+Su, M.-C., & Liu, T.-K. (2001). Application of neural networks using quadratic junctions in cluster analysis. Neurocomputing, 37, 165 – 175. doi:10.1016/S0925-2312(00)00343-X.
+
+Su, M.-C., & Liu, Y.-C. (2002). A hierarchical approach to ART-like clustering algorithm. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 788–793). volume 1. doi:10.1109/ IJCNN.2002.1005574.
+
+Su, M.-C., & Liu, Y.-C. (2005). A new approach to clustering data with arbitrary shapes. Pattern Recogni- tion, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
+
+Sutton, R. S., & Barto, A. G. (2018). Introduction to Reinforcement Learning. (2nd ed.). Cambridge, MA, USA: MIT Press.
+
+Tan, A.-H. (1995). Adaptive Resonance Associative Map. Neural Networks, 8, 437 – 446. doi:10.1016/ 0893-6080(94)00092-Z.
+
+Tan, A.-H. (1997). Cascade ARTMAP: integrating neural computation and symbolic knowledge processing. IEEE Transactions on Neural Networks, 8, 237–250. doi:10.1109/72.557661.
+
+Tan, A.-H. (2004). FALCON: a fusion architecture for learning, cognition, and navigation. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
+
+Tan, A.-H. (2006). Self-organizing Neural Architecture for Reinforcement Learning. In J. Wang, Z. Yi, J. M. Zurada, B.-L. Lu, & H. Yin (Eds.), Advances in Neural Networks - ISNN 2006 (pp. 470–475). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/11759966_70.
+
+Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007). Intelligence Through Interaction: Towards a Unified Theory for Learning. In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.), Advances in Neural Networks – ISNN 2007 (pp. 1094–1103). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/ 978-3-540-72383-7_128.
+
+Tan, A.-H., Lu, N., & Xiao, D. (2008). Integrating Temporal Difference Methods and Self-Organizing Neural Networks for Reinforcement Learning With Delayed Evaluative Feedback. IEEE Transactions on Neural Networks, 19, 230–244. doi:10.1109/TNN.2007.905839.
+
+Tang, X.-l., & Han, M. (2010). Semi-supervised Bayesian ARTMAP. Applied Intelligence, 33, 302–317. doi:10.1007/s10489-009-0167-x.
+
+Tou, J. T., & Gonzalez, R. C. (1974). Pattern recognition principles. Addison-Wesley,.
+
+Tsay, S. W., & Newcomb, R. W. (1991). VLSI implementation of ART1 memories. IEEE Transactions on
+Tsay, S. W., & Newcomb, R. W. (1991). VLSI implementation of ART1 memories. IEEE Transactions on
+Neural Networks, 2, 214–221. doi:10.1109/72.80330.
+
+Tscherepanow, M. (2010). TopoART: A Topology Learning Hierarchical ART Network. In K. Diaman- taras, W. Duch, & L. S. Iliadis (Eds.), Artificial Neural Networks – ICANN 2010 (pp. 157–167). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/978-3-642-15825-4_21.
+
+Tscherepanow, M. (2011). An Extended TopoART Network for the Stable On-line Learning of Re- gression Functions. In B.-L. Lu, L. Zhang, & J. Kwok (Eds.), International Conference on Neu- ral Information Processing (ICONIP) (pp. 562–571). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/978-3-642-24958-7_65.
+
+Tscherepanow, M. (2012). Incremental On-line Clustering with a Topology-Learning Hierarchical ART Neural Network Using Hyperspherical Categories. In P. Perner (Ed.), Proc. Industrial Conference on Data Mining (ICDM) (pp. 22–34). ibai-publishing.
+
+Tscherepanow, M., Kortkamp, M., & Kammer, M. (2011). A hierarchical ART network for the stable incremental learning of topological structures and associations from noisy data. Neural Networks, 24, 906 – 916. doi:10.1016/j.neunet.2011.05.009.
+
+Tscherepanow, M., Ku ̈hnel, S., & Riechers, S. (2012). Episodic Clustering of Data Streams Using a Topology- Learning Neural Network. In V. Lemaire, J.-C. Lamirel, & P. Cuxac (Eds.), Proceedings of the ECAI Workshop on Active and Incremental Learning (AIL) (pp. 24–29).
+
+Tscherepanow, M., & Riechers, S. (2012). An Incremental On-line Classifier for Imbalanced, Incomplete, and Noisy Data. In V. Lemaire, J.-C. Lamirel, & P. Cuxac (Eds.), Proceedings of the ECAI Workshop on Active and Incremental Learning (AIL) (pp. 18–23).
+
+Vakil-Baghmisheh, M.-T., & Paveˇsi ́c, N. (2003). A Fast Simplified Fuzzy ARTMAP Network. Neural Processing Letters, 17, 273–316. doi:10.1023/A:1026004816362.
+
+Versace, M., Kozma, R. T., & Wunsch, D. C. (2012). Adaptive Resonance Theory Design in Mixed Memristive-Fuzzy Hardware. In R. Kozma, R. E. Pino, & G. E. Pazienza (Eds.), Advances in Neuromorphic Memristor Science and Applications (pp. 133–153). Dordrecht: Springer Netherlands. doi:10.1007/978-94-007-4491-2_9.
+
+Verzi, S. J., Heileman, G. L., & Georgiopoulos, M. (2006). Boosted ARTMAP: Modifications to fuzzy ARTMAP motivated by boosting theory. Neural Networks, 19, 446 – 468. doi:10.1016/j.neunet.2005. 08.013.
+
+Verzi, S. J., Heileman, G. L., Georgiopoulos, M., & Anagnostopoulos, G. (2002). Off-line structural risk minimization and BARTMAP-S. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2533–2538). volume 3. doi:10.1109/IJCNN.2002.1007542.
+
+Verzi, S. J., Heileman, G. L., Georgiopoulos, M., & Anagnostopoulos, G. C. (2003). Universal approximation with Fuzzy ART and Fuzzy ARTMAP. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1987–1992). volume 3. doi:10.1109/IJCNN.2003.1223712.
+
+Verzi, S. J., Heileman, G. L., Georgiopoulos, M., & Healy, M. J. (1998). Boosted ARTMAP. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 396–401). volume 1. doi:10.1109/ IJCNN.1998.682299.
+
+Verzi, S. J., Heileman, G. L., Georgiopoulus, M., & Healy, M. J. (2001). Rademacher penalization applied to fuzzy ARTMAP and boosted ARTMAP. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 1191–1196). volume 2. doi:10.1109/IJCNN.2001.939530.
+
+Vigdor, B., & Lerner, B. (2007). The Bayesian ARTMAP. IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
+
+Wang, D., Subagdja, B., Tan, A.-H., & Ng, G.-W. (2009). Creating human-like autonomous players in real-time first person shooter computer games. In Proc. Twenty-First Innovative Applications of Artificial Intelligence Conference (pp. 173 – 178).
+
+Wang, D., & Tan, A. (2015). Creating Autonomous Adaptive Agents in a Real-Time First-Person Shooter Computer Game. IEEE Transactions on Computational Intelligence and AI in Games, 7, 123–138. doi:10. 1109/TCIAIG.2014.2336702.
+
+Watkins, C. J. C. H., & Dayan, P. (1992). Q-learning. Machine Learning, 8, 279–292. doi:10.1007/ BF00992698.
+
+Williamson, J. R. (1996). Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps. Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
+
+Wunsch II, D. C. (1991). An optoelectronic learning machine: invention, experimentation, analysis of first hardware implementation of the ART 1 neural network. Ph.D. thesis University of Washington.
+
+Wunsch II, D. C. (2009). ART properties of interest in engineering applications. In Proc. International Joint Conference on Neural Networks (IJCNN) (pp. 3380–3383). doi:10.1109/IJCNN.2009.5179094.
+
+Wunsch II, D. C., Caudell, T. P., Capps, C. D., Marks, R. J., & Falk, R. A. (1993). An optoelectronic implementation of the adaptive resonance neural network. IEEE Transactions on Neural Networks, 4, 673–684. doi:10.1109/72.238321.
+
+Xu, R., & Wunsch II, D. C. (2009). Clustering. Wiley-IEEE Press.
+
+Xu, R., & Wunsch II, D. C. (2011). BARTMAP: A viable structure for biclustering. Neural Networks, 24,
+709–716. doi:10.1016/j.neunet.2011.03.020.
+
+Xu, R., Wunsch II, D. C., & Kim, S. (2012). Methods and systems for biclustering algorithm. U.S. Patent 9,043,326 Filed January 28, 2012, claiming priority to Provisional U.S. Patent Application, January 28, 2011, issued May 26, 2015.
+
+Yap, K. S., Lim, C. P., & Abidin, I. Z. (2008). A Hybrid ART-GRNN Online Learning Neural Network With a ε-Insensitive Loss Function. IEEE Transactions on Neural Networks, 19, 1641–1646. doi:10.1109/TNN. 2008.2000992.
+
+Yap, K. S., Lim, C. P., & Au, M. T. (2011). Improved GART Neural Network Model for Pattern Classification and Rule Extraction With Application to Power Systems. IEEE Transactions on Neural Networks, 22, 2310–2323. doi:10.1109/TNN.2011.2173502.
+
+Yap, K. S., Lim, C. P., & Mohamad-Saleh, J. (2010). An enhanced generalized adaptive resonance theory neural network and its application to medical pattern classification. Journal of Intelligent & Fuzzy Systems, 21, 65–78. doi:10.3233/IFS-2010-0436.
+
+Yava ̧s, M., & Alpaslan, F. N. (2009). Behavior categorization using Correlation Based Adaptive Resonance Theory. In Proc. 17th Mediterranean Conference on Control and Automation (pp. 724–729). doi:10.1109/ MED.2009.5164629.
+
+Yava ̧s, M., & Alpaslan, F. N. (2012). Hierarchical behavior categorization using correlation based adaptive resonance theory. Neurocomputing, 77, 71 – 81. doi:10.1016/j.neucom.2011.08.022.
+
+Zadeh, L. A. (1965). Fuzzy sets. Information and Control, 8, 338 – 353. doi:10.1016/S0019-9958(65) 90241-X.

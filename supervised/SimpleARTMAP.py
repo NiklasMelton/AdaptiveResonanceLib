@@ -1,3 +1,8 @@
+"""
+Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+Norwell, MA, USA: Kluwer Academic Publishers.
+"""
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes

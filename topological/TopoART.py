@@ -1,3 +1,13 @@
+"""
+Tscherepanow, M. (2010).
+TopoART: A Topology Learning Hierarchical ART Network.
+In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
+Artificial Neural Networks – ICANN 2010 (pp. 157–167).
+Berlin, Heidelberg: Springer Berlin Heidelberg.
+doi:10.1007/978-3-642-15825-4_21.
+
+"""
+
 import numpy as np
 from typing import Optional, Callable
 from common.BaseART import BaseART

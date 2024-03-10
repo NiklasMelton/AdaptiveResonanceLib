@@ -1,3 +1,13 @@
+"""
+Carpenter, G. A., & Grossberg, S. (1987b).
+ART 2: self-organization of stable category recognition codes for analog input patterns.
+Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
+
+Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
+ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition.
+Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+"""
+
 import numpy as np
 from typing import Optional
 from common.BaseART import BaseART

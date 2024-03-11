@@ -14,11 +14,9 @@ Anagnostopoulos, G. C., & Georgiopoulos, M. (2003). Putting the Utility of Match
 
 Anagnostopoulos, G. C., & Georgiopulos, M. (2000). Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 
-Andonie, R. (1990). A Converse H-theorem for Inductive Processes. Comput. Artif. Intell., 9, 161–167. Andonie, R., & Sasu, L. (2003). A Fuzzy ARTMAP Probability Estimator with Relevance Factor. In Proc.
-of the 11th European Symposium on Artificial Neural Networks (ESANN) (pp. 367–372).
+Andonie, R. (1990). A Converse H-theorem for Inductive Processes. Comput. Artif. Intell., 9, 161–167. Andonie, R., & Sasu, L. (2003). A Fuzzy ARTMAP Probability Estimator with Relevance Factor. In Proc. of the 11th European Symposium on Artificial Neural Networks (ESANN) (pp. 367–372).
 
-Andonie, R., & Sasu, L. (2006). Fuzzy ARTMAP with input relevances. IEEE Transactions on Neural
-Networks, 17, 929–941. doi:10.1109/TNN.2006.875988. 55
+Andonie, R., & Sasu, L. (2006). Fuzzy ARTMAP with input relevances. IEEE Transactions on Neural Networks, 17, 929–941. doi:10.1109/TNN.2006.875988. 55
 
 Andonie, R., Sasu, L., & Beiu, V. (2003). A Modified Fuzzy ARTMAP Architecture for Incremental Learning Function Approximation. In Proc. IASTED Int. Conf. Neural Networks and Computational Intelligence (NCI) (pp. 124–129).
 
@@ -180,11 +178,9 @@ Jain, L. C., Seera, M., Lim, C. P., & Balasubramaniam, P. (2014). A review of on
 
 Kasuba, T. (1993). Simplified Fuzzy ARTMAP. AI Expert, 8, 18–25.
 
-Kennedy, J., & Eberhart, R. (1995). Particle swarm optimization. In Proc. International Conference on
-Neural Networks (ICNN) (pp. 1942–1948). volume 4. doi:10.1109/ICNN.1995.488968.
+Kennedy, J., & Eberhart, R. (1995). Particle swarm optimization. In Proc. International Conference on Neural Networks (ICNN) (pp. 1942–1948). volume 4. doi:10.1109/ICNN.1995.488968.
 
-Kim, S. (2016). Novel approaches to clustering , biclustering algorithms based on adaptive resonance theory
-and intelligent control. Ph.D. thesis Missouri University of Science and Technology.
+Kim, S. (2016). Novel approaches to clustering , biclustering algorithms based on adaptive resonance theory and intelligent control. Ph.D. thesis Missouri University of Science and Technology.
 
 Kim, S., & Wunsch II, D. C. (2011). A GPU based Parallel Hierarchical Fuzzy ART clustering. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp. 2778–2782). doi:10.1109/IJCNN. 2011.6033584.
 
@@ -308,9 +304,7 @@ Tang, X.-l., & Han, M. (2010). Semi-supervised Bayesian ARTMAP. Applied Intellig
 
 Tou, J. T., & Gonzalez, R. C. (1974). Pattern recognition principles. Addison-Wesley,.
 
-Tsay, S. W., & Newcomb, R. W. (1991). VLSI implementation of ART1 memories. IEEE Transactions on
-Tsay, S. W., & Newcomb, R. W. (1991). VLSI implementation of ART1 memories. IEEE Transactions on
-Neural Networks, 2, 214–221. doi:10.1109/72.80330.
+Tsay, S. W., & Newcomb, R. W. (1991). VLSI implementation of ART1 memories. IEEE Transactions on Neural Networks, 2, 214–221. doi:10.1109/72.80330.
 
 Tscherepanow, M. (2010). TopoART: A Topology Learning Hierarchical ART Network. In K. Diaman- taras, W. Duch, & L. S. Iliadis (Eds.), Artificial Neural Networks – ICANN 2010 (pp. 157–167). Berlin, Heidelberg: Springer Berlin Heidelberg. doi:10.1007/978-3-642-15825-4_21.
 
@@ -356,8 +350,7 @@ Wunsch II, D. C., Caudell, T. P., Capps, C. D., Marks, R. J., & Falk, R. A. (199
 
 Xu, R., & Wunsch II, D. C. (2009). Clustering. Wiley-IEEE Press.
 
-Xu, R., & Wunsch II, D. C. (2011). BARTMAP: A viable structure for biclustering. Neural Networks, 24,
-709–716. doi:10.1016/j.neunet.2011.03.020.
+Xu, R., & Wunsch II, D. C. (2011). BARTMAP: A viable structure for biclustering. Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
 
 Xu, R., Wunsch II, D. C., & Kim, S. (2012). Methods and systems for biclustering algorithm. U.S. Patent 9,043,326 Filed January 28, 2012, claiming priority to Provisional U.S. Patent Application, January 28, 2011, issued May 26, 2015.
 

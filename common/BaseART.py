@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Optional, Callable, Iterable
 from matplotlib.axes import Axes
+from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -129,6 +130,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             y[i] = c
         return y
 
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        raise NotImplementedError
+
     def visualize(
             self,
             X: np.ndarray,
@@ -138,7 +142,24 @@ class BaseART(BaseEstimator, ClusterMixin):
             linewidth: int = 1,
             colors: Optional[Iterable] = None
     ):
-        raise NotImplementedError
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        if colors is None:
+            from matplotlib.pyplot import cm
+            colors = cm.rainbow(np.linspace(0, 1, self.n_clusters))
+
+        for k, col in enumerate(colors):
+            cluster_data = y == k
+            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+
+        try:
+            self.plot_cluster_bounds(ax, colors, linewidth)
+        except NotImplementedError:
+            warn(f"{self.__name__} does not support plotting cluster bounds." )
+
 
 
 

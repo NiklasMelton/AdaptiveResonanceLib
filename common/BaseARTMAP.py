@@ -24,6 +24,9 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError
 
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        raise NotImplementedError
+
     def visualize(
             self,
             X: np.ndarray,

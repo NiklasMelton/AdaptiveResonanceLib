@@ -10,7 +10,8 @@ In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
 International Society for Optics and Photonics. doi:10.1117/12.421180.
 """
 import numpy as np
-from typing import Optional
+from typing import Optional, Iterable
+from matplotlib.axes import Axes
 from common.BaseART import BaseART
 from common.utils import l2norm2
 
@@ -27,25 +28,25 @@ class EllipsoidART(BaseART):
         assert 1.0 >= params["rho"] >= 0.
         assert 1.0 >= params["alpha"] >= 0.
         assert 1.0 >= params["beta"] >= 0.
-        assert 1.0 >= params["mu"] >= 0.
+        assert 1.0 >= params["mu"] > 0.
 
     @staticmethod
-    def category_distance(centroid: np.ndarray, major_axis: np.ndarray, params):
-        ic_dist = (1 - centroid)
+    def category_distance(i: np.ndarray, centroid: np.ndarray, major_axis: np.ndarray, params):
+        ic_dist = (i - centroid)
 
         if major_axis.any():
             return (1. / params["mu"]) * np.sqrt(
                 l2norm2(ic_dist) - (1 - params["mu"] * params["mu"]) * (np.matmul(major_axis, ic_dist) ** 2)
             )
         else:
-            return l2norm2(ic_dist)
+            return np.sqrt(l2norm2(ic_dist))
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         centroid = w[:self.dim_]
         major_axis = w[self.dim_:-1]
         radius = w[-1]
 
-        dist = self.category_distance(centroid, major_axis, params)
+        dist = self.category_distance(i, centroid, major_axis, params)
 
         cache = {
             "dist": dist
@@ -75,8 +76,9 @@ class EllipsoidART(BaseART):
 
         radius_new = radius + (params["beta"]/2)*(max(radius, dist) - radius)
         centroid_new = centroid + (params["beta"]/2)*(i-centroid)*(1-(min(radius, dist)/dist))
+
         if not radius == 0.:
-            major_axis_new = (i-centroid_new)/l2norm2((i-centroid_new))
+            major_axis_new = (i-centroid_new)/np.sqrt(l2norm2((i-centroid_new)))
         else:
             major_axis_new = major_axis
 
@@ -84,6 +86,37 @@ class EllipsoidART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         return np.concatenate([i, np.zeros_like(i), [0.]])
+
+    def get_2d_ellipsoids(self) -> list[tuple]:
+        ellipsoids = []
+        for w in self.W:
+            centroid = w[:2]
+            major_axis = w[self.dim_:-1]
+            radius = w[-1]
+
+            angle = np.arctan2(major_axis[1], major_axis[0])
+            height = radius*2
+            width = self.params["mu"]*height
+
+            ellipsoids.append((centroid, width, height, angle))
+
+        return ellipsoids
+
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        from matplotlib.patches import Ellipse
+
+        ellipsoids = self.get_2d_ellipsoids()
+        for (centroid, width, height, angle), col in zip(ellipsoids, colors):
+            ellip = Ellipse(
+                centroid,
+                width,
+                height,
+                angle,
+                linewidth=linewidth,
+                edgecolor=col,
+                facecolor='none'
+            )
+            ax.add_patch(ellip)
 
 
 

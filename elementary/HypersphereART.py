@@ -5,7 +5,8 @@ In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
 (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 """
 import numpy as np
-from typing import Optional
+from typing import Optional, Iterable
+from matplotlib.axes import Axes
 from common.BaseART import BaseART
 from common.utils import l2norm2
 
@@ -70,6 +71,22 @@ class HypersphereART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         return np.concatenate([i, [0.]])
+
+
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        from matplotlib.patches import Circle
+
+        for w, col in zip(self.W, colors):
+            centroid = (w[0], w[1])
+            radius = w[-1]
+            circ = Circle(
+                centroid,
+                radius,
+                linewidth=linewidth,
+                edgecolor=col,
+                facecolor='none'
+            )
+            ax.add_patch(circ)
 
 
 

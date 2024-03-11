@@ -26,7 +26,7 @@ def cluster_blobs():
         "alpha": 0.0,
         "beta": 1.0,
         "r_hat": 0.6,
-        "mu": 1.0
+        "mu": 0.8
     }
     cls = EllipsoidART(params)
     y = cls.fit_predict(X)

@@ -94,7 +94,7 @@ class EllipsoidART(BaseART):
             major_axis = w[self.dim_:-1]
             radius = w[-1]
 
-            angle = np.arctan2(major_axis[1], major_axis[0])
+            angle = np.rad2deg(np.arctan2(major_axis[1], major_axis[0]))
             height = radius*2
             width = self.params["mu"]*height
 

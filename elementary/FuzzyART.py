@@ -81,7 +81,7 @@ class FuzzyART(BaseART):
     def get_bounding_boxes(self, n: Optional[int] = None):
         return list(map(lambda w: get_bounding_box(w, n=n), self.W))
 
-    def plot_bounding_boxes(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         from matplotlib.patches import Rectangle
         bboxes = self.get_bounding_boxes(n=2)
         for bbox, col in zip(bboxes, colors):
@@ -94,28 +94,3 @@ class FuzzyART(BaseART):
                 facecolor='none'
             )
             ax.add_patch(rect)
-
-    def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
-    ):
-        import matplotlib.pyplot as plt
-
-
-        if ax is None:
-            fig, ax = plt.subplots()
-
-        if colors is None:
-            from matplotlib.pyplot import cm
-            colors = cm.rainbow(np.linspace(0, 1, self.n_clusters))
-
-        for k, col in enumerate(colors):
-            cluster_data = y == k
-            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
-
-        self.plot_bounding_boxes(ax, colors, linewidth)

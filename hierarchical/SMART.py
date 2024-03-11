@@ -32,6 +32,17 @@ class SMART(DeepARTMAP):
         X_list = [X] * self.n_modules
         return self.partial_fit(X_list)
 
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        for j in range(len(self.modules)):
+            layer_colors = []
+            for k in range(self.modules[j].n_clusters):
+                if j == 0:
+                    layer_colors.append(colors[k])
+                else:
+                    layer_colors.append(colors[self.map_deep(j - 1, k)])
+            self.modules[j].plot_cluster_bounds(ax, layer_colors, linewidth)
+
+
     def visualize(
             self,
             X: np.ndarray,
@@ -54,11 +65,4 @@ class SMART(DeepARTMAP):
             cluster_data = y == k
             plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
 
-        for j in range(len(self.modules)):
-            layer_colors = []
-            for k in range(self.modules[j].n_clusters):
-                if j == 0:
-                    layer_colors.append(colors[k])
-                else:
-                    layer_colors.append(colors[self.map_deep(j - 1, k)])
-            self.modules[j].plot_bounding_boxes(ax, layer_colors, linewidth)
+        self.plot_cluster_bounds(ax, colors, linewidth)

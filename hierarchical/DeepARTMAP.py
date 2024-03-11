@@ -36,6 +36,8 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return len(self.layers)
 
     def map_deep(self, level: int, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
+        if level < 0:
+            level += len(self.layers)
         y_b = self.layers[level].map_a2b(y_a)
         if level > 0:
             return self.map_deep(level-1, y_b)

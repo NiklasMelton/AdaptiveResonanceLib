@@ -123,6 +123,12 @@ class SimpleARTMAP(BaseARTMAP):
             y_b[i] = c_b
         return y_a, y_b
 
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        colors_a = []
+        for k_a in range(self.n_clusters):
+            colors_a.append(colors[self.map[k_a]])
+        self.module_a.plot_cluster_bounds(ax, colors_a, linewidth)
+
     def visualize(
             self,
             X: np.ndarray,
@@ -145,8 +151,4 @@ class SimpleARTMAP(BaseARTMAP):
             cluster_data = y == k_b
             plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
 
-        colors_a = []
-        for k_a in range(self.n_clusters):
-            colors_a.append(colors[self.map[k_a]])
-
-        self.module_a.plot_bounding_boxes(ax, colors_a, linewidth)
+        self.plot_cluster_bounds(ax, colors, linewidth)

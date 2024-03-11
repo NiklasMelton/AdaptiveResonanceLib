@@ -107,7 +107,6 @@ class EllipsoidART(BaseART):
 
         ellipsoids = self.get_2d_ellipsoids()
         for (centroid, width, height, angle), col in zip(ellipsoids, colors):
-            print(centroid, width, height, angle)
             ellip = Ellipse(
                 centroid,
                 width,

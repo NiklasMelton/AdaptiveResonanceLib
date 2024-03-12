@@ -54,22 +54,27 @@ class BayesianART(BaseART):
 
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         # the original paper uses the det(cov_old) for match criterion
         # however, it makes logical sense to use the new_cov and results are improved when doing so
         new_w = self.update(i, w, params, cache)
         new_cov = new_w[self.dim_:-1].reshape((self.dim_, self.dim_))
+        cache["new_w"] = new_w
         # if cache is None:
         #     raise ValueError("No cache provided")
         # return cache["det_cov"]
-        return np.linalg.det(new_cov)
+        return np.linalg.det(new_cov), cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        return self.match_criterion(i, w, params=params, cache=cache) <= params["rho"]
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        return M <= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
         if cache is None:
             raise ValueError("No cache provided")
+
+        if "new_w" in cache:
+            return cache["new_w"]
 
         mean = w[:self.dim_]
         cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))

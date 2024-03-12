@@ -46,10 +46,10 @@ class TopoART(BaseART):
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         return self.base_module.category_choice(i, w, params)
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         return self.base_module.match_criterion(i, w, params, cache)
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
         return self.base_module.match_criterion_bin(i, w, params, cache)
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
@@ -107,7 +107,7 @@ class TopoART(BaseART):
                 c_ = int(np.argmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
-                m = self.match_criterion_bin(x, w, params=self.params, cache=cache)
+                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
                 no_match_reset = (
                         match_reset_func is None or
                         match_reset_func(x, w, c_, params=self.params, cache=cache)

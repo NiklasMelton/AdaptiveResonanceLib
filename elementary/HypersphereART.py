@@ -42,17 +42,18 @@ class HypersphereART(BaseART):
         return (params["r_hat"] - max_radius)/(params["r_hat"] - radius + params["alpha"]), cache
 
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         radius = w[-1]
         if cache is None:
             raise ValueError("No cache provided")
         max_radius = cache["max_radius"]
 
-        return 1 - (max(radius, max_radius)/params["r_hat"])
+        return 1 - (max(radius, max_radius)/params["r_hat"]), cache
 
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        return self.match_criterion(i, w, params=params, cache=cache) >= params["rho"]
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        return M >= params["rho"], cache
 
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:

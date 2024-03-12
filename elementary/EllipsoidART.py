@@ -54,16 +54,17 @@ class EllipsoidART(BaseART):
         return (params["r_hat"] - radius - max(radius, dist)) / (params["r_hat"] - 2*radius + params["alpha"]), cache
 
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         radius = w[-1]
         if cache is None:
             raise ValueError("No cache provided")
         dist = cache["dist"]
 
-        return 1 - (radius + max(radius, dist))/params["r_hat"]
+        return 1 - (radius + max(radius, dist))/params["r_hat"], cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        return self.match_criterion(i, w, params=params, cache=cache) >= params["rho"]
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        return M >= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
         centroid = w[:self.dim_]
@@ -111,7 +112,7 @@ class EllipsoidART(BaseART):
                 centroid,
                 width,
                 height,
-                angle,
+                angle=angle,
                 linewidth=linewidth,
                 edgecolor=col,
                 facecolor='none'

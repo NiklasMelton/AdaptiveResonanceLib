@@ -8,48 +8,7 @@ import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
 from common.BaseART import BaseART
-
-
-def plot_gaussian_contours_fading(
-        ax: Axes,
-        mean: np.ndarray,
-        std_dev: np.ndarray,
-        color: np.ndarray,
-        max_std: int = 2,
-        sigma_steps: float = 0.25,
-        linewidth: int = 1
-):
-    """
-    Plots concentric ellipses to represent the contours of a 2D Gaussian distribution, with fading colors.
-
-    Parameters:
-        - ax: Matplotlib axis object. If None, creates a new figure and axis.
-    - mean: A numpy array representing the mean (μ) of the distribution.
-    - std_dev: A numpy array representing the standard deviation (σ) of the distribution.
-    - color: A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
-    - max_std: Max standard deviations to draw contours to. Default is 2.
-    - sigma_steps: Step size in standard deviations for each contour. Default is 0.25.
-
-    """
-    from matplotlib.patches import Ellipse
-
-    # Calculate the number of steps
-    steps = int(max_std / sigma_steps)
-    alphas = np.linspace(1, 0.1, steps)
-
-    if len(color) != 4:
-        color = np.concatenate([color, [1.]])
-
-    for i, alpha in zip(range(1, steps + 1), alphas):
-        # Adjust the alpha value of the color
-        current_color = np.copy(color)
-        current_color[-1] = alpha  # Update the alpha channel
-
-        # Width and height of the ellipse are 2*i*sigma_steps times the std_dev values
-        width, height = 2 * i * sigma_steps * std_dev[0], 2 * i * sigma_steps * std_dev[1]
-        ellipse = Ellipse(xy=(mean[0], mean[1]), width=width, height=height, edgecolor=current_color, facecolor='none', linewidth=linewidth,
-                          linestyle='dashed', label=f'{i * sigma_steps}σ')
-        ax.add_patch(ellipse)
+from common.utils import plot_gaussian_contours_fading
 
 
 class GaussianART(BaseART):

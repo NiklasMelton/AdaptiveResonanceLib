@@ -33,7 +33,7 @@ class QuadraticNeuronART(BaseART):
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         dim2 = self.dim_ * self.dim_
         w_ = w[:dim2].reshape((self.dim_, self.dim_))
-        b = w[dim2:dim2 + self.dim_]
+        b = w[dim2:-1]
         s = w[-1]
         z = np.matmul(w_, i)
         l2norm2_z_b = l2norm2(z-b)
@@ -70,7 +70,7 @@ class QuadraticNeuronART(BaseART):
 
         b_new = b + params["lr_b"]*(sst2*(z-b))
         w_new = w_ + params["lr_w"]*(-sst2*((z-b).reshape((-1, 1))*i.reshape((1, -1))))
-        s_new = w_ + params["lr_s"]*(-2*s*T*l2norm2_z_b)
+        s_new = s + params["lr_s"]*(-2*s*T*l2norm2_z_b)
 
         return np.concatenate([w_new.flatten(), b_new, [s_new]])
 

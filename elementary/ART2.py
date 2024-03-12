@@ -8,8 +8,18 @@ ART 2-A: An adaptive resonance algorithm for rapid category learning and recogni
 Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
 """
 
+"""
+==================================================================
+DISCLAIMER: DO NOT USE ART2!!!
+IT DOES NOT WORK
+It is provided for completeness only.
+Stephan Grossberg himself has said ART2 does not work.
+==================================================================
+"""
+
 import numpy as np
 from typing import Optional
+from warnings import warn
 from common.BaseART import BaseART
 from common.utils import normalize
 
@@ -19,6 +29,7 @@ def prepare_data(data: np.ndarray) -> np.ndarray:
 
 
 class ART2A(BaseART):
+    warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
     # implementation of ART 2-A
 
     @staticmethod
@@ -31,7 +42,7 @@ class ART2A(BaseART):
         assert 1. >= params["beta"] >= 0.
         
     def check_dimensions(self, X: np.ndarray):
-        if not self.dim_:
+        if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
             assert self.params["alpha"] <= 1 / np.sqrt(self.dim_)
         else:
@@ -45,11 +56,17 @@ class ART2A(BaseART):
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
         if cache is None:
             raise ValueError("No cache provided")
-        return cache["activation"]
+        # TODO: make this more efficient
+        M = cache["activation"]
+        M_u = params["alpha"]*np.sum(i)
+        # suppress if uncommitted activation is higher
+        if M < M_u:
+            return -1.
+        else:
+            return M
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        # TODO: make this more efficient
-        return self.match_criterion(i, w, params, cache) > params["alpha"]*np.sum(i)
+        return self.match_criterion(i, w, params, cache) >= params["rho"]
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
         return params["beta"]*i + (1-params["beta"])*w

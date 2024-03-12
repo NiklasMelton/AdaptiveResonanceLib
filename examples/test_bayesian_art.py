@@ -23,8 +23,8 @@ def cluster_blobs():
     print("Prepared data has shape:", X.shape)
 
     params = {
-        "rho": 0.00002,
-        "cov_init": np.array([[0.0001, 0.0], [0.0, 0.0001]]),
+        "rho": 2e-5,
+        "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
     }
     cls = BayesianART(params)
     y = cls.fit_predict(X)

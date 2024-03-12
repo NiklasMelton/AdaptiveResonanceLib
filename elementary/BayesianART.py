@@ -38,24 +38,31 @@ class BayesianART(BaseART):
         cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))
         n = w[-1]
         dist = mean - i
+
         exp_dist_cov_dist = np.exp(-0.5 * np.matmul(dist.T, np.matmul(np.linalg.inv(cov), dist)))
         det_cov = np.linalg.det(cov)
-        cache = {
-            "cov": cov,
-            "det_cov": det_cov
-        }
+
         p_i_cj = exp_dist_cov_dist / np.sqrt((self.pi2 ** self.dim_) * det_cov)
         p_cj = n / np.sum(w_[-1] for w_ in self.W)
 
         activation = p_i_cj * p_cj
 
+        cache = {
+            "cov": cov,
+            "det_cov": det_cov
+        }
+
         return activation, cache
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
-        if cache is None:
-            raise ValueError("No cache provided")
+        # the original paper uses the det(cov_old) for match criterion
+        # however, it makes logical sense to use the new_cov and results are improved when doing so
+        new_w = self.update(i, w, params, cache)
+        new_cov = new_w[self.dim_:-1].reshape((self.dim_, self.dim_))
+        # if cache is None:
+        #     raise ValueError("No cache provided")
         # return cache["det_cov"]
-        return np.prod(np.diag(cache["cov"]))
+        return np.linalg.det(new_cov)
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
         return self.match_criterion(i, w, params=params, cache=cache) <= params["rho"]

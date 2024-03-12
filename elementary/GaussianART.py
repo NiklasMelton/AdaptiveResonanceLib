@@ -25,14 +25,16 @@ class GaussianART(BaseART):
         n = w[-1]
         sig = np.diag(np.multiply(sigma,sigma))
         dist = mean-i
-        exp_dist_sig_dist = np.exp(-0.5*np.matmul(dist.T, np.matmul((1/sig), dist)))
+        exp_dist_sig_dist = np.exp(-0.5*np.matmul(dist.T, np.matmul(np.linalg.inv(sig), dist)))
         cache = {
             "exp_dist_sig_dist": exp_dist_sig_dist
         }
         p_i_cj = exp_dist_sig_dist/np.sqrt((self.pi2**self.dim_)*np.linalg.det(sig))
         p_cj = n/np.sum(w_[-1] for w_ in self.W)
 
-        return p_i_cj*p_cj, cache
+        activation = p_i_cj*p_cj
+
+        return activation, cache
 
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
@@ -60,4 +62,4 @@ class GaussianART(BaseART):
 
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        return np.concatenate[i, params["sigma_init"], [1]]
+        return np.concatenate([i, params["sigma_init"], [1.]])

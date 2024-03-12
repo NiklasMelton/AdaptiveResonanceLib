@@ -27,7 +27,7 @@ class ART1(BaseART):
         assert params["L"] >= 1.
 
     def validate_data(self, X: np.ndarray):
-        assert ((X == 0) | (X == 1)), "ART1 only supports binary data"
+        assert np.array_equal(X, X.astype(bool)), "ART1 only supports binary data"
         self.check_dimensions(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
@@ -36,7 +36,7 @@ class ART1(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
         w_td = w[self.dim_:]
-        return l1norm(np.logical_and(i, w_td)) / self.dim_
+        return l1norm(np.logical_and(i, w_td)) / l1norm(i)
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
         return self.match_criterion(i, w, params, cache) >= params["rho"]
@@ -51,5 +51,5 @@ class ART1(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         w_td_new = i
-        w_bu_new = (params["L"] / (params["L"] - 1 + self.dim_))
+        w_bu_new = (params["L"] / (params["L"] - 1 + self.dim_))*w_td_new
         return np.concatenate([w_bu_new, w_td_new])

@@ -73,7 +73,7 @@ class DualVigilanceART(BaseART):
                 c_ = int(np.argmax(T))
                 w = self.base_module.W[c_]
                 cache = T_cache[c_]
-                m1 = self.base_module.match_criterion_bin(x, w, params=self.base_module.params, cache=cache)
+                m1, cache = self.base_module.match_criterion_bin(x, w, params=self.base_module.params, cache=cache)
                 no_match_reset = (
                     match_reset_func is None or
                     match_reset_func(x, w, self.map[c_], params=self.base_module.params, cache=cache)
@@ -85,7 +85,7 @@ class DualVigilanceART(BaseART):
                         return self.map[c_]
                     else:
                         lb_params = dict(self.base_module.params, **{"rho": self.lower_bound})
-                        m2 = self.base_module.match_criterion_bin(x, w, params=lb_params, cache=cache)
+                        m2, _ = self.base_module.match_criterion_bin(x, w, params=lb_params, cache=cache)
                         if m2:
                             c_new = len(self.base_module.W)
                             w_new = self.base_module.new_weight(x, self.base_module.params)

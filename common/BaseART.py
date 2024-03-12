@@ -37,10 +37,10 @@ class BaseART(BaseEstimator, ClusterMixin):
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         raise NotImplementedError
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         raise NotImplementedError
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
         raise NotImplementedError
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
@@ -60,7 +60,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                 c_ = int(np.argmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
-                m = self.match_criterion_bin(x, w, params=self.params, cache=cache)
+                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
                 no_match_reset = (
                         match_reset_func is None or
                         match_reset_func(x, w, c_, params=self.params, cache=cache)

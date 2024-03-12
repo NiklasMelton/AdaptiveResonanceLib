@@ -63,11 +63,12 @@ class FuzzyART(BaseART):
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         return l1norm(fuzzy_and(i, w)) / (params["alpha"] + l1norm(w)), None
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
-        return l1norm(fuzzy_and(i, w)) / self.dim_original
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+        return l1norm(fuzzy_and(i, w)) / self.dim_original, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        return self.match_criterion(i, w, params) >= params["rho"]
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params)
+        return M >= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
         b = params["beta"]

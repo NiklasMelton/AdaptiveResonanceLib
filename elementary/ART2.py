@@ -53,7 +53,7 @@ class ART2A(BaseART):
         cache = {"activation": activation}
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         if cache is None:
             raise ValueError("No cache provided")
         # TODO: make this more efficient
@@ -61,12 +61,13 @@ class ART2A(BaseART):
         M_u = params["alpha"]*np.sum(i)
         # suppress if uncommitted activation is higher
         if M < M_u:
-            return -1.
+            return -1., cache
         else:
-            return M
+            return M, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        return self.match_criterion(i, w, params, cache) >= params["rho"]
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params, cache)
+        return M >= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
         return params["beta"]*i + (1-params["beta"])*w

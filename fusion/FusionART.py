@@ -77,27 +77,31 @@ class FusionART(BaseART):
                 for k in range(self.n)
             ]
         )
-        cache = {k: cache for k, cache in enumerate(caches)}
+        cache = {k: cache_k for k, cache_k in enumerate(caches)}
         activation = sum([a*self.params["gamma_values"][k] for k, a in enumerate(activations)])
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> list[float]:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[list[float], dict]:
         if cache is None:
             raise ValueError("No cache provided")
-        M = [
-            self.modules[k].match_criterion(
-                i[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                w[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                self.modules[k].params,
-                cache[k]
-            )
-            for k in range(self.n)
-        ]
-        return M
+        M, caches = zip(
+            *[
+                self.modules[k].match_criterion(
+                    i[self._channel_indices[k][0]:self._channel_indices[k][1]],
+                    w[self._channel_indices[k][0]:self._channel_indices[k][1]],
+                    self.modules[k].params,
+                    cache[k]
+                )
+                for k in range(self.n)
+            ]
+        )
+        cache = {k: cache_k for k, cache_k in enumerate(caches)}
+        return M, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        M = self.match_criterion(i, w, params, cache)
-        return all(M[k] >= self.modules[k].params["rho"] for k in range(self.n))
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params, cache)
+        #TODO make work for Bayesian ART
+        return all(M[k] >= self.modules[k].params["rho"] for k in range(self.n)), cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
         W = [

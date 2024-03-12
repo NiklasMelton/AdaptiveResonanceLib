@@ -40,15 +40,16 @@ class GaussianART(BaseART):
         return activation, cache
 
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> float:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         if cache is None:
             raise ValueError("No cache provided")
         exp_dist_sig_dist = cache["exp_dist_sig_dist"]
-        return exp_dist_sig_dist
+        return exp_dist_sig_dist, cache
 
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> bool:
-        return self.match_criterion(i, w, params=params, cache=cache) >= params["rho"]
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        return M >= params["rho"], cache
 
 
     def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:

@@ -99,6 +99,8 @@ class FusionART(BaseART):
         return M, cache
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        if cache is None:
+            raise ValueError("No cache provided")
         M_bin, caches = zip(
             *[
                 self.modules[k].match_criterion_bin(

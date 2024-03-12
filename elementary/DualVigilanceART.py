@@ -4,7 +4,8 @@ Dual vigilance fuzzy adaptive resonance theory.
 Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 """
 import numpy as np
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterable
+from matplotlib.axes import Axes
 from common.BaseART import BaseART
 
 
@@ -17,6 +18,10 @@ class DualVigilanceART(BaseART):
         self.base_module = base_module
         self.lower_bound = lower_bound
         self.map: dict[int, int] = dict()
+
+    @property
+    def n_clusters(self) -> int:
+        return len(set(c for c in self.map.values()))
 
     @property
     def dim_(self):
@@ -32,7 +37,7 @@ class DualVigilanceART(BaseART):
 
     @labels_.setter
     def labels_(self, new_labels: np.ndarray):
-        self.labels_ = new_labels
+        self.base_module.labels_ = new_labels
 
     @property
     def W(self):
@@ -60,6 +65,7 @@ class DualVigilanceART(BaseART):
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         if len(self.base_module.W) == 0:
             self.base_module.W.append(self.base_module.new_weight(x, self.base_module.params))
+            self.map[0] = 0
             return 0
         else:
             T_values, T_cache = zip(
@@ -110,3 +116,9 @@ class DualVigilanceART(BaseART):
         )
         c_ = int(np.argmax(T))
         return self.map[c_]
+
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        colors_base = []
+        for k_a in range(self.base_module.n_clusters):
+            colors_base.append(colors[self.map[k_a]])
+        self.base_module.plot_cluster_bounds(ax, colors_base, linewidth)

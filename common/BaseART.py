@@ -4,6 +4,7 @@ from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
+from common.utils import normalize
 
 
 class BaseART(BaseEstimator, ClusterMixin):
@@ -11,6 +12,10 @@ class BaseART(BaseEstimator, ClusterMixin):
     def __init__(self, params: dict):
         self.validate_params(params)
         self.params = params
+
+    @staticmethod
+    def prepare_data(X: np.ndarray) -> np.ndarray:
+        return normalize(X)
 
     @property
     def n_clusters(self) -> int:

@@ -123,6 +123,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
                 self.module_a.pre_step_fit(X)
                 c_a = self.step_fit(X_a, k)
                 self.module_a.labels_[k] = c_a
+                self.module_a.post_step_fit(X)
 
         self.rows_ = np.vstack(
             [

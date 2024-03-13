@@ -62,7 +62,9 @@ class SimpleARTMAP(BaseARTMAP):
         for _ in range(max_iter):
             for i, (x, c_b) in enumerate(zip(X, y)):
                 c_a = self.step_fit(x, c_b)
+                self.module_a.pre_step_fit(X)
                 self.module_a.labels_[i] = c_a
+                self.module_a.post_step_fit(X)
         return self
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
@@ -81,6 +83,7 @@ class SimpleARTMAP(BaseARTMAP):
             self.module_a.pre_step_fit(X)
             c_a = self.step_fit(x, c_b)
             self.module_a.labels_[i+j] = c_a
+            self.module_a.post_step_fit(X)
         return self
 
     @property

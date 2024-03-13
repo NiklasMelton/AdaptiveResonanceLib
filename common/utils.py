@@ -31,7 +31,7 @@ def plot_gaussian_contours_fading(
     Plots concentric ellipses to represent the contours of a 2D Gaussian distribution, with fading colors.
 
     Parameters:
-        - ax: Matplotlib axis object. If None, creates a new figure and axis.
+    - ax: Matplotlib axis object. If None, creates a new figure and axis.
     - mean: A numpy array representing the mean (μ) of the distribution.
     - std_dev: A numpy array representing the standard deviation (σ) of the distribution.
     - color: A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.

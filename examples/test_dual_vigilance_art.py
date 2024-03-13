@@ -26,7 +26,7 @@ def cluster_blobs():
         "alpha": 0.8,
         "beta": 1.0
     }
-    base_art = FuzzyART(params)
+    base_art = FuzzyART(**params)
     cls = DualVigilanceART(base_art, 0.78)
     y = cls.fit_predict(X)
 

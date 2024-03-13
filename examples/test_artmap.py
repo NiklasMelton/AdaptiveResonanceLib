@@ -33,7 +33,7 @@ def cluster_iris():
         "alpha": 0.0,
         "beta": 1.0
     }
-    art = FuzzyART(params)
+    art = FuzzyART(**params)
 
     cls = SimpleARTMAP(art)
 
@@ -63,7 +63,7 @@ def cluster_blobs():
         "alpha": 0.0,
         "beta": 1.0
     }
-    art = FuzzyART(params)
+    art = FuzzyART(**params)
 
     cls = SimpleARTMAP(art)
 

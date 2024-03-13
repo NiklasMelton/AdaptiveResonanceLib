@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Optional, Callable, Iterable
+from collections import defaultdict
 from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
@@ -18,6 +19,76 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         self.validate_params(params)
         self.params = params
+
+    def __getattr__(self, key):
+        if key in self.params:
+            return self.params[key]
+        else:
+            # If the key is not in params, raise an AttributeError
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
+
+    def __setattr__(self, key, value):
+        if key in self.__dict__.get('params', {}):
+            # If key is in params, set its value
+            self.params[key] = value
+        else:
+            # Otherwise, proceed with normal attribute setting
+            super().__setattr__(key, value)
+
+
+    def get_params(self, deep: bool = True) -> dict:
+        """
+
+        Parameters:
+        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+
+        Returns:
+            Parameter names mapped to their values.
+
+        """
+        return self.params
+
+    def set_params(self, **params):
+        """Set the parameters of this estimator.
+
+        Specific redefinition of sklearn.BaseEstimator.set_params for ART classes
+
+        Parameters:
+        - **params : Estimator parameters.
+
+        Returns:
+        - self : estimator instance
+        """
+
+        if not params:
+            # Simple optimization to gain speed (inspect is slow)
+            return self
+        valid_params = self.get_params(deep=True)
+        local_params = dict()
+
+        nested_params = defaultdict(dict)  # grouped by prefix
+        for key, value in params.items():
+            key, delim, sub_key = key.partition("__")
+            if key not in valid_params:
+                local_valid_params = list(valid_params.keys())
+                raise ValueError(
+                    f"Invalid parameter {key!r} for estimator {self}. "
+                    f"Valid parameters are: {local_valid_params!r}."
+                )
+
+            if delim:
+                nested_params[key][sub_key] = value
+            else:
+                setattr(self, key, value)
+                valid_params[key] = value
+                local_params[key] = value
+
+        for key, sub_params in nested_params.items():
+            valid_params[key].set_params(**sub_params)
+        self.validate_params(local_params)
+        self.params = local_params
+        return self
+
 
     @staticmethod
     def prepare_data(X: np.ndarray) -> np.ndarray:

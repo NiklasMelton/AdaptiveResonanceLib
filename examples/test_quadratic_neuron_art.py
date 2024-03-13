@@ -28,7 +28,7 @@ def cluster_blobs():
         "lr_w": 0.1,
         "lr_s": 0.1
     }
-    cls = QuadraticNeuronART(params)
+    cls = QuadraticNeuronART(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

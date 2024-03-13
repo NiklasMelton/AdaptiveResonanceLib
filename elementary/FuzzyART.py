@@ -36,6 +36,13 @@ def get_bounding_box(w: np.ndarray, n: Optional[int] = None) -> tuple[list[int],
 
 class FuzzyART(BaseART):
     # implementation of FuzzyART
+    def __init__(self, rho: float, alpha: float, beta: float):
+        params = {
+            "rho": rho,
+            "alpha": alpha,
+            "beta": beta,
+        }
+        super().__init__(params)
 
     @staticmethod
     def prepare_data(X: np.ndarray) -> np.ndarray:

@@ -18,6 +18,12 @@ def prepare_data(data: np.ndarray) -> np.ndarray:
 class BayesianART(BaseART):
     # implementation of Bayesian ART
     pi2 = np.pi * 2
+    def __init__(self, rho: float, cov_init: np.ndarray):
+        params = {
+            "rho": rho,
+            "cov_init": cov_init,
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

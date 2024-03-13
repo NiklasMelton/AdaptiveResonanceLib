@@ -25,7 +25,7 @@ def cluster_blobs():
         "alpha": 0.0,
         "beta": 1.0
     }
-    cls = FuzzyART(params)
+    cls = FuzzyART(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

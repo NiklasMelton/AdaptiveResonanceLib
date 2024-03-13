@@ -27,7 +27,7 @@ def cluster_blobs():
         "beta": 1.0,
         "r_hat": 0.8
     }
-    cls = HypersphereART(params)
+    cls = HypersphereART(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

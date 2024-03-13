@@ -31,6 +31,13 @@ def prepare_data(data: np.ndarray) -> np.ndarray:
 class ART2A(BaseART):
     warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
     # implementation of ART 2-A
+    def __init__(self, rho: float, alpha: float, beta: float):
+        params = {
+            "rho": rho,
+            "alpha": alpha,
+            "beta": beta,
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

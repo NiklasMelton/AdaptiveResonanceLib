@@ -10,12 +10,31 @@ from common.BaseART import BaseART
 from common.utils import normalize, compliment_code, l1norm, fuzzy_and
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
+    """
+    prepare data for clustering
+
+    Parameters:
+    - X: data set
+
+    Returns:
+        normalized and compliment coded data
+    """
     normalized = normalize(data)
     cc_data = compliment_code(normalized)
     return cc_data
 
 
 def get_bounding_box(w: np.ndarray, n: Optional[int] = None) -> tuple[list[int], list[int]]:
+    """
+    extract the bounding boxes from a FuzzyART weight
+
+    Parameters:
+    - w: a fuzzy ART weight
+    - n: dimensions of the bounding box
+
+    Returns:
+        reference_point, lengths of each edge
+    """
     n_ = int(len(w) / 2)
     if n is None:
         n = n_
@@ -37,6 +56,13 @@ def get_bounding_box(w: np.ndarray, n: Optional[int] = None) -> tuple[list[int],
 class FuzzyART(BaseART):
     # implementation of FuzzyART
     def __init__(self, rho: float, alpha: float, beta: float):
+        """
+        Parameters:
+        - rho: vigilance parameter
+        - alpha: choice parameter
+        - beta: learning rate
+
+        """
         params = {
             "rho": rho,
             "alpha": alpha,
@@ -46,10 +72,26 @@ class FuzzyART(BaseART):
 
     @staticmethod
     def prepare_data(X: np.ndarray) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            normalized and compliment coded data
+        """
         return prepare_data(X)
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "rho" in params
         assert "alpha" in params
         assert "beta" in params
@@ -58,6 +100,17 @@ class FuzzyART(BaseART):
         assert 1.0 >= params["beta"] > 0.
 
     def check_dimensions(self, X: np.ndarray):
+        """
+        check the data has the correct dimensions
+
+        Parameters:
+        - X: data set
+
+        """
+        if not hasattr(self, "dim_"):
+            self.dim_ = X.shape[1]
+        else:
+            assert X.shape[1] == self.dim_
         if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
             self.dim_original = int(self.dim_//2)
@@ -65,6 +118,13 @@ class FuzzyART(BaseART):
             assert X.shape[1] == self.dim_
 
     def validate_data(self, X: np.ndarray):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set
+
+        """
         assert X.shape[1] % 2 == 0, "Data has not been compliment coded"
         assert np.all(X >= 0), "Data has not been normalized"
         assert np.all(X <= 1.0), "Data has not been normalized"
@@ -72,28 +132,100 @@ class FuzzyART(BaseART):
         self.check_dimensions(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+        """
+        get the activation of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            cluster activation, cache used for later processing
+
+        """
         return l1norm(fuzzy_and(i, w)) / (params["alpha"] + l1norm(w)), None
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+        """
+        get the match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion, cache used for later processing
+
+        """
         return l1norm(fuzzy_and(i, w)) / self.dim_original, cache
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        """
+        get the binary match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion binary, cache used for later processing
+
+        """
         M, cache = self.match_criterion(i, w, params)
         return M >= params["rho"], cache
 
-    def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
+    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+        """
+        get the updated cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            updated cluster weight, cache used for later processing
+
+        """
         b = params["beta"]
         if b is None:
             return fuzzy_and(i, w)
         return b * fuzzy_and(i, w) + (1 - b) * w
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+        """
+        generate a new cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            updated cluster weight
+
+        """
         return i
 
     def get_bounding_boxes(self, n: Optional[int] = None):
         return list(map(lambda w: get_bounding_box(w, n=n), self.W))
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         from matplotlib.patches import Rectangle
         bboxes = self.get_bounding_boxes(n=2)
         for bbox, col in zip(bboxes, colors):

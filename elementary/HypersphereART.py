@@ -13,6 +13,14 @@ from common.utils import l2norm2
 class HypersphereART(BaseART):
     # implementation of HypersphereART
     def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
+        """
+        Parameters:
+        - rho: vigilance parameter
+        - alpha: choice parameter
+        - beta: learning rate
+        - r_hat: maximum possible category radius
+
+        """
         params = {
             "rho": rho,
             "alpha": alpha,
@@ -23,6 +31,13 @@ class HypersphereART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "rho" in params
         assert "alpha" in params
         assert "beta" in params
@@ -37,6 +52,18 @@ class HypersphereART(BaseART):
 
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+        """
+        get the activation of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            cluster activation, cache used for later processing
+
+        """
         centroid = w[:-1]
         radius = w[-1]
 
@@ -51,6 +78,19 @@ class HypersphereART(BaseART):
 
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+        """
+        get the match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion, cache used for later processing
+
+        """
         radius = w[-1]
         if cache is None:
             raise ValueError("No cache provided")
@@ -60,11 +100,37 @@ class HypersphereART(BaseART):
 
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        """
+        get the binary match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion binary, cache used for later processing
+
+        """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
         return M >= params["rho"], cache
 
 
-    def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
+    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+        """
+        get the updated cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            updated cluster weight, cache used for later processing
+
+        """
         centroid = w[:-1]
         radius = w[-1]
         if cache is None:
@@ -79,10 +145,31 @@ class HypersphereART(BaseART):
 
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+        """
+        generate a new cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            updated cluster weight
+
+        """
         return np.concatenate([i, [0.]])
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         from matplotlib.patches import Circle
 
         for w, col in zip(self.W, colors):

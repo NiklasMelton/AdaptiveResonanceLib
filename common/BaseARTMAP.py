@@ -67,6 +67,15 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         raise NotImplementedError
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         raise NotImplementedError
 
     def visualize(
@@ -78,4 +87,16 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             linewidth: int = 1,
             colors: Optional[Iterable] = None
     ):
+        """
+        Visualize the clustering of the data
+
+        Parameters:
+        - X: data set
+        - y: sample labels
+        - ax: figure axes
+        - marker_size: size used for data points
+        - linewidth: width of boundary line
+        - colors: colors to use for each cluster
+
+        """
         raise NotImplementedError

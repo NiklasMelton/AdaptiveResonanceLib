@@ -15,6 +15,12 @@ from supervised.ARTMAP import ARTMAP
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     def __init__(self, modules: list[BaseART]):
+        """
+
+        Parameters:
+        - modules: list of ART modules
+
+        """
         assert len(modules) >= 1, "Must provide at least one ART module"
         self.modules = modules
         self.layers: list[BaseARTMAP]
@@ -93,6 +99,17 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return len(self.layers)
 
     def map_deep(self, level: int, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
+        """
+        map a label from one arbitrary level to the highest (B) level
+
+        Parameters:
+        - level: level the label is from
+        - y_a: the cluster label(s)
+
+        Returns:
+            cluster label(s) at highest level
+
+        """
         if level < 0:
             level += len(self.layers)
         y_b = self.layers[level].map_a2b(y_a)
@@ -106,7 +123,15 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             self,
             X: list[np.ndarray],
             y: Optional[np.ndarray] = None
-    ) -> tuple[list[np.ndarray], Optional[np.ndarray]]:
+    ):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: list of deep data sets
+        - y: optional labels for data
+
+        """
         assert len(X) == self.n_modules, \
             f"Must provide {self.n_modules} input matrices for {self.n_modules} ART modules"
         if y is not None:
@@ -114,10 +139,18 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         else:
             n = X[0].shape[0]
         assert all(x.shape[0] == n for x in X), "Inconsistent sample number in input matrices"
-        return X, y
 
 
     def fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, max_iter=1):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: list of deep datasets
+        - y: optional labels
+        - max_iter: number of iterations to fit the model on the same data set
+
+        """
         X, y = self.validate_data(X, y)
         if y is not None:
             self.is_supervised = True
@@ -138,6 +171,14 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
 
     def partial_fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None):
+        """
+        Partial fit the model to the data
+
+        Parameters:
+        - X: list of deep datasets
+        - y: optional labels
+
+        """
         X, y = self.validate_data(X, y)
         if y is not None:
             if len(self.layers) == 0:
@@ -166,6 +207,16 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
 
     def predict(self, X: Union[np.ndarray, list[np.ndarray]]) -> list[np.ndarray]:
+        """
+        predict labels for the data
+
+        Parameters:
+        - X: list of deep data sets
+
+        Returns:
+            B labels for the data
+
+        """
         if isinstance(X, list):
             x = X[-1]
         else:

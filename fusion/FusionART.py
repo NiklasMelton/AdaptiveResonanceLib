@@ -79,21 +79,58 @@ class FusionART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "gamma_values" in params
         assert all([1.0 >= g >= 0.0 for g in params["gamma_values"]])
         assert sum(params["gamma_values"]) == 1.0
 
 
     def validate_data(self, X: np.ndarray):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set
+
+        """
         self.check_dimensions(X)
         for k in range(self.n):
             X_k = X[:, self._channel_indices[k][0]:self._channel_indices[k][1]]
             self.modules[k].validate_data(X_k)
 
     def check_dimensions(self, X: np.ndarray):
+        """
+        check the data has the correct dimensions
+
+        Parameters:
+        - X: data set
+
+        """
+        if not hasattr(self, "dim_"):
+            self.dim_ = X.shape[1]
+        else:
+            assert X.shape[1] == self.dim_
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+        """
+        get the activation of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            cluster activation, cache used for later processing
+
+        """
         activations, caches = zip(
             *[
                 self.modules[k].category_choice(
@@ -126,6 +163,19 @@ class FusionART(BaseART):
         return M, cache
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        """
+        get the binary match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion binary, cache used for later processing
+
+        """
         if cache is None:
             raise ValueError("No cache provided")
         M_bin, caches = zip(
@@ -142,7 +192,20 @@ class FusionART(BaseART):
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return all(M_bin), cache
 
-    def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
+    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+        """
+        get the updated cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            updated cluster weight, cache used for later processing
+
+        """
         W = [
             self.modules[k].update(
                 i[self._channel_indices[k][0]:self._channel_indices[k][1]],
@@ -155,6 +218,18 @@ class FusionART(BaseART):
         return np.concatenate(W)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+        """
+        generate a new cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            updated cluster weight
+
+        """
         W = [
             self.modules[k].new_weight(
                 i[self._channel_indices[k][0]:self._channel_indices[k][1]],
@@ -165,11 +240,26 @@ class FusionART(BaseART):
         return np.concatenate(W)
 
     def add_weight(self, new_w: np.ndarray):
+        """
+        add a new cluster weight
+
+        Parameters:
+        - new_w: new cluster weight to add
+
+        """
         for k in range(self.n):
             new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
             self.modules[k].add_weight(new_w_k)
 
     def set_weight(self, idx: int, new_w: np.ndarray):
+        """
+        set the value of a cluster weight
+
+        Parameters:
+        - idx: index of cluster to update
+        - new_w: new cluster weight
+
+        """
         for k in range(self.n):
             new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
             self.modules[k].set_weight(idx, new_w_k)

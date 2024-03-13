@@ -86,7 +86,6 @@ class BaseART(BaseEstimator, ClusterMixin):
         for key, sub_params in nested_params.items():
             valid_params[key].set_params(**sub_params)
         self.validate_params(local_params)
-        self.params = local_params
         return self
 
 

@@ -131,14 +131,14 @@ def plot_weight_matrix_as_ellipse(
     - linewidth: width of boundary line
     """
     # Compute the transformation matrix
-    transform_matrix = W
+    transform_matrix = W[:2, :2]
 
     # Generate points on a unit circle
     theta = np.linspace(0, 2 * np.pi, 100)
     circle = np.array([np.cos(theta), np.sin(theta)])  # Unit circle
 
     # Apply the linear transformation to the circle to get an ellipse
-    ellipse = -s * s * (transform_matrix @ circle)
+    ellipse = 0.25*s * s * (transform_matrix @ circle)
 
     # Shift the ellipse to the specified mean
     ellipse[0, :] += mean[0]

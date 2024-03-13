@@ -37,12 +37,19 @@ class FusionART(BaseART):
         self._channel_indices = get_channel_position_tuples(self.channel_dims)
         self.dim_ = sum(channel_dims)
 
+
     @property
     def W(self):
-        W = np.concatenate(
-            self.modules[k].W
-            for k in range(self.n)
-        )
+        W = [
+            np.concatenate(
+                [
+                    self.modules[k].W[i]
+                    for k in range(self.n)
+                 ]
+            )
+            for i
+            in range(self.modules[0].n_clusters)
+        ]
         return W
 
     @W.setter
@@ -60,8 +67,10 @@ class FusionART(BaseART):
         assert sum(params["gamma_values"]) == 1.0
 
     def validate_data(self, X: np.ndarray):
-        assert np.all(X >= 0), "Data has not been normalized"
-        assert np.all(X <= 1.0), "Data has not been normalized"
+        self.check_dimensions(X)
+        for k in range(self.n):
+            X_k = X[:, self._channel_indices[k][0]:self._channel_indices[k][1]]
+            self.modules[k].validate_data(X_k)
 
     def check_dimensions(self, X: np.ndarray):
         assert X.shape[1] == self.dim_, "Invalid data shape"
@@ -136,3 +145,13 @@ class FusionART(BaseART):
             for k in range(self.n)
         ]
         return np.concatenate(W)
+
+    def add_weight(self, new_w: np.ndarray):
+        for k in range(self.n):
+            new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
+            self.modules[k].add_weight(new_w_k)
+
+    def set_weight(self, idx: int, new_w: np.ndarray):
+        for k in range(self.n):
+            new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
+            self.modules[k].set_weight(idx, new_w_k)

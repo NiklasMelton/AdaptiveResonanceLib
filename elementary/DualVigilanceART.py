@@ -64,7 +64,8 @@ class DualVigilanceART(BaseART):
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         if len(self.base_module.W) == 0:
-            self.base_module.W.append(self.base_module.new_weight(x, self.base_module.params))
+            new_w = self.base_module.new_weight(x, self.base_module.params)
+            self.base_module.add_weight(new_w)
             self.map[0] = 0
             return 0
         else:
@@ -87,7 +88,8 @@ class DualVigilanceART(BaseART):
 
                 if no_match_reset:
                     if m1:
-                        self.base_module.W[c_] = self.base_module.update(x, w, self.params, cache=cache)
+                        new_w = self.base_module.update(x, w, self.params, cache=cache)
+                        self.base_module.set_weight(c_, new_w)
                         return self.map[c_]
                     else:
                         lb_params = dict(self.base_module.params, **{"rho": self.lower_bound})
@@ -95,14 +97,14 @@ class DualVigilanceART(BaseART):
                         if m2:
                             c_new = len(self.base_module.W)
                             w_new = self.base_module.new_weight(x, self.base_module.params)
-                            self.base_module.W.append(w_new)
+                            self.base_module.add_weight(w_new)
                             self.map[c_new] = self.map[c_]
                             return self.map[c_new]
                 T[c_] = -1
 
             c_new = len(self.base_module.W)
             w_new = self.base_module.new_weight(x, self.base_module.params)
-            self.base_module.W.append(w_new)
+            self.base_module.add_weight(w_new)
             self.map[c_new] = max(self.map.values()) + 1
             return self.map[c_new]
 

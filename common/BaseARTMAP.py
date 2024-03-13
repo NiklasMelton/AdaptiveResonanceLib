@@ -1,12 +1,54 @@
 import numpy as np
 from typing import Union, Optional, Iterable
+from collections import defaultdict
 from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
 
 class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
-    map: dict[int, int]
 
-    def map_a2b(self, y_a: Union[np.ndarray, int]) -> np.ndarray:
+    def __init__(self):
+        self.map: dict[int, int] = dict()
+
+    def set_params(self, **params):
+        """Set the parameters of this estimator.
+
+        Specific redefinition of sklearn.BaseEstimator.set_params for ARTMAP classes
+
+        Parameters:
+        - **params : Estimator parameters.
+
+        Returns:
+        - self : estimator instance
+        """
+
+        if not params:
+            # Simple optimization to gain speed (inspect is slow)
+            return self
+        valid_params = self.get_params(deep=True)
+        local_params = dict()
+
+        nested_params = defaultdict(dict)  # grouped by prefix
+        for key, value in params.items():
+            key, delim, sub_key = key.partition("__")
+            if key not in valid_params:
+                local_valid_params = list(valid_params.keys())
+                raise ValueError(
+                    f"Invalid parameter {key!r} for estimator {self}. "
+                    f"Valid parameters are: {local_valid_params!r}."
+                )
+
+            if delim:
+                nested_params[key][sub_key] = value
+            else:
+                setattr(self, key, value)
+                valid_params[key] = value
+                local_params[key] = value
+
+        for key, sub_params in nested_params.items():
+            valid_params[key].set_params(**sub_params)
+        return self
+
+    def map_a2b(self, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
         if isinstance(y_a, int):
             return self.map[y_a]
         u, inv = np.unique(y_a, return_inverse=True)

@@ -19,6 +19,23 @@ class DualVigilanceART(BaseART):
         self.lower_bound = lower_bound
         self.map: dict[int, int] = dict()
 
+    def get_params(self, deep: bool = True) -> dict:
+        """
+
+        Parameters:
+        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+
+        Returns:
+            Parameter names mapped to their values.
+
+        """
+        out = self.params
+        if deep:
+            deep_items = self.base_module.get_params().items()
+            out.update(("base_module" + "__" + k, val) for k, val in deep_items)
+            out["base_module"] = self.base_module
+        return out
+
     @property
     def n_clusters(self) -> int:
         return len(set(c for c in self.map.values()))

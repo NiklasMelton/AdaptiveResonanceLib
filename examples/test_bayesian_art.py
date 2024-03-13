@@ -26,7 +26,7 @@ def cluster_blobs():
         "rho": 2e-5,
         "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
     }
-    cls = BayesianART(params)
+    cls = BayesianART(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

@@ -10,22 +10,32 @@ from supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.validation import check_is_fitted, check_X_y
 
 
-class ARTMAP(BaseARTMAP):
+class ARTMAP(SimpleARTMAP):
     def __init__(self, module_a: BaseART, module_b: BaseART):
         self.module_b = module_b
-        self.simpleARTMAP = SimpleARTMAP(module_a)
+        super(ARTMAP, self).__init__(module_a)
 
-    @property
-    def module_a(self):
-        return self.simpleARTMAP.module_a
+    def get_params(self, deep: bool = True) -> dict:
+        """
 
-    @property
-    def map(self):
-        return self.simpleARTMAP.map
+        Parameters:
+        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
 
-    @property
-    def labels_(self):
-        return self.simpleARTMAP.labels_
+        Returns:
+            Parameter names mapped to their values.
+
+        """
+        out = dict()
+
+        deep_a_items = self.module_a.get_params().items()
+        out.update(("module_a" + "__" + k, val) for k, val in deep_a_items)
+        out["module_a"] = self.module_a
+
+        deep_b_items = self.module_b.get_params().items()
+        out.update(("module_b" + "__" + k, val) for k, val in deep_b_items)
+        out["module_b"] = self.module_b
+        return out
+
 
     @property
     def labels_a(self):
@@ -51,7 +61,7 @@ class ARTMAP(BaseARTMAP):
 
         y_c = self.module_b.labels_
 
-        self.simpleARTMAP.fit(X, y_c, max_iter=max_iter)
+        super(ARTMAP, self).fit(X, y_c, max_iter=max_iter)
 
         return self
 
@@ -59,10 +69,10 @@ class ARTMAP(BaseARTMAP):
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
         self.validate_data(X, y)
         self.module_b.partial_fit(y)
-        self.simpleARTMAP.partial_fit(X, self.labels_b)
+        super(ARTMAP, self).partial_fit(X, self.labels_b)
         return self
 
 
     def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         check_is_fitted(self)
-        return self.simpleARTMAP.predict(X)
+        return super(ARTMAP, self).predict(X)

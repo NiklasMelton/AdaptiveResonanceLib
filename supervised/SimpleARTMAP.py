@@ -30,7 +30,23 @@ class SimpleARTMAP(BaseARTMAP):
 
     def __init__(self, module_a: BaseART):
         self.module_a = module_a
-        self.map: dict[int, int] = dict()
+        super().__init__()
+
+    def get_params(self, deep: bool = True) -> dict:
+        """
+
+        Parameters:
+        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+
+        Returns:
+            Parameter names mapped to their values.
+
+        """
+        out = dict()
+        deep_items = self.module_a.get_params().items()
+        out.update(("module_a" + "__" + k, val) for k, val in deep_items)
+        out["module_a"] = self.module_a
+        return out
 
 
     def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -51,7 +67,7 @@ class SimpleARTMAP(BaseARTMAP):
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
         # Check that X and y have correct shape
-        self.validate_data(X, y)
+        SimpleARTMAP.validate_data(self, X, y)
         # Store the classes seen during fit
         self.classes_ = unique_labels(y)
         self.labels_ = y
@@ -68,7 +84,7 @@ class SimpleARTMAP(BaseARTMAP):
         return self
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
-        self.validate_data(X, y)
+        SimpleARTMAP.validate_data(self, X, y)
         if not hasattr(self, 'labels_'):
             self.labels_ = y
             self.module_a.W = []

@@ -50,12 +50,10 @@ import numpy as np
 
 # Your dataset
 train_X = np.array([...])
-
-# Your model parameters
-params = {...}
+test_X = np.array([...])
 
 # Initialize the Fuzzy ART model
-model = FuzzyART(params)
+model = FuzzyART(rho=0.7, alpha = 0.0, beta=1.0)
 
 # Fit the model
 model.fit(train_X)

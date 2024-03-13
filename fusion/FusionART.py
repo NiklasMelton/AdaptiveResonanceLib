@@ -37,6 +37,23 @@ class FusionART(BaseART):
         self._channel_indices = get_channel_position_tuples(self.channel_dims)
         self.dim_ = sum(channel_dims)
 
+    def get_params(self, deep: bool = True) -> dict:
+        """
+
+        Parameters:
+        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+
+        Returns:
+            Parameter names mapped to their values.
+
+        """
+        out = self.params
+        for i, module in enumerate(self.modules):
+            deep_items = module.get_params().items()
+            out.update((f"module_{i}" + "__" + k, val) for k, val in deep_items)
+            out[f"module_{i}"] = module
+        return out
+
 
     @property
     def W(self):
@@ -65,6 +82,7 @@ class FusionART(BaseART):
         assert "gamma_values" in params
         assert all([1.0 >= g >= 0.0 for g in params["gamma_values"]])
         assert sum(params["gamma_values"]) == 1.0
+
 
     def validate_data(self, X: np.ndarray):
         self.check_dimensions(X)

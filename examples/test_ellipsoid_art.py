@@ -28,7 +28,7 @@ def cluster_blobs():
         "r_hat": 0.6,
         "mu": 0.8
     }
-    cls = EllipsoidART(params)
+    cls = EllipsoidART(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

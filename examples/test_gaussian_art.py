@@ -26,7 +26,7 @@ def cluster_blobs():
         "rho": 0.15,
         "sigma_init": np.array([0.5, 0.5]),
     }
-    cls = GaussianART(params)
+    cls = GaussianART(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

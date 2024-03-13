@@ -19,10 +19,11 @@ class SMART(DeepARTMAP):
         self.rho_values = rho_values
 
         layer_params = [dict(base_params, **{"rho": rho}) for rho in self.rho_values]
-        layers = [base_ART_class(params, **kwargs) for params in layer_params]
+        layers = [base_ART_class(**params, **kwargs) for params in layer_params]
         for layer in layers:
             assert isinstance(layer, BaseART), "Only elementary ART-like objects are supported"
         super().__init__(layers)
+
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1):
         X_list = [X]*self.n_modules

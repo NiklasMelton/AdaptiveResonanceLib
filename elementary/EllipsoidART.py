@@ -17,6 +17,15 @@ from common.utils import l2norm2
 
 class EllipsoidART(BaseART):
     # implementation of EllipsoidART
+    def __init__(self, rho: float, alpha: float, beta: float, mu: float, r_hat: float):
+        params = {
+            "rho": rho,
+            "alpha": alpha,
+            "beta": beta,
+            "mu": mu,
+            "r_hat": r_hat,
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

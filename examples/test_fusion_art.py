@@ -33,8 +33,8 @@ def cluster_blobs():
         "alpha": 0.0,
         "beta": 1.0
     }
-    art_a = FuzzyART(params)
-    art_b = FuzzyART(params)
+    art_a = FuzzyART(**params)
+    art_b = FuzzyART(**params)
     cls = FusionART([art_a, art_b], gamma_values=[0.5, 0.5], channel_dims=[2,2])
     y = cls.fit_predict(X)
 

@@ -14,6 +14,12 @@ from common.utils import plot_gaussian_contours_fading
 class GaussianART(BaseART):
     # implementation of GaussianART
     pi2 = np.pi*2
+    def __init__(self, rho: float, sigma_init: np.ndarray):
+        params = {
+            "rho": rho,
+            "sigma_init": sigma_init,
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

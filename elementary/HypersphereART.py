@@ -12,6 +12,14 @@ from common.utils import l2norm2
 
 class HypersphereART(BaseART):
     # implementation of HypersphereART
+    def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
+        params = {
+            "rho": rho,
+            "alpha": alpha,
+            "beta": beta,
+            "r_hat": r_hat,
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

@@ -16,6 +16,13 @@ def prepare_data(data: np.ndarray) -> np.ndarray:
 
 class ART1(BaseART):
     # implementation of ART 1
+    def __init__(self, rho: float, beta: float, L: float):
+        params = {
+            "rho": rho,
+            "beta": beta,
+            "L": L
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

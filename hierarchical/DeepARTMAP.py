@@ -5,8 +5,9 @@ Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 """
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
-from common.BaseART import BaseART
 from typing import Optional, cast, Union
+from collections import defaultdict
+from common.BaseART import BaseART
 from common.BaseARTMAP import BaseARTMAP
 from supervised.SimpleARTMAP import SimpleARTMAP
 from supervised.ARTMAP import ARTMAP
@@ -18,6 +19,62 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         self.modules = modules
         self.layers: list[BaseARTMAP]
         self.is_supervised: Optional[bool] = None
+
+    def get_params(self, deep: bool = True) -> dict:
+        """
+
+        Parameters:
+        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+
+        Returns:
+            Parameter names mapped to their values.
+
+        """
+        out = dict()
+        for i, module in enumerate(self.modules):
+            deep_items = module.get_params().items()
+            out.update((f"module_{i}" + "__" + k, val) for k, val in deep_items)
+            out[f"module_{i}"] = module
+        return out
+
+    def set_params(self, **params):
+        """Set the parameters of this estimator.
+
+        Specific redefinition of sklearn.BaseEstimator.set_params for ARTMAP classes
+
+        Parameters:
+        - **params : Estimator parameters.
+
+        Returns:
+        - self : estimator instance
+        """
+
+        if not params:
+            # Simple optimization to gain speed (inspect is slow)
+            return self
+        valid_params = self.get_params(deep=True)
+        local_params = dict()
+
+        nested_params = defaultdict(dict)  # grouped by prefix
+        for key, value in params.items():
+            key, delim, sub_key = key.partition("__")
+            if key not in valid_params:
+                local_valid_params = list(valid_params.keys())
+                raise ValueError(
+                    f"Invalid parameter {key!r} for estimator {self}. "
+                    f"Valid parameters are: {local_valid_params!r}."
+                )
+
+            if delim:
+                nested_params[key][sub_key] = value
+            else:
+                setattr(self, key, value)
+                valid_params[key] = value
+                local_params[key] = value
+
+        for key, sub_params in nested_params.items():
+            valid_params[key].set_params(**sub_params)
+        return self
 
     @property
     def labels_(self):

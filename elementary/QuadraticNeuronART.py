@@ -21,6 +21,15 @@ def prepare_data(data: np.ndarray) -> np.ndarray:
 
 class QuadraticNeuronART(BaseART):
     # implementation of QuadraticNeuronART
+    def __init__(self, rho: float, s_init: float, lr_b: float, lr_w: float, lr_s: float):
+        params = {
+            "rho": rho,
+            "s_init": s_init,
+            "lr_b": lr_b,
+            "lr_w": lr_w,
+            "lr_s": lr_s,
+        }
+        super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):

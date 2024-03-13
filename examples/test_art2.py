@@ -34,7 +34,7 @@ def cluster_blobs():
         "alpha": 0.0,
         "beta": 1.0,
     }
-    cls = ART2A(params)
+    cls = ART2A(**params)
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

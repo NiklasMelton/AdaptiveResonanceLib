@@ -38,6 +38,10 @@ class FuzzyART(BaseART):
     # implementation of FuzzyART
 
     @staticmethod
+    def prepare_data(X: np.ndarray) -> np.ndarray:
+        return prepare_data(X)
+
+    @staticmethod
     def validate_params(params: dict):
         assert "rho" in params
         assert "alpha" in params

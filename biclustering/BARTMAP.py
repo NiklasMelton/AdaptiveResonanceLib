@@ -12,6 +12,8 @@ January 28, 2011, issued May 26, 2015.
 
 import numpy as np
 from typing import Optional
+from matplotlib.axes import Axes
+from matplotlib.colors import Colormap
 from common.BaseART import BaseART
 from sklearn.base import BaseEstimator, BiclusterMixin
 from scipy.stats import pearsonr
@@ -38,6 +40,14 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     def row_labels_(self):
         return self.module_a.labels_
 
+    @property
+    def n_row_clusters(self):
+        return self.module_a.n_clusters
+
+    @property
+    def n_column_clusters(self):
+        return self.module_b.n_clusters
+
     def _get_x_cb(self, X: np.ndarray, c_b: int):
         b_components = self.module_b.labels_ == c_b
         return X[b_components]
@@ -47,8 +57,10 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         r, _ = pearsonr(a, b)
         return r
 
-    def _average_pearson_corr(self, X: np.ndarray, k: int, c_a: int, c_b: int) -> float:
-        X_a = X[self.column_labels_ == c_a, :]
+    def _average_pearson_corr(self, X: np.ndarray, k: int, c_b: int) -> float:
+        X_a = X[self.column_labels_ == c_b, :]
+        if len(X_a) == 0:
+            raise ValueError("HERE")
         X_k_cb = self._get_x_cb(X[k,:], c_b)
         mean_r = np.mean(
             [
@@ -57,10 +69,15 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             ]
         )
 
-        return mean_r
+        return float(mean_r)
 
-    def match_criterion_bin(self, X: np.ndarray, k: int, c_a: int, c_b: int, params: dict) -> bool:
-        return self._average_pearson_corr(X, k, c_a, c_b) >= params["eta"]
+    def validate_data(self, X_a: np.ndarray, X_b: np.ndarray):
+        self.module_a.validate_data(X_a)
+        self.module_b.validate_data(X_b)
+
+    def match_criterion_bin(self, X: np.ndarray, k: int, c_b: int, params: dict) -> bool:
+        M = self._average_pearson_corr(X, k, c_b)
+        return M >= self.params["eta"]
 
     def match_reset_func(
             self,
@@ -73,7 +90,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     ) -> bool:
         k = extra["k"]
         for cluster_b in range(len(self.module_b.W)):
-            if self.match_criterion_bin(self.X, k, cluster_a, cluster_b, params):
+            if self.match_criterion_bin(self.X, k, cluster_b, params):
                 return True
         return False
 
@@ -86,11 +103,15 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def fit(self, X: np.ndarray, max_iter=1):
         # Check that X and y have correct shape
-        self.validate_data(X)
         self.X = X
 
         n = X.shape[0]
-        self.module_b = self.module_b.fit(X.T, max_iter=max_iter)
+        X_a = self.module_b.prepare_data(X)
+        X_b = self.module_b.prepare_data(X.T)
+        self.validate_data(X_a, X_b)
+
+
+        self.module_b = self.module_b.fit(X_b, max_iter=max_iter)
 
         # init module A
         self.module_a.W = []
@@ -98,8 +119,9 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         for _ in range(max_iter):
             for k in range(n):
+                print(k, self.module_a.n_clusters)
                 self.module_a.pre_step_fit(X)
-                c_a = self.step_fit(X, k)
+                c_a = self.step_fit(X_a, k)
                 self.module_a.labels_[k] = c_a
 
         self.rows_ = np.vstack(
@@ -119,4 +141,17 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return self
 
 
+    def visualize(
+            self,
+            cmap: Optional[Colormap] = None
+    ):
+        import matplotlib.pyplot as plt
 
+        if cmap is None:
+            from matplotlib.pyplot import cm
+            cmap=plt.cm.Blues
+
+        plt.matshow(
+            np.outer(np.sort(self.row_labels_) + 1, np.sort(self.column_labels_) + 1),
+            cmap=cmap,
+        )

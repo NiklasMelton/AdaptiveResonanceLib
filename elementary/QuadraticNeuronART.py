@@ -22,6 +22,15 @@ def prepare_data(data: np.ndarray) -> np.ndarray:
 class QuadraticNeuronART(BaseART):
     # implementation of QuadraticNeuronART
     def __init__(self, rho: float, s_init: float, lr_b: float, lr_w: float, lr_s: float):
+        """
+        Parameters:
+        - rho: vigilance parameter
+        - s_init: initial linear activation parameter
+        - lr_b: learning rate for cluster mean
+        - lr_w: learning rate for cluster weights
+        - lr_s: learning rate for cluster activation parameter
+
+        """
         params = {
             "rho": rho,
             "s_init": s_init,
@@ -33,6 +42,13 @@ class QuadraticNeuronART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "rho" in params
         assert "s_init" in params
         assert "lr_b" in params
@@ -41,6 +57,18 @@ class QuadraticNeuronART(BaseART):
         assert 1.0 >= params["rho"] >= 0.
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+        """
+        get the activation of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            cluster activation, cache used for later processing
+
+        """
         dim2 = self.dim_ * self.dim_
         w_ = w[:dim2].reshape((self.dim_, self.dim_))
         b = w[dim2:-1]
@@ -60,15 +88,54 @@ class QuadraticNeuronART(BaseART):
         return activation, cache
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+        """
+        get the match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion, cache used for later processing
+
+        """
         if cache is None:
             raise ValueError("No cache provided")
         return cache["activation"], cache
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        """
+        get the binary match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion binary, cache used for later processing
+
+        """
         M, cache = self.match_criterion(i, w, params, cache)
         return M >= params["rho"], cache
 
-    def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
+    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+        """
+        get the updated cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            updated cluster weight, cache used for later processing
+
+        """
         s = cache["s"]
         w_ = cache["w"]
         b = cache["b"]
@@ -86,10 +153,31 @@ class QuadraticNeuronART(BaseART):
 
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+        """
+        generate a new cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            updated cluster weight
+
+        """
         w_new = np.identity(self.dim_)
         return np.concatenate([w_new.flatten(), i, [params["s_init"]]])
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         # kinda works
         from matplotlib.patches import Rectangle
         for w, col in zip(self.W, colors):

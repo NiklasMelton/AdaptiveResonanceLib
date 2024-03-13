@@ -38,6 +38,12 @@ class DualVigilanceART(BaseART):
 
     @property
     def n_clusters(self) -> int:
+        """
+        get the current number of clusters
+
+        Returns:
+            the number of clusters
+        """
         return len(set(c for c in self.map.values()))
 
     @property
@@ -65,14 +71,39 @@ class DualVigilanceART(BaseART):
         self.base_module.W = new_W
 
     def check_dimensions(self, X: np.ndarray):
+        """
+        check the data has the correct dimensions
+
+        Parameters:
+        - X: data set
+
+        """
+        if not hasattr(self, "dim_"):
+            self.dim_ = X.shape[1]
+        else:
+            assert X.shape[1] == self.dim_
         self.base_module.check_dimensions(X)
 
     def validate_data(self, X: np.ndarray):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set
+
+        """
         self.base_module.validate_data(X)
         self.check_dimensions(X)
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "rho" in params, \
             "Dual Vigilance ART is only compatible with ART modules relying on 'rho' for vigilance."
         assert "rho_lower_bound" in params, \
@@ -80,6 +111,19 @@ class DualVigilanceART(BaseART):
         assert params["rho"] > params["rho_lower_bound"] >= 0
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+
+        Returns:
+            cluster label of the input sample
+
+        """
         if len(self.base_module.W) == 0:
             new_w = self.base_module.new_weight(x, self.base_module.params)
             self.base_module.add_weight(new_w)
@@ -126,6 +170,16 @@ class DualVigilanceART(BaseART):
             return self.map[c_new]
 
     def step_pred(self, x) -> int:
+        """
+        predict the label for a single sample
+
+        Parameters:
+        - x: data sample
+
+        Returns:
+            cluster label of the input sample
+
+        """
         assert len(self.base_module.W) >= 0, "ART module is not fit."
         T, _ = zip(
             *[
@@ -137,6 +191,15 @@ class DualVigilanceART(BaseART):
         return self.map[c_]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         colors_base = []
         for k_a in range(self.base_module.n_clusters):
             colors_base.append(colors[self.map[k_a]])

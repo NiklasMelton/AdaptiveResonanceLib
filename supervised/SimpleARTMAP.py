@@ -23,6 +23,21 @@ class SimpleARTMAP(BaseARTMAP):
             extra: dict,
             cache: Optional[dict] = None
     ) -> bool:
+        """
+        Permits external factors to influence cluster creation.
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - cluster_a: a-side cluster label
+        - params: dict containing parameters for the algorithm
+        - extra: additional parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            true if match is permitted
+
+        """
         cluster_b = extra["cluster_b"]
         if cluster_a in self.map and self.map[cluster_a] != cluster_b:
             return False
@@ -50,11 +65,30 @@ class SimpleARTMAP(BaseARTMAP):
 
 
     def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+
+        """
         X, y = check_X_y(X, y)
         self.module_a.validate_data(X)
         return X, y
 
     def step_fit(self, x: np.ndarray, c_b: int) -> int:
+        """
+        Fit the model to a single sample
+
+        Parameters:
+        - x: data sample for side A
+        - c_b: side b label
+
+        Returns:
+            side A cluster label
+
+        """
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
             i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
         )
@@ -66,6 +100,15 @@ class SimpleARTMAP(BaseARTMAP):
         return c_a
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+        - max_iter: number of iterations to fit the model on the same data set
+
+        """
         # Check that X and y have correct shape
         SimpleARTMAP.validate_data(self, X, y)
         # Store the classes seen during fit
@@ -84,6 +127,14 @@ class SimpleARTMAP(BaseARTMAP):
         return self
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
+        """
+        Partial fit the model to the data
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+
+        """
         SimpleARTMAP.validate_data(self, X, y)
         if not hasattr(self, 'labels_'):
             self.labels_ = y
@@ -127,12 +178,32 @@ class SimpleARTMAP(BaseARTMAP):
         return len(set(c for c in self.map.values()))
 
     def step_pred(self, x: np.ndarray) -> tuple[int, int]:
+        """
+        Predict the label for a single sample
+
+        Parameters:
+        - x: data sample for side A
+
+        Returns:
+            side A cluster label, side B cluster label
+
+        """
         c_a = self.module_a.step_pred(x)
         c_b = self.map[c_a]
         return c_a, c_b
 
 
     def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        predict labels for the data
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            A labels for the data, B labels for the data
+
+        """
         check_is_fitted(self)
         y_a = np.zeros((X.shape[0],), dtype=int)
         y_b = np.zeros((X.shape[0],), dtype=int)
@@ -143,6 +214,15 @@ class SimpleARTMAP(BaseARTMAP):
         return y_a, y_b
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         colors_a = []
         for k_a in range(self.n_clusters):
             colors_a.append(colors[self.map[k_a]])
@@ -157,6 +237,18 @@ class SimpleARTMAP(BaseARTMAP):
             linewidth: int = 1,
             colors: Optional[Iterable] = None
     ):
+        """
+        Visualize the clustering of the data
+
+        Parameters:
+        - X: data set
+        - y: sample labels
+        - ax: figure axes
+        - marker_size: size used for data points
+        - linewidth: width of boundary line
+        - colors: colors to use for each cluster
+
+        """
         import matplotlib.pyplot as plt
 
         if ax is None:

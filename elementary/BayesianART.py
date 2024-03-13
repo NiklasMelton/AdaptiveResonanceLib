@@ -19,6 +19,12 @@ class BayesianART(BaseART):
     # implementation of Bayesian ART
     pi2 = np.pi * 2
     def __init__(self, rho: float, cov_init: np.ndarray):
+        """
+        Parameters:
+        - rho: vigilance parameter
+        - cov_init: initial estimate of covariance matrix
+
+        """
         params = {
             "rho": rho,
             "cov_init": cov_init,
@@ -27,11 +33,29 @@ class BayesianART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "rho" in params
         assert "cov_init" in params
         assert params["rho"] > 0
 
     def check_dimensions(self, X: np.ndarray):
+        """
+        check the data has the correct dimensions
+
+        Parameters:
+        - X: data set
+
+        """
+        if not hasattr(self, "dim_"):
+            self.dim_ = X.shape[1]
+        else:
+            assert X.shape[1] == self.dim_
         if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
             assert self.params["cov_init"].shape[0] == self.dim_
@@ -40,6 +64,18 @@ class BayesianART(BaseART):
             assert X.shape[1] == self.dim_
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+        """
+        get the activation of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            cluster activation, cache used for later processing
+
+        """
         mean = w[:self.dim_]
         cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))
         n = w[-1]
@@ -61,6 +97,19 @@ class BayesianART(BaseART):
         return activation, cache
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+        """
+        get the match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion, cache used for later processing
+
+        """
         # the original paper uses the det(cov_old) for match criterion
         # however, it makes logical sense to use the new_cov and results are improved when doing so
         new_w = self.update(i, w, params, cache)
@@ -72,10 +121,36 @@ class BayesianART(BaseART):
         return np.linalg.det(new_cov), cache
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        """
+        get the binary match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion binary, cache used for later processing
+
+        """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
         return M <= params["rho"], cache
 
-    def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
+    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+        """
+        get the updated cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            updated cluster weight, cache used for later processing
+
+        """
         if cache is None:
             raise ValueError("No cache provided")
 
@@ -97,10 +172,31 @@ class BayesianART(BaseART):
         return np.concatenate([mean_new, cov_new.flatten(), [n_new]])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+        """
+        generate a new cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            updated cluster weight
+
+        """
         return np.concatenate([i, params["cov_init"].flatten(), [1]])
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
         for w, col in zip(self.W, colors):
             mean = w[:self.dim_]
             cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))

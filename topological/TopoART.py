@@ -25,6 +25,13 @@ class TopoART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
+        """
+        validate clustering parameters
+
+        Parameters:
+        - params: dict containing parameters for the algorithm
+
+        """
         assert "beta" in params, "TopoART is only compatible with ART modules relying on 'beta' for learning."
         assert "beta_lower" in params
         assert "tau" in params
@@ -41,23 +48,93 @@ class TopoART(BaseART):
         self.base_module.W = new_W
 
     def validate_data(self, X: np.ndarray):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set
+
+        """
         self.base_module.validate_data(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+        """
+        get the activation of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            cluster activation, cache used for later processing
+
+        """
         return self.base_module.category_choice(i, w, params)
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+        """
+        get the match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion, cache used for later processing
+
+        """
         return self.base_module.match_criterion(i, w, params, cache)
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+        """
+        get the binary match criterion of the cluster
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            cluster match criterion binary, cache used for later processing
+
+        """
         return self.base_module.match_criterion_bin(i, w, params, cache)
 
-    def update(self, i: np.ndarray, w: np.ndarray, params, cache: Optional[dict] = None) -> np.ndarray:
+    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+        """
+        get the updated cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+        - cache: dict containing values cached from previous calculations
+
+        Returns:
+            updated cluster weight, cache used for later processing
+
+        """
         if cache.get("resonant_c", -1) >= 0:
             self.adjacency[cache["resonant_c"], cache["current_c"]] += 1
         return self.base_module.update(i, w, params, cache)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+        """
+        generate a new cluster weight
+
+        Parameters:
+        - i: data sample
+        - w: cluster weight / info
+        - params: dict containing parameters for the algorithm
+
+        Returns:
+            updated cluster weight
+
+        """
         self.adjacency = np.pad(self.adjacency, ((0, 1), (0, 1)), "constant")
         self._counter = np.pad(self._counter, (0, 1), "constant", constant_values=(1,))
         self._permanent_mask = np.pad(self._permanent_mask, (0, 1), "constant")
@@ -92,6 +169,19 @@ class TopoART(BaseART):
             self.prune(X)
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+
+        Returns:
+            cluster label of the input sample
+
+        """
         resonant_c: int = -1
 
         if len(self.W) == 0:
@@ -143,6 +233,17 @@ class TopoART(BaseART):
 
 
     def fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, max_iter=1):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: data set
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - max_iter: number of iterations to fit the model on the same data set
+
+        """
         self.validate_data(X)
         self.check_dimensions(X)
 

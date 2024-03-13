@@ -12,6 +12,13 @@ from sklearn.utils.validation import check_is_fitted, check_X_y
 
 class ARTMAP(SimpleARTMAP):
     def __init__(self, module_a: BaseART, module_b: BaseART):
+        """
+
+        Parameters:
+        - module_a: a-side ART module
+        - module_b: b-side ART module
+
+        """
         self.module_b = module_b
         super(ARTMAP, self).__init__(module_a)
 
@@ -50,10 +57,27 @@ class ARTMAP(SimpleARTMAP):
         return {"A": self.labels_a, "B": self.labels_}
 
     def validate_data(self, X: np.ndarray, y: np.ndarray):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+
+        """
         self.module_a.validate_data(X)
         self.module_b.validate_data(y)
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+        - max_iter: number of iterations to fit the model on the same data set
+
+        """
         # Check that X and y have correct shape
         self.validate_data(X, y)
 
@@ -67,6 +91,14 @@ class ARTMAP(SimpleARTMAP):
 
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
+        """
+        Partial fit the model to the data
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+
+        """
         self.validate_data(X, y)
         self.module_b.partial_fit(y)
         super(ARTMAP, self).partial_fit(X, self.labels_b)
@@ -74,5 +106,15 @@ class ARTMAP(SimpleARTMAP):
 
 
     def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        predict labels for the data
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            A labels for the data, B labels for the data
+
+        """
         check_is_fitted(self)
         return super(ARTMAP, self).predict(X)

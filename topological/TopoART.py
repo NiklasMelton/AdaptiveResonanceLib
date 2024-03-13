@@ -95,7 +95,8 @@ class TopoART(BaseART):
         resonant_c: int = -1
 
         if len(self.W) == 0:
-            self.W.append(self.new_weight(x, self.params))
+            new_w = self.new_weight(x, self.params)
+            self.add_weight(new_w)
             self.adjacency = np.zeros((1, 1), dtype=int)
             self._counter = np.ones((1, ), dtype=int)
             self._permanent_mask = np.zeros((1, ), dtype=bool)
@@ -118,12 +119,13 @@ class TopoART(BaseART):
                     else:
                         params = dict(self.params, **{"beta": self.params["beta_lower"]})
                     #TODO: make compatible with DualVigilanceART
-                    self.W[c_] = self.update(
+                    new_w = self.update(
                         x,
                         w,
                         params=params,
                         cache=dict(cache, **{"resonant_c": resonant_c, "current_c": c_})
                     )
+                    self.set_weight(c_, new_w)
                     if resonant_c < 0:
                         resonant_c = c_
                     else:
@@ -134,7 +136,7 @@ class TopoART(BaseART):
             if resonant_c < 0:
                 c_new = len(self.W)
                 w_new = self.new_weight(x, self.params)
-                self.W.append(w_new)
+                self.add_weight(w_new)
                 return c_new
 
             return resonant_c

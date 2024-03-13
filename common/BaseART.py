@@ -49,9 +49,16 @@ class BaseART(BaseEstimator, ClusterMixin):
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         raise NotImplementedError
 
+    def add_weight(self, new_w: np.ndarray):
+        self.W.append(new_w)
+
+    def set_weight(self, idx: int, new_w: np.ndarray):
+        self.W[idx] = new_w
+
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         if len(self.W) == 0:
-            self.W.append(self.new_weight(x, self.params))
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
             return 0
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
@@ -66,14 +73,14 @@ class BaseART(BaseEstimator, ClusterMixin):
                         match_reset_func(x, w, c_, params=self.params, cache=cache)
                 )
                 if m and no_match_reset:
-                    self.W[c_] = self.update(x, w, self.params, cache=cache)
+                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
                     return c_
                 else:
                     T[c_] = -1
 
             c_new = len(self.W)
             w_new = self.new_weight(x, self.params)
-            self.W.append(w_new)
+            self.add_weight(w_new)
             return c_new
 
     def step_pred(self, x) -> int:

@@ -37,6 +37,7 @@ def plot_gaussian_contours_fading(
     - color: A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
     - max_std: Max standard deviations to draw contours to. Default is 2.
     - sigma_steps: Step size in standard deviations for each contour. Default is 0.25.
+    - linewidth: width of boundary line
 
     """
     from matplotlib.patches import Ellipse
@@ -75,12 +76,13 @@ def plot_gaussian_contours_covariance(
 
 
     Parameters:
-        - ax: Matplotlib axis object. If None, creates a new figure and axis.
+    - ax: Matplotlib axis object. If None, creates a new figure and axis.
     - mean: A numpy array representing the mean (μ) of the distribution.
     - covariance: A 2x2 numpy array representing the covariance matrix of the distribution.
     - color: A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
     - max_std: Max standard deviations to draw contours to. Default is 2.
     - sigma_steps: Step size in standard deviations for each contour. Default is 0.25.
+    - linewidth: width of boundary line
 
     """
     from matplotlib.patches import Ellipse
@@ -109,3 +111,38 @@ def plot_gaussian_contours_covariance(
         ax.add_patch(ellipse)
 
 
+def plot_weight_matrix_as_ellipse(
+        ax: Axes,
+        s: float,
+        W: np.ndarray,
+        mean: np.ndarray,
+        color: np.ndarray,
+        linewidth: int = 1
+):
+    """
+    Plots the transformation of a unit circle by the weight matrix W as an ellipse.
+
+    Parameters:
+    - ax: Matplotlib axis object. If None, creates a new figure and axis.
+    - mean: The center point (x, y) of the ellipse.
+    - s: Scalar to scale the weight matrix W.
+    - W: 2x2 weight matrix.
+    - color: Color of the ellipse.
+    - linewidth: width of boundary line
+    """
+    # Compute the transformation matrix
+    transform_matrix = W
+
+    # Generate points on a unit circle
+    theta = np.linspace(0, 2 * np.pi, 100)
+    circle = np.array([np.cos(theta), np.sin(theta)])  # Unit circle
+
+    # Apply the linear transformation to the circle to get an ellipse
+    ellipse = -s * s * (transform_matrix @ circle)
+
+    # Shift the ellipse to the specified mean
+    ellipse[0, :] += mean[0]
+    ellipse[1, :] += mean[1]
+
+    # Plotting
+    ax.plot(ellipse[0, :], ellipse[1, :], color=color, linewidth=linewidth)

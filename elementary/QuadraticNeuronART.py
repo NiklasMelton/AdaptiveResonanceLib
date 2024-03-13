@@ -9,9 +9,10 @@ Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
 """
 
 import numpy as np
-from typing import Optional
+from typing import Optional, Iterable
+from matplotlib.axes import Axes
 from common.BaseART import BaseART
-from common.utils import normalize, l2norm2
+from common.utils import normalize, l2norm2, plot_weight_matrix_as_ellipse
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
     normalized = normalize(data)
@@ -78,3 +79,14 @@ class QuadraticNeuronART(BaseART):
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         w_new = np.identity(self.dim_)
         return np.concatenate([w_new.flatten(), i, [params["s_init"]]])
+
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        # kinda works
+        from matplotlib.patches import Rectangle
+        for w, col in zip(self.W, colors):
+            dim2 = self.dim_ * self.dim_
+            w_ = w[:dim2].reshape((self.dim_, self.dim_))
+            b = w[dim2:-1]
+            s = w[-1]
+            plot_weight_matrix_as_ellipse(ax, s, w_, b, col)
+

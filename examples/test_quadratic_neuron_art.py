@@ -23,7 +23,7 @@ def cluster_blobs():
 
     params = {
         "rho": 0.9,
-        "s_init": 1.0,
+        "s_init": 0.9,
         "lr_b": 0.1,
         "lr_w": 0.1,
         "lr_s": 0.1

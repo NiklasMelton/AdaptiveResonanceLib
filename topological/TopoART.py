@@ -9,7 +9,8 @@ doi:10.1007/978-3-642-15825-4_21.
 """
 
 import numpy as np
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterable
+from matplotlib.axes import Axes
 from warnings import warn
 from common.BaseART import BaseART
 
@@ -146,7 +147,7 @@ class TopoART(BaseART):
 
         """
 
-        return self.new_weight(i, params)
+        return self.base_module.new_weight(i, params)
 
 
     def add_weight(self, new_w: np.ndarray):
@@ -157,7 +158,10 @@ class TopoART(BaseART):
         - new_w: new cluster weight to add
 
         """
-        self.adjacency = np.pad(self.adjacency, ((0, 1), (0, 1)), "constant")
+        if len(self.W) == 0:
+            self.adjacency = np.zeros((1, 1))
+        else:
+            self.adjacency = np.pad(self.adjacency, ((0, 1), (0, 1)), "constant")
         self._permanent_mask = np.pad(self._permanent_mask, (0, 1), "constant")
         self.weight_sample_counter_.append(1)
         self.W.append(new_w)
@@ -166,9 +170,10 @@ class TopoART(BaseART):
     def prune(self, X: np.ndarray):
         self._permanent_mask += (np.array(self.weight_sample_counter_) >= self.phi)
         perm_labels = np.where(self._permanent_mask)[0]
+
         self.W = [w for w, pm in zip(self.W, self._permanent_mask) if pm]
         self.weight_sample_counter_ = [self.weight_sample_counter_[i] for i in perm_labels]
-        self.adjacency = self.adjacency[perm_labels, perm_labels]
+        self.adjacency = self.adjacency[perm_labels][:, perm_labels]
         self._permanent_mask = self._permanent_mask[perm_labels]
 
         label_map = {
@@ -180,9 +185,11 @@ class TopoART(BaseART):
         for i, x in enumerate(X):
             if self.labels_[i] in label_map:
                 self.labels_[i] = label_map[self.labels_[i]]
-            else:
+            elif len(self.W) > 0:
                 # this is a more flexible approach than that described in the paper
                 self.labels_[i] = self.step_pred(x)
+            else:
+                self.labels_[i] = -1
 
     def post_step_fit(self, X: np.ndarray):
         """
@@ -240,11 +247,12 @@ class TopoART(BaseART):
                         x,
                         w,
                         params=params,
-                        cache=dict(cache, **{"resonant_c": resonant_c, "current_c": c_})
+                        cache=dict((cache if cache else {}), **{"resonant_c": resonant_c, "current_c": c_})
                     )
                     self.set_weight(c_, new_w)
                     if resonant_c < 0:
                         resonant_c = c_
+                        T[c_] = -1
                     else:
                         return resonant_c
                 else:
@@ -258,3 +266,17 @@ class TopoART(BaseART):
 
             return resonant_c
 
+    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+        """
+        undefined function for visualizing the bounds of each cluster
+
+        Parameters:
+        - ax: figure axes
+        - colors: colors to use for each cluster
+        - linewidth: width of boundary line
+
+        """
+        try:
+            self.base_module.plot_cluster_bounds(ax=ax, colors=colors, linewidth=linewidth)
+        except NotImplementedError:
+            warn(f"{self.base_module.__class__.__name__} does not support plotting cluster bounds.")

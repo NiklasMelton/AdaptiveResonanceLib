@@ -209,4 +209,8 @@ class DualVigilanceART(BaseART):
         colors_base = []
         for k_a in range(self.base_module.n_clusters):
             colors_base.append(colors[self.map[k_a]])
-        self.base_module.plot_cluster_bounds(ax, colors_base, linewidth)
+
+        try:
+            self.base_module.plot_cluster_bounds(ax=ax, colors=colors_base, linewidth=linewidth)
+        except NotImplementedError:
+            warn(f"{self.base_module.__class__.__name__} does not support plotting cluster bounds.")

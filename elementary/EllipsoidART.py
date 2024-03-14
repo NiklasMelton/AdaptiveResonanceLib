@@ -54,6 +54,11 @@ class EllipsoidART(BaseART):
         assert 1.0 >= params["alpha"] >= 0.
         assert 1.0 >= params["beta"] >= 0.
         assert 1.0 >= params["mu"] > 0.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["alpha"], float)
+        assert isinstance(params["beta"], float)
+        assert isinstance(params["mu"], float)
+        assert isinstance(params["r_hat"], float)
 
     @staticmethod
     def category_distance(i: np.ndarray, centroid: np.ndarray, major_axis: np.ndarray, params):

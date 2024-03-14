@@ -98,6 +98,9 @@ class FuzzyART(BaseART):
         assert 1.0 >= params["rho"] >= 0.
         assert params["alpha"] >= 0.
         assert 1.0 >= params["beta"] > 0.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["alpha"], float)
+        assert isinstance(params["beta"], float)
 
     def check_dimensions(self, X: np.ndarray):
         """

@@ -57,6 +57,9 @@ class ART2A(BaseART):
         assert 1. >= params["rho"] >= 0.
         assert 1. >= params["alpha"] >= 0.
         assert 1. >= params["beta"] >= 0.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["alpha"], float)
+        assert isinstance(params["beta"], float)
         
     def check_dimensions(self, X: np.ndarray):
         """

@@ -46,6 +46,9 @@ class ART1(BaseART):
         assert 1. >= params["rho"] >= 0.
         assert 1. >= params["beta"] >= 0.
         assert params["L"] >= 1.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["beta"], float)
+        assert isinstance(params["L"], float)
 
     def validate_data(self, X: np.ndarray):
         """

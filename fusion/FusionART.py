@@ -89,6 +89,7 @@ class FusionART(BaseART):
         assert "gamma_values" in params
         assert all([1.0 >= g >= 0.0 for g in params["gamma_values"]])
         assert sum(params["gamma_values"]) == 1.0
+        assert isinstance(params["gamma_values"], np.ndarray)
 
 
     def validate_data(self, X: np.ndarray):

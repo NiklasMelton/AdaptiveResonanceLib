@@ -45,6 +45,10 @@ class HypersphereART(BaseART):
         assert 1.0 >= params["rho"] >= 0.
         assert params["alpha"] >= 0.
         assert 1.0 >= params["beta"] >= 0.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["alpha"], float)
+        assert isinstance(params["beta"], float)
+        assert isinstance(params["r_hat"], float)
 
     @staticmethod
     def category_distance(i: np.ndarray, centroid: np.ndarray, radius: float, params) -> float:

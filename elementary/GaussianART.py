@@ -39,6 +39,8 @@ class GaussianART(BaseART):
         assert "rho" in params
         assert "sigma_init" in params
         assert 1.0 >= params["rho"] > 0.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["sigma_init"], np.ndarray)
 
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:

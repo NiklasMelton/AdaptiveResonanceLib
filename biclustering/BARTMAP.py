@@ -123,6 +123,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         """
         assert "eta" in params
+        assert isinstance(params["eta"], float)
 
     @property
     def column_labels_(self):
@@ -140,9 +141,20 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     def n_column_clusters(self):
         return self.module_b.n_clusters
 
-    def _get_x_cb(self, X: np.ndarray, c_b: int):
+    def _get_x_cb(self, x: np.ndarray, c_b: int):
+        """
+        get the components of a vector belonging to a b-side cluster
+
+        Parameters:
+        - x: a sample vector
+        - c_b: b-side cluster label
+
+        Returns:
+            x filtered to features belonging to the b-side cluster c_b
+
+        """
         b_components = self.module_b.labels_ == c_b
-        return X[b_components]
+        return x[b_components]
 
     @staticmethod
     def _pearsonr(a: np.ndarray, b: np.ndarray):

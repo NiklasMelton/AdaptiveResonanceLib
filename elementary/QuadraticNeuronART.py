@@ -55,6 +55,14 @@ class QuadraticNeuronART(BaseART):
         assert "lr_w" in params
         assert "lr_s" in params
         assert 1.0 >= params["rho"] >= 0.
+        assert 1.0 >= params["lr_b"] > 0.
+        assert 1.0 >= params["lr_w"] >= 0.
+        assert 1.0 >= params["lr_s"] >= 0.
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["s_init"], float)
+        assert isinstance(params["lr_b"], float)
+        assert isinstance(params["lr_w"], float)
+        assert isinstance(params["lr_s"], float)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """

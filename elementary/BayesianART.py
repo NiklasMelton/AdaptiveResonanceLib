@@ -43,6 +43,8 @@ class BayesianART(BaseART):
         assert "rho" in params
         assert "cov_init" in params
         assert params["rho"] > 0
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["cov_init"], np.ndarray)
 
     def check_dimensions(self, X: np.ndarray):
         """

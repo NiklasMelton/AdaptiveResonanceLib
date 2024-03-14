@@ -463,7 +463,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         try:
             self.plot_cluster_bounds(ax, colors, linewidth)
         except NotImplementedError:
-            warn(f"{self.__class__.__name__} does not support plotting cluster bounds." )
+            warn(f"{self.__class__.__name__} does not support plotting cluster bounds.")
 
 
 

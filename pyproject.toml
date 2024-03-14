@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "artlib"
+version = "0.1.0"
+description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
+authors = ["Niklas M. Melton <niklasmelton@gmail.com>"]
+license = "MIT"
+homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+readme = "README.md"
+keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = ">=1.19.4"
+scipy = ">=1.5.4"
+scikit-learn = ">=1.0"
+matplotlib = ">=3.3.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -19,6 +19,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         self.validate_params(params)
         self.params = params
+        self.sample_counter_ = 0
+        self.weight_sample_counter_: list[int] = []
 
     def __getattr__(self, key):
         if key in self.params:
@@ -237,6 +239,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         - new_w: new cluster weight to add
 
         """
+        self.weight_sample_counter_.append(1)
         self.W.append(new_w)
 
     def set_weight(self, idx: int, new_w: np.ndarray):
@@ -248,6 +251,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         - new_w: new cluster weight
 
         """
+        self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
@@ -264,6 +268,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             cluster label of the input sample
 
         """
+        self.sample_counter_ += 1
         if len(self.W) == 0:
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
@@ -345,6 +350,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         self.validate_data(X)
         self.check_dimensions(X)
+        self.is_fitted_ = True
 
         self.W: list[np.ndarray] = []
         self.labels_ = np.zeros((X.shape[0], ), dtype=int)
@@ -371,6 +377,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         self.validate_data(X)
         self.check_dimensions(X)
+        self.is_fitted_ =  True
 
         if not hasattr(self, 'W'):
             self.W: list[np.ndarray] = []

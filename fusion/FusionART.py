@@ -112,10 +112,6 @@ class FusionART(BaseART):
         - X: data set
 
         """
-        if not hasattr(self, "dim_"):
-            self.dim_ = X.shape[1]
-        else:
-            assert X.shape[1] == self.dim_
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:

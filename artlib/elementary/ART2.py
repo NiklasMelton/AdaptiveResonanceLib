@@ -1,31 +1,43 @@
 """
-Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
-Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning.
-In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-(pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
-"""
-import numpy as np
-from typing import Optional, Iterable
-from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.utils import l2norm2
+Carpenter, G. A., & Grossberg, S. (1987b).
+ART 2: self-organization of stable category recognition codes for analog input patterns.
+Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
 
-class HypersphereART(BaseART):
-    # implementation of HypersphereART
-    def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
+Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
+ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition.
+Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+"""
+
+"""
+==================================================================
+DISCLAIMER: DO NOT USE ART2!!!
+IT DOES NOT WORK
+It is provided for completeness only.
+Stephan Grossberg himself has said ART2 does not work.
+==================================================================
+"""
+
+import numpy as np
+from typing import Optional
+from warnings import warn
+from artlib.common.BaseART import BaseART
+
+
+class ART2A(BaseART):
+    warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
+    # implementation of ART 2-A
+    def __init__(self, rho: float, alpha: float, beta: float):
         """
         Parameters:
         - rho: vigilance parameter
         - alpha: choice parameter
         - beta: learning rate
-        - r_hat: maximum possible category radius
 
         """
         params = {
             "rho": rho,
             "alpha": alpha,
             "beta": beta,
-            "r_hat": r_hat,
         }
         super().__init__(params)
 
@@ -41,20 +53,27 @@ class HypersphereART(BaseART):
         assert "rho" in params
         assert "alpha" in params
         assert "beta" in params
-        assert "r_hat" in params
-        assert 1.0 >= params["rho"] >= 0.
-        assert params["alpha"] >= 0.
-        assert 1.0 >= params["beta"] >= 0.
+        assert 1. >= params["rho"] >= 0.
+        assert 1. >= params["alpha"] >= 0.
+        assert 1. >= params["beta"] >= 0.
         assert isinstance(params["rho"], float)
         assert isinstance(params["alpha"], float)
         assert isinstance(params["beta"], float)
-        assert isinstance(params["r_hat"], float)
+        
+    def check_dimensions(self, X: np.ndarray):
+        """
+        check the data has the correct dimensions
 
-    @staticmethod
-    def category_distance(i: np.ndarray, centroid: np.ndarray, radius: float, params) -> float:
-        return np.sqrt(l2norm2(i-centroid))
+        Parameters:
+        - X: data set
 
-
+        """
+        if not hasattr(self, "dim_"):
+            self.dim_ = X.shape[1]
+            assert self.params["alpha"] <= 1 / np.sqrt(self.dim_)
+        else:
+            assert X.shape[1] == self.dim_
+        
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
         get the activation of the cluster
@@ -68,18 +87,9 @@ class HypersphereART(BaseART):
             cluster activation, cache used for later processing
 
         """
-        centroid = w[:-1]
-        radius = w[-1]
-
-        i_radius = self.category_distance(i, centroid, radius, params)
-        max_radius = max(radius, i_radius)
-
-        cache = {
-            "max_radius": max_radius,
-            "i_radius": i_radius,
-        }
-        return (params["r_hat"] - max_radius)/(params["r_hat"] - radius + params["alpha"]), cache
-
+        activation = float(np.dot(i, w))
+        cache = {"activation": activation}
+        return activation, cache
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
@@ -95,13 +105,16 @@ class HypersphereART(BaseART):
             cluster match criterion, cache used for later processing
 
         """
-        radius = w[-1]
         if cache is None:
             raise ValueError("No cache provided")
-        max_radius = cache["max_radius"]
-
-        return 1 - (max(radius, max_radius)/params["r_hat"]), cache
-
+        # TODO: make this more efficient
+        M = cache["activation"]
+        M_u = params["alpha"]*np.sum(i)
+        # suppress if uncommitted activation is higher
+        if M < M_u:
+            return -1., cache
+        else:
+            return M, cache
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
         """
@@ -117,9 +130,8 @@ class HypersphereART(BaseART):
             cluster match criterion binary, cache used for later processing
 
         """
-        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        M, cache = self.match_criterion(i, w, params, cache)
         return M >= params["rho"], cache
-
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -135,18 +147,7 @@ class HypersphereART(BaseART):
             updated cluster weight, cache used for later processing
 
         """
-        centroid = w[:-1]
-        radius = w[-1]
-        if cache is None:
-            raise ValueError("No cache provided")
-        max_radius = cache["max_radius"]
-        i_radius = cache["i_radius"]
-
-        radius_new = radius + (params["beta"]/2)*(max_radius-radius)
-        centroid_new = centroid + (params["beta"]/2)*(i-centroid)*(1-(min(radius, i_radius)/i_radius))
-
-        return np.concatenate([centroid_new, [radius_new]])
-
+        return params["beta"]*i + (1-params["beta"])*w
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
@@ -161,35 +162,4 @@ class HypersphereART(BaseART):
             updated cluster weight
 
         """
-        return np.concatenate([i, [0.]])
-
-
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        undefined function for visualizing the bounds of each cluster
-
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
-
-        """
-        from matplotlib.patches import Circle
-
-        for w, col in zip(self.W, colors):
-            centroid = (w[0], w[1])
-            radius = w[-1]
-            circ = Circle(
-                centroid,
-                radius,
-                linewidth=linewidth,
-                edgecolor=col,
-                facecolor='none'
-            )
-            ax.add_patch(circ)
-
-
-
-
-
-
+        return i

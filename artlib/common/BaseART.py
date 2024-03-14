@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
-from common.utils import normalize
+from artlib.common.utils import normalize
 
 
 class BaseART(BaseEstimator, ClusterMixin):

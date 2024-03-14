@@ -6,8 +6,8 @@ Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.BaseARTMAP import BaseARTMAP
+from artlib.common.BaseART import BaseART
+from artlib.common.BaseARTMAP import BaseARTMAP
 from sklearn.utils.validation import check_is_fitted, check_X_y
 from sklearn.utils.multiclass import unique_labels
 

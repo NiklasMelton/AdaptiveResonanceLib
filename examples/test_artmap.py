@@ -2,19 +2,8 @@ import numpy as np
 from sklearn.datasets import load_iris, make_blobs
 import matplotlib.pyplot as plt
 
+from artlib import FuzzyART, SimpleARTMAP
 
-import path
-import sys
-
-# directory reach
-directory = path.Path(__file__).abspath()
-
-print(directory.parent)
-# setting path
-sys.path.append(directory.parent.parent)
-
-from elementary.FuzzyART import FuzzyART, prepare_data
-from supervised.SimpleARTMAP import SimpleARTMAP
 
 def cluster_iris():
     from sklearn.model_selection import train_test_split
@@ -23,7 +12,7 @@ def cluster_iris():
     data, target = load_iris(return_X_y=True)
     print("Data has shape:", data.shape)
 
-    X = prepare_data(data)
+    X = FuzzyART.prepare_data(data)
     print("Prepared data has shape:", X.shape)
 
     X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.33, random_state=0)
@@ -55,7 +44,7 @@ def cluster_blobs():
     data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
     print("Data has shape:", data.shape)
 
-    X = prepare_data(data)
+    X = FuzzyART.prepare_data(data)
     print("Prepared data has shape:", X.shape)
 
     params = {

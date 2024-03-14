@@ -6,8 +6,8 @@ Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0
 
 import numpy as np
 from typing import Optional
-from common.BaseART import BaseART
-from common.utils import normalize, l1norm
+from artlib.common.BaseART import BaseART
+from artlib.common.utils import normalize, l1norm
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
     normalized = normalize(data)

@@ -1,20 +1,7 @@
-
 from sklearn.datasets import make_checkerboard
 import matplotlib.pyplot as plt
-import path
-import sys
-import numpy as np
 
-# directory reach
-directory = path.Path(__file__).abspath()
-
-print(directory.parent)
-# setting path
-sys.path.append(directory.parent.parent)
-
-from biclustering.BARTMAP import BARTMAP
-from elementary.FuzzyART import FuzzyART
-from common.utils import normalize
+from artlib import BARTMAP, FuzzyART, normalize
 
 
 def cluster_checkerboard():
@@ -37,9 +24,9 @@ def cluster_checkerboard():
         "alpha": 0.0,
         "beta": 1.0
     }
-    art_a = FuzzyART(params_a)
-    art_b = FuzzyART(params_b)
-    cls = BARTMAP(art_a, art_b, {"eta": -1.})
+    art_a = FuzzyART(**params_a)
+    art_b = FuzzyART(**params_b)
+    cls = BARTMAP(art_a, art_b, eta=-1.)
     cls.fit(X)
 
     print(f"{cls.n_row_clusters} row clusters found")

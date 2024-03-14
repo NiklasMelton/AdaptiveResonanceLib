@@ -12,7 +12,7 @@ import numpy as np
 from typing import Optional, Callable, Iterable
 from matplotlib.axes import Axes
 from warnings import warn
-from common.BaseART import BaseART
+from artlib.common.BaseART import BaseART
 
 
 class TopoART(BaseART):

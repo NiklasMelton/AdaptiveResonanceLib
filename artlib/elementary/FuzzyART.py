@@ -6,22 +6,8 @@ Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.utils import normalize, compliment_code, l1norm, fuzzy_and
-
-def prepare_data(data: np.ndarray) -> np.ndarray:
-    """
-    prepare data for clustering
-
-    Parameters:
-    - X: data set
-
-    Returns:
-        normalized and compliment coded data
-    """
-    normalized = normalize(data)
-    cc_data = compliment_code(normalized)
-    return cc_data
+from artlib.common.BaseART import BaseART
+from artlib.common.utils import normalize, compliment_code, l1norm, fuzzy_and
 
 
 def get_bounding_box(w: np.ndarray, n: Optional[int] = None) -> tuple[list[int], list[int]]:
@@ -81,7 +67,9 @@ class FuzzyART(BaseART):
         Returns:
             normalized and compliment coded data
         """
-        return prepare_data(X)
+        normalized = normalize(X)
+        cc_data = compliment_code(normalized)
+        return cc_data
 
     @staticmethod
     def validate_params(params: dict):

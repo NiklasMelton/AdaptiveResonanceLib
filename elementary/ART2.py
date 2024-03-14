@@ -68,10 +68,6 @@ class ART2A(BaseART):
         """
         if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
-        else:
-            assert X.shape[1] == self.dim_
-        if not hasattr(self, "dim_"):
-            self.dim_ = X.shape[1]
             assert self.params["alpha"] <= 1 / np.sqrt(self.dim_)
         else:
             assert X.shape[1] == self.dim_

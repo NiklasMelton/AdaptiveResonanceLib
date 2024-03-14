@@ -5,6 +5,7 @@ Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 """
 import numpy as np
 from typing import Optional, Callable, Iterable
+from warnings import warn
 from matplotlib.axes import Axes
 from common.BaseART import BaseART
 
@@ -13,6 +14,12 @@ class DualVigilanceART(BaseART):
     # implementation of Dual Vigilance ART
 
     def __init__(self, base_module: BaseART, lower_bound: float):
+        assert isinstance(base_module, BaseART)
+        if hasattr(base_module, "base_module"):
+            warn(
+                f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
+                f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
+            )
         params = dict(base_module.params, **{"rho_lower_bound": lower_bound})
         super().__init__(params)
         self.base_module = base_module
@@ -78,10 +85,6 @@ class DualVigilanceART(BaseART):
         - X: data set
 
         """
-        if not hasattr(self, "dim_"):
-            self.dim_ = X.shape[1]
-        else:
-            assert X.shape[1] == self.dim_
         self.base_module.check_dimensions(X)
 
     def validate_data(self, X: np.ndarray):
@@ -109,6 +112,8 @@ class DualVigilanceART(BaseART):
         assert "rho_lower_bound" in params, \
             "Dual Vigilance ART requires a lower bound 'rho' value"
         assert params["rho"] > params["rho_lower_bound"] >= 0
+        assert isinstance(params["rho"], float)
+        assert isinstance(params["rho_lower_bound"], float)
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         """
@@ -124,6 +129,7 @@ class DualVigilanceART(BaseART):
             cluster label of the input sample
 
         """
+        self.sample_counter_ += 1
         if len(self.base_module.W) == 0:
             new_w = self.base_module.new_weight(x, self.base_module.params)
             self.base_module.add_weight(new_w)

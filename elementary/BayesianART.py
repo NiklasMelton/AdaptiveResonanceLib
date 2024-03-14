@@ -54,10 +54,6 @@ class BayesianART(BaseART):
         """
         if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
-        else:
-            assert X.shape[1] == self.dim_
-        if not hasattr(self, "dim_"):
-            self.dim_ = X.shape[1]
             assert self.params["cov_init"].shape[0] == self.dim_
             assert self.params["cov_init"].shape[1] == self.dim_
         else:

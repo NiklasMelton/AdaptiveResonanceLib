@@ -10,17 +10,23 @@ doi:10.1007/978-3-642-15825-4_21.
 
 import numpy as np
 from typing import Optional, Callable
+from warnings import warn
 from common.BaseART import BaseART
 
 
 class TopoART(BaseART):
 
     def __init__(self, base_module: BaseART, betta_lower: float, tau: int, phi: int):
+        assert isinstance(base_module, BaseART)
+        if hasattr(base_module, "base_module"):
+            warn(
+                f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
+                f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
+            )
         params = dict(base_module.params, **{"beta_lower": betta_lower, "tau": tau, "phi": phi})
         super().__init__(params)
         self.base_module = base_module
         self.adjacency = np.zeros([], dtype=int)
-        self._counter = np.zeros([], dtype=int)
         self._permanent_mask = np.zeros([], dtype=bool)
 
     @staticmethod
@@ -38,6 +44,10 @@ class TopoART(BaseART):
         assert "phi" in params
         assert params["beta"] >= params["beta_lower"]
         assert params["phi"] <= params["tau"]
+        assert isinstance(params["beta"], float)
+        assert isinstance(params["beta_lower"], float)
+        assert isinstance(params["tau"], int)
+        assert isinstance(params["phi"], int)
 
     @property
     def W(self):
@@ -135,17 +145,31 @@ class TopoART(BaseART):
             updated cluster weight
 
         """
-        self.adjacency = np.pad(self.adjacency, ((0, 1), (0, 1)), "constant")
-        self._counter = np.pad(self._counter, (0, 1), "constant", constant_values=(1,))
-        self._permanent_mask = np.pad(self._permanent_mask, (0, 1), "constant")
+
         return self.new_weight(i, params)
 
 
+    def add_weight(self, new_w: np.ndarray):
+        """
+        add a new cluster weight
+
+        Parameters:
+        - new_w: new cluster weight to add
+
+        """
+        self.adjacency = np.pad(self.adjacency, ((0, 1), (0, 1)), "constant")
+        self._permanent_mask = np.pad(self._permanent_mask, (0, 1), "constant")
+        self.weight_sample_counter_.append(1)
+        self.W.append(new_w)
+
+
     def prune(self, X: np.ndarray):
-        self._permanent_mask += (self._counter >= self.params["phi"])
+        self._permanent_mask += (np.array(self.weight_sample_counter_) >= self.phi)
         perm_labels = np.where(self._permanent_mask)[0]
         self.W = [w for w, pm in zip(self.W, self._permanent_mask) if pm]
-        self._counter = self._counter[perm_labels]
+        self.weight_sample_counter_ = [self.weight_sample_counter_[i] for i in perm_labels]
+        self.adjacency = self.adjacency[perm_labels, perm_labels]
+        self._permanent_mask = self._permanent_mask[perm_labels]
 
         label_map = {
             label: np.where(perm_labels == label)[0][0]
@@ -157,15 +181,18 @@ class TopoART(BaseART):
             if self.labels_[i] in label_map:
                 self.labels_[i] = label_map[self.labels_[i]]
             else:
-                T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
-                T = np.array(T_values)
-                new_label = np.argmax(T)
-                self.labels_[i] = new_label
-                self._counter[new_label] += 1
+                # this is a more flexible approach than that described in the paper
+                self.labels_[i] = self.step_pred(x)
 
-    def step_prune(self, X: np.ndarray):
-        sum_counter = sum(self._counter)
-        if sum_counter > 0 and sum_counter % self.params["tau"] == 0:
+    def post_step_fit(self, X: np.ndarray):
+        """
+        Function called after each sample fit. Used for cluster pruning
+
+        Parameters:
+        - X: data set
+
+        """
+        if self.sample_counter_ > 0 and self.sample_counter_ % self.tau == 0:
             self.prune(X)
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
@@ -182,13 +209,13 @@ class TopoART(BaseART):
             cluster label of the input sample
 
         """
+        self.sample_counter_ += 1
         resonant_c: int = -1
 
         if len(self.W) == 0:
             new_w = self.new_weight(x, self.params)
             self.add_weight(new_w)
             self.adjacency = np.zeros((1, 1), dtype=int)
-            self._counter = np.ones((1, ), dtype=int)
             self._permanent_mask = np.zeros((1, ), dtype=bool)
             return 0
         else:
@@ -231,27 +258,3 @@ class TopoART(BaseART):
 
             return resonant_c
 
-
-    def fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, max_iter=1):
-        """
-        Fit the model to the data
-
-        Parameters:
-        - X: data set
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
-        - max_iter: number of iterations to fit the model on the same data set
-
-        """
-        self.validate_data(X)
-        self.check_dimensions(X)
-
-        self.W: list[np.ndarray] = []
-        self.labels_ = np.zeros((X.shape[0], ), dtype=int)
-        for _ in range(max_iter):
-            for i, x in enumerate(X):
-                self.step_prune(X)
-                c = self.step_fit(x, match_reset_func=match_reset_func)
-                self.labels_[i] = c
-        return self

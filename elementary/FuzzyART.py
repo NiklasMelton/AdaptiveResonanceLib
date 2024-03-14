@@ -109,10 +109,6 @@ class FuzzyART(BaseART):
         """
         if not hasattr(self, "dim_"):
             self.dim_ = X.shape[1]
-        else:
-            assert X.shape[1] == self.dim_
-        if not hasattr(self, "dim_"):
-            self.dim_ = X.shape[1]
             self.dim_original = int(self.dim_//2)
         else:
             assert X.shape[1] == self.dim_

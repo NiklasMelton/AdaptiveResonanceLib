@@ -35,7 +35,7 @@ To install AdaptiveResonanceLib, simply use pip:
 [comment]: <> (```)
 
 ```bash
-pip install pip@git+https://github.com/NiklasMelton/AdaptiveResonanceLib
+pip install artlib
 ```
 
 Ensure you have Python 3.9 or newer installed.

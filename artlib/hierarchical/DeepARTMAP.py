@@ -38,9 +38,10 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         out = dict()
         for i, module in enumerate(self.modules):
-            deep_items = module.get_params().items()
-            out.update((f"module_{i}" + "__" + k, val) for k, val in deep_items)
             out[f"module_{i}"] = module
+            if deep:
+                deep_items = module.get_params().items()
+                out.update((f"module_{i}" + "__" + k, val) for k, val in deep_items)
         return out
 
     def set_params(self, **params):
@@ -221,7 +222,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             x = X[-1]
         else:
             x = X
-        pred_a, pred_b = self.layers[-1].predict(x)
+        pred_a, pred_b = self.layers[-1].predict_ab(x)
         pred = [pred_a, pred_b]
         for layer in self.layers[:-1][::-1]:
             pred.append(layer.map_a2b(pred[-1]))

@@ -31,15 +31,17 @@ class ARTMAP(SimpleARTMAP):
             Parameter names mapped to their values.
 
         """
-        out = dict()
+        out = {
+            "module_a": self.module_a,
+            "module_b": self.module_b,
+        }
 
-        deep_a_items = self.module_a.get_params().items()
-        out.update(("module_a" + "__" + k, val) for k, val in deep_a_items)
-        out["module_a"] = self.module_a
+        if deep:
+            deep_a_items = self.module_a.get_params().items()
+            out.update(("module_a" + "__" + k, val) for k, val in deep_a_items)
 
-        deep_b_items = self.module_b.get_params().items()
-        out.update(("module_b" + "__" + k, val) for k, val in deep_b_items)
-        out["module_b"] = self.module_b
+            deep_b_items = self.module_b.get_params().items()
+            out.update(("module_b" + "__" + k, val) for k, val in deep_b_items)
         return out
 
 
@@ -104,9 +106,23 @@ class ARTMAP(SimpleARTMAP):
         return self
 
 
-    def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         predict labels for the data
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            B labels for the data
+
+        """
+        check_is_fitted(self)
+        return super(ARTMAP, self).predict(X)
+
+    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        predict labels for the data, both A-side and B-side
 
         Parameters:
         - X: data set A
@@ -116,4 +132,4 @@ class ARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
-        return super(ARTMAP, self).predict(X)
+        return super(ARTMAP, self).predict_ab(X)

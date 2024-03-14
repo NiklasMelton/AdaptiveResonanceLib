@@ -57,10 +57,10 @@ class SimpleARTMAP(BaseARTMAP):
             Parameter names mapped to their values.
 
         """
-        out = dict()
-        deep_items = self.module_a.get_params().items()
-        out.update(("module_a" + "__" + k, val) for k, val in deep_items)
-        out["module_a"] = self.module_a
+        out = {"module_a": self.module_a}
+        if deep:
+            deep_items = self.module_a.get_params().items()
+            out.update(("module_a" + "__" + k, val) for k, val in deep_items)
         return out
 
 
@@ -192,10 +192,27 @@ class SimpleARTMAP(BaseARTMAP):
         c_b = self.map[c_a]
         return c_a, c_b
 
-
-    def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         predict labels for the data
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            B labels for the data
+
+        """
+        check_is_fitted(self)
+        y_b = np.zeros((X.shape[0],), dtype=int)
+        for i, x in enumerate(X):
+            c_a, c_b = self.step_pred(x)
+            y_b[i] = c_b
+        return y_b
+
+    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        predict labels for the data, both A-side and B-side
 
         Parameters:
         - X: data set A

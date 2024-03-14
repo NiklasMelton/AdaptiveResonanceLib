@@ -49,21 +49,79 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return self
 
     def map_a2b(self, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
+        """
+        map an a-side label to a b-side label
+
+        Parameters:
+        - y_a: side a label(s)
+
+        Returns:
+            side B cluster label(s)
+
+        """
         if isinstance(y_a, int):
             return self.map[y_a]
         u, inv = np.unique(y_a, return_inverse=True)
         return np.array([self.map[x] for x in u], dtype=int)[inv].reshape(y_a.shape)
 
     def validate_data(self, X: np.ndarray, y: np.ndarray):
+        """
+        validates the data prior to clustering
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+
+        """
         raise NotImplementedError
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+        - max_iter: number of iterations to fit the model on the same data set
+
+        """
         raise NotImplementedError
 
     def partial_fit(self, X: np.ndarray, y: np.ndarray):
+        """
+        Partial fit the model to the data
+
+        Parameters:
+        - X: data set A
+        - y: data set B
+
+        """
         raise NotImplementedError
 
-    def predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """
+        predict labels for the data
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            B labels for the data
+
+        """
+        raise NotImplementedError
+
+    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        predict labels for the data, both A-side and B-side
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            A labels for the data, B labels for the data
+
+        """
         raise NotImplementedError
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):

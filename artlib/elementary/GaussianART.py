@@ -1,42 +1,29 @@
 """
-Su, M.-C., & Liu, T.-K. (2001).
-Application of neural networks using quadratic junctions in cluster analysis.
-Neurocomputing, 37, 165 – 175. doi:10.1016/S0925-2312(00)00343-X.
-
-Su, M.-C., & Liu, Y.-C. (2005).
-A new approach to clustering data with arbitrary shapes.
-Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
+Williamson, J. R. (1996).
+Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps.
+Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 """
 
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.utils import normalize, l2norm2, plot_weight_matrix_as_ellipse
-
-def prepare_data(data: np.ndarray) -> np.ndarray:
-    normalized = normalize(data)
-    return normalized
+from artlib.common.BaseART import BaseART
+from artlib.common.visualization import plot_gaussian_contours_fading
 
 
-class QuadraticNeuronART(BaseART):
-    # implementation of QuadraticNeuronART
-    def __init__(self, rho: float, s_init: float, lr_b: float, lr_w: float, lr_s: float):
+class GaussianART(BaseART):
+    # implementation of GaussianART
+    pi2 = np.pi*2
+    def __init__(self, rho: float, sigma_init: np.ndarray):
         """
         Parameters:
         - rho: vigilance parameter
-        - s_init: initial linear activation parameter
-        - lr_b: learning rate for cluster mean
-        - lr_w: learning rate for cluster weights
-        - lr_s: learning rate for cluster activation parameter
+        - sigma_init: initial estimate of the diagonal std
 
         """
         params = {
             "rho": rho,
-            "s_init": s_init,
-            "lr_b": lr_b,
-            "lr_w": lr_w,
-            "lr_s": lr_s,
+            "sigma_init": sigma_init,
         }
         super().__init__(params)
 
@@ -50,19 +37,11 @@ class QuadraticNeuronART(BaseART):
 
         """
         assert "rho" in params
-        assert "s_init" in params
-        assert "lr_b" in params
-        assert "lr_w" in params
-        assert "lr_s" in params
-        assert 1.0 >= params["rho"] >= 0.
-        assert 1.0 >= params["lr_b"] > 0.
-        assert 1.0 >= params["lr_w"] >= 0.
-        assert 1.0 >= params["lr_s"] >= 0.
+        assert "sigma_init" in params
+        assert 1.0 >= params["rho"] > 0.
         assert isinstance(params["rho"], float)
-        assert isinstance(params["s_init"], float)
-        assert isinstance(params["lr_b"], float)
-        assert isinstance(params["lr_w"], float)
-        assert isinstance(params["lr_s"], float)
+        assert isinstance(params["sigma_init"], np.ndarray)
+
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
@@ -77,23 +56,22 @@ class QuadraticNeuronART(BaseART):
             cluster activation, cache used for later processing
 
         """
-        dim2 = self.dim_ * self.dim_
-        w_ = w[:dim2].reshape((self.dim_, self.dim_))
-        b = w[dim2:-1]
-        s = w[-1]
-        z = np.matmul(w_, i)
-        l2norm2_z_b = l2norm2(z-b)
-        activation = np.exp(-s*s*l2norm2_z_b)
-
+        mean = w[:self.dim_]
+        sigma = w[self.dim_:-1]
+        n = w[-1]
+        sig = np.diag(np.multiply(sigma,sigma))
+        dist = mean-i
+        exp_dist_sig_dist = np.exp(-0.5*np.matmul(dist.T, np.matmul(np.linalg.inv(sig), dist)))
         cache = {
-            "activation": activation,
-            "l2norm2_z_b": l2norm2_z_b,
-            "w": w_,
-            "b": b,
-            "s": s,
-            "z": z
+            "exp_dist_sig_dist": exp_dist_sig_dist
         }
+        p_i_cj = exp_dist_sig_dist/np.sqrt((self.pi2**self.dim_)*np.linalg.det(sig))
+        p_cj = n/np.sum(w_[-1] for w_ in self.W)
+
+        activation = p_i_cj*p_cj
+
         return activation, cache
+
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
@@ -111,7 +89,9 @@ class QuadraticNeuronART(BaseART):
         """
         if cache is None:
             raise ValueError("No cache provided")
-        return cache["activation"], cache
+        exp_dist_sig_dist = cache["exp_dist_sig_dist"]
+        return exp_dist_sig_dist, cache
+
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
         """
@@ -127,8 +107,9 @@ class QuadraticNeuronART(BaseART):
             cluster match criterion binary, cache used for later processing
 
         """
-        M, cache = self.match_criterion(i, w, params, cache)
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
         return M >= params["rho"], cache
+
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -144,20 +125,15 @@ class QuadraticNeuronART(BaseART):
             updated cluster weight, cache used for later processing
 
         """
-        s = cache["s"]
-        w_ = cache["w"]
-        b = cache["b"]
-        z = cache["z"]
-        T = cache["activation"]
-        l2norm2_z_b = cache["l2norm2_z_b"]
+        mean = w[:self.dim_]
+        sigma = w[self.dim_:-1]
+        n = w[-1]
 
-        sst2 = 2*s*s*T
+        n_new = n+1
+        mean_new = (1-(1/n_new))*mean + (1/n_new)*i
+        sigma_new = np.sqrt((1-(1/n_new))*np.multiply(sigma, sigma) + (1/n_new)*((mean_new - i)**2))
 
-        b_new = b + params["lr_b"]*(sst2*(z-b))
-        w_new = w_ + params["lr_w"]*(-sst2*((z-b).reshape((-1, 1))*i.reshape((1, -1))))
-        s_new = s + params["lr_s"]*(-2*s*T*l2norm2_z_b)
-
-        return np.concatenate([w_new.flatten(), b_new, [s_new]])
+        return np.concatenate([mean_new, sigma_new, [n_new]])
 
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
@@ -173,8 +149,8 @@ class QuadraticNeuronART(BaseART):
             updated cluster weight
 
         """
-        w_new = np.identity(self.dim_)
-        return np.concatenate([w_new.flatten(), i, [params["s_init"]]])
+        return np.concatenate([i, params["sigma_init"], [1.]])
+
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
@@ -186,12 +162,7 @@ class QuadraticNeuronART(BaseART):
         - linewidth: width of boundary line
 
         """
-        # kinda works
-        from matplotlib.patches import Rectangle
         for w, col in zip(self.W, colors):
-            dim2 = self.dim_ * self.dim_
-            w_ = w[:dim2].reshape((self.dim_, self.dim_))
-            b = w[dim2:-1]
-            s = w[-1]
-            plot_weight_matrix_as_ellipse(ax, s, w_, b, col)
-
+            mean = w[:self.dim_]
+            sigma = w[self.dim_:-1]
+            plot_gaussian_contours_fading(ax, mean, sigma, col, linewidth=linewidth)

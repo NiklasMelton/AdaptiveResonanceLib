@@ -6,9 +6,9 @@ IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.9002
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.utils import normalize
-from common.utils import plot_gaussian_contours_covariance
+from artlib.common.BaseART import BaseART
+from artlib.common.utils import normalize
+from artlib.common.visualization import plot_gaussian_contours_covariance
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
     normalized = normalize(data)

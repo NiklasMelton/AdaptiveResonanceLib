@@ -1,29 +1,31 @@
 """
-Williamson, J. R. (1996).
-Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps.
-Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
+Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
+Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning.
+In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+(pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 """
-
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.utils import plot_gaussian_contours_fading
+from artlib.common.BaseART import BaseART
+from artlib.common.utils import l2norm2
 
-
-class GaussianART(BaseART):
-    # implementation of GaussianART
-    pi2 = np.pi*2
-    def __init__(self, rho: float, sigma_init: np.ndarray):
+class HypersphereART(BaseART):
+    # implementation of HypersphereART
+    def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
         """
         Parameters:
         - rho: vigilance parameter
-        - sigma_init: initial estimate of the diagonal std
+        - alpha: choice parameter
+        - beta: learning rate
+        - r_hat: maximum possible category radius
 
         """
         params = {
             "rho": rho,
-            "sigma_init": sigma_init,
+            "alpha": alpha,
+            "beta": beta,
+            "r_hat": r_hat,
         }
         super().__init__(params)
 
@@ -37,10 +39,20 @@ class GaussianART(BaseART):
 
         """
         assert "rho" in params
-        assert "sigma_init" in params
-        assert 1.0 >= params["rho"] > 0.
+        assert "alpha" in params
+        assert "beta" in params
+        assert "r_hat" in params
+        assert 1.0 >= params["rho"] >= 0.
+        assert params["alpha"] >= 0.
+        assert 1.0 >= params["beta"] >= 0.
         assert isinstance(params["rho"], float)
-        assert isinstance(params["sigma_init"], np.ndarray)
+        assert isinstance(params["alpha"], float)
+        assert isinstance(params["beta"], float)
+        assert isinstance(params["r_hat"], float)
+
+    @staticmethod
+    def category_distance(i: np.ndarray, centroid: np.ndarray, radius: float, params) -> float:
+        return np.sqrt(l2norm2(i-centroid))
 
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
@@ -56,21 +68,17 @@ class GaussianART(BaseART):
             cluster activation, cache used for later processing
 
         """
-        mean = w[:self.dim_]
-        sigma = w[self.dim_:-1]
-        n = w[-1]
-        sig = np.diag(np.multiply(sigma,sigma))
-        dist = mean-i
-        exp_dist_sig_dist = np.exp(-0.5*np.matmul(dist.T, np.matmul(np.linalg.inv(sig), dist)))
+        centroid = w[:-1]
+        radius = w[-1]
+
+        i_radius = self.category_distance(i, centroid, radius, params)
+        max_radius = max(radius, i_radius)
+
         cache = {
-            "exp_dist_sig_dist": exp_dist_sig_dist
+            "max_radius": max_radius,
+            "i_radius": i_radius,
         }
-        p_i_cj = exp_dist_sig_dist/np.sqrt((self.pi2**self.dim_)*np.linalg.det(sig))
-        p_cj = n/np.sum(w_[-1] for w_ in self.W)
-
-        activation = p_i_cj*p_cj
-
-        return activation, cache
+        return (params["r_hat"] - max_radius)/(params["r_hat"] - radius + params["alpha"]), cache
 
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
@@ -87,10 +95,12 @@ class GaussianART(BaseART):
             cluster match criterion, cache used for later processing
 
         """
+        radius = w[-1]
         if cache is None:
             raise ValueError("No cache provided")
-        exp_dist_sig_dist = cache["exp_dist_sig_dist"]
-        return exp_dist_sig_dist, cache
+        max_radius = cache["max_radius"]
+
+        return 1 - (max(radius, max_radius)/params["r_hat"]), cache
 
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
@@ -125,15 +135,17 @@ class GaussianART(BaseART):
             updated cluster weight, cache used for later processing
 
         """
-        mean = w[:self.dim_]
-        sigma = w[self.dim_:-1]
-        n = w[-1]
+        centroid = w[:-1]
+        radius = w[-1]
+        if cache is None:
+            raise ValueError("No cache provided")
+        max_radius = cache["max_radius"]
+        i_radius = cache["i_radius"]
 
-        n_new = n+1
-        mean_new = (1-(1/n_new))*mean + (1/n_new)*i
-        sigma_new = np.sqrt((1-(1/n_new))*np.multiply(sigma, sigma) + (1/n_new)*((mean_new - i)**2))
+        radius_new = radius + (params["beta"]/2)*(max_radius-radius)
+        centroid_new = centroid + (params["beta"]/2)*(i-centroid)*(1-(min(radius, i_radius)/i_radius))
 
-        return np.concatenate([mean_new, sigma_new, [n_new]])
+        return np.concatenate([centroid_new, [radius_new]])
 
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
@@ -149,7 +161,7 @@ class GaussianART(BaseART):
             updated cluster weight
 
         """
-        return np.concatenate([i, params["sigma_init"], [1.]])
+        return np.concatenate([i, [0.]])
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
@@ -162,7 +174,22 @@ class GaussianART(BaseART):
         - linewidth: width of boundary line
 
         """
+        from matplotlib.patches import Circle
+
         for w, col in zip(self.W, colors):
-            mean = w[:self.dim_]
-            sigma = w[self.dim_:-1]
-            plot_gaussian_contours_fading(ax, mean, sigma, col, linewidth=linewidth)
+            centroid = (w[0], w[1])
+            radius = w[-1]
+            circ = Circle(
+                centroid,
+                radius,
+                linewidth=linewidth,
+                edgecolor=col,
+                facecolor='none'
+            )
+            ax.add_patch(circ)
+
+
+
+
+
+

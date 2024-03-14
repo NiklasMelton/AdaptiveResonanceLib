@@ -1,17 +1,7 @@
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
-import path
-import sys
 
-# directory reach
-directory = path.Path(__file__).abspath()
-
-print(directory.parent)
-# setting path
-sys.path.append(directory.parent.parent)
-
-from elementary.QuadraticNeuronART import QuadraticNeuronART
-from common.utils import normalize
+from artlib import QuadraticNeuronART, normalize
 
 
 def cluster_blobs():

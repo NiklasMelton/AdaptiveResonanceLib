@@ -7,7 +7,7 @@ import numpy as np
 from typing import Optional, Callable, Iterable
 from warnings import warn
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
+from artlib.common.BaseART import BaseART
 
 
 class DualVigilanceART(BaseART):

@@ -8,8 +8,8 @@ In Proc. IEEE International Conference on Neural Networks (ICNN)
 import numpy as np
 from typing import Union, Type, Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from hierarchical.DeepARTMAP import DeepARTMAP
+from artlib.common.BaseART import BaseART
+from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 class SMART(DeepARTMAP):
 

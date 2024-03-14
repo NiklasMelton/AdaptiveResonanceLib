@@ -1,18 +1,8 @@
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
-import path
-import sys
-
-# directory reach
-directory = path.Path(__file__).abspath()
-
-print(directory.parent)
-# setting path
-sys.path.append(directory.parent.parent)
-
-from elementary.GaussianART import GaussianART
-from common.utils import normalize
 import numpy as np
+
+from artlib import GaussianART, normalize
 
 
 def cluster_blobs():

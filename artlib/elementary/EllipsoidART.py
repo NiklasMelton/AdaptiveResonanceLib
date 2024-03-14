@@ -12,8 +12,8 @@ International Society for Optics and Photonics. doi:10.1117/12.421180.
 import numpy as np
 from typing import Optional, Iterable
 from matplotlib.axes import Axes
-from common.BaseART import BaseART
-from common.utils import l2norm2
+from artlib.common.BaseART import BaseART
+from artlib.common.utils import l2norm2
 
 class EllipsoidART(BaseART):
     # implementation of EllipsoidART

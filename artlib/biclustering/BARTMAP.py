@@ -14,7 +14,7 @@ import numpy as np
 from typing import Optional
 from collections import defaultdict
 from matplotlib.colors import Colormap
-from common.BaseART import BaseART
+from artlib.common.BaseART import BaseART
 from sklearn.base import BaseEstimator, BiclusterMixin
 from scipy.stats import pearsonr
 

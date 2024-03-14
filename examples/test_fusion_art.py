@@ -1,18 +1,8 @@
 import numpy as np
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
-import path
-import sys
 
-# directory reach
-directory = path.Path(__file__).abspath()
-
-print(directory.parent)
-# setting path
-sys.path.append(directory.parent.parent)
-
-from fusion.FusionART import FusionART
-from elementary.FuzzyART import FuzzyART, prepare_data
+from artlib import FusionART, FuzzyART
 
 
 def cluster_blobs():
@@ -22,8 +12,8 @@ def cluster_blobs():
     data_channel_a = data[:,0].reshape((-1,1))
     data_channel_b = data[:,1].reshape((-1,1))
 
-    X_channel_a = prepare_data(data_channel_a)
-    X_channel_b = prepare_data(data_channel_b)
+    X_channel_a = FuzzyART.prepare_data(data_channel_a)
+    X_channel_b = FuzzyART.prepare_data(data_channel_b)
 
     X = np.hstack([X_channel_a, X_channel_b])
     print("Prepared data has shape:", X.shape)

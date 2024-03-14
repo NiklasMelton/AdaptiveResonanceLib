@@ -10,8 +10,8 @@ print(directory.parent)
 # setting path
 sys.path.append(directory.parent.parent)
 
-from elementary.BayesianART import BayesianART
-from common.utils import normalize
+from artlib import BayesianART
+from artlib.common.utils import normalize
 import numpy as np
 
 

@@ -45,7 +45,7 @@ Ensure you have Python 3.9 or newer installed.
 Here's a quick example of how to use AdaptiveResonanceLib with the Fuzzy ART model:
 
 ```python
-from adaptiveresonancelib import FuzzyART
+from artlib import FuzzyART
 import numpy as np
 
 # Your dataset

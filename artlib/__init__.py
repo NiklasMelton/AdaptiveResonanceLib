@@ -11,6 +11,7 @@ from artlib.elementary.GaussianART import GaussianART
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.elementary.HypersphereART import HypersphereART
 from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
+from artlib.elementary.iCVIART import iCVIART
 
 from artlib.supervised.ARTMAP import ARTMAP, SimpleARTMAP
 
@@ -44,4 +45,5 @@ __all__ = [
     "SMART",
     "FusionART",
     "BARTMAP",
+    "iCVIART"
 ]

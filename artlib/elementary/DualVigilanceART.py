@@ -26,6 +26,18 @@ class DualVigilanceART(BaseART):
         self.lower_bound = lower_bound
         self.map: dict[int, int] = dict()
 
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            base modules prepare_data
+        """
+        return self.base_module.prepare_data(X)
+
     def get_params(self, deep: bool = True) -> dict:
         """
 

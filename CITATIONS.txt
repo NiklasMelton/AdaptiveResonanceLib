@@ -365,3 +365,5 @@ Yava ̧s, M., & Alpaslan, F. N. (2009). Behavior categorization using Correlatio
 Yava ̧s, M., & Alpaslan, F. N. (2012). Hierarchical behavior categorization using correlation based adaptive resonance theory. Neurocomputing, 77, 71 – 81. doi:10.1016/j.neucom.2011.08.022.
 
 Zadeh, L. A. (1965). Fuzzy sets. Information and Control, 8, 338 – 353. doi:10.1016/S0019-9958(65) 90241-X.
+
+Brito da Silva LE, Rayapati N, Wunsch DC. iCVI-ARTMAP: Using Incremental Cluster Validity Indices and Adaptive Resonance Theory Reset Mechanism to Accelerate Validation and Achieve Multiprototype Unsupervised Representations. IEEE Trans Neural Netw Learn Syst. 2023 Dec;34(12):9757-9770. doi: 10.1109/TNNLS.2022.3160381. Epub 2023 Nov 30. PMID: 35353707.

@@ -9,17 +9,6 @@ from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 
-
-import path
-import sys
-
-# directory reach
-directory = path.Path(__file__).abspath()
-
-print(directory.parent)
-# setting path
-sys.path.append(directory.parent.parent)
-
 import artlib
 
 # ============

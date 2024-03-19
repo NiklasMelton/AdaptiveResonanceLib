@@ -27,7 +27,7 @@ class DualVigilanceART(BaseART):
         assert base_module.params["rho"] > params["rho_lower_bound"] >= 0
         super().__init__(params)
         self.base_module = base_module
-        self.lower_bound = rho_lower_bound
+        self.rho_lower_bound = rho_lower_bound
         self.map: dict[int, int] = dict()
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
@@ -175,7 +175,7 @@ class DualVigilanceART(BaseART):
                         self.base_module.set_weight(c_, new_w)
                         return self.map[c_]
                     else:
-                        lb_params = dict(self.base_module.params, **{"rho": self.lower_bound})
+                        lb_params = dict(self.base_module.params, **{"rho": self.rho_lower_bound})
                         m2, _ = self.base_module.match_criterion_bin(x, w, params=lb_params, cache=cache)
                         if m2:
                             c_new = len(self.base_module.W)

@@ -7,22 +7,33 @@ Welcome to AdaptiveResonanceLib, a comprehensive and modular Python library for 
 
 AdaptiveResonanceLib includes implementations for the following ART models:
 
-- ART1
-- ART2
-- Bayesian ART
-- Gaussian ART
-- Hypersphere ART
-- Ellipsoidal ART
-- Fuzzy ART
-- Quadratic Neuron ART
-- Dual Vigilance ART
-- Topo ART
-- Simple ARTMAP
-- ARTMAP
-- DeepARTMAP
-- SMART
-- Fusion ART
-- Biclustering ARTMAP
+- #### Elementary Clustering
+    - ART1
+    - ART2
+    - Bayesian ART
+    - Gaussian ART
+    - Hypersphere ART
+    - Ellipsoidal ART
+    - Fuzzy ART
+    - Quadratic Neuron ART
+    - Dual Vigilance ART
+- #### Topological
+    - Topo ART
+- #### Classification
+    - Simple ARTMAP
+      
+- #### Regression
+    - ARTMAP
+- #### Hierarchical
+    - DeepARTMAP
+    - SMART
+- #### Data Fusion and Reinforcement Learning
+    - Fusion ART
+- #### Biclustering
+    - Biclustering ARTMAP
+
+## Comparison of Elementary Models
+![Comparison of Elementary Images](./img/comparison_of_elementary_methods.jpg?raw=true")
 
 ## Installation
 

@@ -13,17 +13,21 @@ from artlib.common.BaseART import BaseART
 class DualVigilanceART(BaseART):
     # implementation of Dual Vigilance ART
 
-    def __init__(self, base_module: BaseART, lower_bound: float):
+    def __init__(self, base_module: BaseART, rho_lower_bound: float):
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
             warn(
                 f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
                 f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
             )
-        params = dict(base_module.params, **{"rho_lower_bound": lower_bound})
+        assert "rho" in base_module.params, \
+            "Dual Vigilance ART is only compatible with ART modules relying on 'rho' for vigilance."
+
+        params = {"rho_lower_bound": rho_lower_bound}
+        assert base_module.params["rho"] > params["rho_lower_bound"] >= 0
         super().__init__(params)
         self.base_module = base_module
-        self.lower_bound = lower_bound
+        self.lower_bound = rho_lower_bound
         self.map: dict[int, int] = dict()
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
@@ -48,11 +52,14 @@ class DualVigilanceART(BaseART):
             Parameter names mapped to their values.
 
         """
-        out = self.params
+        out = {
+            "rho_lower_bound": self.params["rho_lower_bound"],
+            "base_module": self.base_module
+        }
         if deep:
             deep_items = self.base_module.get_params().items()
             out.update(("base_module" + "__" + k, val) for k, val in deep_items)
-            out["base_module"] = self.base_module
+
         return out
 
     @property
@@ -110,8 +117,7 @@ class DualVigilanceART(BaseART):
         self.base_module.validate_data(X)
         self.check_dimensions(X)
 
-    @staticmethod
-    def validate_params(params: dict):
+    def validate_params(self, params: dict):
         """
         validate clustering parameters
 
@@ -119,12 +125,10 @@ class DualVigilanceART(BaseART):
         - params: dict containing parameters for the algorithm
 
         """
-        assert "rho" in params, \
-            "Dual Vigilance ART is only compatible with ART modules relying on 'rho' for vigilance."
+
         assert "rho_lower_bound" in params, \
             "Dual Vigilance ART requires a lower bound 'rho' value"
-        assert params["rho"] > params["rho_lower_bound"] >= 0
-        assert isinstance(params["rho"], float)
+        assert params["rho_lower_bound"] >= 0
         assert isinstance(params["rho_lower_bound"], float)
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
@@ -167,7 +171,7 @@ class DualVigilanceART(BaseART):
 
                 if no_match_reset:
                     if m1:
-                        new_w = self.base_module.update(x, w, self.params, cache=cache)
+                        new_w = self.base_module.update(x, w, self.base_module.params, cache=cache)
                         self.base_module.set_weight(c_, new_w)
                         return self.map[c_]
                     else:

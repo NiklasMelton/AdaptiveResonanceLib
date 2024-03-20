@@ -152,7 +152,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         - max_iter: number of iterations to fit the model on the same data set
 
         """
-        X, y = self.validate_data(X, y)
+        self.validate_data(X, y)
         if y is not None:
             self.is_supervised = True
             self.layers = [SimpleARTMAP(self.modules[i]) for i in range(self.n_modules)]
@@ -180,7 +180,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         - y: optional labels
 
         """
-        X, y = self.validate_data(X, y)
+        self.validate_data(X, y)
         if y is not None:
             if len(self.layers) == 0:
                 self.is_supervised = True

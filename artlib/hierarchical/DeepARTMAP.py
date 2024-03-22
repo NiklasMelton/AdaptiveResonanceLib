@@ -89,7 +89,15 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     @property
     def labels_deep_(self):
-        return np.concatenate([layer.labels_ for layer in self.layers]+[self.layers[-1].labels_a])
+        return np.concatenate(
+            [
+                layer.labels_.reshape((-1, 1))
+                for layer in self.layers
+            ]+[
+                self.layers[-1].labels_a.reshape((-1, 1))
+            ],
+            axis=1
+        )
 
     @property
     def n_modules(self):

@@ -87,7 +87,7 @@ For examples of how to use each model in AdaptiveResonanceLib, check out the `/e
 
 We welcome contributions to AdaptiveResonanceLib! If you have suggestions for improvements, or if you'd like to add more ART models, please see our `CONTRIBUTING.md` file for guidelines on how to contribute.
 
-You can also join our [Discord server](https://discord.gg/45FjtRCt) and participate directly in the discussion.
+You can also join our [Discord server](https://discord.gg/E465HBwEuN) and participate directly in the discussion.
 
 ## License
 
@@ -95,6 +95,6 @@ AdaptiveResonanceLib is open source and available under the MIT license. See the
 
 ## Contact
 
-For questions and support, please open an issue in the GitHub issue tracker or message us on our [Discord server](https://discord.gg/45FjtRCt). We'll do our best to assist you.
+For questions and support, please open an issue in the GitHub issue tracker or message us on our [Discord server](https://discord.gg/E465HBwEuN). We'll do our best to assist you.
 
 Happy Modeling with AdaptiveResonanceLib!

@@ -89,7 +89,15 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     @property
     def labels_deep_(self):
-        return np.concatenate([layer.labels_ for layer in self.layers]+[self.layers[-1].labels_a])
+        return np.concatenate(
+            [
+                layer.labels_.reshape((-1, 1))
+                for layer in self.layers
+            ]+[
+                self.layers[-1].labels_a.reshape((-1, 1))
+            ],
+            axis=1
+        )
 
     @property
     def n_modules(self):
@@ -152,7 +160,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         - max_iter: number of iterations to fit the model on the same data set
 
         """
-        X, y = self.validate_data(X, y)
+        self.validate_data(X, y)
         if y is not None:
             self.is_supervised = True
             self.layers = [SimpleARTMAP(self.modules[i]) for i in range(self.n_modules)]
@@ -180,7 +188,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         - y: optional labels
 
         """
-        X, y = self.validate_data(X, y)
+        self.validate_data(X, y)
         if y is not None:
             if len(self.layers) == 0:
                 self.is_supervised = True

@@ -61,7 +61,6 @@ class BaseART(BaseEstimator, ClusterMixin):
         Returns:
         - self : estimator instance
         """
-
         if not params:
             # Simple optimization to gain speed (inspect is slow)
             return self
@@ -336,12 +335,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
 
-    def fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, max_iter=1):
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1):
         """
         Fit the model to the data
 
         Parameters:
         - X: data set
+        - y: not used. For compatibility.
         - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise

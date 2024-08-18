@@ -24,7 +24,6 @@ from artlib.common.BaseART import BaseART
 
 
 class ART2A(BaseART):
-    warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
     # implementation of ART 2-A
     def __init__(self, rho: float, alpha: float, beta: float):
         """
@@ -34,6 +33,8 @@ class ART2A(BaseART):
         - beta: learning rate
 
         """
+        warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
+
         params = {
             "rho": rho,
             "alpha": alpha,

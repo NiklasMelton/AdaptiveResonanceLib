@@ -11,6 +11,7 @@ from artlib.elementary.GaussianART import GaussianART
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.elementary.HypersphereART import HypersphereART
 from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
+from artlib.elementary.GramART import GramART
 
 from artlib.supervised.ARTMAP import ARTMAP, SimpleARTMAP
 
@@ -38,6 +39,7 @@ __all__ = [
     "FuzzyART",
     "TopoART",
     "DualVigilanceART",
+    "GramART",
     "ARTMAP",
     "SimpleARTMAP",
     "DeepARTMAP",

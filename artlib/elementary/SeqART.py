@@ -2,6 +2,13 @@ import numpy as np
 from typing import Optional, Callable
 from artlib import BaseART
 from artlib.common.utils import normalize
+import re
+
+def compress_dashes(input_string):
+    return re.sub('-+', '-', input_string)
+
+def arr2seq(x):
+    return "".join([str(i_) for i_ in x])
 
 def needleman_wunsch(seq1, seq2, match_score=1, gap_cost=-1, mismatch_cost=-1):
     m, n = len(seq1), len(seq2)
@@ -61,13 +68,13 @@ def needleman_wunsch(seq1, seq2, match_score=1, gap_cost=-1, mismatch_cost=-1):
     # The alignments are built from the end to the beginning, so we need to reverse them
     align1 = align1[::-1]
     align2 = align2[::-1]
-
-    return align1, align2, float(score_matrix[m][n])
+    alignment = ''.join([a if a == b else '-' for a, b in zip(align1, align2)])
+    l = max(len(seq1), len(seq2))
+    return alignment, float(score_matrix[m][n])/l
 
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
-    normalized = normalize(data)
-    return normalized
+    return data
 
 
 class SeqART(BaseART):
@@ -76,7 +83,7 @@ class SeqART(BaseART):
         """
         Parameters:
         - rho: vigilance parameter
-        - metric: allignment function. Should be in the format align_a, align_b, score = metric(seq_a, seq_b)
+        - metric: allignment function. Should be in the format alignment, score = metric(seq_a, seq_b)
 
         """
         params = {
@@ -116,6 +123,7 @@ class SeqART(BaseART):
         """
         pass
 
+
     def category_choice(self, i: str, w: str, params: dict) -> tuple[float, Optional[dict]]:
         """
         get the activation of the cluster
@@ -129,8 +137,8 @@ class SeqART(BaseART):
             cluster activation, cache used for later processing
 
         """
-        align_i, align_w, score = self.metric(i, w)
-        cache = {'align_i': align_i, 'align_w': align_w, 'score': score}
+        alignment, score = self.metric(arr2seq(i), w)
+        cache = {'alignment': alignment, 'score': score}
         return score, cache
 
     def match_criterion(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
@@ -147,8 +155,9 @@ class SeqART(BaseART):
             cluster match criterion, cache used for later processing
 
         """
-        _, _, M = self.metric(cache['align_w'], w)
-        return M, cache
+        # _, M = self.metric(cache['alignment'], w)
+
+        return cache['score'], cache
 
     def match_criterion_bin(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
         """
@@ -164,8 +173,8 @@ class SeqART(BaseART):
             cluster match criterion binary, cache used for later processing
 
         """
-        M, cache = self.match_criterion(i, w, params, cache)
-        return M >= params['rho'], cache
+        M, cache = self.match_criterion(arr2seq(i), w, params, cache)
+        return M > params['rho'], cache
 
     def update(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> str:
         """
@@ -181,7 +190,8 @@ class SeqART(BaseART):
             updated cluster weight, cache used for later processing
 
         """
-        return cache['align_w']
+        # print(cache['alignment'])
+        return compress_dashes(cache['alignment'])
 
     def new_weight(self, i: str, params: dict) -> str:
         """
@@ -196,4 +206,4 @@ class SeqART(BaseART):
             updated cluster weight
 
         """
-        return i
+        return arr2seq(i)

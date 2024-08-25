@@ -73,7 +73,7 @@ class SimpleARTMAP(BaseARTMAP):
         - y: data set B
 
         """
-        X, y = check_X_y(X, y)
+        X, y = check_X_y(X, y, dtype=None)
         self.module_a.validate_data(X)
         return X, y
 
@@ -120,8 +120,9 @@ class SimpleARTMAP(BaseARTMAP):
 
         for _ in range(max_iter):
             for i, (x, c_b) in enumerate(zip(X, y)):
-                c_a = self.step_fit(x, c_b)
                 self.module_a.pre_step_fit(X)
+                c_a = self.step_fit(x, c_b)
+                print("step--", i, self.n_clusters_a, self.n_clusters_b, '--', c_a)
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
         return self

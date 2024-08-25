@@ -273,22 +273,30 @@ class BaseART(BaseEstimator, ClusterMixin):
             self.add_weight(w_new)
             return 0
         else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+            # T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+            T_values, T_cache = zip(
+                *[
+                    self.category_choice(x, w, params=self.params)
+                    if (match_reset_func is None or not match_reset_func(x, w, c_, params=self.params, cache=dict())) else (np.nan, dict())
+                    for c_, w in enumerate(self.W)
+                ]
+            )
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
-                no_match_reset = (
-                        match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.params, cache=cache)
-                )
-                if m and no_match_reset:
+                # no_match_reset = (
+                #         match_reset_func is None or
+                #         match_reset_func(x, w, c_, params=self.params, cache=cache)
+                # )
+                # if m and no_match_reset:
+                if m:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
                     return c_
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
 
             c_new = len(self.W)
             w_new = self.new_weight(x, self.params)

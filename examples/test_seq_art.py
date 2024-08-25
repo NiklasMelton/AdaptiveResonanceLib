@@ -22,7 +22,7 @@ def cluster_sequences():
     X = np.array(sequences, dtype=object)
 
     params = {
-        "rho": 0.0
+        "rho": 0.3
     }
     cls = SeqART(**params)
 
@@ -35,6 +35,7 @@ def cluster_sequences():
         for s_i in range(len(sequences)):
             if i == y[s_i]:
                 print(sequences[s_i])
+        print(cls.W[i])
         print("=" * 20)
 
 

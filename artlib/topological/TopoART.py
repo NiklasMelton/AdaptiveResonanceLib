@@ -12,6 +12,7 @@ import numpy as np
 from typing import Optional, Callable, Iterable
 from matplotlib.axes import Axes
 from warnings import warn
+from copy import deepcopy
 from artlib.common.BaseART import BaseART
 
 
@@ -202,7 +203,76 @@ class TopoART(BaseART):
         if self.sample_counter_ > 0 and self.sample_counter_ % self.tau == 0:
             self.prune(X)
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+    def _step_fit_original(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+
+        Returns:
+            cluster label of the input sample
+
+        """
+        base_params = deepcopy(self.base_module.params)
+        self.sample_counter_ += 1
+        resonant_c: int = -1
+
+        if len(self.W) == 0:
+            new_w = self.new_weight(x, self.params)
+            self.add_weight(new_w)
+            self.adjacency = np.zeros((1, 1), dtype=int)
+            self._permanent_mask = np.zeros((1, ), dtype=bool)
+            return 0
+        else:
+            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+            T = np.array(T_values)
+            while any(T > 0):
+                c_ = int(np.argmax(T))
+                w = self.W[c_]
+                cache = T_cache[c_]
+                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
+                no_match_reset = (
+                        match_reset_func is None or
+                        match_reset_func(x, w, c_, params=self.params, cache=cache)
+                )
+                if m and no_match_reset:
+                    if resonant_c < 0:
+                        params = self.params
+                    else:
+                        params = dict(self.params, **{"beta": self.params["beta_lower"]})
+                    #TODO: make compatible with DualVigilanceART
+                    new_w = self.update(
+                        x,
+                        w,
+                        params=params,
+                        cache=dict((cache if cache else {}), **{"resonant_c": resonant_c, "current_c": c_})
+                    )
+                    self.set_weight(c_, new_w)
+                    if resonant_c < 0:
+                        resonant_c = c_
+                        T[c_] = -1
+                    else:
+                        self.base_module.params = base_params
+                        return resonant_c
+                else:
+                    T[c_] = -1
+                    if not no_match_reset:
+                        self.base_module.params["rho"] = cache["match_criterion"]
+
+            self.base_module.params = base_params
+            if resonant_c < 0:
+                c_new = len(self.W)
+                w_new = self.new_weight(x, self.params)
+                self.add_weight(w_new)
+                return c_new
+
+            return resonant_c
+
+    def _step_fit_modified(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         """
         fit the model to a single sample
 

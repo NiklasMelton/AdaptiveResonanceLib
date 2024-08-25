@@ -149,22 +149,6 @@ class FuzzyART(BaseART):
         """
         return l1norm(fuzzy_and(i, w)) / self.dim_original, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
-        """
-        get the binary match criterion of the cluster
-
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
-
-        Returns:
-            cluster match criterion binary, cache used for later processing
-
-        """
-        M, cache = self.match_criterion(i, w, params)
-        return M >= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """

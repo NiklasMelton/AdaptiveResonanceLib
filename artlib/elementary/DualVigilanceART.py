@@ -6,6 +6,7 @@ Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 import numpy as np
 from typing import Optional, Callable, Iterable
 from warnings import warn
+from copy import deepcopy
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 
@@ -145,6 +146,7 @@ class DualVigilanceART(BaseART):
             cluster label of the input sample
 
         """
+        base_params = deepcopy(self.params)
         self.sample_counter_ += 1
         if len(self.base_module.W) == 0:
             new_w = self.base_module.new_weight(x, self.base_module.params)
@@ -173,6 +175,7 @@ class DualVigilanceART(BaseART):
                     if m1:
                         new_w = self.base_module.update(x, w, self.base_module.params, cache=cache)
                         self.base_module.set_weight(c_, new_w)
+                        self.base_module.params = base_params
                         return self.map[c_]
                     else:
                         lb_params = dict(self.base_module.params, **{"rho": self.rho_lower_bound})
@@ -182,7 +185,10 @@ class DualVigilanceART(BaseART):
                             w_new = self.base_module.new_weight(x, self.base_module.params)
                             self.base_module.add_weight(w_new)
                             self.map[c_new] = self.map[c_]
+                            self.base_module.params = base_params
                             return self.map[c_new]
+                else:
+                    self.base_module.params["rho"] = cache["match_criterion"]
                 T[c_] = -1
 
             c_new = len(self.base_module.W)

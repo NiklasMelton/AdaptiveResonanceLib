@@ -133,7 +133,7 @@ class BayesianART(BaseART):
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
-        return M <= params["rho"], cache
+        return M < params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """

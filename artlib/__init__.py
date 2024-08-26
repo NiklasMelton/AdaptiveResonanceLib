@@ -13,7 +13,7 @@ from artlib.elementary.HypersphereART import HypersphereART
 from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 
 from artlib.cvi.iCVIFuzzyArt import iCVIFuzzyART
-from artlib.cvi.CVIFuzzyArt import CVIFuzzyART
+from artlib.cvi.CVIART import CVIART
 
 from artlib.supervised.ARTMAP import ARTMAP, SimpleARTMAP
 
@@ -48,5 +48,5 @@ __all__ = [
     "FusionART",
     "BARTMAP",
     "iCVIFuzzyART",
-    "CVIFuzzyART"
+    "CVIART"
 ]

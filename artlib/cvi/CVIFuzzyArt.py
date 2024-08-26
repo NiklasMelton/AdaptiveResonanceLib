@@ -38,15 +38,14 @@ class CVIFuzzyART(FuzzyART):
         if len(self.W) < 2:
             return True
 
-        match params['validity']:
-            case self.CALINSKIHARABASZ:
-                valid_func = metrics.calinski_harabasz_score
-            case self.DAVIESBOULDIN:
-                valid_func = metrics.davies_bouldin_score
-            case self.SILHOUETTE:
-                valid_func = metrics.silhouette_score
-            case _:
-                valid_func = metrics.calinski_harabasz_score
+        if params['validity'] == self.CALINSKIHARABASZ:
+            valid_func = metrics.calinski_harabasz_score
+        elif params['validity'] == self.DAVIESBOULDIN:
+            valid_func = metrics.davies_bouldin_score
+        elif params['validity'] == self.SILHOUETTE:
+            valid_func = metrics.silhouette_score
+        else:
+            raise ValueError(f"Invalid Validity Parameter: {params['validity']}")
 
         old_VI = valid_func(self.data, self.labels_)
         new_labels = np.copy(self.labels_)

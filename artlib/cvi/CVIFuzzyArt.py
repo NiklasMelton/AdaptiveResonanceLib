@@ -34,28 +34,27 @@ class CVIFuzzyART(FuzzyART):
         assert 'validity' in self.params
         assert isinstance(self.params['validity'], int)
 
-    def CVIMatch(self, x, w, c_, params, cache):
+    def CVI_match(self, x, w, c_, params, cache):
         if len(self.W) < 2:
             return True
 
-        match params['validity']:
-            case self.CALINSKIHARABASZ:
-                validFunc = metrics.calinski_harabasz_score
-            case self.DAVIESBOULDIN:
-                validFunc = metrics.davies_bouldin_score
-            case self.SILHOUETTE:
-                validFunc = metrics.silhouette_score
-            case _:
-                validFunc = metrics.calinski_harabasz_score
-
-        oldVI = validFunc(self.data, self.labels_)
-        newLabels = np.copy(self.labels_)
-        newLabels[self.index] = c_
-        new_VI = validFunc(self.data, newLabels)
-        if params['validity'] != self.DAVIESBOULDIN:
-            return new_VI > oldVI
+        if params['validity'] == self.CALINSKIHARABASZ:
+            valid_func = metrics.calinski_harabasz_score
+        elif params['validity'] == self.DAVIESBOULDIN:
+            valid_func = metrics.davies_bouldin_score
+        elif params['validity'] == self.SILHOUETTE:
+            valid_func = metrics.silhouette_score
         else:
-            return new_VI < oldVI
+            raise ValueError(f"Invalid Validity Parameter: {params['validity']}")
+
+        old_VI = valid_func(self.data, self.labels_)
+        new_labels = np.copy(self.labels_)
+        new_labels[self.index] = c_
+        new_VI = valid_func(self.data, new_labels)
+        if params['validity'] != self.DAVIESBOULDIN:
+            return new_VI > old_VI
+        else:
+            return new_VI < old_VI
 
     def fit(self, X: np.ndarray, max_iter: int = 1):
         self.data = X
@@ -70,6 +69,6 @@ class CVIFuzzyART(FuzzyART):
             for i, x in enumerate(X):
                 self.pre_step_fit(X)
                 self.index = i
-                c = self.step_fit(x, match_reset_func=self.CVIMatch)
+                c = self.step_fit(x, match_reset_func=self.CVI_match)
                 self.labels_[i] = c
                 self.post_step_fit(X)

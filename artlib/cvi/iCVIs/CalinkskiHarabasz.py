@@ -12,14 +12,14 @@ update after update is called.
 import numpy as np
 
 
-def deltaAddSampleToAverage(average, sample, totalSamples):
+def delta_add_sample_to_average(average, sample, total_samples):
     """Calculate the new average if sample is added"""
-    return (sample - average) / totalSamples
+    return (sample - average) / total_samples
 
 
-def deltaRemoveSampleFromAverage(average, sample, totalSamples):
+def delta_remove_sample_from_average(average, sample, total_samples):
     """Calculate the new average if sample is removed"""
-    return (average - sample) / (totalSamples - 1)
+    return (average - sample) / (total_samples - 1)
 
 
 class iCVI_CH():
@@ -43,7 +43,7 @@ class iCVI_CH():
 
     Parameters:
         dim: an int storing the dimensionality of the input data.
-        nSamples: an int with the total number of samples.
+        n_samples: an int with the total number of samples.
         mu: a numpy array representing the average of all data points.
         CD: ClusterData... a dict holding all the data for each cluster, with the parameters
             n: the number of samples belonging to each cluster/label.
@@ -51,7 +51,7 @@ class iCVI_CH():
             CP: the compactness of each cluster. Not really needed since WGSS can be calculated incrementally.
             G: the vector g of each cluster.
         WGSS: Within Groupd sum of squares.
-        criterionValue: the calculated CH score.
+        criterion_value: the calculated CH score.
     """
 
     def __init__(self, x: np.ndarray) -> None:
@@ -61,19 +61,19 @@ class iCVI_CH():
             x: a sample from the dataset used for recording data dimensionality.
         """
         self.dim = x.shape[0]  # Dimension of the input data
-        self.nSamples: int = 0  # number of samples encountered
+        self.n_samples: int = 0  # number of samples encountered
         self.mu = np.array([])  # geometric mean of the data
         self.CD = {}            # Dict for each cluster label containing n,v,CP, and G
         self.WGSS = 0           # within group sum of squares
-        self.criterionValue = 0  # calcualted CH index
+        self.criterion_value = 0  # calcualted CH index
 
-    def addSample(self, x, label) -> dict:
+    def add_sample(self, x, label) -> dict:
         """Calculate the result of adding a new sample with a given label.
 
         Create a dictionary containing the updated values after assigning a label to a given sample.
         To accept the outcome of the sample being added, pass the returned parameter dict to update.
 
-        In general, if newP['criterionValue'] > obj.criterionValue, the clustering has been improved.
+        In general, if newP['criterion_value'] > obj.criterion_value, the clustering has been improved.
 
         Args:
             x: The sample to add to the current validity index calculation
@@ -83,40 +83,40 @@ class iCVI_CH():
             newP: a dictionary contained the values after the sample is added, to be passed to update call.
         """
         newP = {'x': x, 'label': label}  # New Parameters
-        newP['nSamples'] = self.nSamples + 1
+        newP['n_samples'] = self.n_samples + 1
         if self.mu.size == 0:  # mu will be size 0 if no samples in dataset.
             newP['mu'] = x
         else:
-            newP['mu'] = self.mu + deltaAddSampleToAverage(self.mu, x, newP['nSamples'])
+            newP['mu'] = self.mu + delta_add_sample_to_average(self.mu, x, newP['n_samples'])
 
         CD = {}
         newP['CD'] = CD
         SEP = []  # separation between each cluster and the mean of the data
         if label not in self.CD:
-            nClusters = len(self.CD) + 1
+            n_clusters = len(self.CD) + 1
             CD['n'] = 1
             CD['v'] = x
             CD['CP'] = 0
             CD['G'] = np.zeros(self.dim)
-            newP['CPdiff'] = 0
+            newP['CP_diff'] = 0
             diff = x - newP['mu']
             SEP.append(sum(diff ** 2))  # Handle SEP for new clusters now instead of later.
         else:
-            nClusters = len(self.CD)
+            n_clusters = len(self.CD)
             Data = self.CD[label]
             CD['n'] = Data['n'] + 1
 
             # The paper defines deltaV = Vold - Vnew, so I need to switch this sign. Consider changing functions to do this.
-            deltaV = -1 * deltaAddSampleToAverage(Data['v'], x, CD['n'])
+            deltaV = -1 * delta_add_sample_to_average(Data['v'], x, CD['n'])
             CD['v'] = Data['v'] - deltaV  # Vnew = Vold - deltaV
             diff_x_v = x - CD['v']
 
-            newP['CPdiff'] = (diff_x_v @ diff_x_v.T) + (CD['n'] - 1) * (deltaV @ deltaV.T) + 2 * (deltaV @ Data['G'])
-            CD['CP'] = Data['CP'] + newP['CPdiff']
+            newP['CP_diff'] = (diff_x_v @ diff_x_v.T) + (CD['n'] - 1) * (deltaV @ deltaV.T) + 2 * (deltaV @ Data['G'])
+            CD['CP'] = Data['CP'] + newP['CP_diff']
             CD['G'] = Data['G'] + diff_x_v + (CD['n'] - 1) * deltaV
 
-        if nClusters < 2:
-            newP['criterionValue'] = 0
+        if n_clusters < 2:
+            newP['criterion_value'] = 0
         else:
             for i in self.CD:  # A new label won't be processed, but handled earlier
                 if i == label:
@@ -128,12 +128,12 @@ class iCVI_CH():
                 diff = v - newP['mu']
                 SEP.append(n * sum(diff ** 2))
 
-            WGSS = self.WGSS + newP['CPdiff']
+            WGSS = self.WGSS + newP['CP_diff']
             BGSS = sum(SEP)  # between-group sum of squares
             if WGSS == 0:  # this can be 0 if all samples in different clusters, which is a divide by 0 error.
-                newP['criterionValue'] = 0
+                newP['criterion_value'] = 0
             else:
-                newP['criterionValue'] = (BGSS / WGSS) * (newP['nSamples'] - nClusters) / (nClusters - 1)
+                newP['criterion_value'] = (BGSS / WGSS) * (newP['n_samples'] - n_clusters) / (n_clusters - 1)
         return newP
 
     def update(self, params) -> None:
@@ -146,16 +146,16 @@ class iCVI_CH():
         Args:
             params: dict containing the parameters to update.
         """
-        self.nSamples = params['nSamples']
+        self.n_samples = params['n_samples']
         self.mu = params['mu']
-        self.criterionValue = params['criterionValue']
+        self.criterion_value = params['criterion_value']
         self.CD[params['label']] = params['CD']
-        self.WGSS += params['CPdiff']
+        self.WGSS += params['CP_diff']
         if 'label2' in params:
             self.CD[params['label2']] = params['CD2']
-            self.WGSS += params['CPdiff2']
+            self.WGSS += params['CP_diff2']
 
-    def switchLabel(self, x, label_old, label_new):
+    def switch_label(self, x, label_old, label_new):
         """Calculates the parameters if a sample has its label changed.
 
         This essentially removes a sample with the old label from the clusters, then adds it back with the new sample.
@@ -173,11 +173,11 @@ class iCVI_CH():
         Returns:
             newP: a dictionary contained the values after the sample is added, to be passed to update call."""
         if label_new == label_old:
-            return {'nSamples': self.nSamples,
+            return {'n_samples': self.n_samples,
                     'mu': self.mu,
-                    'criterionValue': self.criterionValue,
+                    'criterion_value': self.criterion_value,
                     'label': label_old,
-                    'CPdiff': 0,
+                    'CP_diff': 0,
                     'CD': {
                         'n': self.CD[label_old]['n'],
                         'v': self.CD[label_old]['v'],
@@ -189,48 +189,48 @@ class iCVI_CH():
 
         newP = {'x': x, 'label': label_old, 'label2': label_new}  # New Parameters
         newP['mu'] = self.mu
-        newP['nSamples'] = self.nSamples
-        paramsRemove = self.removeSample(x, label_old)
-        paramsAdd = self.addSample(x, label_new)
-        newP['CD'] = paramsRemove['CD']
-        newP['CPdiff'] = paramsRemove['CPdiff']
-        newP['CD2'] = paramsAdd['CD']
-        newP['CPdiff2'] = paramsAdd['CPdiff']
+        newP['n_samples'] = self.n_samples
+        params_remove = self.remove_sample(x, label_old)
+        params_add = self.add_sample(x, label_new)
+        newP['CD'] = params_remove['CD']
+        newP['CP_diff'] = params_remove['CP_diff']
+        newP['CD2'] = params_add['CD']
+        newP['CP_diff2'] = params_add['CP_diff']
 
         SEP = []  # separation between each cluster and the mean of the data
         if label_new not in self.CD:
-            nClusters = len(self.CD) + 1
+            n_clusters = len(self.CD) + 1
             diff = x - newP['mu']
             SEP.append(sum(diff ** 2))  # Handle SEP for new clusters now instead of later.
         else:
-            nClusters = len(self.CD)
+            n_clusters = len(self.CD)
 
-        if nClusters < 2:  # I don't think this can ever happen with remove label not deleting categories.
-            newP['criterionValue'] = 0
+        if n_clusters < 2:  # I don't think this can ever happen with remove label not deleting categories.
+            newP['criterion_value'] = 0
         else:
             for i in self.CD:
                 if i == label_old:
-                    n = paramsRemove['CD']['n']
-                    v = paramsRemove['CD']['v']
+                    n = params_remove['CD']['n']
+                    v = params_remove['CD']['v']
                 elif i == label_new:
-                    n = paramsAdd['CD']['n']
-                    v = paramsAdd['CD']['v']
+                    n = params_add['CD']['n']
+                    v = params_add['CD']['v']
                 else:
                     n = self.CD[i]['n']
                     v = self.CD[i]['v']
                 diff = v - newP['mu']
                 SEP.append(n * sum(diff ** 2))
 
-            WGSS = self.WGSS + newP['CPdiff']
-            WGSS += newP['CPdiff2']
+            WGSS = self.WGSS + newP['CP_diff']
+            WGSS += newP['CP_diff2']
             BGSS = sum(SEP)  # between-group sum of squares
             if WGSS == 0:  # this can be 0 if all samples in different clusters, which is a divide by 0 error.
-                newP['criterionValue'] = 0
+                newP['criterion_value'] = 0
             else:
-                newP['criterionValue'] = (BGSS / WGSS) * (newP['nSamples'] - nClusters) / (nClusters - 1)
+                newP['criterion_value'] = (BGSS / WGSS) * (newP['n_samples'] - n_clusters) / (n_clusters - 1)
         return newP
 
-    def removeSample(self, x, label):  # This is left here mostly as an extra, and not really meant to be used.
+    def remove_sample(self, x, label):  # This is left here mostly as an extra, and not really meant to be used.
         """Remove a sample from the clusters
 
          Calculates parameters after removing a sample from the clusters, or the opposite of an add operation.
@@ -247,27 +247,27 @@ class iCVI_CH():
             raise Exception("Can't remove a value from a cluster of 1")  # At least for now
 
         newP = {'x': x, 'label': label}  # New Parameters after removal
-        newP['mu'] = self.mu - deltaRemoveSampleFromAverage(self.mu, x, self.nSamples)
-        newP['nSamples'] = self.nSamples - 1
+        newP['mu'] = self.mu - delta_remove_sample_from_average(self.mu, x, self.n_samples)
+        newP['n_samples'] = self.n_samples - 1
 
         CD = {}
         newP['CD'] = CD
         CD['n'] = Data['n'] - 1
 
         # We need the delta v from when the sample was added, but the paper defines deltaV = Vold - Vnew, so I need to keep these signs
-        deltaVPrior = deltaRemoveSampleFromAverage(Data['v'], x, Data['n'])
+        deltaVPrior = delta_remove_sample_from_average(Data['v'], x, Data['n'])
         CD['v'] = Data['v'] + deltaVPrior  # Vnew + deltaV = Vold
         diff_x_vPrior = x - Data['v']
 
         # We already subtracted 1 from n
         CD['G'] = Data['G'] - (diff_x_vPrior + (CD['n']) * deltaVPrior)
         # CD's G is the old G, which is what we added before.
-        newP['CPdiff'] = -1 * ((diff_x_vPrior @ diff_x_vPrior.T) + (CD['n']) * (deltaVPrior @ deltaVPrior.T) + 2 * (deltaVPrior @ CD['G']))
-        CD['CP'] = Data['CP'] + newP['CPdiff']
+        newP['CP_diff'] = -1 * ((diff_x_vPrior @ diff_x_vPrior.T) + (CD['n']) * (deltaVPrior @ deltaVPrior.T) + 2 * (deltaVPrior @ CD['G']))
+        CD['CP'] = Data['CP'] + newP['CP_diff']
 
-        nClusters = len(self.CD)  # Move this up if deleting clusters are allowed.
-        if nClusters < 2:
-            newP['criterionValue'] = 0
+        n_clusters = len(self.CD)  # Move this up if deleting clusters are allowed.
+        if n_clusters < 2:
+            newP['criterion_value'] = 0
         else:
             SEP = []  # separation between each cluster and the mean of the data
             for i in self.CD:
@@ -280,10 +280,10 @@ class iCVI_CH():
                 diff = v - newP['mu']
                 SEP.append(n * sum(diff ** 2))
 
-            WGSS = self.WGSS + newP['CPdiff']
+            WGSS = self.WGSS + newP['CP_diff']
             BGSS = sum(SEP)  # between-group sum of squares
             if WGSS == 0:  # this can be 0 if all samples in different clusters, which is a divide by 0 error.
-                newP['criterionValue'] = 0
+                newP['criterion_value'] = 0
             else:
-                newP['criterionValue'] = (BGSS / WGSS) * (newP['nSamples'] - nClusters) / (nClusters - 1)
+                newP['criterion_value'] = (BGSS / WGSS) * (newP['n_samples'] - n_clusters) / (n_clusters - 1)
         return newP

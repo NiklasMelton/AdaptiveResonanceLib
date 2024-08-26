@@ -230,7 +230,7 @@ class TopoART(BaseART):
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(~np.nan(T)):
+            while any(~np.isnan(T)):
                 c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]

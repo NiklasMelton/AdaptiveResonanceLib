@@ -202,6 +202,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         if cache is None:
             cache = dict()
         cache["match_criterion"] = M
+        cache["match_criterion_bin"] = M > params["rho"]
         return M > params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:

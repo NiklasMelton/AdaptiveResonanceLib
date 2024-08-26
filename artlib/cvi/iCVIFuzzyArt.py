@@ -31,13 +31,13 @@ class iCVIFuzzyART(FuzzyART):
         assert 'validity' in self.params  # Because Fuzzy art doesn't accept validity, and makes the params the way it does, validations have to be done after init.
         assert isinstance(self.params['validity'], int)
 
-    def iCVIMatch(self, x, w, c_, params, cache):
+    def iCVI_match(self, x, w, c_, params, cache):
         if self.offline:
-            new = self.iCVI.switchLabel(x, self.labels_[self.index], c_)
+            new = self.iCVI.switch_label(x, self.labels_[self.index], c_)
         else:
-            new = self.iCVI.addSample(x, c_)
+            new = self.iCVI.add_sample(x, c_)
         # Eventually this should be an icvi function that you pass the params, and it handles if this is true or false.
-        return new['criterionValue'] > self.iCVI.criterionValue
+        return new['criterion_value'] > self.iCVI.criterion_value
         # return self.iCVI.evalLabel(x, c_) This except pass params instead.
 
     # Could add max epochs back in, but only if offline is true, or do something special...
@@ -53,18 +53,18 @@ class iCVIFuzzyART(FuzzyART):
 
         if self.offline:
             for x in X:
-                params = self.iCVI.addSample(x, 0)
+                params = self.iCVI.add_sample(x, 0)
                 self.iCVI.update(params)
 
         for i, x in enumerate(X):
             self.pre_step_fit(X)
             self.index = i
-            c = self.step_fit(x, match_reset_func=self.iCVIMatch)
+            c = self.step_fit(x, match_reset_func=self.iCVI_match)
 
             if self.offline:
-                params = self.iCVI.switchLabel(x, self.labels_[i], c)
+                params = self.iCVI.switch_label(x, self.labels_[i], c)
             else:
-                params = self.iCVI.addSample(x, c)
+                params = self.iCVI.add_sample(x, c)
             self.iCVI.update(params)
 
             self.labels_[i] = c

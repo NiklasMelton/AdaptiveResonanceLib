@@ -281,8 +281,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
@@ -295,7 +295,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                     self.params = base_params
                     return c_
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
                     if not no_match_reset:
                         self.params["rho"] = cache["match_criterion"]
 
@@ -307,7 +307,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def _step_fit_modified(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
         """
-        fit the model to a single sample
+        fit the model to a single sample using the modified match reset method
 
         Parameters:
         - x: data sample
@@ -327,8 +327,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
@@ -340,15 +340,29 @@ class BaseART(BaseEstimator, ClusterMixin):
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
                     return c_
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
 
             c_new = len(self.W)
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
             return c_new
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, artmap_method: Literal["original", "modified"] = "original") -> int:
-        if artmap_method == "original":
+    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original") -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method: either "original" or "modified"
+
+        Returns:
+            cluster label of the input sample
+
+        """
+        if match_reset_method == "original":
             return self._step_fit_original(x, match_reset_func)
         else:
             return self._step_fit_modified(x, match_reset_func)
@@ -393,7 +407,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1):
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """
         Fit the model to the data
 
@@ -404,6 +418,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method: either "original" or "modified"
 
         """
         self.validate_data(X)
@@ -415,13 +430,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         for _ in range(max_iter):
             for i, x in enumerate(X):
                 self.pre_step_fit(X)
-                c = self.step_fit(x, match_reset_func=match_reset_func)
+                c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
                 self.labels_[i] = c
                 self.post_step_fit(X)
         return self
 
 
-    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None):
+    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original"):
         """
         iteratively fit the model to the data
 
@@ -430,6 +445,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method: either "original" or "modified"
 
         """
 
@@ -445,7 +461,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             j = len(self.labels_)
             self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
         for i, x in enumerate(X):
-            c = self.step_fit(x, match_reset_func=match_reset_func)
+            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
             self.labels_[i+j] = c
         return self
 

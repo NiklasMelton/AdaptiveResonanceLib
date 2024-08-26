@@ -230,8 +230,8 @@ class TopoART(BaseART):
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.nan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
@@ -254,12 +254,12 @@ class TopoART(BaseART):
                     self.set_weight(c_, new_w)
                     if resonant_c < 0:
                         resonant_c = c_
-                        T[c_] = -1
+                        T[c_] = np.nan
                     else:
                         self.base_module.params = base_params
                         return resonant_c
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
                     if not no_match_reset:
                         self.base_module.params["rho"] = cache["match_criterion"]
 
@@ -298,8 +298,8 @@ class TopoART(BaseART):
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
@@ -322,11 +322,11 @@ class TopoART(BaseART):
                     self.set_weight(c_, new_w)
                     if resonant_c < 0:
                         resonant_c = c_
-                        T[c_] = -1
+                        T[c_] = np.nan
                     else:
                         return resonant_c
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
 
             if resonant_c < 0:
                 c_new = len(self.W)

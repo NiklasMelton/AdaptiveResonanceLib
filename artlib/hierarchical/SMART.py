@@ -32,7 +32,7 @@ class SMART(DeepARTMAP):
             assert isinstance(layer, BaseART), "Only elementary ART-like objects are supported"
         super().__init__(layers)
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1):
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """
         Fit the model to the data
 
@@ -40,14 +40,15 @@ class SMART(DeepARTMAP):
         - X: data set A
         - y: not used
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method: either "original" or "modified"
 
         """
         X_list = [X]*self.n_modules
-        return super().fit(X_list, max_iter=max_iter)
+        return super().fit(X_list, max_iter=max_iter, match_reset_method=match_reset_method)
 
-    def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None):
+    def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_method: Literal["original", "modified"] = "original"):
         X_list = [X] * self.n_modules
-        return self.partial_fit(X_list)
+        return self.partial_fit(X_list, match_reset_method=match_reset_method)
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

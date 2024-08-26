@@ -213,8 +213,8 @@ class FusionART(BaseART):
         else:
             T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
@@ -228,7 +228,7 @@ class FusionART(BaseART):
                         self.modules[i].params = base_params[i]
                     return c_
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
                     if not no_match_reset:
                         for i in range(self.n):
                             self.modules[i].params["rho"] = cache[i]["match_criterion"]

@@ -10,7 +10,7 @@ In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
 International Society for Optics and Photonics. doi:10.1117/12.421180.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
@@ -179,6 +179,14 @@ class EllipsoidART(BaseART):
             ellipsoids.append((centroid, width, height, angle))
 
         return ellipsoids
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return [w[:self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

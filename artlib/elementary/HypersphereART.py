@@ -5,7 +5,7 @@ In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
 (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
@@ -145,6 +145,14 @@ class HypersphereART(BaseART):
 
         """
         return np.concatenate([i, [0.]])
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return [w[:-1] for w in self.W]
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):

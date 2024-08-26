@@ -9,7 +9,7 @@ doi:10.1007/978-3-642-15825-4_21.
 """
 
 import numpy as np
-from typing import Optional, Callable, Iterable
+from typing import Optional, Callable, Iterable, List
 from matplotlib.axes import Axes
 from warnings import warn
 from copy import deepcopy
@@ -335,6 +335,14 @@ class TopoART(BaseART):
                 return c_new
 
             return resonant_c
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

@@ -136,3 +136,19 @@ class ARTMAP(SimpleARTMAP):
         """
         check_is_fitted(self)
         return super(ARTMAP, self).predict_ab(X)
+
+    def predict_regression(self, X: np.ndarray) -> np.ndarray:
+        """
+        predict values for the data
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            predicted values using cluster centers
+
+        """
+        check_is_fitted(self)
+        C = self.predict(X)
+        centers = self.module_b.get_cluster_centers()
+        return np.array([centers[c] for c in C])

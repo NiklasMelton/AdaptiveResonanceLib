@@ -18,7 +18,7 @@ Stephan Grossberg himself has said ART2 does not work.
 """
 
 import numpy as np
-from typing import Optional
+from typing import Optional, List
 from warnings import warn
 from artlib.common.BaseART import BaseART
 
@@ -148,3 +148,11 @@ class ART2A(BaseART):
 
         """
         return i
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return self.W

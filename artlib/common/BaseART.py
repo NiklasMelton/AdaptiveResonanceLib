@@ -151,7 +151,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         assert np.all(X >= 0), "Data has not been normalized"
         assert np.all(X <= 1.0), "Data has not been normalized"
-        self.check_dimensions(X)
+        # self.check_dimensions(X)
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """

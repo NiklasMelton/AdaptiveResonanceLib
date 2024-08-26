@@ -140,6 +140,7 @@ class ARTMAP(SimpleARTMAP):
     def predict_regression(self, X: np.ndarray) -> np.ndarray:
         """
         predict values for the data
+        ARTMAP is not recommended for regression. Use FusionART instead.
 
         Parameters:
         - X: data set A

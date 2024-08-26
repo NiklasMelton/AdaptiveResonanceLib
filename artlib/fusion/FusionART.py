@@ -8,6 +8,7 @@ doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
 from typing import Optional, Union, Callable
+from copy import deepcopy
 from artlib.common.BaseART import BaseART
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
@@ -205,7 +206,7 @@ class FusionART(BaseART):
 
         """
         self.sample_counter_ += 1
-        base_params = {i: deepcopy(module.params) for i, module in zip(self.modules)}
+        base_params = {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
         if len(self.W) == 0:
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)

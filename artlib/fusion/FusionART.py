@@ -7,7 +7,7 @@ Berlin, Heidelberg: Springer Berlin Heidelberg.
 doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 from artlib.common.BaseART import BaseART
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:

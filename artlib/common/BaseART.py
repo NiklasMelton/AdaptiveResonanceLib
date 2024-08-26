@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Optional, Callable, Iterable, Literal
+from copy import deepcopy
 from collections import defaultdict
 from matplotlib.axes import Axes
 from warnings import warn

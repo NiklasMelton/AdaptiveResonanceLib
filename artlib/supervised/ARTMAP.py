@@ -4,6 +4,7 @@ ARTMAP: Supervised real-time learning and classification of nonstationary data b
 Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 """
 import numpy as np
+from typing import Literal
 from artlib.common.BaseART import BaseART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.validation import check_is_fitted

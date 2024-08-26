@@ -5,7 +5,7 @@ Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 """
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
-from typing import Optional, cast, Union
+from typing import Optional, cast, Union, Literal
 from collections import defaultdict
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP

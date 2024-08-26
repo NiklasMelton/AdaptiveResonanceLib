@@ -6,7 +6,7 @@ In Proc. IEEE International Conference on Neural Networks (ICNN)
 """
 
 import numpy as np
-from typing import Union, Type, Optional, Iterable
+from typing import Union, Type, Optional, Iterable, Literal
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP

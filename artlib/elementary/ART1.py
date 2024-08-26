@@ -5,7 +5,7 @@ Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0
 """
 
 import numpy as np
-from typing import Optional
+from typing import Optional, List
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import normalize, l1norm
 
@@ -132,3 +132,11 @@ class ART1(BaseART):
         w_td_new = i
         w_bu_new = (params["L"] / (params["L"] - 1 + self.dim_))*w_td_new
         return np.concatenate([w_bu_new, w_td_new])
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return [w[self.dim_:] for w in self.W]

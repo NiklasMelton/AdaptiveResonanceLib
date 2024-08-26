@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Callable, Iterable, Literal
+from typing import Optional, Callable, Iterable, Literal, List
 from copy import deepcopy
 from collections import defaultdict
 from matplotlib.axes import Axes
@@ -500,6 +500,15 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         raise NotImplementedError
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        undefined function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        raise NotImplementedError
+
 
     def visualize(
             self,

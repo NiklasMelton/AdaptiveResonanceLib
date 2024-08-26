@@ -4,7 +4,7 @@ Fuzzy ART: Fast stable learning and categorization of analog patterns by an adap
 Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import normalize, compliment_code, l1norm, fuzzy_and
@@ -186,6 +186,18 @@ class FuzzyART(BaseART):
 
     def get_bounding_boxes(self, n: Optional[int] = None):
         return list(map(lambda w: get_bounding_box(w, n=n), self.W))
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        centers = []
+        for w in self.W:
+            ref_points, widths = get_bounding_box(w,None)
+            centers.append(np.array(ref_points)+0.5*np.array(widths))
+        return centers
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

@@ -4,7 +4,7 @@ Dual vigilance fuzzy adaptive resonance theory.
 Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 """
 import numpy as np
-from typing import Optional, Callable, Iterable
+from typing import Optional, Callable, Iterable, List
 from warnings import warn
 from copy import deepcopy
 from matplotlib.axes import Axes
@@ -218,9 +218,17 @@ class DualVigilanceART(BaseART):
         c_ = int(np.argmax(T))
         return self.map[c_]
 
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return self.base_module.get_cluster_centers()
+
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        function for visualizing the bounds of each cluster
 
         Parameters:
         - ax: figure axes

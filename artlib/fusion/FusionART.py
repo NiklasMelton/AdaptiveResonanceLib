@@ -241,12 +241,13 @@ class FusionART(BaseART):
                 else:
                     T[c_] = np.nan
                     delta_matching_M = [abs(self.modules[i].params["rho"]-cache[i]["match_criterion"]) for i in range(self.n) if cache[i]["match_criterion_bin"]]
-                    vigilence_delta = min(delta_matching_M)
-                    for i in range(self.n):
-                        if self.modules[i].__class__.__name__ == "BayesianART":
-                            self.modules[i].params["rho"] -= vigilence_delta
-                        else:
-                            self.modules[i].params["rho"] += vigilence_delta
+                    if delta_matching_M:
+                        vigilence_delta = min(delta_matching_M)
+                        for i in range(self.n):
+                            if self.modules[i].__class__.__name__ == "BayesianART":
+                                self.modules[i].params["rho"] -= vigilence_delta
+                            else:
+                                self.modules[i].params["rho"] += vigilence_delta
 
             c_new = len(self.W)
             w_new = self.new_weight(x, self.params)

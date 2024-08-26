@@ -7,7 +7,8 @@ Berlin, Heidelberg: Springer Berlin Heidelberg.
 doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, Callable
+from copy import deepcopy
 from artlib.common.BaseART import BaseART
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
@@ -188,6 +189,57 @@ class FusionART(BaseART):
         )
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return all(M_bin), cache
+
+
+    def _step_fit_original(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+
+        Returns:
+            cluster label of the input sample
+
+        """
+        self.sample_counter_ += 1
+        base_params = {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
+        if len(self.W) == 0:
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            return 0
+        else:
+            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+            T = np.array(T_values)
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
+                w = self.W[c_]
+                cache = T_cache[c_]
+                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
+                no_match_reset = (
+                        match_reset_func is None or
+                        match_reset_func(x, w, c_, params=self.params, cache=cache)
+                )
+                if m and no_match_reset:
+                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    for i in range(self.n):
+                        self.modules[i].params = base_params[i]
+                    return c_
+                else:
+                    T[c_] = np.nan
+                    if not no_match_reset:
+                        for i in range(self.n):
+                            self.modules[i].params["rho"] = cache[i]["match_criterion"]
+
+            c_new = len(self.W)
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            for i in range(self.n):
+                self.modules[i].params = base_params[i]
+            return c_new
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """

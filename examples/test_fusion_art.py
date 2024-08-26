@@ -25,7 +25,7 @@ def cluster_blobs():
     }
     art_a = FuzzyART(**params)
     art_b = FuzzyART(**params)
-    cls = FusionART([art_a, art_b], gamma_values=[0.5, 0.5], channel_dims=[2,2])
+    cls = FusionART([art_a, art_b], gamma_values=np.array([0.5, 0.5]), channel_dims=[2,2])
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

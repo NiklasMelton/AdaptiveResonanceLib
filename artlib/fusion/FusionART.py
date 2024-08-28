@@ -7,7 +7,7 @@ Berlin, Heidelberg: Springer Berlin Heidelberg.
 doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
-from typing import Optional, Union, Callable, List
+from typing import Optional, Union, Callable, List, Literal
 from copy import deepcopy
 from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted
@@ -255,6 +255,35 @@ class FusionART(BaseART):
             for i in range(self.n):
                 self.modules[i].params = base_params[i]
             return c_new
+
+    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original"):
+        """
+        iteratively fit the model to the data
+
+        Parameters:
+        - X: data set
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method: either "original" or "modified"
+
+        """
+
+        self.validate_data(X)
+        self.check_dimensions(X)
+        self.is_fitted_ =  True
+
+        if not hasattr(self.modules[0], 'W'):
+            self.W: list[np.ndarray] = []
+            self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+            j = 0
+        else:
+            j = len(self.labels_)
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
+        for i, x in enumerate(X):
+            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
+            self.labels_[i+j] = c
+        return self
 
     def step_pred(self, x, skip_channels: List[int] = []) -> int:
         """

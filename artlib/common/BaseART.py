@@ -490,6 +490,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             y[i] = c
         return y
 
+    def shrink_clusters(self, shrink_ratio: float = 0.1):
+        return self
+
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
         undefined function for visualizing the bounds of each cluster

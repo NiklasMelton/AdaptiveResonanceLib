@@ -22,6 +22,8 @@ from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 from artlib.fusion.FusionART import FusionART
 
+from artlib.reinforcement.FALCON import FALCON
+
 from artlib.biclustering.BARTMAP import BARTMAP
 
 from artlib.topological.TopoART import TopoART

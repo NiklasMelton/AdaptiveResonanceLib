@@ -199,6 +199,19 @@ class FuzzyART(BaseART):
             centers.append(np.array(ref_points)+0.5*np.array(widths))
         return centers
 
+    def shrink_clusters(self, shrink_ratio: float = 0.1):
+        new_W = []
+        dim = len(self.W[0])//2
+        for w in self.W:
+            new_w = np.copy(w)
+            widths = (1-w[dim:]) - w[:dim]
+            new_w[:dim] += widths*shrink_ratio
+            new_w[dim:] += widths*shrink_ratio
+            new_W.append(new_w)
+        self.W = new_W
+        return self
+
+
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
         undefined function for visualizing the bounds of each cluster

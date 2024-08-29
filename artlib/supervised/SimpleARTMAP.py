@@ -73,7 +73,7 @@ class SimpleARTMAP(BaseARTMAP):
         - y: data set B
 
         """
-        X, y = check_X_y(X, y)
+        X, y = check_X_y(X, y, dtype=None)
         self.module_a.validate_data(X)
         return X, y
 

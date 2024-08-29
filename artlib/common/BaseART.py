@@ -199,11 +199,12 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        M_bin = M > params["rho"]
         if cache is None:
             cache = dict()
         cache["match_criterion"] = M
-        cache["match_criterion_bin"] = M > params["rho"]
-        return M > params["rho"], cache
+        cache["match_criterion_bin"] = M_bin
+        return M_bin, cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -408,6 +409,17 @@ class BaseART(BaseEstimator, ClusterMixin):
         # this is where pruning steps can go
         pass
 
+    def post_fit(self, X: np.ndarray):
+        """
+        undefined function called after fit. Useful for cluster pruning
+
+        Parameters:
+        - X: data set
+
+        """
+        # this is where pruning steps can go
+        pass
+
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """
@@ -435,6 +447,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                 c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
                 self.labels_[i] = c
                 self.post_step_fit(X)
+        self.post_fit(X)
         return self
 
 

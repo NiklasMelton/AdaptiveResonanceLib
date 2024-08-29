@@ -137,7 +137,7 @@ def centroid_of_convex_hull(hull: HullTypes):
 
 
 class ConvexHullART(BaseART):
-    def __init__(self, rho: float):
+    def __init__(self, rho: float, merge_rho: float):
         """
         Parameters:
         - rho: vigilance parameter
@@ -145,6 +145,7 @@ class ConvexHullART(BaseART):
         """
         params = {
             "rho": rho,
+            "merge_rho": merge_rho
         }
         super().__init__(params)
 
@@ -176,7 +177,7 @@ class ConvexHullART(BaseART):
         """
         if isinstance(w, PseudoConvexHull):
             d = minimum_distance(i.reshape((1,-1)), w.points)
-            activation = 1. - d
+            activation = 1. - d**len(i)
             if w.points.shape[0] == 1:
                 new_w = deepcopy(w)
                 new_w.add_points(i.reshape((1,-1)))
@@ -243,23 +244,23 @@ class ConvexHullART(BaseART):
     def merge_clusters(self):
         def can_merge(w1, w2):
             combined_points = np.vstack([w1.points[w1.vertices,:], w2.points[w2.vertices,:]])
-            new_w = ConvexHull(combined_points)
 
             if isinstance(w1, PseudoConvexHull) and isinstance(w2, PseudoConvexHull):
                 d = minimum_distance(w1.points, w2.points)
-                activation = 1.0 - d
+                activation = 1.0 - d**w1.points.shape[1]
             else:
+                new_w = ConvexHull(combined_points)
                 if isinstance(w1, ConvexHull):
                     a1 = w1.area / new_w.area
                 else:
-                    a1 = 0
+                    a1 = np.nan
                 if isinstance(w2, ConvexHull):
                     a2 = w2.area / new_w.area
                 else:
-                    a2 = 0
-                activation = max(a1, a2)
+                    a2 = np.nan
+                activation = np.max([a1,a2])
 
-            if activation > self.params["rho"]:
+            if activation > self.params["merge_rho"]:
                 return True
             else:
                 return False

@@ -14,7 +14,8 @@ def cluster_blobs():
     print("Prepared data has shape:", X.shape)
 
     params = {
-        "rho": 0.75,
+        "rho": 0.85,
+        "merge_rho": 0.8
     }
     cls = ConvexHullART(**params)
     y = cls.fit_predict(X)

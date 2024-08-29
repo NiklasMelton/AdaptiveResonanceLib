@@ -40,7 +40,6 @@ __all__ = [
     "EllipsoidART",
     "HypersphereART",
     "QuadraticNeuronART",
-    "SeqART",
     "FuzzyART",
     "TopoART",
     "DualVigilanceART",

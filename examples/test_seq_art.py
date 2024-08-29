@@ -1,6 +1,6 @@
 import numpy as np
 
-from artlib import SeqART
+from artlib.experimental.SeqART import SeqART
 
 
 sequences = [

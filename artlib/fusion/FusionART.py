@@ -7,8 +7,10 @@ Berlin, Heidelberg: Springer Berlin Heidelberg.
 doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, Callable, List, Literal
+from copy import deepcopy
 from artlib.common.BaseART import BaseART
+from sklearn.utils.validation import check_is_fitted
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
     positions = []
@@ -54,6 +56,9 @@ class FusionART(BaseART):
             out[f"module_{i}"] = module
         return out
 
+    @property
+    def n_clusters(self) -> int:
+        return self.modules[0].n_clusters
 
     @property
     def W(self):
@@ -115,7 +120,7 @@ class FusionART(BaseART):
         """
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict, skip_channels: List[int] = []) -> tuple[float, Optional[dict]]:
         """
         get the activation of the cluster
 
@@ -135,6 +140,8 @@ class FusionART(BaseART):
                     w[self._channel_indices[k][0]:self._channel_indices[k][1]],
                     self.modules[k].params
                 )
+                if k not in skip_channels
+                else (1., dict())
                 for k in range(self.n)
             ]
         )
@@ -142,7 +149,7 @@ class FusionART(BaseART):
         activation = sum([a*self.params["gamma_values"][k] for k, a in enumerate(activations)])
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[list[float], dict]:
+    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = []) -> tuple[list[float], dict]:
         if cache is None:
             raise ValueError("No cache provided")
         M, caches = zip(
@@ -153,13 +160,15 @@ class FusionART(BaseART):
                     self.modules[k].params,
                     cache[k]
                 )
+                if k not in skip_channels
+                else (np.inf, {"match_criterion": np.inf})
                 for k in range(self.n)
             ]
         )
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return M, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = []) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -183,11 +192,137 @@ class FusionART(BaseART):
                     self.modules[k].params,
                     cache[k]
                 )
+                if k not in skip_channels
+                else (True, {"match_criterion": np.inf})
                 for k in range(self.n)
             ]
         )
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return all(M_bin), cache
+
+
+    def _step_fit_original(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+
+        Returns:
+            cluster label of the input sample
+
+        """
+        self.sample_counter_ += 1
+        base_params = {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
+        if len(self.W) == 0:
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            return 0
+        else:
+            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+            T = np.array(T_values)
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
+                w = self.W[c_]
+                cache = T_cache[c_]
+                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
+                no_match_reset = (
+                        match_reset_func is None or
+                        match_reset_func(x, w, c_, params=self.params, cache=cache)
+                )
+                if m and no_match_reset:
+                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    for i in range(self.n):
+                        self.modules[i].params = base_params[i]
+                    return c_
+                else:
+                    T[c_] = np.nan
+                    delta_matching_M = [abs(self.modules[i].params["rho"]-cache[i]["match_criterion"]) for i in range(self.n) if cache[i]["match_criterion_bin"]]
+                    if delta_matching_M:
+                        vigilence_delta = min(delta_matching_M)
+                        for i in range(self.n):
+                            if self.modules[i].__class__.__name__ == "BayesianART":
+                                self.modules[i].params["rho"] -= vigilence_delta
+                            else:
+                                self.modules[i].params["rho"] += vigilence_delta
+
+            c_new = len(self.W)
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            for i in range(self.n):
+                self.modules[i].params = base_params[i]
+            return c_new
+
+    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original"):
+        """
+        iteratively fit the model to the data
+
+        Parameters:
+        - X: data set
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method: either "original" or "modified"
+
+        """
+
+        self.validate_data(X)
+        self.check_dimensions(X)
+        self.is_fitted_ =  True
+
+        if not hasattr(self.modules[0], 'W'):
+            self.W: list[np.ndarray] = []
+            self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+            j = 0
+        else:
+            j = len(self.labels_)
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
+        for i, x in enumerate(X):
+            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
+            self.labels_[i+j] = c
+        return self
+
+    def step_pred(self, x, skip_channels: List[int] = []) -> int:
+        """
+        predict the label for a single sample
+
+        Parameters:
+        - x: data sample
+
+        Returns:
+            cluster label of the input sample
+
+        """
+        assert len(self.W) >= 0, "ART module is not fit."
+
+        T, _ = zip(*[self.category_choice(x, w, params=self.params, skip_channels=skip_channels) for w in self.W])
+        c_ = int(np.argmax(T))
+        return c_
+
+    def predict(self, X: np.ndarray, skip_channels: List[int] = []) -> np.ndarray:
+        """
+        predict labels for the data
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            labels for the data
+
+        """
+
+        check_is_fitted(self)
+        self.validate_data(X)
+        self.check_dimensions(X)
+
+        y = np.zeros((X.shape[0],), dtype=int)
+        for i, x in enumerate(X):
+            c = self.step_pred(x, skip_channels=skip_channels)
+            y[i] = c
+        return y
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -260,3 +395,50 @@ class FusionART(BaseART):
         for k in range(self.n):
             new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
             self.modules[k].set_weight(idx, new_w_k)
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        centers_ = [module.get_cluster_centers() for module in self.modules]
+        centers = [
+            np.concatenate(
+                [
+                    centers_[k][i]
+                    for k in range(self.n)
+                ]
+            )
+            for i
+            in range(self.n_clusters)
+        ]
+        return centers
+
+    def get_channel_centers(self, channel: int):
+        return self.modules[channel].get_cluster_centers()
+
+    def predict_regression(self, X: np.ndarray, target_channels: List[int] = [-1]) -> Union[np.ndarray, List[np.ndarray]]:
+        target_channels = [self.n+k if k < 0 else k for k in target_channels]
+        C = self.predict(X, skip_channels=target_channels)
+        centers = [self.get_channel_centers(k) for k in target_channels]
+        if len(target_channels) == 1:
+            return np.array([centers[0][c] for c in C])
+        else:
+            return [np.array([centers[k][c] for c in C]) for k in target_channels]
+
+    def join_channel_data(self, channel_data: List[np.ndarray], skip_channels: List[int] = []) -> np.ndarray:
+        skip_channels = [self.n+k if k < 0 else k for k in skip_channels]
+        n_samples = channel_data[0].shape[0]
+
+        formatted_channel_data = []
+        i = 0
+        for k in range(self.n):
+            if k not in skip_channels:
+                formatted_channel_data.append(channel_data[i])
+                i += 1
+            else:
+                formatted_channel_data.append(0.5*np.ones((n_samples, self._channel_indices[k][1]-self._channel_indices[k][0])))
+
+        X = np.hstack(formatted_channel_data)
+        return X

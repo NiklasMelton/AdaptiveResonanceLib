@@ -4,7 +4,7 @@ The Bayesian ARTMAP.
 IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import normalize
@@ -133,7 +133,12 @@ class BayesianART(BaseART):
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
-        return M <= params["rho"], cache
+        if cache is None:
+            cache = dict()
+        cache["match_criterion"] = M
+        cache["match_criterion_bin"] = M < params["rho"]
+
+        return M < params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -184,6 +189,13 @@ class BayesianART(BaseART):
         """
         return np.concatenate([i, params["cov_init"].flatten(), [1]])
 
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return [w[:self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

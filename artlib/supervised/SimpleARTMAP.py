@@ -4,7 +4,7 @@ Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 Norwell, MA, USA: Kluwer Academic Publishers.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Literal
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
@@ -77,13 +77,14 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.validate_data(X)
         return X, y
 
-    def step_fit(self, x: np.ndarray, c_b: int) -> int:
+    def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["original", "modified"] = "original") -> int:
         """
         Fit the model to a single sample
 
         Parameters:
         - x: data sample for side A
         - c_b: side b label
+        - match_reset_method: either "original" or "modified"
 
         Returns:
             side A cluster label
@@ -92,14 +93,14 @@ class SimpleARTMAP(BaseARTMAP):
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
             i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
         )
-        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func)
+        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
         if c_a not in self.map:
             self.map[c_a] = c_b
         else:
             assert self.map[c_a] == c_b
         return c_a
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
+    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """
         Fit the model to the data
 
@@ -107,6 +108,7 @@ class SimpleARTMAP(BaseARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method: either "original" or "modified"
 
         """
         # Check that X and y have correct shape
@@ -121,19 +123,19 @@ class SimpleARTMAP(BaseARTMAP):
         for _ in range(max_iter):
             for i, (x, c_b) in enumerate(zip(X, y)):
                 self.module_a.pre_step_fit(X)
-                c_a = self.step_fit(x, c_b)
-                print("step--", i, self.n_clusters_a, self.n_clusters_b, '--', c_a)
+                c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method)
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
         return self
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray):
+    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["original", "modified"] = "original"):
         """
         Partial fit the model to the data
 
         Parameters:
         - X: data set A
         - y: data set B
+        - match_reset_method: either "original" or "modified"
 
         """
         SimpleARTMAP.validate_data(self, X, y)
@@ -149,7 +151,7 @@ class SimpleARTMAP(BaseARTMAP):
             self.module_a.labels_ = np.pad(self.module_a.labels_, [(0, X.shape[0])], mode='constant')
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(x, c_b)
+            c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method)
             self.module_a.labels_[i+j] = c_a
             self.module_a.post_step_fit(X)
         return self

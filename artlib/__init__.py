@@ -13,12 +13,17 @@ from artlib.elementary.HypersphereART import HypersphereART
 from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 from artlib.elementary.SeqART import SeqART
 
+from artlib.cvi.iCVIFuzzyArt import iCVIFuzzyART
+from artlib.cvi.CVIART import CVIART
+
 from artlib.supervised.ARTMAP import ARTMAP, SimpleARTMAP
 
 from artlib.hierarchical.SMART import SMART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 from artlib.fusion.FusionART import FusionART
+
+from artlib.reinforcement.FALCON import FALCON
 
 from artlib.biclustering.BARTMAP import BARTMAP
 
@@ -46,4 +51,6 @@ __all__ = [
     "SMART",
     "FusionART",
     "BARTMAP",
+    "iCVIFuzzyART",
+    "CVIART"
 ]

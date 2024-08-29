@@ -4,7 +4,7 @@ Fuzzy ART: Fast stable learning and categorization of analog patterns by an adap
 Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import normalize, compliment_code, l1norm, fuzzy_and
@@ -149,22 +149,6 @@ class FuzzyART(BaseART):
         """
         return l1norm(fuzzy_and(i, w)) / self.dim_original, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
-        """
-        get the binary match criterion of the cluster
-
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
-
-        Returns:
-            cluster match criterion binary, cache used for later processing
-
-        """
-        M, cache = self.match_criterion(i, w, params)
-        return M >= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -202,6 +186,31 @@ class FuzzyART(BaseART):
 
     def get_bounding_boxes(self, n: Optional[int] = None):
         return list(map(lambda w: get_bounding_box(w, n=n), self.W))
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        centers = []
+        for w in self.W:
+            ref_points, widths = get_bounding_box(w,None)
+            centers.append(np.array(ref_points)+0.5*np.array(widths))
+        return centers
+
+    def shrink_clusters(self, shrink_ratio: float = 0.1):
+        new_W = []
+        dim = len(self.W[0])//2
+        for w in self.W:
+            new_w = np.copy(w)
+            widths = (1-w[dim:]) - w[:dim]
+            new_w[:dim] += widths*shrink_ratio
+            new_w[dim:] += widths*shrink_ratio
+            new_W.append(new_w)
+        self.W = new_W
+        return self
+
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

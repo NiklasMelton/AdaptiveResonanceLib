@@ -27,24 +27,3 @@ def cluster_blobs():
 
 if __name__ == "__main__":
     cluster_blobs()
-
-# points = np.array(
-#     [
-#         [0.0, 0.0],
-#         [0.0, 0.5],
-#         [0.1, 0.2],
-#     ]
-# )
-# new_point = np.array([[0.5, 0.5]])
-# hull = ConvexHull(points, incremental=True)
-#
-# fig, ax = plt.subplots()
-#
-# plot_convex_polygon(points, ax)
-# plt.scatter(new_point[:,0], new_point[:, 1], c='k')
-#
-# fig, ax = plt.subplots()
-# hull.add_points(new_point)
-#
-# plot_convex_polygon(hull.points[hull.vertices,:], ax)
-# plt.show()

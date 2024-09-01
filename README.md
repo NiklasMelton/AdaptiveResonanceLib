@@ -17,18 +17,21 @@ AdaptiveResonanceLib includes implementations for the following ART models:
     - Fuzzy ART
     - Quadratic Neuron ART
     - Dual Vigilance ART
+    - Gram ART
 - #### Topological
     - Topo ART
 - #### Classification
     - Simple ARTMAP
-      
 - #### Regression
     - ARTMAP
+    - Fusion ART
 - #### Hierarchical
     - DeepARTMAP
     - SMART
-- #### Data Fusion and Reinforcement Learning
+- #### Data Fusion
     - Fusion ART
+- #### Reinforcement Learning
+    - FALCON
 - #### Biclustering
     - Biclustering ARTMAP
 

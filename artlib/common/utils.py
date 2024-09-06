@@ -26,6 +26,34 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
     cc_data = np.hstack([data, 1.0-data])
     return cc_data
 
+def de_compliment_code(data: np.ndarray) -> np.ndarray:
+    """
+    finds centroid of compliment coded data
+
+    Parameters:
+    - data: data set
+
+    Returns:
+        compliment coded data
+    """
+    # Get the shape of the array
+    n, total_columns = data.shape
+
+    # Ensure the number of columns is even so that it can be split evenly
+    assert total_columns % 2 == 0, "The number of columns must be even"
+
+    # Calculate the number of columns in each resulting array
+    m = total_columns // 2
+
+    # Split the array into two arrays of shape n x m
+    arr1 = data[:, :m]
+    arr2 = 1-data[:, m:]
+
+    # Find the element-wise mean
+    mean_array = (arr1 + arr2) / 2
+
+    return mean_array
+
 def l1norm(x: np.ndarray) -> float:
     """
     get l1 norm of a vector

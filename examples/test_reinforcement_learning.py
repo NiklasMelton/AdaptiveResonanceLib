@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from artlib import FALCON, FuzzyART, compliment_code
+from artlib import TD_FALCON, FuzzyART, compliment_code
 import gymnasium as gym
 from collections import defaultdict
 import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ def prune_clusters(cls):
 
     return cls
 
-def update_FALCON(records, cls, sarsa_alpha, sarsa_gamma, shrink_ratio):
+def update_FALCON(records, cls, shrink_ratio):
     # convert records into arrays
     states = np.array(records["states"]).reshape((-1,1))
     actions = np.array(records["actions"]).reshape((-1,1))
@@ -41,38 +41,25 @@ def update_FALCON(records, cls, sarsa_alpha, sarsa_gamma, shrink_ratio):
     # compliment code states and actions
     states_cc = compliment_code(states)
     actions_cc = compliment_code(actions)
+    rewards_cc = compliment_code(rewards)
 
-    # calculate SARSA values
-    if len(states) > 1:
-
-        if hasattr(cls.fusion_art.modules[0], "W"):
-            # if FALCON has been trained get predicted rewards
-            Q = cls.get_rewards(states_cc, actions_cc)
-        else:
-            # otherwise set predicted rewards to 0
-            Q = np.zeros_like(rewards)
-        # SARSA equation
-        sarsa_rewards = Q[:-1] + sarsa_alpha * (rewards[:-1] + sarsa_gamma * Q[1:] - Q[:-1])
-        # ensure SARSA values are between 0 and 1
-        sarsa_rewards = np.maximum(np.minimum(sarsa_rewards, 1.0), 0.0)
-        # compliment code rewards
-        sarsa_rewards_cc = compliment_code(sarsa_rewards)
-        # we cant train on the final state because no rewards are generated after it
-        states_cc = states_cc[:-1, :]
-        actions_cc = actions_cc[:-1, :]
-    else:
-        # if we only have a single sample, we immediately walked off a cliff so set reward to max
-        sarsa_rewards_cc = compliment_code(np.array([[1.0]]))
+    # states_fit, actions_fit, sarsa_rewards_fit = cls.calculate_SARSA(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
 
     # if FALCON has been previously trained
     if hasattr(cls.fusion_art.modules[0], "W"):
         # remove any duplicate clusters
         cls = prune_clusters(cls)
-        # shrink clusters to account for dynamic programming changes
-        for m in range(3):
-            cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
+        # # shrink clusters to account for dynamic programming changes
+        # for m in range(3):
+        #     cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
+
     # fit FALCON to data
-    cls = cls.partial_fit(states_cc, actions_cc, sarsa_rewards_cc)
+    # data = cls.fusion_art.join_channel_data([states_fit, actions_fit, sarsa_rewards_fit])
+    # cls.fusion_art = cls.fusion_art.partial_fit(data)
+    cls = cls.partial_fit(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
+    for m in range(3):
+        cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
+
     return cls
 
 def training_cycle(cls, epochs, steps, sarsa_alpha, sarsa_gamma, render_mode=None, shrink_ratio=0.1, explore_rate=0.0, checkpoint_frequency=50, early_stopping_reward=-20):
@@ -83,6 +70,8 @@ def training_cycle(cls, epochs, steps, sarsa_alpha, sarsa_gamma, render_mode=Non
     STATE_MAX = 47
     ACTION_MAX = 3
     REWARD_MAX = 150
+    cls.td_alpha = sarsa_alpha
+    cls.td_lambda = sarsa_gamma
 
     best_reward = -np.inf
     best_cls = None
@@ -130,7 +119,7 @@ def training_cycle(cls, epochs, steps, sarsa_alpha, sarsa_gamma, render_mode=Non
                 break
 
         # train FALCON
-        cls = update_FALCON(records, cls, sarsa_alpha, sarsa_gamma, shrink_ratio)
+        cls = update_FALCON(records, cls, shrink_ratio)
         # record sum of rewards generated during this epoch
         reward_history.append(-sum(records["rewards"])*REWARD_MAX)
 
@@ -147,6 +136,8 @@ def training_cycle(cls, epochs, steps, sarsa_alpha, sarsa_gamma, render_mode=Non
                     best_reward = test_reward_history[0]
                     # check early stopping condition
                     if best_reward > early_stopping_reward:
+                        # show current best reward on progress bar
+                        pbar.set_postfix({'Best Reward': best_reward})
                         return cls, reward_history
                 else:
                     # restore previous best model
@@ -213,13 +204,22 @@ def demo_cycle(cls, epochs, steps, render_mode=None):
     return cls, reward_history
 
 
+def max_up_to_each_element(lst):
+    max_list = []
+    current_max = float('-inf')  # Start with the smallest possible value
+    for num in lst:
+        current_max = max(current_max, num)
+        max_list.append(current_max)
+    return max_list
+
 
 def train_FALCON():
     # define training regimen
     training_regimen = [
         {"name": "random", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.0, "explore_rate": 1.0, "render_mode": None},
-        {"name": "explore 33%", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.333, "render_mode": None},
-        {"name": "explore 0%", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.05, "render_mode": None},
+        {"name": "explore 33%", "epochs": 500, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.333, "render_mode": None},
+        {"name": "explore 20%", "epochs": 500, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.20, "render_mode": None},
+        {"name": "explore 5%", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.05, "render_mode": None},
     ]
     MAX_STEPS = 25
     SARSA_ALPHA = 1.0
@@ -229,7 +229,7 @@ def train_FALCON():
     art_action = FuzzyART(rho=0.99,alpha=0.01, beta=1.0)
     art_reward = FuzzyART(rho=0.0,alpha=0.01, beta=1.0)
     # instantiate FALCON
-    cls = FALCON(art_state, art_action, art_reward, channel_dims=[2, 2, 2])
+    cls = TD_FALCON(art_state, art_action, art_reward, channel_dims=[2, 2, 2])
     # record rewards for each epoch
     all_rewards = []
     # initialize FALCON with random exploration
@@ -253,9 +253,12 @@ def train_FALCON():
     cls, reward_history = demo_cycle(cls, epochs=2, steps=25, render_mode="human")
     print(reward_history)
     all_rewards.extend(reward_history)
+    max_rewards = max_up_to_each_element(all_rewards)
 
     # plot reward history
+    plt.figure()
     plt.plot(list(range(len(all_rewards))), all_rewards, "r-")
+    plt.plot(list(range(len(all_rewards))), max_rewards, "b-")
     plt.xlabel("Epoch")
     plt.ylabel("Reward")
     plt.title("Rewards over Time")

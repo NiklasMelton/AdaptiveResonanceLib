@@ -1,6 +1,6 @@
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
-from artlib.common.utils import normalize, compliment_code
+from artlib.common.utils import normalize, compliment_code, de_compliment_code
 
 from artlib.elementary.ART1 import ART1
 from artlib.elementary.ART2 import ART2A
@@ -22,7 +22,7 @@ from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 from artlib.fusion.FusionART import FusionART
 
-from artlib.reinforcement.FALCON import FALCON
+from artlib.reinforcement.FALCON import FALCON, TD_FALCON
 
 from artlib.biclustering.BARTMAP import BARTMAP
 

@@ -4,7 +4,7 @@ Dual vigilance fuzzy adaptive resonance theory.
 Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 """
 import numpy as np
-from typing import Optional, Callable, Iterable, List
+from typing import Optional, Callable, Iterable, List, Literal
 from warnings import warn
 from copy import deepcopy
 from matplotlib.axes import Axes
@@ -132,7 +132,7 @@ class DualVigilanceART(BaseART):
         assert params["rho_lower_bound"] >= 0
         assert isinstance(params["rho_lower_bound"], float)
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original") -> int:
         """
         fit the model to a single sample
 
@@ -146,7 +146,7 @@ class DualVigilanceART(BaseART):
             cluster label of the input sample
 
         """
-        base_params = deepcopy(self.params)
+        base_params = deepcopy(self.base_module.params)
         self.sample_counter_ += 1
         if len(self.base_module.W) == 0:
             new_w = self.base_module.new_weight(x, self.base_module.params)
@@ -162,7 +162,7 @@ class DualVigilanceART(BaseART):
             )
             T = np.array(T_values)
             while any(T > 0):
-                c_ = int(np.argmax(T))
+                c_ = int(np.nanargmax(T))
                 w = self.base_module.W[c_]
                 cache = T_cache[c_]
                 m1, cache = self.base_module.match_criterion_bin(x, w, params=self.base_module.params, cache=cache)
@@ -187,9 +187,9 @@ class DualVigilanceART(BaseART):
                             self.map[c_new] = self.map[c_]
                             self.base_module.params = base_params
                             return self.map[c_new]
-                else:
+                elif match_reset_method == "original":
                     self.base_module.params["rho"] = cache["match_criterion"]
-                T[c_] = -1
+                T[c_] = np.nan
 
             c_new = len(self.base_module.W)
             w_new = self.base_module.new_weight(x, self.base_module.params)

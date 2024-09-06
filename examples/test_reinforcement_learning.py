@@ -235,7 +235,7 @@ def train_FALCON():
     # initialize FALCON with random exploration
     print("Starting Training")
     for regimen in training_regimen:
-        print(f"Staring Training Cycle: {regimen['name']}")
+        print(f"Starting Training Cycle: {regimen['name']}")
         cls, reward_history = training_cycle(
             cls,
             epochs=regimen["epochs"],

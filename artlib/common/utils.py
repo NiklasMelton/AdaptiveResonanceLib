@@ -47,7 +47,7 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
 
     # Split the array into two arrays of shape n x m
     arr1 = data[:, :m]
-    arr2 = data[:, m:]
+    arr2 = 1-data[:, m:]
 
     # Find the element-wise mean
     mean_array = (arr1 + arr2) / 2

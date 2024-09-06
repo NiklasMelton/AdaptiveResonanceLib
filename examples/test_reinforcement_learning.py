@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 from artlib import TD_FALCON, FuzzyART, compliment_code
 import gymnasium as gym
+from collections import defaultdict
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
@@ -55,6 +56,7 @@ def update_FALCON(records, cls, shrink_ratio):
     # fit FALCON to data
     data = cls.fusion_art.join_channel_data([states_fit, actions_fit, sarsa_rewards_fit])
     cls.fusion_art = cls.fusion_art.partial_fit(data)
+    # cls = cls.partial_fit(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
 
     return cls
 
@@ -69,13 +71,8 @@ def training_cycle(cls, epochs, steps, sarsa_alpha, sarsa_gamma, render_mode=Non
     cls.td_alpha = sarsa_alpha
     cls.td_lambda = sarsa_gamma
 
-    best_cls = deepcopy(cls)
-    if explore_rate < 1.0:
-        cls, test_reward_history = demo_cycle(cls, 1, steps, render_mode=None)
-        best_reward = test_reward_history[0]
-    else:
-        best_reward = -np.inf
-
+    best_reward = -np.inf
+    best_cls = None
 
     # track reward history
     reward_history = []
@@ -137,6 +134,8 @@ def training_cycle(cls, epochs, steps, sarsa_alpha, sarsa_gamma, render_mode=Non
                     best_reward = test_reward_history[0]
                     # check early stopping condition
                     if best_reward > early_stopping_reward:
+                        # show current best reward on progress bar
+                        pbar.set_postfix({'Best Reward': best_reward})
                         return cls, reward_history
                 else:
                     # restore previous best model
@@ -155,7 +154,7 @@ def demo_cycle(cls, epochs, steps, render_mode=None):
     ACTION_SPACE = np.array([[0], [1.], [2.], [3.]])
     STATE_MAX = 47
     ACTION_MAX = 3
-    REWARD_MAX = 100
+    REWARD_MAX = 150
 
     # track reward history
     reward_history = []
@@ -203,13 +202,21 @@ def demo_cycle(cls, epochs, steps, render_mode=None):
     return cls, reward_history
 
 
+def max_up_to_each_element(lst):
+    max_list = []
+    current_max = float('-inf')  # Start with the smallest possible value
+    for num in lst:
+        current_max = max(current_max, num)
+        max_list.append(current_max)
+    return max_list
+
 
 def train_FALCON():
     # define training regimen
     training_regimen = [
         {"name": "random", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.0, "explore_rate": 1.0, "render_mode": None},
-        {"name": "explore 33%", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.333, "render_mode": None},
-        {"name": "explore 5%", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.05, "render_mode": None},
+        {"name": "explore 33%", "epochs": 500, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.333, "render_mode": None},
+        {"name": "explore 5%", "epochs": 1000, "shrink_ratio": 0.33, "gamma": 0.2, "explore_rate": 0.05, "render_mode": None},
     ]
     MAX_STEPS = 25
     SARSA_ALPHA = 1.0
@@ -243,15 +250,18 @@ def train_FALCON():
     cls, reward_history = demo_cycle(cls, epochs=2, steps=25, render_mode="human")
     print(reward_history)
     all_rewards.extend(reward_history)
+    max_rewards = max_up_to_each_element(all_rewards)
 
     # plot reward history
+    plt.figure()
     plt.plot(list(range(len(all_rewards))), all_rewards, "r-")
+    plt.plot(list(range(len(all_rewards))), max_rewards, "b-")
     plt.xlabel("Epoch")
     plt.ylabel("Reward")
     plt.title("Rewards over Time")
     plt.show()
 
 if __name__ == "__main__":
-    # This takes between 3 and 20 minutes depending on your system
+    # This takes approximately 3 minutes
     np.random.seed(42)
     train_FALCON()

@@ -43,20 +43,22 @@ def update_FALCON(records, cls, shrink_ratio):
     actions_cc = compliment_code(actions)
     rewards_cc = compliment_code(rewards)
 
-    states_fit, actions_fit, sarsa_rewards_fit = cls.calculate_SARSA(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
+    # states_fit, actions_fit, sarsa_rewards_fit = cls.calculate_SARSA(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
 
     # if FALCON has been previously trained
     if hasattr(cls.fusion_art.modules[0], "W"):
         # remove any duplicate clusters
         cls = prune_clusters(cls)
-        # shrink clusters to account for dynamic programming changes
-        for m in range(3):
-            cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
+        # # shrink clusters to account for dynamic programming changes
+        # for m in range(3):
+        #     cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
 
     # fit FALCON to data
-    data = cls.fusion_art.join_channel_data([states_fit, actions_fit, sarsa_rewards_fit])
-    cls.fusion_art = cls.fusion_art.partial_fit(data)
-    # cls = cls.partial_fit(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
+    # data = cls.fusion_art.join_channel_data([states_fit, actions_fit, sarsa_rewards_fit])
+    # cls.fusion_art = cls.fusion_art.partial_fit(data)
+    cls = cls.partial_fit(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
+    for m in range(3):
+        cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
 
     return cls
 
@@ -216,7 +218,8 @@ def train_FALCON():
     training_regimen = [
         {"name": "random", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.0, "explore_rate": 1.0, "render_mode": None},
         {"name": "explore 33%", "epochs": 500, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.333, "render_mode": None},
-        {"name": "explore 5%", "epochs": 1000, "shrink_ratio": 0.33, "gamma": 0.2, "explore_rate": 0.05, "render_mode": None},
+        {"name": "explore 20%", "epochs": 500, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.20, "render_mode": None},
+        {"name": "explore 5%", "epochs": 1000, "shrink_ratio": 0.3, "gamma": 0.2, "explore_rate": 0.05, "render_mode": None},
     ]
     MAX_STEPS = 25
     SARSA_ALPHA = 1.0

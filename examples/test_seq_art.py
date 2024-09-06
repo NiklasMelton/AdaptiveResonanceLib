@@ -22,7 +22,7 @@ def cluster_sequences():
     X = np.array(sequences, dtype=object)
 
     params = {
-        "rho": 0.3
+        "rho": -0.5
     }
     cls = SeqART(**params)
 

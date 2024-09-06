@@ -8,15 +8,16 @@ def cluster_blobs():
     data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
     print("Data has shape:", data.shape)
 
-    X = FuzzyART.prepare_data(data)
-    print("Prepared data has shape:", X.shape)
-
     params = {
         "rho": 0.7,
         "alpha": 0.0,
         "beta": 1.0
     }
     cls = FuzzyART(**params)
+
+    X = cls.prepare_data(data)
+    print("Prepared data has shape:", X.shape)
+
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

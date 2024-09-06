@@ -7,12 +7,7 @@ import numpy as np
 from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import normalize
 from artlib.common.visualization import plot_gaussian_contours_covariance
-
-def prepare_data(data: np.ndarray) -> np.ndarray:
-    normalized = normalize(data)
-    return normalized
 
 
 class BayesianART(BaseART):

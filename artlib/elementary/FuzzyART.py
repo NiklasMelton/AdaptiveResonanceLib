@@ -56,8 +56,7 @@ class FuzzyART(BaseART):
         }
         super().__init__(params)
 
-    @staticmethod
-    def prepare_data(X: np.ndarray) -> np.ndarray:
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
         prepare data for clustering
 
@@ -67,7 +66,7 @@ class FuzzyART(BaseART):
         Returns:
             normalized and compliment coded data
         """
-        normalized = normalize(X)
+        normalized, self.d_max_, self.d_min_ = normalize(X, self.d_max_, self.d_min_)
         cc_data = compliment_code(normalized)
         return cc_data
 

@@ -7,11 +7,7 @@ Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0
 import numpy as np
 from typing import Optional, List
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import normalize, l1norm
-
-def prepare_data(data: np.ndarray) -> np.ndarray:
-    normalized = normalize(data)
-    return normalized
+from artlib.common.utils import l1norm
 
 
 class ART1(BaseART):

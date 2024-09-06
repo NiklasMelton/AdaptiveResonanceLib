@@ -1,6 +1,8 @@
 import numpy as np
+from typing import Tuple, Optional
 
-def normalize(data: np.ndarray) -> np.ndarray:
+
+def normalize(data: np.ndarray, d_max: Optional[float] = None, d_min: Optional[float] = None) -> Tuple[np.ndarray, float, float]:
     """
     normalize data betweeon 0 and 1
 
@@ -10,8 +12,12 @@ def normalize(data: np.ndarray) -> np.ndarray:
     Returns:
         normalized data
     """
-    normalized = (data-np.min(data))/(np.max(data)-np.min(data))
-    return normalized
+    if d_min is None:
+        d_min = np.min(data)
+    if d_max is None:
+        d_max = np.max(data)
+    normalized = (data-d_min)/(d_max-d_min)
+    return normalized, d_max, d_min
 
 def compliment_code(data: np.ndarray) -> np.ndarray:
     """

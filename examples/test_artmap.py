@@ -12,8 +12,6 @@ def cluster_iris():
     data, target = load_iris(return_X_y=True)
     print("Data has shape:", data.shape)
 
-    X = FuzzyART.prepare_data(data)
-    print("Prepared data has shape:", X.shape)
 
     X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.33, random_state=0)
 
@@ -23,6 +21,9 @@ def cluster_iris():
         "beta": 1.0
     }
     art = FuzzyART(**params)
+
+    X = art.prepare_data(data)
+    print("Prepared data has shape:", X.shape)
 
     cls = SimpleARTMAP(art)
 

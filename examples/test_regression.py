@@ -9,18 +9,14 @@ def make_data():
     x = x_+0.5
     y = np.sin(x)+np.cos(x**2)+np.log(x**3)+np.cos(x)*np.log(x**2)
 
-    x_norm = normalize(x)
-    y_norm = normalize(y)
+    x_norm, _, _ = normalize(x)
+    y_norm, _, _ = normalize(y)
     return x_norm.reshape((-1,1)), y_norm.reshape((-1,1))
 
 
 def fit_regression_ARTMAP():
     X_, y_ = make_data()
     print("Data has shape:", X_.shape)
-
-    X = FuzzyART.prepare_data(X_)
-    y = FuzzyART.prepare_data(y_)
-    print("Prepared data has shape:", X.shape)
 
     params = {
         "rho": 0.95,
@@ -29,6 +25,10 @@ def fit_regression_ARTMAP():
     }
     art_a = FuzzyART(**params)
     art_b = FuzzyART(**params)
+
+    X = art_a.prepare_data(X_)
+    y = art_b.prepare_data(y_)
+    print("Prepared data has shape:", X.shape)
 
     cls = ARTMAP(art_a, art_b)
 
@@ -47,10 +47,6 @@ def fit_regression_FusionART():
     X_, y_ = make_data()
     print("Data has shape:", X_.shape)
 
-    X = FuzzyART.prepare_data(X_)
-    y = FuzzyART.prepare_data(y_)
-    print("Prepared data has shape:", X.shape)
-
     params = {
         "rho": 0.95,
         "alpha": 0.0,
@@ -58,6 +54,10 @@ def fit_regression_FusionART():
     }
     art_a = FuzzyART(**params)
     art_b = FuzzyART(**params)
+
+    X = art_a.prepare_data(X_)
+    y = art_b.prepare_data(y_)
+    print("Prepared data has shape:", X.shape)
 
     cls = FusionART([art_a, art_b], gamma_values=np.array([0.5, 0.5]), channel_dims=[2, 2])
 

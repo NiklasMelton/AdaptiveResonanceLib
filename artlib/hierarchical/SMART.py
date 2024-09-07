@@ -45,6 +45,19 @@ class SMART(DeepARTMAP):
         X_, _ = super(SMART, self).prepare_data([X]*self.n_modules)
         return X_[0]
 
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        X_, _ = super(SMART, self).restore_data([X] * self.n_modules)
+        return X_[0]
+
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """
         Fit the model to the data

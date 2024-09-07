@@ -161,6 +161,18 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         return [self.modules[i].prepare_data(X[i]) for i in range(self.n_modules)], y
 
+    def restore_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            prepared data
+        """
+        return [self.modules[i].restore_data(X[i]) for i in range(self.n_modules)], y
+
 
     def fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """

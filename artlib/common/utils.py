@@ -19,6 +19,18 @@ def normalize(data: np.ndarray, d_max: Optional[float] = None, d_min: Optional[f
     normalized = (data-d_min)/(d_max-d_min)
     return normalized, d_max, d_min
 
+def de_normalize(data: np.ndarray, d_max: float, d_min: float) -> np.ndarray:
+    """
+    restore normalize data
+
+    Parameters:
+    - data: data set
+
+    Returns:
+        de-normalized data
+    """
+    return data*(d_max-d_min) + d_min
+
 def compliment_code(data: np.ndarray) -> np.ndarray:
     """
     compliment code data

@@ -7,7 +7,7 @@ import numpy as np
 from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import normalize, compliment_code, l1norm, fuzzy_and
+from artlib.common.utils import normalize, compliment_code, l1norm, fuzzy_and, de_compliment_code
 
 
 def get_bounding_box(w: np.ndarray, n: Optional[int] = None) -> tuple[list[int], list[int]]:
@@ -69,6 +69,19 @@ class FuzzyART(BaseART):
         normalized, self.d_max_, self.d_min_ = normalize(X, self.d_max_, self.d_min_)
         cc_data = compliment_code(normalized)
         return cc_data
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        out = de_compliment_code(X)
+        return super(FuzzyART, self).restore_data(out)
 
     @staticmethod
     def validate_params(params: dict):

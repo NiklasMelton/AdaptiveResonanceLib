@@ -77,6 +77,30 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.validate_data(X)
         return X, y
 
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            prepared data
+        """
+        return self.module_a.prepare_data(X)
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.module_a.restore_data(X)
+
     def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["original", "modified"] = "original") -> int:
         """
         Fit the model to a single sample

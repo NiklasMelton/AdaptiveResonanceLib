@@ -6,7 +6,7 @@ from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
-from artlib.common.utils import normalize
+from artlib.common.utils import normalize, de_normalize
 
 
 class BaseART(BaseEstimator, ClusterMixin):
@@ -22,6 +22,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.params = params
         self.sample_counter_ = 0
         self.weight_sample_counter_: list[int] = []
+        self.d_min_ = None
+        self.d_max_ = None
 
     def __getattr__(self, key):
         if key in self.params:
@@ -91,8 +93,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self
 
 
-    @staticmethod
-    def prepare_data(X: np.ndarray) -> np.ndarray:
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
         prepare data for clustering
 
@@ -102,7 +103,20 @@ class BaseART(BaseEstimator, ClusterMixin):
         Returns:
             normalized data
         """
-        return normalize(X)
+        normalized, self.d_max_, self.d_min_ = normalize(X, self.d_max_, self.d_min_)
+        return normalized
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return de_normalize(X, d_max=self.d_max_, d_min=self.d_min_)
 
     @property
     def n_clusters(self) -> int:

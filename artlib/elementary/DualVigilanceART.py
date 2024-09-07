@@ -43,6 +43,18 @@ class DualVigilanceART(BaseART):
         """
         return self.base_module.prepare_data(X)
 
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.base_module.restore_data(X)
+
     def get_params(self, deep: bool = True) -> dict:
         """
 

@@ -4,7 +4,7 @@ ARTMAP: Supervised real-time learning and classification of nonstationary data b
 Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 """
 import numpy as np
-from typing import Literal
+from typing import Literal, Tuple
 from artlib.common.BaseART import BaseART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.validation import check_is_fitted
@@ -69,6 +69,30 @@ class ARTMAP(SimpleARTMAP):
         """
         self.module_a.validate_data(X)
         self.module_b.validate_data(y)
+
+    def prepare_data(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            normalized data
+        """
+        return self.module_a.prepare_data(X), self.module_b.prepare_data(y)
+
+    def restore_data(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.module_a.restore_data(X), self.module_b.restore_data(y)
 
     def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
         """

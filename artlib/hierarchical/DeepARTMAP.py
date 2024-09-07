@@ -5,7 +5,7 @@ Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 """
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
-from typing import Optional, cast, Union, Literal
+from typing import Optional, cast, Union, Literal, Tuple
 from collections import defaultdict
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
@@ -148,6 +148,30 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         else:
             n = X[0].shape[0]
         assert all(x.shape[0] == n for x in X), "Inconsistent sample number in input matrices"
+
+    def prepare_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            prepared data
+        """
+        return [self.modules[i].prepare_data(X[i]) for i in range(self.n_modules)], y
+
+    def restore_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            prepared data
+        """
+        return [self.modules[i].restore_data(X[i]) for i in range(self.n_modules)], y
 
 
     def fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):

@@ -12,12 +12,8 @@ import numpy as np
 from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import normalize, l2norm2
+from artlib.common.utils import l2norm2
 from artlib.common.visualization import plot_weight_matrix_as_ellipse
-
-def prepare_data(data: np.ndarray) -> np.ndarray:
-    normalized = normalize(data)
-    return normalized
 
 
 class QuadraticNeuronART(BaseART):

@@ -42,6 +42,30 @@ class CVIART(BaseART):
         assert isinstance(params['validity'], int)
         assert params["validity"] in [CVIART.CALINSKIHARABASZ, CVIART.DAVIESBOULDIN, CVIART.SILHOUETTE]
 
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            normalized data
+        """
+        return self.base_module.prepare_data(X)
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.base_module.restore_data(X)
+
     @property
     def W(self):
         return self.base_module.W

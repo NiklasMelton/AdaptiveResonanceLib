@@ -108,9 +108,9 @@ class CVIART(BaseART):
         new_labels[extra["index"]] = c_
         new_VI = valid_func(self.data, new_labels)
         if extra['validity'] != self.DAVIESBOULDIN:
-            return new_VI > old_VI
+            return new_VI >= old_VI
         else:
-            return new_VI < old_VI
+            return new_VI <= old_VI
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None,
             max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
@@ -151,4 +151,3 @@ class CVIART(BaseART):
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         return self.base_module.plot_cluster_bounds(ax, colors,linewidth)
-

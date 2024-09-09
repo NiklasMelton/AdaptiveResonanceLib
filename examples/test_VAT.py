@@ -1,4 +1,3 @@
-import numpy as np
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 
@@ -14,11 +13,10 @@ def visualize_blobs():
     R, P = VAT(data)
     dt = time.time() - t0
     print("time:", dt)
-    print(P.shape, np.unique(P))
 
 
     plt.figure()
-    plt.scatter(data[:,0], data[:,1],c=P, cmap="jet",s=10)
+    plt.scatter(data[:,0], data[:,1], c=P, cmap="jet", s=10)
 
     plt.figure()
     plt.imshow(R)

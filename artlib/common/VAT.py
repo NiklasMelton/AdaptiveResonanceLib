@@ -6,28 +6,39 @@ from scipy.spatial.distance import pdist, squareform
 
 
 def VAT(data: np.ndarray, distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean")) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Visual Assessment of cluster Tendency (VAT) algorithm.
+
+    Parameters:
+    - data: Input data set as a 2D numpy array where each row is a sample.
+    - distance_metric: Optional callable function to calculate pairwise distances.
+      Defaults to Euclidean distance using pdist.
+      If None, assume data is a pre-computed distance matrix
+
+    Returns:
+        Tuple containing:
+        - Reordered distance matrix reflecting cluster structure.
+        - Reordered list of indices indicating the optimal clustering order.
+    """
     if distance_metric is None:
-        R = data
+        pairwise_dist = data
     else:
-        R = squareform(distance_metric(data))
+        pairwise_dist = squareform(distance_metric(data))
 
-    dim = data.shape[0]
-    P = np.zeros((dim,), dtype=int)
+    num_samples = data.shape[0]
+    indicies = []
+    remaining = list(range(num_samples))
 
-    i, j = np.unravel_index(np.argmax(R), R.shape)
-    P[0] = i
-    I = [i]
-    J = set(range(dim)) - {i}
+    ix, jx = np.unravel_index(pairwise_dist.argmax(), pairwise_dist.shape)
+    indicies.append(ix)
+    remaining.pop(ix)
 
-    for r in range(1, dim):
-        J_list = list(J)
-        R_sub = R[np.ix_(I, J_list)]
-        _, j_ = np.unravel_index(np.argmin(R_sub), R_sub.shape)
-        j = J_list[j_]
-        P[r] = j
-        I.append(j)
-        J -= {j}
+    while remaining:
+        sub_matrix = pairwise_dist[np.ix_(indicies, remaining)]
+        _, jx = np.unravel_index(sub_matrix.argmin(), sub_matrix.shape)
+        indicies.append(remaining[jx])
+        remaining.pop(jx)
 
-    return R[np.ix_(P, P)], P
+    return pairwise_dist[np.ix_(indicies, indicies)], np.array(indicies)
 
 

@@ -13,8 +13,12 @@ def visualize_blobs():
     t0 = time.time()
     R, P = VAT(data)
     dt = time.time() - t0
-    print("time:", dt)
-    print(P.shape, np.unique(P))
+    print("Nik time:", dt)
+    #
+    # t0 = time.time()
+    # R, P = vat_islam(data)
+    # dt = time.time() - t0
+    # print("Islam time:", dt)
 
 
     plt.figure()

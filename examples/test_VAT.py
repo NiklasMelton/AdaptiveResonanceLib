@@ -1,4 +1,3 @@
-import numpy as np
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 
@@ -13,16 +12,11 @@ def visualize_blobs():
     t0 = time.time()
     R, P = VAT(data)
     dt = time.time() - t0
-    print("Nik time:", dt)
-    #
-    # t0 = time.time()
-    # R, P = vat_islam(data)
-    # dt = time.time() - t0
-    # print("Islam time:", dt)
+    print("time:", dt)
 
 
     plt.figure()
-    plt.scatter(data[:,0], data[:,1],c=P, cmap="jet",s=10)
+    plt.scatter(data[:,0], data[:,1], c=P, cmap="jet", s=10)
 
     plt.figure()
     plt.imshow(R)

@@ -9,11 +9,12 @@ doi:10.1007/978-3-642-15825-4_21.
 """
 
 import numpy as np
-from typing import Optional, Callable, Iterable, List
+from typing import Optional, Callable, Iterable, List, Literal
 from matplotlib.axes import Axes
 from warnings import warn
 from copy import deepcopy
 from artlib.common.BaseART import BaseART
+import operator
 
 
 class TopoART(BaseART):
@@ -124,7 +125,7 @@ class TopoART(BaseART):
         """
         return self.base_module.match_criterion(i, w, params, cache)
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -138,7 +139,7 @@ class TopoART(BaseART):
             cluster match criterion binary, cache used for later processing
 
         """
-        return self.base_module.match_criterion_bin(i, w, params, cache)
+        return self.base_module.match_criterion_bin(i, w, params, cache, op)
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -227,7 +228,32 @@ class TopoART(BaseART):
         if self.sample_counter_ > 0 and self.sample_counter_ % self.tau == 0:
             self.prune(X)
 
-    def _step_fit_original(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        M = cache["match_criterion"]
+        if method == "MT+":
+            self.base_module.params["rho"] = M+epsilon
+            return True
+        elif method == "MT-":
+            self.base_module.params["rho"] = M - epsilon
+            return True
+        elif method == "MT0":
+            self.base_module.params["rho"] = M
+            return True
+        elif method == "MT1":
+            self.base_module.params["rho"] = np.inf
+            return False
+        elif method == "MT~":
+            return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+    def _set_params(self, new_params):
+        self.base_module.params = new_params
+
+    def _deep_copy_params(self) -> dict:
+        return deepcopy(self.base_module.params)
+
+    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
         """
         fit the model to a single sample
 
@@ -236,12 +262,20 @@ class TopoART(BaseART):
         - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
+
 
         Returns:
             cluster label of the input sample
 
         """
-        base_params = deepcopy(self.base_module.params)
+        base_params = self._deep_copy_params()
+        mt_operator = self._match_tracking_operator(match_reset_method)
         self.sample_counter_ += 1
         resonant_c: int = -1
 
@@ -252,22 +286,22 @@ class TopoART(BaseART):
             self._permanent_mask = np.zeros((1, ), dtype=bool)
             return 0
         else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.base_module.params) for w in self.W])
             T = np.array(T_values)
             while any(~np.isnan(T)):
                 c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
+                m, cache = self.match_criterion_bin(x, w, params=self.base_module.params, cache=cache, op=mt_operator)
                 no_match_reset = (
                         match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.params, cache=cache)
+                        match_reset_func(x, w, c_, params=self.base_module.params, cache=cache)
                 )
                 if m and no_match_reset:
                     if resonant_c < 0:
-                        params = self.params
+                        params = self.base_module.params
                     else:
-                        params = dict(self.params, **{"beta": self.params["beta_lower"]})
+                        params = dict(self.base_module.params, **{"beta": self.params["beta_lower"]})
                     #TODO: make compatible with DualVigilanceART
                     new_w = self.update(
                         x,
@@ -280,85 +314,25 @@ class TopoART(BaseART):
                         resonant_c = c_
                         T[c_] = np.nan
                     else:
-                        self.base_module.params = base_params
+                        self._set_params(base_params)
                         return resonant_c
                 else:
                     T[c_] = np.nan
                     if not no_match_reset:
-                        self.base_module.params["rho"] = cache["match_criterion"]
+                        keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
+                        if not keep_searching:
+                            T[:] = np.nan
 
             self.base_module.params = base_params
             if resonant_c < 0:
                 c_new = len(self.W)
                 w_new = self.new_weight(x, self.params)
                 self.add_weight(w_new)
+                self._set_params(base_params)
                 return c_new
 
             return resonant_c
 
-    def _step_fit_modified(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
-        """
-        fit the model to a single sample
-
-        Parameters:
-        - x: data sample
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
-
-        Returns:
-            cluster label of the input sample
-
-        """
-        self.sample_counter_ += 1
-        resonant_c: int = -1
-
-        if len(self.W) == 0:
-            new_w = self.new_weight(x, self.params)
-            self.add_weight(new_w)
-            self.adjacency = np.zeros((1, 1), dtype=int)
-            self._permanent_mask = np.zeros((1, ), dtype=bool)
-            return 0
-        else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
-            T = np.array(T_values)
-            while any(~np.isnan(T)):
-                c_ = int(np.nanargmax(T))
-                w = self.W[c_]
-                cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
-                no_match_reset = (
-                        match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.params, cache=cache)
-                )
-                if m and no_match_reset:
-                    if resonant_c < 0:
-                        params = self.params
-                    else:
-                        params = dict(self.params, **{"beta": self.params["beta_lower"]})
-                    #TODO: make compatible with DualVigilanceART
-                    new_w = self.update(
-                        x,
-                        w,
-                        params=params,
-                        cache=dict((cache if cache else {}), **{"resonant_c": resonant_c, "current_c": c_})
-                    )
-                    self.set_weight(c_, new_w)
-                    if resonant_c < 0:
-                        resonant_c = c_
-                        T[c_] = np.nan
-                    else:
-                        return resonant_c
-                else:
-                    T[c_] = np.nan
-
-            if resonant_c < 0:
-                c_new = len(self.W)
-                w_new = self.new_weight(x, self.params)
-                self.add_weight(w_new)
-                return c_new
-
-            return resonant_c
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """

@@ -149,7 +149,12 @@ class CVIART(BaseART):
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
         - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         self.data = X

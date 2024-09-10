@@ -102,7 +102,12 @@ class ARTMAP(SimpleARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         # Check that X and y have correct shape
@@ -124,7 +129,12 @@ class ARTMAP(SimpleARTMAP):
         Parameters:
         - X: data set A
         - y: data set B
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         self.validate_data(X, y)

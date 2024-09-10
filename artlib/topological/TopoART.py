@@ -323,12 +323,11 @@ class TopoART(BaseART):
                         if not keep_searching:
                             T[:] = np.nan
 
-            self.base_module.params = base_params
+            self._set_params(base_params)
             if resonant_c < 0:
                 c_new = len(self.W)
                 w_new = self.new_weight(x, self.params)
                 self.add_weight(w_new)
-                self._set_params(base_params)
                 return c_new
 
             return resonant_c

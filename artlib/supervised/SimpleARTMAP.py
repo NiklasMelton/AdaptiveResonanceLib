@@ -108,7 +108,12 @@ class SimpleARTMAP(BaseARTMAP):
         Parameters:
         - x: data sample for side A
         - c_b: side b label
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         Returns:
             side A cluster label
@@ -132,7 +137,12 @@ class SimpleARTMAP(BaseARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         # Check that X and y have correct shape
@@ -159,7 +169,12 @@ class SimpleARTMAP(BaseARTMAP):
         Parameters:
         - X: data set A
         - y: data set B
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         SimpleARTMAP.validate_data(self, X, y)

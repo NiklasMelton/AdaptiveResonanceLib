@@ -4,7 +4,8 @@ The Bayesian ARTMAP.
 IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 """
 import numpy as np
-from typing import Optional, Iterable, List
+from typing import Optional, Iterable, List, Callable, Literal, Tuple
+import operator
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.visualization import plot_gaussian_contours_covariance
@@ -113,7 +114,7 @@ class BayesianART(BaseART):
         # return cache["det_cov"]
         return np.linalg.det(new_cov), cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -128,12 +129,33 @@ class BayesianART(BaseART):
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        M_bin = op(params["rho"], M) # note that this is backwards from the base ART: rho >= M
         if cache is None:
             cache = dict()
         cache["match_criterion"] = M
-        cache["match_criterion_bin"] = M < params["rho"]
+        cache["match_criterion_bin"] = M_bin
 
-        return M < params["rho"], cache
+        return M_bin, cache
+
+    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        M = cache["match_criterion"]
+        # we have to reverse some signs becayse bayesianART has an inverted vigilence check
+        if method == "MT+":
+            self.params["rho"] = M - epsilon
+            return True
+        elif method == "MT-":
+            self.params["rho"] = M + epsilon
+            return True
+        elif method == "MT0":
+            self.params["rho"] = M
+            return True
+        elif method == "MT1":
+            self.params["rho"] = -np.inf
+            return False
+        elif method == "MT~":
+            return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """

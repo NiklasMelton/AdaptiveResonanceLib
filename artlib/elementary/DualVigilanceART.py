@@ -144,7 +144,32 @@ class DualVigilanceART(BaseART):
         assert params["rho_lower_bound"] >= 0
         assert isinstance(params["rho_lower_bound"], float)
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original") -> int:
+    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        M = cache["match_criterion"]
+        if method == "MT+":
+            self.base_module.params["rho"] = M+epsilon
+            return True
+        elif method == "MT-":
+            self.base_module.params["rho"] = M - epsilon
+            return True
+        elif method == "MT0":
+            self.base_module.params["rho"] = M
+            return True
+        elif method == "MT1":
+            self.base_module.params["rho"] = np.inf
+            return False
+        elif method == "MT~":
+            return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+    def _set_params(self, new_params):
+        self.base_module.params = new_params
+
+    def _deep_copy_params(self) -> dict:
+        return deepcopy(self.base_module.params)
+
+    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None,match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
         """
         fit the model to a single sample
 
@@ -158,7 +183,8 @@ class DualVigilanceART(BaseART):
             cluster label of the input sample
 
         """
-        base_params = deepcopy(self.base_module.params)
+        base_params = self._deep_copy_params()
+        mt_operator = self._match_tracking_operator(match_reset_method)
         self.sample_counter_ += 1
         if len(self.base_module.W) == 0:
             new_w = self.base_module.new_weight(x, self.base_module.params)
@@ -177,7 +203,7 @@ class DualVigilanceART(BaseART):
                 c_ = int(np.nanargmax(T))
                 w = self.base_module.W[c_]
                 cache = T_cache[c_]
-                m1, cache = self.base_module.match_criterion_bin(x, w, params=self.base_module.params, cache=cache)
+                m1, cache = self.base_module.match_criterion_bin(x, w, params=self.base_module.params, cache=cache, op=mt_operator)
                 no_match_reset = (
                     match_reset_func is None or
                     match_reset_func(x, w, self.map[c_], params=self.base_module.params, cache=cache)
@@ -187,26 +213,29 @@ class DualVigilanceART(BaseART):
                     if m1:
                         new_w = self.base_module.update(x, w, self.base_module.params, cache=cache)
                         self.base_module.set_weight(c_, new_w)
-                        self.base_module.params = base_params
+                        self._set_params(base_params)
                         return self.map[c_]
                     else:
                         lb_params = dict(self.base_module.params, **{"rho": self.rho_lower_bound})
-                        m2, _ = self.base_module.match_criterion_bin(x, w, params=lb_params, cache=cache)
+                        m2, _ = self.base_module.match_criterion_bin(x, w, params=lb_params, cache=cache, op=mt_operator)
                         if m2:
                             c_new = len(self.base_module.W)
                             w_new = self.base_module.new_weight(x, self.base_module.params)
                             self.base_module.add_weight(w_new)
                             self.map[c_new] = self.map[c_]
-                            self.base_module.params = base_params
+                            self._set_params(base_params)
                             return self.map[c_new]
-                elif match_reset_method == "original":
-                    self.base_module.params["rho"] = cache["match_criterion"]
+                else:
+                    keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
+                    if not keep_searching:
+                        T[:] = np.nan
                 T[c_] = np.nan
 
             c_new = len(self.base_module.W)
             w_new = self.base_module.new_weight(x, self.base_module.params)
             self.base_module.add_weight(w_new)
             self.map[c_new] = max(self.map.values()) + 1
+            self._set_params(base_params)
             return self.map[c_new]
 
     def step_pred(self, x) -> int:

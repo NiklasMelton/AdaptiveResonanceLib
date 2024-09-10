@@ -7,6 +7,7 @@ Extended icvi offline mode can be found at
 https://ieeexplore.ieee.org/document/9745260
 """
 import numpy as np
+from typing import Optional, Literal, Callable
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.cvi.iCVIs.CalinkskiHarabasz import iCVI_CH
 
@@ -41,7 +42,25 @@ class iCVIFuzzyART(FuzzyART):
         # return self.iCVI.evalLabel(x, c_) This except pass params instead.
 
     # Could add max epochs back in, but only if offline is true, or do something special...
-    def fit(self, X: np.ndarray):
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: data set
+        - y: not used. For compatibility.
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
+
+        """
         self.validate_data(X)
         self.check_dimensions(X)
         self.is_fitted_ = True
@@ -59,7 +78,11 @@ class iCVIFuzzyART(FuzzyART):
         for i, x in enumerate(X):
             self.pre_step_fit(X)
             self.index = i
-            c = self.step_fit(x, match_reset_func=self.iCVI_match)
+            if match_reset_func is None:
+                c = self.step_fit(x, match_reset_func=self.iCVI_match, match_reset_method=match_reset_method, epsilon=epsilon)
+            else:
+                match_reset_func = lambda x, w, c_, params, cache: (match_reset_func(x, w, c_, params, cache) & self.iCVI_match(x, w, c_, params, cache))
+                c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
 
             if self.offline:
                 params = self.iCVI.switch_label(x, self.labels_[i], c)

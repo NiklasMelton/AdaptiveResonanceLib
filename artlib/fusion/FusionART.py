@@ -7,10 +7,11 @@ Berlin, Heidelberg: Springer Berlin Heidelberg.
 doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
-from typing import Optional, Union, Callable, List, Literal
+from typing import Optional, Union, Callable, List, Literal, Tuple
 from copy import deepcopy
 from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted
+import operator
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
     positions = []
@@ -168,7 +169,7 @@ class FusionART(BaseART):
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return M, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = []) -> tuple[bool, dict]:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = [], op: Callable = operator.ge) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -190,7 +191,8 @@ class FusionART(BaseART):
                     i[self._channel_indices[k][0]:self._channel_indices[k][1]],
                     w[self._channel_indices[k][0]:self._channel_indices[k][1]],
                     self.modules[k].params,
-                    cache[k]
+                    cache[k],
+                    op
                 )
                 if k not in skip_channels
                 else (True, {"match_criterion": np.inf})
@@ -201,62 +203,26 @@ class FusionART(BaseART):
         return all(M_bin), cache
 
 
-    def _step_fit_original(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
-        """
-        fit the model to a single sample
+    def _match_tracking(self, cache: List[dict], epsilon: float, params: List[dict], method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        keep_searching = []
+        for i in range(len(cache)):
+            if cache[i]["match_criterion_bin"]:
+                keep_searching_i = self.modules[i]._match_tracking(cache[i], epsilon, params[i], method)
+                keep_searching.append(keep_searching_i)
+            else:
+                keep_searching.append(True)
+        return all(keep_searching)
 
-        Parameters:
-        - x: data sample
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
 
-        Returns:
-            cluster label of the input sample
+    def _set_params(self, new_params):
+        for i in range(self.n):
+            self.modules[i].params = new_params[i]
 
-        """
-        self.sample_counter_ += 1
-        base_params = {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
-        if len(self.W) == 0:
-            w_new = self.new_weight(x, self.params)
-            self.add_weight(w_new)
-            return 0
-        else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
-            T = np.array(T_values)
-            while any(~np.isnan(T)):
-                c_ = int(np.nanargmax(T))
-                w = self.W[c_]
-                cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
-                no_match_reset = (
-                        match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.params, cache=cache)
-                )
-                if m and no_match_reset:
-                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
-                    for i in range(self.n):
-                        self.modules[i].params = base_params[i]
-                    return c_
-                else:
-                    T[c_] = np.nan
-                    delta_matching_M = [abs(self.modules[i].params["rho"]-cache[i]["match_criterion"]) for i in range(self.n) if cache[i]["match_criterion_bin"]]
-                    if delta_matching_M:
-                        vigilence_delta = min(delta_matching_M)
-                        for i in range(self.n):
-                            if self.modules[i].__class__.__name__ == "BayesianART":
-                                self.modules[i].params["rho"] -= vigilence_delta
-                            else:
-                                self.modules[i].params["rho"] += vigilence_delta
+    def _deep_copy_params(self):
+        return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
 
-            c_new = len(self.W)
-            w_new = self.new_weight(x, self.params)
-            self.add_weight(w_new)
-            for i in range(self.n):
-                self.modules[i].params = base_params[i]
-            return c_new
 
-    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["original", "modified"] = "original"):
+    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
         iteratively fit the model to the data
 
@@ -265,7 +231,12 @@ class FusionART(BaseART):
         - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
 
@@ -281,7 +252,7 @@ class FusionART(BaseART):
             j = len(self.labels_)
             self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
         for i, x in enumerate(X):
-            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
+            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
             self.labels_[i+j] = c
         return self
 

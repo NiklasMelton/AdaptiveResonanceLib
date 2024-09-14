@@ -339,7 +339,16 @@ class BaseART(BaseEstimator, ClusterMixin):
             self.add_weight(w_new)
             return 0
         else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+
+            if match_reset_method == "MY~" and match_reset_func is not None:
+                T_values, T_cache = zip(*[
+                    self.category_choice(x, w, params=self.params)
+                    if match_reset_func(x, w, c_, params=self.params, cache=None)
+                    else (np.nan, None)
+                    for c_, w in enumerate(self.W)
+                ])
+            else:
+                T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
             while any(~np.isnan(T)):
                 c_ = int(np.nanargmax(T))

@@ -109,9 +109,10 @@ class CVIART(BaseART):
         new_labels[extra["index"]] = c_
         new_VI = valid_func(self.data, new_labels)
         if extra['validity'] != self.DAVIESBOULDIN:
-            return new_VI > old_VI
+            return new_VI >= old_VI
         else:
-            return new_VI < old_VI
+            return new_VI <= old_VI
+
     def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
         M = cache["match_criterion"]
         if method == "MT+":
@@ -213,4 +214,3 @@ class CVIART(BaseART):
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         return self.base_module.plot_cluster_bounds(ax, colors,linewidth)
-

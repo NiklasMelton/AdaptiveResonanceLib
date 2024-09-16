@@ -9,7 +9,7 @@ https://ieeexplore.ieee.org/document/9745260
 import numpy as np
 from typing import Optional, Literal, Callable
 from artlib.elementary.FuzzyART import FuzzyART
-from artlib.cvi.iCVIs.CalinkskiHarabasz import iCVI_CH
+from artlib.cvi.iCVIs.CH import CH
 
 
 class iCVIFuzzyART(FuzzyART):
@@ -37,9 +37,7 @@ class iCVIFuzzyART(FuzzyART):
             new = self.iCVI.switch_label(x, self.labels_[self.index], c_)
         else:
             new = self.iCVI.add_sample(x, c_)
-        # Eventually this should be an icvi function that you pass the params, and it handles if this is true or false.
-        return new['criterion_value'] > self.iCVI.criterion_value
-        # return self.iCVI.evalLabel(x, c_) This except pass params instead.
+        return self.iCVI.clustering_improved(new)
 
     # Could add max epochs back in, but only if offline is true, or do something special...
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
@@ -68,7 +66,7 @@ class iCVIFuzzyART(FuzzyART):
         self.W: list[np.ndarray] = []
         self.labels_ = np.zeros((X.shape[0], ), dtype=int)
 
-        self.iCVI = iCVI_CH(X[0])
+        self.iCVI = CH()
 
         if self.offline:
             for x in X:

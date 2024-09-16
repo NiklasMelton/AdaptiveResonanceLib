@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Optional, Callable
 from artlib import BaseART
-from artlib.common.utils import normalize
+import operator
 import re
 
 def compress_dashes(input_string):
@@ -159,7 +159,7 @@ class SeqART(BaseART):
 
         return cache['score'], cache
 
-    def match_criterion_bin(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -174,7 +174,13 @@ class SeqART(BaseART):
 
         """
         M, cache = self.match_criterion(arr2seq(i), w, params, cache)
-        return M > params['rho'], cache
+        M_bin = op(M, params["rho"])
+        if cache is None:
+            cache = dict()
+        cache["match_criterion"] = M
+        cache["match_criterion_bin"] = M_bin
+
+        return M_bin, cache
 
     def update(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> str:
         """

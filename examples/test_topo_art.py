@@ -9,7 +9,7 @@ def cluster_blobs():
     print("Data has shape:", data.shape)
 
     params = {
-        "rho": 0.6,
+        "rho": 0.4,
         "alpha": 0.8,
         "beta": 1.0
     }

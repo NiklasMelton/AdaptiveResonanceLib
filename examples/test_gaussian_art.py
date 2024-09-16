@@ -10,7 +10,7 @@ def cluster_blobs():
     print("Data has shape:", data.shape)
 
     params = {
-        "rho": 0.15,
+        "rho": 0.05,
         "sigma_init": np.array([0.5, 0.5]),
     }
     cls = GaussianART(**params)

@@ -12,7 +12,7 @@ def cluster_blobs():
         "alpha": 0.0,
         "beta": 1.0
     }
-    rho_values = [0.7, 0.85, 0.9]
+    rho_values = [0.5, 0.85, 0.9]
     cls = SMART(FuzzyART, rho_values, base_params)
 
     X = cls.prepare_data(data)

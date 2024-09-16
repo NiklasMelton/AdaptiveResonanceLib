@@ -9,10 +9,10 @@ def cluster_blobs():
     print("Data has shape:", data.shape)
 
     params = {
-        "rho": 0.2,
+        "rho": 0.01,
         "alpha": 0.0,
         "beta": 1.0,
-        "r_hat": 0.6,
+        "r_hat": 0.65,
         "mu": 0.8
     }
     cls = EllipsoidART(**params)

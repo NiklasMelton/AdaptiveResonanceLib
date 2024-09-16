@@ -2,34 +2,43 @@ import numpy as np
 from typing import Tuple, Optional
 
 
-def normalize(data: np.ndarray, d_max: Optional[float] = None, d_min: Optional[float] = None) -> Tuple[np.ndarray, float, float]:
+def normalize(data: np.ndarray, d_max: Optional[np.ndarray] = None, d_min: Optional[np.ndarray] = None) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray]:
     """
-    normalize data betweeon 0 and 1
+    Normalize data column-wise between 0 and 1.
 
     Parameters:
-    - data: data set
+    - data: 2D array of data set (rows = samples, columns = features)
+    - d_max: Optional, maximum values for each column
+    - d_min: Optional, minimum values for each column
 
     Returns:
-        normalized data
+    - normalized: normalized data
+    - d_max: maximum values for each column
+    - d_min: minimum values for each column
     """
     if d_min is None:
-        d_min = np.min(data)
+        d_min = np.min(data, axis=0)
     if d_max is None:
-        d_max = np.max(data)
-    normalized = (data-d_min)/(d_max-d_min)
+        d_max = np.max(data, axis=0)
+
+    normalized = (data - d_min) / (d_max - d_min)
     return normalized, d_max, d_min
 
-def de_normalize(data: np.ndarray, d_max: float, d_min: float) -> np.ndarray:
+
+def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.ndarray:
     """
-    restore normalize data
+    Restore column-wise normalized data to original scale.
 
     Parameters:
-    - data: data set
+    - data: normalized data
+    - d_max: maximum values for each column
+    - d_min: minimum values for each column
 
     Returns:
-        de-normalized data
+    - De-normalized data
     """
-    return data*(d_max-d_min) + d_min
+    return data * (d_max - d_min) + d_min
 
 def compliment_code(data: np.ndarray) -> np.ndarray:
     """

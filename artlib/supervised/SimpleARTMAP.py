@@ -101,14 +101,19 @@ class SimpleARTMAP(BaseARTMAP):
         """
         return self.module_a.restore_data(X)
 
-    def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["original", "modified"] = "original") -> int:
+    def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10) -> int:
         """
         Fit the model to a single sample
 
         Parameters:
         - x: data sample for side A
         - c_b: side b label
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         Returns:
             side A cluster label
@@ -117,14 +122,14 @@ class SimpleARTMAP(BaseARTMAP):
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
             i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
         )
-        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method)
+        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
         if c_a not in self.map:
             self.map[c_a] = c_b
         else:
             assert self.map[c_a] == c_b
         return c_a
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
+    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Fit the model to the data
 
@@ -132,7 +137,12 @@ class SimpleARTMAP(BaseARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         # Check that X and y have correct shape
@@ -147,19 +157,24 @@ class SimpleARTMAP(BaseARTMAP):
         for _ in range(max_iter):
             for i, (x, c_b) in enumerate(zip(X, y)):
                 self.module_a.pre_step_fit(X)
-                c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method)
+                c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
         return self
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["original", "modified"] = "original"):
+    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Partial fit the model to the data
 
         Parameters:
         - X: data set A
         - y: data set B
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         SimpleARTMAP.validate_data(self, X, y)
@@ -175,7 +190,7 @@ class SimpleARTMAP(BaseARTMAP):
             self.module_a.labels_ = np.pad(self.module_a.labels_, [(0, X.shape[0])], mode='constant')
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method)
+            c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
             self.module_a.labels_[i+j] = c_a
             self.module_a.post_step_fit(X)
         return self

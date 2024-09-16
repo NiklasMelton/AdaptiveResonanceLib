@@ -94,7 +94,7 @@ class ARTMAP(SimpleARTMAP):
         """
         return self.module_a.restore_data(X), self.module_b.restore_data(y)
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
+    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Fit the model to the data
 
@@ -102,34 +102,44 @@ class ARTMAP(SimpleARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         # Check that X and y have correct shape
         self.validate_data(X, y)
 
-        self.module_b.fit(y, max_iter=max_iter, match_reset_method=match_reset_method)
+        self.module_b.fit(y, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
         y_c = self.module_b.labels_
 
-        super(ARTMAP, self).fit(X, y_c, max_iter=max_iter, match_reset_method=match_reset_method)
+        super(ARTMAP, self).fit(X, y_c, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
         return self
 
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["original", "modified"] = "original"):
+    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Partial fit the model to the data
 
         Parameters:
         - X: data set A
         - y: data set B
-        - match_reset_method: either "original" or "modified"
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         self.validate_data(X, y)
-        self.module_b.partial_fit(y, match_reset_method=match_reset_method)
-        super(ARTMAP, self).partial_fit(X, self.labels_b, match_reset_method=match_reset_method)
+        self.module_b.partial_fit(y, match_reset_method=match_reset_method, epsilon=epsilon)
+        super(ARTMAP, self).partial_fit(X, self.labels_b, match_reset_method=match_reset_method, epsilon=epsilon)
         return self
 
 

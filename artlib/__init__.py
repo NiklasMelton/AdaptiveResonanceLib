@@ -1,6 +1,7 @@
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
-from artlib.common.utils import normalize, compliment_code, de_compliment_code
+from artlib.common.utils import normalize, compliment_code, de_compliment_code, de_normalize
+from artlib.common.VAT import VAT
 
 from artlib.elementary.ART1 import ART1
 from artlib.elementary.ART2 import ART2A

@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 import sklearn.metrics as metrics
 from typing import Optional, List, Callable, Literal, Iterable
 from matplotlib.axes import Axes
@@ -112,8 +113,51 @@ class CVIART(BaseART):
         else:
             return new_VI <= old_VI
 
+    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        M = cache["match_criterion"]
+        if method == "MT+":
+            self.base_module.params["rho"] = M+epsilon
+            return True
+        elif method == "MT-":
+            self.base_module.params["rho"] = M - epsilon
+            return True
+        elif method == "MT0":
+            self.base_module.params["rho"] = M
+            return True
+        elif method == "MT1":
+            self.base_module.params["rho"] = np.inf
+            return False
+        elif method == "MT~":
+            return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+    def _set_params(self, new_params):
+        self.base_module.params = new_params
+
+    def _deep_copy_params(self) -> dict:
+        return deepcopy(self.base_module.params)
+
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None,
-            max_iter=1, match_reset_method: Literal["original", "modified"] = "original"):
+            max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+        """
+        Fit the model to the data
+
+        Parameters:
+        - X: data set
+        - y: not used. For compatibility.
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
+
+        """
         self.data = X
         self.base_module.validate_data(X)
         self.base_module.check_dimensions(X)
@@ -128,7 +172,7 @@ class CVIART(BaseART):
                     cvi_match_reset_func = lambda i, w, cluster_a, params, cache: self.CVI_match(i, w, cluster_a, params, {"index": index, "validity":self.params["validity"]}, cache)
                 else:
                     cvi_match_reset_func = lambda i, w, cluster_a, params, cache: (match_reset_func(i,w,cluster_a,params,cache) and self.CVI_match(i, w, cluster_a, params, {"index": index, "validity":self.params["validity"]}, cache))
-                c = self.base_module.step_fit(x, match_reset_func=cvi_match_reset_func, match_reset_method=match_reset_method)
+                c = self.base_module.step_fit(x, match_reset_func=cvi_match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
                 self.labels_[index] = c
                 self.post_step_fit(X)
 
@@ -139,8 +183,27 @@ class CVIART(BaseART):
     def post_step_fit(self, X: np.ndarray):
         return self.base_module.post_step_fit(X)
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None,
-                 match_reset_method: Literal["original", "modified"] = "original") -> int:
+    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
+        """
+        fit the model to a single sample
+
+        Parameters:
+        - x: data sample
+        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
+            Permits external factors to influence cluster creation.
+            Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
+
+
+        Returns:
+            cluster label of the input sample
+
+        """
         raise NotImplementedError
 
     def step_pred(self, x) -> int:

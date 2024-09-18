@@ -340,7 +340,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             return 0
         else:
 
-            if match_reset_method == "MY~" and match_reset_func is not None:
+            if match_reset_method in ["MT~", "MT1"] and match_reset_func is not None:
                 T_values, T_cache = zip(*[
                     self.category_choice(x, w, params=self.params)
                     if match_reset_func(x, w, c_, params=self.params, cache=None)
@@ -355,17 +355,20 @@ class BaseART(BaseEstimator, ClusterMixin):
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache, op=mt_operator)
-                no_match_reset = (
-                        match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.params, cache=cache)
-                )
+                if match_reset_method in ["MT~", "MT1"] and match_reset_func is not None:
+                    no_match_reset = True
+                else:
+                    no_match_reset = (
+                            match_reset_func is None or
+                            match_reset_func(x, w, c_, params=self.params, cache=cache)
+                    )
                 if m and no_match_reset:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
                     self._set_params(base_params)
                     return c_
                 else:
                     T[c_] = np.nan
-                    if not no_match_reset:
+                    if m and not no_match_reset:
                         keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
                         if not keep_searching:
                             T[:] = np.nan

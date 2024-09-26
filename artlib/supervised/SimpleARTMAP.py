@@ -129,7 +129,7 @@ class SimpleARTMAP(BaseARTMAP):
             assert self.map[c_a] == c_b
         return c_a
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
+    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10, verbose: bool = False):
         """
         Fit the model to the data
 
@@ -155,7 +155,12 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         for _ in range(max_iter):
-            for i, (x, c_b) in enumerate(zip(X, y)):
+            if verbose:
+                from tqdm import tqdm
+                x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
+            else:
+                x_y_iter = enumerate(zip(X, y))
+            for i, (x, c_b) in x_y_iter:
                 self.module_a.pre_step_fit(X)
                 c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
                 self.module_a.labels_[i] = c_a

@@ -340,7 +340,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             return 0
         else:
 
-            if match_reset_method in ["MT~", "MT1"] and match_reset_func is not None:
+            if match_reset_method in ["MT~"] and match_reset_func is not None:
                 T_values, T_cache = zip(*[
                     self.category_choice(x, w, params=self.params)
                     if match_reset_func(x, w, c_, params=self.params, cache=None)
@@ -355,7 +355,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache, op=mt_operator)
-                if match_reset_method in ["MT~", "MT1"] and match_reset_func is not None:
+                if match_reset_method in ["MT~"] and match_reset_func is not None:
                     no_match_reset = True
                 else:
                     no_match_reset = (
@@ -430,7 +430,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0, verbose: bool = False):
         """
         Fit the model to the data
 
@@ -456,7 +456,12 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.W: list[np.ndarray] = []
         self.labels_ = np.zeros((X.shape[0], ), dtype=int)
         for _ in range(max_iter):
-            for i, x in enumerate(X):
+            if verbose:
+                from tqdm import tqdm
+                x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
+            else:
+                x_iter = enumerate(X)
+            for i, x in x_iter:
                 self.pre_step_fit(X)
                 c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
                 self.labels_[i] = c

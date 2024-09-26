@@ -5,6 +5,7 @@ Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 """
 
 import numpy as np
+from decimal import Decimal
 from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
@@ -13,19 +14,21 @@ from artlib.common.visualization import plot_gaussian_contours_fading
 
 class GaussianART(BaseART):
     # implementation of GaussianART
-    pi2 = np.pi*2
-    def __init__(self, rho: float, sigma_init: np.ndarray):
+    def __init__(self, rho: float, sigma_init: np.ndarray, alpha: float = 1e-10):
         """
         Parameters:
         - rho: vigilance parameter
         - sigma_init: initial estimate of the diagonal std
+        - alpha: used to prevent division by zero errors
 
         """
         params = {
             "rho": rho,
             "sigma_init": sigma_init,
+            "alpha": alpha
         }
         super().__init__(params)
+
 
     @staticmethod
     def validate_params(params: dict):
@@ -38,7 +41,9 @@ class GaussianART(BaseART):
         """
         assert "rho" in params
         assert "sigma_init" in params
-        assert 1.0 >= params["rho"] > 0.
+        assert "alpha" in params
+        assert 1.0 >= params["rho"] >= 0.
+        assert params["alpha"] > 0.
         assert isinstance(params["rho"], float)
         assert isinstance(params["sigma_init"], np.ndarray)
 
@@ -57,15 +62,19 @@ class GaussianART(BaseART):
 
         """
         mean = w[:self.dim_]
-        sigma = w[self.dim_:-1]
+        # sigma = w[self.dim_:2*self.dim]
+        inv_sig = w[2*self.dim_:3*self.dim_]
+        sqrt_det_sig = w[-2]
         n = w[-1]
-        sig = np.diag(np.multiply(sigma,sigma))
+
         dist = mean-i
-        exp_dist_sig_dist = np.exp(-0.5*np.matmul(dist.T, np.matmul(np.linalg.inv(sig), dist)))
+        exp_dist_sig_dist = np.exp(-0.5 * np.dot(dist, np.multiply(inv_sig, dist)))
+
         cache = {
             "exp_dist_sig_dist": exp_dist_sig_dist
         }
-        p_i_cj = exp_dist_sig_dist/np.sqrt((self.pi2**self.dim_)*np.linalg.det(sig))
+        # ignore the (2*pi)^d term as that is constant
+        p_i_cj = exp_dist_sig_dist/(params["alpha"]+sqrt_det_sig)
         p_cj = n/np.sum(w_[-1] for w_ in self.W)
 
         activation = p_i_cj*p_cj
@@ -109,14 +118,18 @@ class GaussianART(BaseART):
 
         """
         mean = w[:self.dim_]
-        sigma = w[self.dim_:-1]
+        sigma = w[self.dim_:2*self.dim_]
         n = w[-1]
 
         n_new = n+1
         mean_new = (1-(1/n_new))*mean + (1/n_new)*i
         sigma_new = np.sqrt((1-(1/n_new))*np.multiply(sigma, sigma) + (1/n_new)*((mean_new - i)**2))
 
-        return np.concatenate([mean_new, sigma_new, [n_new]])
+        sigma2 = np.multiply(sigma_new, sigma_new)
+        inv_sig = 1 / sigma2
+        det_sig = np.sqrt(np.prod(sigma2))
+
+        return np.concatenate([mean_new, sigma_new, inv_sig, [det_sig], [n_new]])
 
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
@@ -132,7 +145,10 @@ class GaussianART(BaseART):
             updated cluster weight
 
         """
-        return np.concatenate([i, params["sigma_init"], [1.]])
+        sigma2 = np.multiply(params["sigma_init"], params["sigma_init"])
+        inv_sig_init = 1 / sigma2
+        det_sig_init = np.sqrt(np.prod(sigma2))
+        return np.concatenate([i, params["sigma_init"], inv_sig_init, [det_sig_init], [1.]])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """

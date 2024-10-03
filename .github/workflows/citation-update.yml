@@ -1,0 +1,36 @@
+name: Update CITATION.cff on Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  update_citation:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get Release Data
+      id: release_info
+      run: |
+        echo "RELEASE_TAG=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
+
+    - name: Fetch DOI from Zenodo
+      run: |
+        # Replace with actual API request or data fetch logic
+        # Example command to fetch the DOI for the latest release via Zenodo API
+        curl -s "https://zenodo.org/api/records?query=AdaptiveResonanceLib" | jq '.hits.hits[0].doi' > doi.txt
+
+    - name: Update CITATION.cff
+      run: |
+        DOI=$(cat doi.txt)
+        sed -i "s/doi: .*/doi: \"$DOI\"/" CITATION.cff
+        sed -i "s/version: .*/version: \"$RELEASE_TAG\"/" CITATION.cff
+
+    - name: Commit updated CITATION.cff
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add CITATION.cff
+        git commit -m "Update CITATION.cff with DOI and version for release $RELEASE_TAG"
+        git push origin main

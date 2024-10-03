@@ -1,7 +1,7 @@
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 
-from artlib import ART1, normalize
+from artlib import ART1
 
 
 def cluster_blobs():
@@ -9,8 +9,6 @@ def cluster_blobs():
     data =  ( data > 0.5).astype(int)
     print("Data has shape:", data.shape)
 
-    X = normalize(data)
-    print("Prepared data has shape:", X.shape)
 
     params = {
         "rho": 0.7,
@@ -18,6 +16,10 @@ def cluster_blobs():
         "L": 1.0
     }
     cls = ART1(**params)
+
+    X = cls.prepare_data(data)
+    print("Prepared data has shape:", X.shape)
+
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

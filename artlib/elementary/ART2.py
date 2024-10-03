@@ -18,7 +18,7 @@ Stephan Grossberg himself has said ART2 does not work.
 """
 
 import numpy as np
-from typing import Optional
+from typing import Optional, List
 from warnings import warn
 from artlib.common.BaseART import BaseART
 
@@ -117,22 +117,6 @@ class ART2A(BaseART):
         else:
             return M, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
-        """
-        get the binary match criterion of the cluster
-
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
-
-        Returns:
-            cluster match criterion binary, cache used for later processing
-
-        """
-        M, cache = self.match_criterion(i, w, params, cache)
-        return M >= params["rho"], cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -164,3 +148,11 @@ class ART2A(BaseART):
 
         """
         return i
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return self.W

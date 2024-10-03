@@ -1,34 +1,32 @@
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
+import numpy as np
 
-from artlib import FuzzyART, SMART
+from artlib.experimental.ConvexHullART import ConvexHullART, plot_convex_polygon
+from scipy.spatial import ConvexHull
 
 
 def cluster_blobs():
     data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
     print("Data has shape:", data.shape)
 
-    base_params = {
-        "alpha": 0.0,
-        "beta": 1.0
+
+    params = {
+        "rho": 0.85,
+        "merge_rho": 0.8
     }
-    rho_values = [0.5, 0.85, 0.9]
-    cls = SMART(FuzzyART, rho_values, base_params)
+    cls = ConvexHullART(**params)
 
     X = cls.prepare_data(data)
     print("Prepared data has shape:", X.shape)
 
-    cls = cls.fit(X)
-    y = cls.layers[0].labels_
+    y = cls.fit_predict(X)
+
+    print(f"{cls.n_clusters} clusters found")
 
     cls.visualize(X, y)
     plt.show()
 
 
-def main():
-    cluster_blobs()
-
-
-
 if __name__ == "__main__":
-    main()
+    cluster_blobs()

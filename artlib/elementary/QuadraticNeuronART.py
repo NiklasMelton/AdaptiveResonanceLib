@@ -9,15 +9,11 @@ Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
 """
 
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import normalize, l2norm2
+from artlib.common.utils import l2norm2
 from artlib.common.visualization import plot_weight_matrix_as_ellipse
-
-def prepare_data(data: np.ndarray) -> np.ndarray:
-    normalized = normalize(data)
-    return normalized
 
 
 class QuadraticNeuronART(BaseART):
@@ -114,23 +110,6 @@ class QuadraticNeuronART(BaseART):
             raise ValueError("No cache provided")
         return cache["activation"], cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
-        """
-        get the binary match criterion of the cluster
-
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
-
-        Returns:
-            cluster match criterion binary, cache used for later processing
-
-        """
-        M, cache = self.match_criterion(i, w, params, cache)
-        return M >= params["rho"], cache
-
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
         get the updated cluster weight
@@ -176,6 +155,15 @@ class QuadraticNeuronART(BaseART):
         """
         w_new = np.identity(self.dim_)
         return np.concatenate([w_new.flatten(), i, [params["s_init"]]])
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        dim2 = self.dim_ * self.dim_
+        return [w[dim2:-1] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

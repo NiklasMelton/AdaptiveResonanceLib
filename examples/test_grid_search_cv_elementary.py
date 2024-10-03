@@ -18,15 +18,15 @@ def grid_search_blobs():
     data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
     print("Data has shape:", data.shape)
 
-    X = FuzzyART.prepare_data(data)
-    print("Prepared data has shape:", X.shape)
-
     base_params = {
         "rho": 0.7,
         "alpha": 0.0,
         "beta": 1.0,
     }
     cls = FuzzyART(**base_params)
+
+    X = cls.prepare_data(data)
+    print("Prepared data has shape:", X.shape)
 
     param_grid = {
         "rho": [0.0, 0.25, 0.5, 0.7, 0.9],

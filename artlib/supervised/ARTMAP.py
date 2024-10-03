@@ -4,6 +4,7 @@ ARTMAP: Supervised real-time learning and classification of nonstationary data b
 Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 """
 import numpy as np
+from typing import Literal, Tuple
 from artlib.common.BaseART import BaseART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.validation import check_is_fitted
@@ -69,7 +70,31 @@ class ARTMAP(SimpleARTMAP):
         self.module_a.validate_data(X)
         self.module_b.validate_data(y)
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
+    def prepare_data(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            normalized data
+        """
+        return self.module_a.prepare_data(X), self.module_b.prepare_data(y)
+
+    def restore_data(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.module_a.restore_data(X), self.module_b.restore_data(y)
+
+    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Fit the model to the data
 
@@ -77,32 +102,44 @@ class ARTMAP(SimpleARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         # Check that X and y have correct shape
         self.validate_data(X, y)
 
-        self.module_b.fit(y, max_iter=max_iter)
+        self.module_b.fit(y, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
         y_c = self.module_b.labels_
 
-        super(ARTMAP, self).fit(X, y_c, max_iter=max_iter)
+        super(ARTMAP, self).fit(X, y_c, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
         return self
 
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray):
+    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Partial fit the model to the data
 
         Parameters:
         - X: data set A
         - y: data set B
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         self.validate_data(X, y)
-        self.module_b.partial_fit(y)
-        super(ARTMAP, self).partial_fit(X, self.labels_b)
+        self.module_b.partial_fit(y, match_reset_method=match_reset_method, epsilon=epsilon)
+        super(ARTMAP, self).partial_fit(X, self.labels_b, match_reset_method=match_reset_method, epsilon=epsilon)
         return self
 
 
@@ -133,3 +170,20 @@ class ARTMAP(SimpleARTMAP):
         """
         check_is_fitted(self)
         return super(ARTMAP, self).predict_ab(X)
+
+    def predict_regression(self, X: np.ndarray) -> np.ndarray:
+        """
+        predict values for the data
+        ARTMAP is not recommended for regression. Use FusionART instead.
+
+        Parameters:
+        - X: data set A
+
+        Returns:
+            predicted values using cluster centers
+
+        """
+        check_is_fitted(self)
+        C = self.predict(X)
+        centers = self.module_b.get_cluster_centers()
+        return np.array([centers[c] for c in C])

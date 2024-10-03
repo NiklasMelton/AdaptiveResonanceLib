@@ -12,12 +12,6 @@ def cluster_blobs():
     data_channel_a = data[:,0].reshape((-1,1))
     data_channel_b = data[:,1].reshape((-1,1))
 
-    X_channel_a = FuzzyART.prepare_data(data_channel_a)
-    X_channel_b = FuzzyART.prepare_data(data_channel_b)
-
-    X = np.hstack([X_channel_a, X_channel_b])
-    print("Prepared data has shape:", X.shape)
-
     params = {
         "rho": 0.5,
         "alpha": 0.0,
@@ -25,7 +19,14 @@ def cluster_blobs():
     }
     art_a = FuzzyART(**params)
     art_b = FuzzyART(**params)
-    cls = FusionART([art_a, art_b], gamma_values=[0.5, 0.5], channel_dims=[2,2])
+    cls = FusionART([art_a, art_b], gamma_values=np.array([0.5, 0.5]), channel_dims=[2,2])
+
+    X_channel_a = art_a.prepare_data(data_channel_a)
+    X_channel_b = art_b.prepare_data(data_channel_b)
+
+    X = cls.join_channel_data(channel_data=[X_channel_a, X_channel_b])
+    print("Prepared data has shape:", X.shape)
+
     y = cls.fit_predict(X)
 
     print(f"{cls.n_clusters} clusters found")

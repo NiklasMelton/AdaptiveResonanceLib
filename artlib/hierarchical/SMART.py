@@ -6,7 +6,7 @@ In Proc. IEEE International Conference on Neural Networks (ICNN)
 """
 
 import numpy as np
-from typing import Union, Type, Optional, Iterable
+from typing import Union, Type, Optional, Iterable, Literal
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
@@ -32,7 +32,33 @@ class SMART(DeepARTMAP):
             assert isinstance(layer, BaseART), "Only elementary ART-like objects are supported"
         super().__init__(layers)
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1):
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            prepared data
+        """
+        X_, _ = super(SMART, self).prepare_data([X]*self.n_modules)
+        return X_[0]
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        X_, _ = super(SMART, self).restore_data([X] * self.n_modules)
+        return X_[0]
+
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
         Fit the model to the data
 
@@ -40,14 +66,20 @@ class SMART(DeepARTMAP):
         - X: data set A
         - y: not used
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         X_list = [X]*self.n_modules
-        return super().fit(X_list, max_iter=max_iter)
+        return super().fit(X_list, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
-    def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None):
+    def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         X_list = [X] * self.n_modules
-        return self.partial_fit(X_list)
+        return self.partial_fit(X_list, match_reset_method=match_reset_method, epsilon=epsilon)
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

@@ -9,11 +9,6 @@ def grid_search_blobs():
     data, target = load_iris(return_X_y=True)
     print("Data has shape:", data.shape)
 
-    X = HypersphereART.prepare_data(data)
-    print("Prepared data has shape:", X.shape)
-
-    X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.33, random_state=0)
-
     base_params = {
         "rho": 0.3,
         "alpha": 0.0,
@@ -21,6 +16,12 @@ def grid_search_blobs():
         "r_hat": 0.8
     }
     art = HypersphereART(**base_params)
+
+    X = art.prepare_data(data)
+    print("Prepared data has shape:", X.shape)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.33, random_state=0)
+
     cls = SimpleARTMAP(art)
     # print(cls.get_params(deep=False))
     # raise ValueError

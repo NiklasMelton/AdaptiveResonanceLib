@@ -1,11 +1,13 @@
 import numpy as np
-from typing import Optional, Callable, Iterable
+from typing import Optional, Callable, Iterable, Literal, List, Tuple
+from copy import deepcopy
 from collections import defaultdict
 from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
-from artlib.common.utils import normalize
+from artlib.common.utils import normalize, de_normalize
+import operator
 
 
 class BaseART(BaseEstimator, ClusterMixin):
@@ -21,6 +23,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.params = params
         self.sample_counter_ = 0
         self.weight_sample_counter_: list[int] = []
+        self.d_min_ = None
+        self.d_max_ = None
 
     def __getattr__(self, key):
         if key in self.params:
@@ -90,8 +94,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self
 
 
-    @staticmethod
-    def prepare_data(X: np.ndarray) -> np.ndarray:
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
         prepare data for clustering
 
@@ -101,7 +104,20 @@ class BaseART(BaseEstimator, ClusterMixin):
         Returns:
             normalized data
         """
-        return normalize(X)
+        normalized, self.d_max_, self.d_min_ = normalize(X, self.d_max_, self.d_min_)
+        return normalized
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return de_normalize(X, d_max=self.d_max_, d_min=self.d_min_)
 
     @property
     def n_clusters(self) -> int:
@@ -183,7 +199,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -197,7 +213,13 @@ class BaseART(BaseEstimator, ClusterMixin):
             cluster match criterion binary, cache used for later processing
 
         """
-        raise NotImplementedError
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        M_bin = op(M, params["rho"])
+        if cache is None:
+            cache = dict()
+        cache["match_criterion"] = M
+        cache["match_criterion_bin"] = M_bin
+        return M_bin, cache
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -253,7 +275,42 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None) -> int:
+    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        M = cache["match_criterion"]
+        if method == "MT+":
+            self.params["rho"] = M+epsilon
+            return True
+        elif method == "MT-":
+            self.params["rho"] = M - epsilon
+            return True
+        elif method == "MT0":
+            self.params["rho"] = M
+            return True
+        elif method == "MT1":
+            self.params["rho"] = np.inf
+            return False
+        elif method == "MT~":
+            return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+    @staticmethod
+    def _match_tracking_operator(method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> Callable:
+        if method in ["MT+", "MT-","MT1"]:
+            return operator.ge
+        elif method in ["MT0", "MT~"]:
+            return operator.gt
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+    def _set_params(self, new_params):
+        self.params = new_params
+
+    def _deep_copy_params(self) -> dict:
+        return deepcopy(self.params)
+
+
+    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
         """
         fit the model to a single sample
 
@@ -262,37 +319,64 @@ class BaseART(BaseEstimator, ClusterMixin):
         - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
+
 
         Returns:
             cluster label of the input sample
 
         """
         self.sample_counter_ += 1
+        base_params = self._deep_copy_params()
+        mt_operator = self._match_tracking_operator(match_reset_method)
         if len(self.W) == 0:
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
             return 0
         else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+
+            if match_reset_method in ["MT~"] and match_reset_func is not None:
+                T_values, T_cache = zip(*[
+                    self.category_choice(x, w, params=self.params)
+                    if match_reset_func(x, w, c_, params=self.params, cache=None)
+                    else (np.nan, None)
+                    for c_, w in enumerate(self.W)
+                ])
+            else:
+                T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.argmax(T))
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache)
-                no_match_reset = (
-                        match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.params, cache=cache)
-                )
+                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache, op=mt_operator)
+                if match_reset_method in ["MT~"] and match_reset_func is not None:
+                    no_match_reset = True
+                else:
+                    no_match_reset = (
+                            match_reset_func is None or
+                            match_reset_func(x, w, c_, params=self.params, cache=cache)
+                    )
                 if m and no_match_reset:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    self._set_params(base_params)
                     return c_
                 else:
-                    T[c_] = -1
+                    T[c_] = np.nan
+                    if m and not no_match_reset:
+                        keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
+                        if not keep_searching:
+                            T[:] = np.nan
 
             c_new = len(self.W)
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
+            self._set_params(base_params)
             return c_new
 
     def step_pred(self, x) -> int:
@@ -334,8 +418,19 @@ class BaseART(BaseEstimator, ClusterMixin):
         # this is where pruning steps can go
         pass
 
+    def post_fit(self, X: np.ndarray):
+        """
+        undefined function called after fit. Useful for cluster pruning
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1):
+        Parameters:
+        - X: data set
+
+        """
+        # this is where pruning steps can go
+        pass
+
+
+    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0, verbose: bool = False):
         """
         Fit the model to the data
 
@@ -346,6 +441,12 @@ class BaseART(BaseEstimator, ClusterMixin):
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         self.validate_data(X)
@@ -355,15 +456,21 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.W: list[np.ndarray] = []
         self.labels_ = np.zeros((X.shape[0], ), dtype=int)
         for _ in range(max_iter):
-            for i, x in enumerate(X):
+            if verbose:
+                from tqdm import tqdm
+                x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
+            else:
+                x_iter = enumerate(X)
+            for i, x in x_iter:
                 self.pre_step_fit(X)
-                c = self.step_fit(x, match_reset_func=match_reset_func)
+                c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
                 self.labels_[i] = c
                 self.post_step_fit(X)
+        self.post_fit(X)
         return self
 
 
-    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None):
+    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
         iteratively fit the model to the data
 
@@ -372,6 +479,12 @@ class BaseART(BaseEstimator, ClusterMixin):
         - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
             Permits external factors to influence cluster creation.
             Returns True if the cluster is valid for the sample, False otherwise
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
 
@@ -387,7 +500,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             j = len(self.labels_)
             self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
         for i, x in enumerate(X):
-            c = self.step_fit(x, match_reset_func=match_reset_func)
+            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
             self.labels_[i+j] = c
         return self
 
@@ -414,6 +527,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             y[i] = c
         return y
 
+    def shrink_clusters(self, shrink_ratio: float = 0.1):
+        return self
+
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
         undefined function for visualizing the bounds of each cluster
@@ -425,6 +541,15 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         raise NotImplementedError
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        undefined function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        raise NotImplementedError
+
 
     def visualize(
             self,

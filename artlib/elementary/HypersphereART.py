@@ -5,7 +5,7 @@ In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
 (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, List
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
@@ -103,23 +103,6 @@ class HypersphereART(BaseART):
         return 1 - (max(radius, max_radius)/params["r_hat"]), cache
 
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
-        """
-        get the binary match criterion of the cluster
-
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
-
-        Returns:
-            cluster match criterion binary, cache used for later processing
-
-        """
-        M, cache = self.match_criterion(i, w, params=params, cache=cache)
-        return M >= params["rho"], cache
-
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
@@ -162,6 +145,14 @@ class HypersphereART(BaseART):
 
         """
         return np.concatenate([i, [0.]])
+
+    def get_cluster_centers(self) -> List[np.ndarray]:
+        """
+        function for getting centers of each cluster. Used for regression
+        Returns:
+            cluster centroid
+        """
+        return [w[:-1] for w in self.W]
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):

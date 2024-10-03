@@ -1,17 +1,44 @@
 import numpy as np
+from typing import Tuple, Optional
 
-def normalize(data: np.ndarray) -> np.ndarray:
+
+def normalize(data: np.ndarray, d_max: Optional[np.ndarray] = None, d_min: Optional[np.ndarray] = None) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray]:
     """
-    normalize data betweeon 0 and 1
+    Normalize data column-wise between 0 and 1.
 
     Parameters:
-    - data: data set
+    - data: 2D array of data set (rows = samples, columns = features)
+    - d_max: Optional, maximum values for each column
+    - d_min: Optional, minimum values for each column
 
     Returns:
-        normalized data
+    - normalized: normalized data
+    - d_max: maximum values for each column
+    - d_min: minimum values for each column
     """
-    normalized = (data-np.min(data))/(np.max(data)-np.min(data))
-    return normalized
+    if d_min is None:
+        d_min = np.min(data, axis=0)
+    if d_max is None:
+        d_max = np.max(data, axis=0)
+
+    normalized = (data - d_min) / (d_max - d_min)
+    return normalized, d_max, d_min
+
+
+def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.ndarray:
+    """
+    Restore column-wise normalized data to original scale.
+
+    Parameters:
+    - data: normalized data
+    - d_max: maximum values for each column
+    - d_min: minimum values for each column
+
+    Returns:
+    - De-normalized data
+    """
+    return data * (d_max - d_min) + d_min
 
 def compliment_code(data: np.ndarray) -> np.ndarray:
     """
@@ -25,6 +52,34 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
     """
     cc_data = np.hstack([data, 1.0-data])
     return cc_data
+
+def de_compliment_code(data: np.ndarray) -> np.ndarray:
+    """
+    finds centroid of compliment coded data
+
+    Parameters:
+    - data: data set
+
+    Returns:
+        compliment coded data
+    """
+    # Get the shape of the array
+    n, total_columns = data.shape
+
+    # Ensure the number of columns is even so that it can be split evenly
+    assert total_columns % 2 == 0, "The number of columns must be even"
+
+    # Calculate the number of columns in each resulting array
+    m = total_columns // 2
+
+    # Split the array into two arrays of shape n x m
+    arr1 = data[:, :m]
+    arr2 = 1-data[:, m:]
+
+    # Find the element-wise mean
+    mean_array = (arr1 + arr2) / 2
+
+    return mean_array
 
 def l1norm(x: np.ndarray) -> float:
     """

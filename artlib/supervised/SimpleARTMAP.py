@@ -4,7 +4,7 @@ Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 Norwell, MA, USA: Kluwer Academic Publishers.
 """
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Literal
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
@@ -73,17 +73,47 @@ class SimpleARTMAP(BaseARTMAP):
         - y: data set B
 
         """
-        X, y = check_X_y(X, y)
+        X, y = check_X_y(X, y, dtype=None)
         self.module_a.validate_data(X)
         return X, y
 
-    def step_fit(self, x: np.ndarray, c_b: int) -> int:
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            prepared data
+        """
+        return self.module_a.prepare_data(X)
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.module_a.restore_data(X)
+
+    def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10) -> int:
         """
         Fit the model to a single sample
 
         Parameters:
         - x: data sample for side A
         - c_b: side b label
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         Returns:
             side A cluster label
@@ -92,14 +122,14 @@ class SimpleARTMAP(BaseARTMAP):
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
             i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
         )
-        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func)
+        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
         if c_a not in self.map:
             self.map[c_a] = c_b
         else:
             assert self.map[c_a] == c_b
         return c_a
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1):
+    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10, verbose: bool = False):
         """
         Fit the model to the data
 
@@ -107,6 +137,12 @@ class SimpleARTMAP(BaseARTMAP):
         - X: data set A
         - y: data set B
         - max_iter: number of iterations to fit the model on the same data set
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         # Check that X and y have correct shape
@@ -119,20 +155,31 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         for _ in range(max_iter):
-            for i, (x, c_b) in enumerate(zip(X, y)):
-                c_a = self.step_fit(x, c_b)
+            if verbose:
+                from tqdm import tqdm
+                x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
+            else:
+                x_y_iter = enumerate(zip(X, y))
+            for i, (x, c_b) in x_y_iter:
                 self.module_a.pre_step_fit(X)
+                c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
         return self
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray):
+    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
         """
         Partial fit the model to the data
 
         Parameters:
         - X: data set A
         - y: data set B
+        - match_reset_method:
+            "MT+": Original method, rho=M+epsilon
+             "MT-": rho=M-epsilon
+             "MT0": rho=M, using > operator
+             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
+             "MT~": do not change rho
 
         """
         SimpleARTMAP.validate_data(self, X, y)
@@ -148,7 +195,7 @@ class SimpleARTMAP(BaseARTMAP):
             self.module_a.labels_ = np.pad(self.module_a.labels_, [(0, X.shape[0])], mode='constant')
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(x, c_b)
+            c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
             self.module_a.labels_[i+j] = c_a
             self.module_a.post_step_fit(X)
         return self

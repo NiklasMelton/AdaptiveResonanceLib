@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "artlib"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
 authors = ["Niklas M. Melton <niklasmelton@gmail.com>"]
 license = "MIT"

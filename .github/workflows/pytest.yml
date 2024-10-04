@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - main
-      - master  # Adjust based on your main branch name
+      - develop
 
 jobs:
   test:

@@ -133,3 +133,7 @@ def test_clustering(art_model):
     labels = art_model.fit_predict(data)
 
     assert np.all(np.equal(labels, np.array([0, 0, 1, 2, 3])))
+
+
+def test_runner():
+    assert False

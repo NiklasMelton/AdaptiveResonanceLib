@@ -134,6 +134,3 @@ def test_clustering(art_model):
 
     assert np.all(np.equal(labels, np.array([0, 0, 1, 2, 3])))
 
-
-def test_runner():
-    assert False

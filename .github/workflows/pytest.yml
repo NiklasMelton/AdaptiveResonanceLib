@@ -27,7 +27,7 @@ jobs:
 
     - name: Run tests
       run: |
-        poetry run pytest unit_tests/ --maxfail=5 --disable-warnings  # Run tests inside Poetry's virtual environment
+        poetry run pytest unit_tests/ --maxfail=5 --disable-warnings -v --tb=short  # Add verbose and short traceback options
 
     - name: Publish test results
       if: failure()

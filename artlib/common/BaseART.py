@@ -69,7 +69,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             # Simple optimization to gain speed (inspect is slow)
             return self
         valid_params = self.get_params(deep=True)
-        local_params = dict()
+        local_params = dict(valid_params)
 
         nested_params = defaultdict(dict)  # grouped by prefix
         for key, value in params.items():

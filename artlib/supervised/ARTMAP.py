@@ -52,11 +52,11 @@ class ARTMAP(SimpleARTMAP):
 
     @property
     def labels_b(self):
-        return self.labels_
+        return self.module_b.labels_
 
     @property
     def labels_ab(self):
-        return {"A": self.labels_a, "B": self.labels_}
+        return {"A": self.labels_a, "B": self.module_b.labels_}
 
     def validate_data(self, X: np.ndarray, y: np.ndarray):
         """

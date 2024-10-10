@@ -59,7 +59,7 @@ def test_step_fit(bartmap_model):
 
 def test_match_criterion_bin(bartmap_model):
     # Test the match_criterion_bin method
-    X = np.random.rand(10, 10)
+    X = np.random.rand(100, 100)
 
     bartmap_model.X = X
 
@@ -78,7 +78,7 @@ def test_match_criterion_bin(bartmap_model):
 
 def test_fit(bartmap_model):
     # Test the fit method
-    X = np.random.rand(10, 10)
+    X = np.random.rand(100, 100)
 
     bartmap_model.fit(X, max_iter=1)
 

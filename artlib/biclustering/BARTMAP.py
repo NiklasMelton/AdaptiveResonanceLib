@@ -184,7 +184,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         """
         X_a = X[self.column_labels_ == c_b, :]
         if len(X_a) == 0:
-            raise ValueError("HERE")
+            raise ValueError("X_a has length 0")
         X_k_cb = self._get_x_cb(X[k,:], c_b)
         mean_r = np.mean(
             [
@@ -285,7 +285,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         self.X = X
 
         n = X.shape[0]
-        X_a = self.module_b.prepare_data(X)
+        X_a = self.module_a.prepare_data(X)
         X_b = self.module_b.prepare_data(X.T)
         self.validate_data(X_a, X_b)
 
@@ -298,10 +298,10 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         for _ in range(max_iter):
             for k in range(n):
-                self.module_a.pre_step_fit(X)
+                self.module_a.pre_step_fit(X_a)
                 c_a = self.step_fit(X_a, k)
                 self.module_a.labels_[k] = c_a
-                self.module_a.post_step_fit(X)
+                self.module_a.post_step_fit(X_a)
 
         self.rows_ = np.vstack(
             [

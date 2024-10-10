@@ -33,6 +33,7 @@ def test_labels_properties(artmap_model):
 
 def test_validate_data(artmap_model):
     # Test the validate_data method
+    np.random.seed(42)
     X = np.random.rand(10, 5)
     y = np.random.rand(10, 5)
     X_prep, y_prep = artmap_model.prepare_data(X, y)
@@ -46,6 +47,7 @@ def test_validate_data(artmap_model):
 
 def test_prepare_and_restore_data(artmap_model):
     # Test prepare_data and restore_data methods
+    np.random.seed(42)
     X = np.random.rand(5, 5)
     y = np.random.rand(5, 5)
 
@@ -57,6 +59,7 @@ def test_prepare_and_restore_data(artmap_model):
 
 def test_fit(artmap_model):
     # Test the fit method
+    np.random.seed(42)
     X = np.random.rand(10, 5)
     y = np.random.rand(10, 5)
 
@@ -69,6 +72,7 @@ def test_fit(artmap_model):
 
 def test_partial_fit(artmap_model):
     # Test the partial_fit method
+    np.random.seed(42)
     X = np.random.rand(10, 5)
     y = np.random.rand(10, 5)
 
@@ -81,6 +85,7 @@ def test_partial_fit(artmap_model):
 
 def test_predict(artmap_model):
     # Test the predict method
+    np.random.seed(42)
     X = np.random.rand(10, 5)
     y = np.random.rand(10, 5)
 
@@ -93,6 +98,7 @@ def test_predict(artmap_model):
 
 def test_predict_ab(artmap_model):
     # Test the predict_ab method
+    np.random.seed(42)
     X = np.random.rand(10, 5)
     y = np.random.rand(10, 5)
 
@@ -106,6 +112,7 @@ def test_predict_ab(artmap_model):
 
 def test_predict_regression(artmap_model):
     # Test the predict_regression method
+    np.random.seed(42)
     X = np.random.rand(10, 5)
     y = np.random.rand(10, 5)
 

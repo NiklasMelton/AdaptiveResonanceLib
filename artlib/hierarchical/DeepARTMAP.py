@@ -23,7 +23,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         assert len(modules) >= 1, "Must provide at least one ART module"
         self.modules = modules
-        self.layers: list[BaseARTMAP]
+        self.layers: list[BaseARTMAP] = []
         self.is_supervised: Optional[bool] = None
 
     def get_params(self, deep: bool = True) -> dict:
@@ -239,12 +239,12 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 self.layers = cast(list[BaseARTMAP], [ARTMAP(self.modules[1], self.modules[0])]) + \
                                cast(list[BaseARTMAP], [SimpleARTMAP(self.modules[i]) for i in range(2, self.n_modules)])
             assert not self.is_supervised, "Labels were not previously provided. Do not provide labels to continue partial fit."
+
             self.layers[0] = self.layers[0].partial_fit(X[1], X[0], match_reset_method=match_reset_method, epsilon=epsilon)
             x_i = 2
 
         n_samples = X[0].shape[0]
-
-        for art_i in range(1, self.n_modules):
+        for art_i in range(1, self.n_layers):
             y_i = self.layers[art_i-1].labels_a[-n_samples:]
             self.layers[art_i] = self.layers[art_i].partial_fit(X[x_i], y_i, match_reset_method=match_reset_method, epsilon=epsilon)
             x_i += 1

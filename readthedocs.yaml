@@ -6,7 +6,10 @@ build:
     python: "3.9"
   commands:
     - pip install sphinx
-    - sphinx-build -b html docs/ _build/html
+    - sphinx-build -b html docs/source/ _build/html  # Update source directory
+
+sphinx:
+  configuration: docs/source/conf.py  # Specify the path to conf.py
 
 python:
   install:

@@ -59,10 +59,7 @@ def test_falcon_get_actions_and_rewards(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    print("actions\n", actions)
-    print("actions_min", np.min(actions,axis=0))
     states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
-    print("actions_prep\n", actions_prep)
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
     print(states_prep[0,:])
@@ -73,36 +70,36 @@ def test_falcon_get_actions_and_rewards(falcon_model):
     assert rewards.shape[0] > 0
 
 
-# def test_falcon_get_action(falcon_model):
-#     # Test the get_action method of FALCON
-#     states = np.random.rand(10, 2)
-#     actions = np.random.rand(10, 2)
-#     rewards = np.random.rand(10, 1)
-#
-#     # Prepare data
-#     states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
-#
-#     falcon_model.fit(states_prep, actions_prep, rewards_prep)
-#
-#     action = falcon_model.get_action(states_prep[0,:])
-#
-#     assert action.shape[0] == actions.shape[1]
+def test_falcon_get_action(falcon_model):
+    # Test the get_action method of FALCON
+    states = np.random.rand(10, 2)
+    actions = np.random.rand(10, 2)
+    rewards = np.random.rand(10, 1)
 
-#
-# def test_falcon_get_probabilistic_action(falcon_model):
-#     # Test the get_probabilistic_action method of FALCON
-#     states = np.random.rand(10, 2)
-#     actions = np.random.rand(10, 2)
-#     rewards = np.random.rand(10, 1)
-#
-#     # Prepare data
-#     states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
-#
-#     falcon_model.fit(states_prep, actions_prep, rewards_prep)
-#
-#     action = falcon_model.get_probabilistic_action(states_prep[0,:])
-#
-#     assert action.shape[0] == actions.shape[1]
+    # Prepare data
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+
+    falcon_model.fit(states_prep, actions_prep, rewards_prep)
+
+    action = falcon_model.get_action(states_prep[0,:])
+
+    assert action.shape[0] == actions.shape[1]
+
+
+def test_falcon_get_probabilistic_action(falcon_model):
+    # Test the get_probabilistic_action method of FALCON
+    states = np.random.rand(10, 2)
+    actions = np.random.rand(10, 2)
+    rewards = np.random.rand(10, 1)
+
+    # Prepare data
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+
+    falcon_model.fit(states_prep, actions_prep, rewards_prep)
+
+    action = falcon_model.get_probabilistic_action(states_prep[0,:])
+
+    assert isinstance(action.tolist(), float)
 
 
 def test_falcon_get_rewards(falcon_model):
@@ -113,10 +110,6 @@ def test_falcon_get_rewards(falcon_model):
 
     # Prepare data
     states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
-
-    print(states_prep.shape)
-    print(actions_prep.shape)
-    print(rewards_prep.shape)
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
 

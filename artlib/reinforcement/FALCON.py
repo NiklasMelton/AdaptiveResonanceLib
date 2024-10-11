@@ -60,7 +60,6 @@ class FALCON:
         action_space_prepared = self.fusion_art.modules[1].prepare_data(action_space)
         viable_clusters = []
         for action in action_space_prepared:
-            print("action", action)
             data = self.fusion_art.join_channel_data([state.reshape(1, -1), action.reshape(1, -1)], skip_channels=[2])
             c = self.fusion_art.predict(data, skip_channels=[2])
             viable_clusters.append(c[0])

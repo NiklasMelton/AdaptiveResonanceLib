@@ -205,11 +205,12 @@ class FuzzyART(BaseART):
         Returns:
             cluster centroid
         """
-        centers = []
-        for w in self.W:
-            ref_points, widths = get_bounding_box(w,None)
-            centers.append(np.array(ref_points)+0.5*np.array(widths))
-        return centers
+        # centers = []
+        # for w in self.W:
+        #     ref_points, widths = get_bounding_box(w,None)
+        #     centers.append(np.array(ref_points)+0.5*np.array(widths))
+        # return
+        return [self.restore_data(w.reshape((1,-1))).reshape((-1,)) for w in self.W]
 
     def shrink_clusters(self, shrink_ratio: float = 0.1):
         new_W = []

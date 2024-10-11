@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Literal
+from typing import Optional, Literal, Tuple
 from artlib import FusionART, BaseART, compliment_code, de_compliment_code
 
 
@@ -18,6 +18,30 @@ class FALCON:
             channel_dims=channel_dims
         )
 
+    def prepare_data(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - channel_data: list of channel arrays
+
+        Returns:
+            normalized data
+        """
+        return self.fusion_art.modules[0].prepare_data(states), self.fusion_art.modules[1].prepare_data(actions), self.fusion_art.modules[2].prepare_data(rewards)
+
+    def restore_data(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        return self.fusion_art.modules[0].restore_data(states), self.fusion_art.modules[1].restore_data(actions), self.fusion_art.modules[2].restore_data(rewards)
+
     def fit(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray):
         data = self.fusion_art.join_channel_data([states, actions, rewards])
         self.fusion_art = self.fusion_art.fit(data)
@@ -33,9 +57,10 @@ class FALCON:
         if action_space is None:
             action_space = self.fusion_art.get_channel_centers(1)
             action_space = np.array(action_space)
-        action_space_prepared = self.fusion_art.modules[0].prepare_data(action_space)
+        action_space_prepared = self.fusion_art.modules[1].prepare_data(action_space)
         viable_clusters = []
         for action in action_space_prepared:
+            print("action", action)
             data = self.fusion_art.join_channel_data([state.reshape(1, -1), action.reshape(1, -1)], skip_channels=[2])
             c = self.fusion_art.predict(data, skip_channels=[2])
             viable_clusters.append(c[0])

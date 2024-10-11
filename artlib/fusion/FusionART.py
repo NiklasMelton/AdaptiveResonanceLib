@@ -121,17 +121,16 @@ class FusionART(BaseART):
         """
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
-    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+    def prepare_data(self, channel_data: List[np.ndarray]) -> np.ndarray:
         """
         prepare data for clustering
 
         Parameters:
-        - X: data set
+        - channel_data: list of channel arrays
 
         Returns:
             normalized data
         """
-        channel_data = self.split_channel_data(X)
         prepared_channel_data = [self.modules[i].prepare_data(channel_data[i]) for i in range(self.n)]
         return self.join_channel_data(prepared_channel_data)
 
@@ -147,7 +146,7 @@ class FusionART(BaseART):
         """
         channel_data = self.split_channel_data(X)
         restored_channel_data = [self.modules[i].restore_data(channel_data[i]) for i in range(self.n)]
-        return self.join_channel_data(restored_channel_data)
+        return restored_channel_data
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict, skip_channels: List[int] = []) -> tuple[float, Optional[dict]]:
         """

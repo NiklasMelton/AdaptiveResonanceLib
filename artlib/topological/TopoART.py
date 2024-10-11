@@ -19,14 +19,14 @@ import operator
 
 class TopoART(BaseART):
 
-    def __init__(self, base_module: BaseART, betta_lower: float, tau: int, phi: int):
+    def __init__(self, base_module: BaseART, beta_lower: float, tau: int, phi: int):
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
             warn(
                 f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
                 f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
             )
-        params = dict(base_module.params, **{"beta_lower": betta_lower, "tau": tau, "phi": phi})
+        params = dict(base_module.params, **{"beta_lower": beta_lower, "tau": tau, "phi": phi})
         super().__init__(params)
         self.base_module = base_module
         self.adjacency = np.zeros([], dtype=int)
@@ -194,7 +194,11 @@ class TopoART(BaseART):
 
 
     def prune(self, X: np.ndarray):
-        self._permanent_mask += (np.array(self.weight_sample_counter_) >= self.phi)
+        a = np.array(self.weight_sample_counter_).reshape(-1,) >= self.phi
+        b = self._permanent_mask
+        print(a.shape, b.shape)
+
+        self._permanent_mask += np.array(self.weight_sample_counter_).reshape(-1,) >= self.phi
         perm_labels = np.where(self._permanent_mask)[0]
 
         self.W = [w for w, pm in zip(self.W, self._permanent_mask) if pm]

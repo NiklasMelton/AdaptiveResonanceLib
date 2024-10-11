@@ -121,6 +121,33 @@ class FusionART(BaseART):
         """
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
+    def prepare_data(self, channel_data: List[np.ndarray]) -> np.ndarray:
+        """
+        prepare data for clustering
+
+        Parameters:
+        - channel_data: list of channel arrays
+
+        Returns:
+            normalized data
+        """
+        prepared_channel_data = [self.modules[i].prepare_data(channel_data[i]) for i in range(self.n)]
+        return self.join_channel_data(prepared_channel_data)
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """
+        restore data to state prior to preparation
+
+        Parameters:
+        - X: data set
+
+        Returns:
+            restored data
+        """
+        channel_data = self.split_channel_data(X)
+        restored_channel_data = [self.modules[i].restore_data(channel_data[i]) for i in range(self.n)]
+        return restored_channel_data
+
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict, skip_channels: List[int] = []) -> tuple[float, Optional[dict]]:
         """
         get the activation of the cluster
@@ -413,3 +440,23 @@ class FusionART(BaseART):
 
         X = np.hstack(formatted_channel_data)
         return X
+
+    def split_channel_data(self, joined_data: np.ndarray, skip_channels: List[int] = []) -> List[np.ndarray]:
+        skip_channels = [self.n + k if k < 0 else k for k in skip_channels]
+
+        channel_data = []
+        current_col = 0
+
+        for k in range(self.n):
+            start_idx, end_idx = self._channel_indices[k]
+            channel_width = end_idx - start_idx
+
+            if k not in skip_channels:
+                # Extract the original channel data
+                channel_data.append(joined_data[:, current_col:current_col + channel_width])
+                current_col += channel_width
+            else:
+                # If this channel was skipped, we know it was filled with 0.5, so we skip those columns
+                current_col += channel_width
+
+        return channel_data

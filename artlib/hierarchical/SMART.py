@@ -27,10 +27,10 @@ class SMART(DeepARTMAP):
         self.rho_values = rho_values
 
         layer_params = [dict(base_params, **{"rho": rho}) for rho in self.rho_values]
-        layers = [base_ART_class(**params, **kwargs) for params in layer_params]
-        for layer in layers:
-            assert isinstance(layer, BaseART), "Only elementary ART-like objects are supported"
-        super().__init__(layers)
+        modules = [base_ART_class(**params, **kwargs) for params in layer_params]
+        for module in modules:
+            assert isinstance(module, BaseART), "Only elementary ART-like objects are supported"
+        super().__init__(modules)
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
@@ -79,7 +79,7 @@ class SMART(DeepARTMAP):
 
     def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         X_list = [X] * self.n_modules
-        return self.partial_fit(X_list, match_reset_method=match_reset_method, epsilon=epsilon)
+        return super(SMART, self).partial_fit(X_list, match_reset_method=match_reset_method, epsilon=epsilon)
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """

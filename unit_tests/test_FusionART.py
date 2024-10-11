@@ -37,6 +37,10 @@ def test_get_cluster_centers(fusionart_model):
     # Test the get_cluster_centers method
     fusionart_model.modules[0].W = [np.array([0.1, 0.4, 0.5, 0.4])]
     fusionart_model.modules[1].W = [np.array([0.2, 0.2, 0.2, 0.2])]
+    fusionart_model.modules[0].d_min_ = np.array([0.0, 0.0])
+    fusionart_model.modules[1].d_min_ = np.array([0.0, 0.0])
+    fusionart_model.modules[0].d_max_ = np.array([1.0, 1.0])
+    fusionart_model.modules[1].d_max_ = np.array([1.0, 1.0])
 
     centers = fusionart_model.get_cluster_centers()
 

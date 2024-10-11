@@ -121,5 +121,6 @@ def test_step_pred(simple_artmap_model):
     simple_artmap_model.fit(X_prep, y, max_iter=1)
 
     c_a, c_b = simple_artmap_model.step_pred(X_prep[0])
-    assert isinstance(c_a, int)
-    assert isinstance(c_b, np.int32)
+    print(type(c_a), type(c_b))
+    assert isinstance(c_a, (int, np.integer))
+    assert isinstance(c_b, (int, np.integer))

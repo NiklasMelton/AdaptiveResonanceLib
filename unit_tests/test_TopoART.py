@@ -27,6 +27,9 @@ def test_validate_params():
 def test_get_cluster_centers(topoart_model):
     # Test the get_cluster_centers method
     topoart_model.base_module.W = [np.array([0.5, 1.0, 0.5, 1.0]), np.array([0.1, 0.4, 0.5, 0.4])]
+    topoart_model.base_module.d_min_ = np.array([0.0, 0.0])
+    topoart_model.base_module.d_max_ = np.array([1.0, 1.0])
+
     centers = topoart_model.get_cluster_centers()
     print(centers)
     assert len(centers) == 2

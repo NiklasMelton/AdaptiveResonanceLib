@@ -81,8 +81,8 @@ class iCVIFuzzyART(FuzzyART):
             if match_reset_func is None:
                 c = self.step_fit(x, match_reset_func=self.iCVI_match, match_reset_method=match_reset_method, epsilon=epsilon)
             else:
-                match_reset_func = lambda x, w, c_, params, cache: (match_reset_func(x, w, c_, params, cache) & self.iCVI_match(x, w, c_, params, cache))
-                c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
+                match_reset_func_ = lambda x, w, c_, params, cache: (match_reset_func(x, w, c_, params, cache) & self.iCVI_match(x, w, c_, params, cache))
+                c = self.step_fit(x, match_reset_func=match_reset_func_, match_reset_method=match_reset_method, epsilon=epsilon)
 
             if self.offline:
                 params = self.iCVI.switch_label(x, self.labels_[i], c)

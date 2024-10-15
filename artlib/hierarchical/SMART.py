@@ -12,18 +12,38 @@ from artlib.common.BaseART import BaseART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 class SMART(DeepARTMAP):
+    """SMART for Hierachical Clustering
+
+    This module implements SMART as first published in
+    Bartfai, G. (1994).
+    Hierarchical clustering with ART neural networks.
+    In Proc. IEEE International Conference on Neural Networks (ICNN)
+    (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307.
+    SMART accepts an uninstatiated ART class and hierarchically clusters data in a divisive fashion by using a set of
+    vigilance values that monotonically increase in their restrictiveness. SMART is a special case of DeepARTMAP,
+    which forms the backbone of this class, where all channels receive the same data.
+
+
+    Parameters:
+        base_ART_class: An uninstatiated BaseART class. e.g. FuzzyART
+        rho_values: Union[list[float], np.ndarray] a set of monotonically increasing vigilance values
+        base_params: all other params used to instantiate the base ART (will be identical across all layers)
+
+    """
 
     def __init__(self, base_ART_class: Type, rho_values: Union[list[float], np.ndarray], base_params: dict, **kwargs):
         """
 
         Parameters:
-        - base_ART: some ART class
+        - base_ART_class: some ART class
         - rho_values: rho parameters for each sub-module
         - base_params: base param dict for each sub-module
 
         """
-
-        assert all(np.diff(rho_values) > 0), "rho_values must be monotonically increasing"
+        if base_ART_class.__name__ != "BayesianART":
+            assert all(np.diff(rho_values) > 0), "rho_values must be monotonically increasing"
+        else:
+            assert all(np.diff(rho_values) < 0), "rho_values must be monotonically decreasing for BayesianART"
         self.rho_values = rho_values
 
         layer_params = [dict(base_params, **{"rho": rho}) for rho in self.rho_values]

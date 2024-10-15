@@ -18,8 +18,36 @@ import operator
 
 
 class TopoART(BaseART):
+    """Topo ART Clustering
+
+    This module implements Topo ART as first published in
+    Tscherepanow, M. (2010).
+    TopoART: A Topology Learning Hierarchical ART Network.
+    In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
+    Artificial Neural Networks – ICANN 2010 (pp. 157–167).
+    Berlin, Heidelberg: Springer Berlin Heidelberg.
+    doi:10.1007/978-3-642-15825-4_21.
+    Topo ART clusters accepts an instatiated base ART module and generates a topological clustering by recording
+    the first and second resonant cluster relationships in an adjacency matrix. Further, it updates the second
+    resonant cluster with a lower learning rate than the first, providing for a distributed learning model.
+
+
+    Parameters:
+        base_module: an instantiated ART module
+        beta_lower: the learning rate for the second resonant cluster
+        tau: number of samples after which we prune
+        phi: minimum number of samples a cluster must have association with to be kept
+
+    """
 
     def __init__(self, base_module: BaseART, beta_lower: float, tau: int, phi: int):
+        """
+        Parameters:
+        - base_module: an instantiated ART module
+        - beta_lower: the learning rate for the second resonant cluster
+        - tau: number of samples after which we prune
+        - phi: minimum number of samples a cluster must have association with to be kept
+        """
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
             warn(

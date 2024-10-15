@@ -11,7 +11,23 @@ from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
 
 class HypersphereART(BaseART):
-    # implementation of HypersphereART
+    """Hypersphere ART for Clustering
+
+    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
+    Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning.
+    In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+    (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
+    Hyperpshere ART clusters data in Hyper-spheres similar to k-means with a dynamic k.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        alpha: float choice parameter. 1e-7 recommended value.
+        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
+        mu: float ratio between the major and minor axes
+        r_hat: float maximum possible radius
+
+    """
     def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
         """
         Parameters:

@@ -16,14 +16,31 @@ from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
 
 class EllipsoidART(BaseART):
-    # implementation of EllipsoidART
+    """Ellipsoid ART for Clustering
+
+    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
+    Ellipsoid ART and ARTMAP for incremental clustering and classification.
+    In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+    (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
+    Ellipsoid ART clusters data in Hyper-ellipsoids. It is highly sensitive to sample presentation order as the second
+    sample will determine the orientation of the principal axes.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        alpha: float choice parameter. 1e-7 recommended value.
+        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
+        mu: float ratio between the major and minor axes
+        r_hat: float radius bias parameter
+
+    """
     def __init__(self, rho: float, alpha: float, beta: float, mu: float, r_hat: float):
         """
         Parameters:
         - rho: vigilance parameter
         - alpha: choice parameter
         - beta: learning rate
-        - mu: ratio between major and minor axis
+        - mu: ratio between major and minor axess
         - r_hat: radius bias parameter
 
         """

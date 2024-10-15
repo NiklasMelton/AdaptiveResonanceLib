@@ -13,7 +13,22 @@ from artlib.common.visualization import plot_gaussian_contours_fading
 
 
 class GaussianART(BaseART):
-    # implementation of GaussianART
+    """Gaussian ART for Clustering
+
+    This module implements Gaussian ART as first published in Williamson, J. R. (1996).
+    Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps.
+    Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
+    Guassian ART clusters data in Gaussian Distributions (Hyper-ellipsoids) and is similar to Bayesian ART but differs
+    in that the hyper-ellipsoid always have their principal axes square to the coordinate frame.
+    It is also faster than Bayesian ART.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        sigma_init: np.ndarray the initial estimate of the variance of each dimension for each cluster.
+        alpha: float an arbitrarily small parameter used to prevent division-by-zero errors. 1e-10 is recommended
+
+    """
     def __init__(self, rho: float, sigma_init: np.ndarray, alpha: float = 1e-10):
         """
         Parameters:

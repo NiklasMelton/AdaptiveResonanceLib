@@ -12,7 +12,19 @@ from artlib.common.visualization import plot_gaussian_contours_covariance
 
 
 class BayesianART(BaseART):
-    # implementation of Bayesian ART
+    """Bayesian ART for Clustering
+
+    This module implements Bayesian ART as first published in Vigdor, B., & Lerner, B. (2007).
+    The Bayesian ARTMAP. IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
+    Bayesian ART clusters data in Bayesian Distributions (Hyper-ellipsoids) and is similar to Gaussian ART but differs
+    in that it allows arbitrary rotation of the hyper-ellipsoid.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        cov_init: np.ndarray the initial estimate of the covariance matrix for each cluster.
+
+    """
     pi2 = np.pi * 2
     def __init__(self, rho: float, cov_init: np.ndarray):
         """

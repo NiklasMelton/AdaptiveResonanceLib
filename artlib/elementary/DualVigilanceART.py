@@ -12,9 +12,31 @@ from artlib.common.BaseART import BaseART
 
 
 class DualVigilanceART(BaseART):
-    # implementation of Dual Vigilance ART
+    """Dual Vigilance ART for Clustering
+
+    This module implements Dual Vigilance ART as first published in
+    Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
+    Dual vigilance fuzzy adaptive resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+    Dual Vigilance ART allows a base ART module to cluster with both an upper and lower vigilance value.
+    The upper-vigilance value allows the base ART module to cluster normally, however, data is simultaneously clustered
+    using the lower vigilance level to combine multiple base ART categories into a single abstracted category. This
+    permits clusters to be combined to form arbitrary shapes. For example if the base ART module is fuzzy ART, a
+    Dual Vigilance Fuzzy ART clustering result would look like a series of hyper-boxes forming an arbitrary geometry.
+
+
+    Parameters:
+        base_module: BaseART the instantiated ART module that wil serve as the base for dual vigilance
+        rho_lower_bound: float the lower vigilance value that will "merge" the base_module clusters
+
+    """
 
     def __init__(self, base_module: BaseART, rho_lower_bound: float):
+        """
+        Parameters:
+        - base_module: BaseART the instantiated ART module that wil serve as the base for dual vigilance
+        - rho_lower_bound: float the lower vigilance value that will "merge" the base_module clusters
+
+        """
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
             warn(

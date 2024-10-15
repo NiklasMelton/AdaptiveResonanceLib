@@ -40,7 +40,19 @@ def get_bounding_box(w: np.ndarray, n: Optional[int] = None) -> tuple[list[int],
 
 
 class FuzzyART(BaseART):
-    # implementation of FuzzyART
+    """Fuzzy ART for Clustering
+
+    This module implements Fuzzy ART as first published in Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
+    Fuzzy ART: Fast stable learning and categorization of analog patterns by an adaptive resonance system.
+    Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B. Fuzzy ART is a hyper-box based clustering method.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        alpha: float choice parameter. 1e-7 recommended value.
+        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
+
+    """
     def __init__(self, rho: float, alpha: float, beta: float):
         """
         Parameters:

@@ -24,7 +24,20 @@ from artlib.common.BaseART import BaseART
 
 
 class ART2A(BaseART):
-    # implementation of ART 2-A
+    """ART2-A for Clustering
+
+    This module implements ART2-A as first published in Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
+    ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition.
+    Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7. ART2-A is similar to ART1 but designed for
+    analog data. This method is implemented for historical purposes and is not recommended for use.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        alpha: float choice parameter. 1e-7 recommended value.
+        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
+
+    """
     def __init__(self, rho: float, alpha: float, beta: float):
         """
         Parameters:

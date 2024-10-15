@@ -35,6 +35,7 @@ AdaptiveResonanceLib includes implementations for the following ART models:
     - Fusion ART
 - #### Reinforcement Learning
     - FALCON
+    - TD-FALCON
   
 - #### Biclustering
     - Biclustering ARTMAP

@@ -17,15 +17,31 @@ from artlib.common.visualization import plot_weight_matrix_as_ellipse
 
 
 class QuadraticNeuronART(BaseART):
-    # implementation of QuadraticNeuronART
+    """Quadratic Neuron ART for Clustering
+
+    This module implements Quadratic Neuron ART as first published in Su, M.-C., & Liu, Y.-C. (2005).
+    A new approach to clustering data with arbitrary shapes.
+    Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
+    Quadratic Neuron ART clusters data in Hyper-ellipsoid by utilizing a quadratic neural network for activation
+    and resonance.
+
+
+    Parameters:
+        rho: float [0,1] for the vigilance parameter.
+        s_init: float initial quadratic term
+        lr_b: float the bias learning rate
+        lr_w: float the weight matrix learning rate
+        lr_s: the learning rate for the quadratic term
+
+    """
     def __init__(self, rho: float, s_init: float, lr_b: float, lr_w: float, lr_s: float):
         """
         Parameters:
         - rho: vigilance parameter
-        - s_init: initial linear activation parameter
+        - s_init: initial quadratic term
         - lr_b: learning rate for cluster mean
         - lr_w: learning rate for cluster weights
-        - lr_s: learning rate for cluster activation parameter
+        - lr_s: learning rate for the quadratic term
 
         """
         params = {

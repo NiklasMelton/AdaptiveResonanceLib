@@ -13,6 +13,31 @@ from sklearn.utils.multiclass import unique_labels
 
 
 class SimpleARTMAP(BaseARTMAP):
+    """SimpleARTMAP for Classification
+
+    This module implements SimpleARTMAP as first published in
+    Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+    Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+    Norwell, MA, USA: Kluwer Academic Publishers.
+
+    SimpleARTMAP allows the clustering of data samples while enforcing a many-to-one mapping from sample clusters to
+    labels. It accepts an instantiated ART module and dynamically adapts the vigilance function to prevent resonance
+    when the many-to-one mapping is violated. This enables SimpleARTMAP to identify discrete clusters belonging to
+    each category label.
+
+    Parameters:
+        module_a: The instantiated ART module used for clustering the independent channel
+
+    """
+
+    def __init__(self, module_a: BaseART):
+        """
+        Parameters:
+        - module_a: The instantiated ART module used for clustering the independent channel
+        """
+        self.module_a = module_a
+        super().__init__()
+
 
     def match_reset_func(
             self,
@@ -42,10 +67,6 @@ class SimpleARTMAP(BaseARTMAP):
         if cluster_a in self.map and self.map[cluster_a] != cluster_b:
             return False
         return True
-
-    def __init__(self, module_a: BaseART):
-        self.module_a = module_a
-        super().__init__()
 
     def get_params(self, deep: bool = True) -> dict:
         """

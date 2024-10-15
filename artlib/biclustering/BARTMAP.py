@@ -19,6 +19,24 @@ from sklearn.base import BaseEstimator, BiclusterMixin
 from scipy.stats import pearsonr
 
 class BARTMAP(BaseEstimator, BiclusterMixin):
+    """BARTMAP for Biclustering
+
+    This module implements BARTMAP as first published in
+    Xu, R., & Wunsch II, D. C. (2011).
+    BARTMAP: A viable structure for biclustering.
+    Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
+    BARTMAP accepts two instantiated ART modules module_a and module_b which will cluster the rows (samples) and
+    columns (features) respectively. The features are clustered independently but the samples are clustered by
+    considering samples already within a row cluster as well as the candidate sample and enforcing a minimum correlation
+    within the subset of features belonging to at least one of the feature clusters.
+
+
+    Parameters:
+        module_a: The instantiated ART module used for clustering the rows (samples)
+        module_b: The instantiated ART module used for clustering the columns (features)
+        eta: float the minimum pearson correlation
+
+    """
     rows_: np.ndarray #bool
     columns_: np.ndarray #bool
 
@@ -26,8 +44,8 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         """
 
         Parameters:
-        - module_a: a-side ART module
-        - module_b: b-side ART module
+        - module_a: The instantiated ART module used for clustering the rows (samples)
+        - module_b: The instantiated ART module used for clustering the columns (features)
         - eta: minimum correlation
 
         """

@@ -7,7 +7,7 @@ Berlin, Heidelberg: Springer Berlin Heidelberg.
 doi:10.1007/ 978-3-540-72383-7_128.
 """
 import numpy as np
-from typing import Optional, Union, Callable, List, Literal, Tuple
+from typing import Optional, Union, Callable, List, Literal
 from copy import deepcopy
 from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted
@@ -23,14 +23,42 @@ def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]
     return positions
 
 class FusionART(BaseART):
-    # implementation of FusionART
+    """Fusion ART for Data Fusion and Regression
+
+    This module implements Fusion ART as first described in
+    Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
+    Intelligence Through Interaction: Towards a Unified Theory for Learning.
+    In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.),
+    Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
+    Berlin, Heidelberg: Springer Berlin Heidelberg.
+    doi:10.1007/ 978-3-540-72383-7_128.
+    Fusion ART accepts an arbitrary number of ART modules, each assigned a different data channel. The activation
+    and match functions for all ART modules are then fused such that all modules must be simultaneously active and
+    resonant in order for a match to occur. This provides fine-grain control when clustering multi-channel or
+    molti-modal data and allows for different geometries of clusters to be used for each channel.
+    Fusion ART also allows for fitting regression models and specific functions have been implemented to allow this.
+
+
+    Parameters:
+        modules: List[BaseART] a list of instantiated ART modules to use for each channel
+        gamma_values: Union[List[float], np.ndarray] the activation ratio for each channel
+        channel_dims: Union[List[int], np.ndarray] the dimension of each channel
+
+    """
 
     def __init__(
             self,
-            modules: list[BaseART],
-            gamma_values: Union[list[float], np.ndarray],
-            channel_dims: Union[list[int], np.ndarray]
+            modules: List[BaseART],
+            gamma_values: Union[List[float], np.ndarray],
+            channel_dims: Union[List[int], np.ndarray]
     ):
+
+        """
+        Parameters:
+        - modules: List[BaseART] a list of instantiated ART modules to use for each channel
+        - gamma_values: Union[List[float], np.ndarray] the activation ratio for each channel
+        - channel_dims: Union[List[int], np.ndarray] the dimension of each channel
+        """
         assert len(modules) == len(gamma_values) == len(channel_dims)
         params = {"gamma_values": gamma_values}
         super().__init__(params)

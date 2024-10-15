@@ -17,7 +17,6 @@ AdaptiveResonanceLib includes implementations for the following ART models:
     - Fuzzy ART
     - Quadratic Neuron ART
     - Dual Vigilance ART
-    - Gram ART
 - #### Metric Informed 
     - CVI ART  
     - iCVI Fuzzy ART  
@@ -36,12 +35,13 @@ AdaptiveResonanceLib includes implementations for the following ART models:
 - #### Reinforcement Learning
     - FALCON
     - TD-FALCON
-  
 - #### Biclustering
     - Biclustering ARTMAP
 
 ## Comparison of Elementary Models
-![Comparison of Elementary Images](./img/comparison_of_elementary_methods.jpg?raw=true")
+
+[comment]: <> (![Comparison of Elementary Images]&#40;https://github.com/NiklasMelton/AdaptiveResonanceLib/raw/main/docs/_static/comparison_of_elementary_methods.jpg?raw=true"&#41;)
+![Comparison of Elementary Images](https://github.com/NiklasMelton/AdaptiveResonanceLib/raw/main/img/comparison_of_elementary_methods.jpg?raw=true")
 
 ## Installation
 

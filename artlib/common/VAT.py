@@ -7,18 +7,22 @@ from scipy.spatial.distance import pdist, squareform
 
 def VAT(data: np.ndarray, distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean")) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Visual Assessment of cluster Tendency (VAT) algorithm.
+    Visual Assessment of Cluster Tendency (VAT) algorithm.
 
-    Parameters:
-    - data: Input data set as a 2D numpy array where each row is a sample.
-    - distance_metric: Optional callable function to calculate pairwise distances.
-      Defaults to Euclidean distance using pdist.
-      If None, assume data is a pre-computed distance matrix
+    Parameters
+    ----------
+    data : np.ndarray
+        Input dataset as a 2D numpy array where each row is a sample.
+    distance_metric : callable, optional
+        Callable function to calculate pairwise distances. Defaults to Euclidean distance
+        using `pdist`. If None, assumes data is a pre-computed distance matrix.
 
-    Returns:
-        Tuple containing:
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
         - Reordered distance matrix reflecting cluster structure.
         - Reordered list of indices indicating the optimal clustering order.
+
     """
     if distance_metric is None:
         pairwise_dist = data

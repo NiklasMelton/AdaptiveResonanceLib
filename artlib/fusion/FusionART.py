@@ -14,6 +14,19 @@ from sklearn.utils.validation import check_is_fitted
 import operator
 
 def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
+    """
+    Generate the start and end positions for each channel in the input data.
+
+    Parameters
+    ----------
+    channel_dims : list of int
+        A list representing the number of dimensions for each channel.
+
+    Returns
+    -------
+    list of tuple of int
+        A list of tuples where each tuple represents the start and end index for a channel.
+    """
     positions = []
     start = 0
     for length in channel_dims:
@@ -38,12 +51,6 @@ class FusionART(BaseART):
     molti-modal data and allows for different geometries of clusters to be used for each channel.
     Fusion ART also allows for fitting regression models and specific functions have been implemented to allow this.
 
-
-    Parameters:
-        modules: List[BaseART] a list of instantiated ART modules to use for each channel
-        gamma_values: Union[List[float], np.ndarray] the activation ratio for each channel
-        channel_dims: Union[List[int], np.ndarray] the dimension of each channel
-
     """
 
     def __init__(
@@ -54,10 +61,16 @@ class FusionART(BaseART):
     ):
 
         """
-        Parameters:
-        - modules: List[BaseART] a list of instantiated ART modules to use for each channel
-        - gamma_values: Union[List[float], np.ndarray] the activation ratio for each channel
-        - channel_dims: Union[List[int], np.ndarray] the dimension of each channel
+        Initialize the FusionART instance.
+
+        Parameters
+        ----------
+        modules : List[BaseART]
+            A list of ART modules corresponding to each data channel.
+        gamma_values : Union[List[float], np.ndarray]
+            The activation ratio for each channel.
+        channel_dims : Union[List[int], np.ndarray]
+            The number of dimensions for each channel.
         """
         assert len(modules) == len(gamma_values) == len(channel_dims)
         params = {"gamma_values": gamma_values}
@@ -70,13 +83,17 @@ class FusionART(BaseART):
 
     def get_params(self, deep: bool = True) -> dict:
         """
+        Get the parameters of the FusionART model.
 
-        Parameters:
-        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+        Parameters
+        ----------
+        deep : bool, optional
+            If True, will return parameters for this class and the contained sub-objects that are estimators (default is True).
 
-        Returns:
+        Returns
+        -------
+        dict
             Parameter names mapped to their values.
-
         """
         out = self.params
         for i, module in enumerate(self.modules):
@@ -87,10 +104,26 @@ class FusionART(BaseART):
 
     @property
     def n_clusters(self) -> int:
+        """
+        Return the number of clusters in the first ART module.
+
+        Returns
+        -------
+        int
+            The number of clusters.
+        """
         return self.modules[0].n_clusters
 
     @property
     def W(self):
+        """
+        Get the weights of all modules as a single array.
+
+        Returns
+        -------
+        np.ndarray
+            Concatenated weights of all channels from the ART modules.
+        """
         W = [
             np.concatenate(
                 [
@@ -105,6 +138,14 @@ class FusionART(BaseART):
 
     @W.setter
     def W(self, new_W):
+        """
+        Set the weights for each module by splitting the input weights.
+
+        Parameters
+        ----------
+        new_W : np.ndarray
+            New concatenated weights to be set for the modules.
+        """
         for k in range(self.n):
             if len(new_W) > 0:
                 self.modules[k].W = new_W[self._channel_indices[k][0]:self._channel_indices[k][1]]
@@ -114,11 +155,12 @@ class FusionART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
-
+        Parameters
+        ----------
+        params : dict
+            The parameters for the FusionART model.
         """
         assert "gamma_values" in params
         assert all([1.0 >= g >= 0.0 for g in params["gamma_values"]])
@@ -128,11 +170,12 @@ class FusionART(BaseART):
 
     def validate_data(self, X: np.ndarray):
         """
-        validates the data prior to clustering
+        Validate the input data for clustering.
 
-        Parameters:
-        - X: data set
-
+        Parameters
+        ----------
+        X : np.ndarray
+            The input dataset.
         """
         self.check_dimensions(X)
         for k in range(self.n):
@@ -141,36 +184,45 @@ class FusionART(BaseART):
 
     def check_dimensions(self, X: np.ndarray):
         """
-        check the data has the correct dimensions
+        Ensure that the input data has the correct dimensions.
 
-        Parameters:
-        - X: data set
-
+        Parameters
+        ----------
+        X : np.ndarray
+            The input dataset.
         """
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
     def prepare_data(self, channel_data: List[np.ndarray]) -> np.ndarray:
         """
-        prepare data for clustering
+        Prepare the input data by processing each channel's data through its respective ART module.
 
-        Parameters:
-        - channel_data: list of channel arrays
+        Parameters
+        ----------
+        channel_data : list of np.ndarray
+            List of arrays, one for each channel.
 
-        Returns:
-            normalized data
+        Returns
+        -------
+        np.ndarray
+            Processed and concatenated data.
         """
         prepared_channel_data = [self.modules[i].prepare_data(channel_data[i]) for i in range(self.n)]
         return self.join_channel_data(prepared_channel_data)
 
-    def restore_data(self, X: np.ndarray) -> np.ndarray:
+    def restore_data(self, X: np.ndarray) -> List[np.ndarray]:
         """
-        restore data to state prior to preparation
+        Restore data to its original state before preparation.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The prepared data.
 
-        Returns:
-            restored data
+        Returns
+        -------
+        np.ndarray
+            Restored data for each channel.
         """
         channel_data = self.split_channel_data(X)
         restored_channel_data = [self.modules[i].restore_data(channel_data[i]) for i in range(self.n)]
@@ -178,16 +230,23 @@ class FusionART(BaseART):
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict, skip_channels: List[int] = []) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            The data sample.
+        w : np.ndarray
+            The cluster weight information.
+        params : dict
+            Parameters for the ART algorithm.
+        skip_channels : list of int, optional
+            Channels to be skipped (default is []).
 
-        Returns:
-            cluster activation, cache used for later processing
-
+        Returns
+        -------
+        tuple
+            Cluster activation and cache for further processing.
         """
         activations, caches = zip(
             *[
@@ -206,6 +265,27 @@ class FusionART(BaseART):
         return activation, cache
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = []) -> tuple[list[float], dict]:
+        """
+        Get the match criterion for the cluster.
+
+        Parameters
+        ----------
+        i : np.ndarray
+            The data sample.
+        w : np.ndarray
+            The cluster weight information.
+        params : dict
+            Parameters for the ART algorithm.
+        cache : dict, optional
+            Cache for previous calculations (default is None).
+        skip_channels : list of int, optional
+            Channels to be skipped (default is []).
+
+        Returns
+        -------
+        tuple
+            List of match criteria for each channel and the updated cache.
+        """
         if cache is None:
             raise ValueError("No cache provided")
         M, caches = zip(
@@ -226,17 +306,27 @@ class FusionART(BaseART):
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = [], op: Callable = operator.ge) -> tuple[bool, dict]:
         """
-        get the binary match criterion of the cluster
+        Get the binary match criterion for the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            The data sample.
+        w : np.ndarray
+            The cluster weight information.
+        params : dict
+            Parameters for the ART algorithm.
+        cache : dict, optional
+            Cache for previous calculations (default is None).
+        skip_channels : list of int, optional
+            Channels to be skipped (default is []).
+        op : Callable, optional
+            Operator for comparison (default is operator.ge).
 
-        Returns:
-            cluster match criterion binary, cache used for later processing
-
+        Returns
+        -------
+        tuple
+            Binary match criterion and cache for further processing.
         """
         if cache is None:
             raise ValueError("No cache provided")
@@ -259,6 +349,25 @@ class FusionART(BaseART):
 
 
     def _match_tracking(self, cache: List[dict], epsilon: float, params: List[dict], method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        """
+        Perform match tracking for all channels using the specified method.
+
+        Parameters
+        ----------
+        cache : list of dict
+            Cached match criterion values for each channel.
+        epsilon : float
+            Small adjustment factor for match tracking.
+        params : list of dict
+            Parameters for each channel module.
+        method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"]
+            Match tracking method to apply.
+
+        Returns
+        -------
+        bool
+            Whether to continue searching for a match across all channels.
+        """
         keep_searching = []
         for i in range(len(cache)):
             if cache[i]["match_criterion_bin"]:
@@ -269,30 +378,44 @@ class FusionART(BaseART):
         return all(keep_searching)
 
 
-    def _set_params(self, new_params):
+    def _set_params(self, new_params: List[dict]):
+        """
+        Set the parameters for each module in FusionART.
+
+        Parameters
+        ----------
+        new_params : list of dict
+            A list of parameters for each module.
+        """
         for i in range(self.n):
             self.modules[i].params = new_params[i]
 
-    def _deep_copy_params(self):
+    def _deep_copy_params(self) -> dict:
+        """
+        Create a deep copy of the parameters for each module.
+
+        Returns
+        -------
+        dict
+            A dictionary with module indices as keys and their deep-copied parameters as values.
+        """
         return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
 
 
     def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
-        iteratively fit the model to the data
+        Iteratively fit the model to the data.
 
-        Parameters:
-        - X: data set
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
-
+        Parameters
+        ----------
+        X : np.ndarray
+            Input dataset.
+        match_reset_func : callable, optional
+            Function to reset the match criteria based on external factors.
+        match_reset_method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"], optional
+            Method for resetting match criteria (default is "MT+").
+        epsilon : float, optional
+            Value to adjust the vigilance parameter (default is 0.0).
         """
 
         self.validate_data(X)
@@ -313,14 +436,19 @@ class FusionART(BaseART):
 
     def step_pred(self, x, skip_channels: List[int] = []) -> int:
         """
-        predict the label for a single sample
+        Predict the label for a single sample.
 
-        Parameters:
-        - x: data sample
+        Parameters
+        ----------
+        x : np.ndarray
+            Input sample.
+        skip_channels : list of int, optional
+            Channels to skip (default is []).
 
-        Returns:
-            cluster label of the input sample
-
+        Returns
+        -------
+        int
+            Predicted cluster label for the input sample.
         """
         assert len(self.W) >= 0, "ART module is not fit."
 
@@ -330,14 +458,19 @@ class FusionART(BaseART):
 
     def predict(self, X: np.ndarray, skip_channels: List[int] = []) -> np.ndarray:
         """
-        predict labels for the data
+        Predict labels for the input data.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            Input dataset.
+        skip_channels : list of int, optional
+            Channels to skip (default is []).
 
-        Returns:
-            labels for the data
-
+        Returns
+        -------
+        np.ndarray
+            Predicted labels for the input data.
         """
 
         check_is_fitted(self)
@@ -352,17 +485,23 @@ class FusionART(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Update the cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Input data sample.
+        w : np.ndarray
+            Cluster weight information.
+        params : dict
+            Parameters for the ART algorithm.
+        cache : dict, optional
+            Cache for previous calculations (default is None).
 
-        Returns:
-            updated cluster weight, cache used for later processing
-
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
         """
         W = [
             self.modules[k].update(
@@ -377,16 +516,19 @@ class FusionART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Input data sample.
+        params : dict
+            Parameters for the ART algorithm.
 
-        Returns:
-            updated cluster weight
-
+        Returns
+        -------
+        np.ndarray
+            New cluster weight.
         """
         W = [
             self.modules[k].new_weight(
@@ -424,9 +566,12 @@ class FusionART(BaseART):
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the center points for each cluster.
+
+        Returns
+        -------
+        list of np.ndarray
+            Center points of the clusters.
         """
         centers_ = [module.get_cluster_centers() for module in self.modules]
         centers = [
@@ -442,9 +587,39 @@ class FusionART(BaseART):
         return centers
 
     def get_channel_centers(self, channel: int):
+        """
+        Get the center points of clusters for a specific channel.
+
+        Parameters
+        ----------
+        channel : int
+            The channel index.
+
+        Returns
+        -------
+        np.ndarray
+            Cluster centers for the specified channel.
+        """
         return self.modules[channel].get_cluster_centers()
 
     def predict_regression(self, X: np.ndarray, target_channels: List[int] = [-1]) -> Union[np.ndarray, List[np.ndarray]]:
+        """
+        Predict regression values for the input data using the target channels.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Input dataset.
+        target_channels : list of int, optional
+            List of target channels to use for regression. If negative values are used, they are considered as
+            channels counting backward from the last channel. By default, it uses the last channel (-1).
+
+        Returns
+        -------
+        Union[np.ndarray, list of np.ndarray]
+            Predicted regression values. If only one target channel is used, returns a single np.ndarray.
+            If multiple target channels are used, returns a list of np.ndarray, one for each channel.
+        """
         target_channels = [self.n+k if k < 0 else k for k in target_channels]
         C = self.predict(X, skip_channels=target_channels)
         centers = [self.get_channel_centers(k) for k in target_channels]
@@ -454,6 +629,21 @@ class FusionART(BaseART):
             return [np.array([centers[k][c] for c in C]) for k in target_channels]
 
     def join_channel_data(self, channel_data: List[np.ndarray], skip_channels: List[int] = []) -> np.ndarray:
+        """
+        Concatenate data from different channels into a single array.
+
+        Parameters
+        ----------
+        channel_data : list of np.ndarray
+            Data from each channel.
+        skip_channels : list of int, optional
+            Channels to skip (default is []).
+
+        Returns
+        -------
+        np.ndarray
+            Concatenated data.
+        """
         skip_channels = [self.n+k if k < 0 else k for k in skip_channels]
         n_samples = channel_data[0].shape[0]
 
@@ -470,6 +660,21 @@ class FusionART(BaseART):
         return X
 
     def split_channel_data(self, joined_data: np.ndarray, skip_channels: List[int] = []) -> List[np.ndarray]:
+        """
+        Split the concatenated data into its original channels.
+
+        Parameters
+        ----------
+        joined_data : np.ndarray
+            Concatenated data from multiple channels.
+        skip_channels : list of int, optional
+            Channels to skip (default is []).
+
+        Returns
+        -------
+        list of np.ndarray
+            Split data, one array for each channel.
+        """
         skip_channels = [self.n + k if k < 0 else k for k in skip_channels]
 
         channel_data = []

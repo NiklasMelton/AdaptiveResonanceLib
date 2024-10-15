@@ -25,23 +25,23 @@ class EllipsoidART(BaseART):
     Ellipsoid ART clusters data in Hyper-ellipsoids. It is highly sensitive to sample presentation order as the second
     sample will determine the orientation of the principal axes.
 
-
-    Parameters:
-        rho: float [0,1] for the vigilance parameter.
-        alpha: float choice parameter. 1e-7 recommended value.
-        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
-        mu: float ratio between the major and minor axes
-        r_hat: float radius bias parameter
-
     """
     def __init__(self, rho: float, alpha: float, beta: float, mu: float, r_hat: float):
         """
-        Parameters:
-        - rho: vigilance parameter
-        - alpha: choice parameter
-        - beta: learning rate
-        - mu: ratio between major and minor axess
-        - r_hat: radius bias parameter
+        Initialize the Ellipsoid ART model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter in the range [0, 1].
+        alpha : float
+            Choice parameter, recommended value is 1e-7.
+        beta : float
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
+        mu : float
+            Ratio between major and minor axes.
+        r_hat : float
+            Radius bias parameter.
 
         """
         params = {
@@ -56,10 +56,12 @@ class EllipsoidART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -78,7 +80,27 @@ class EllipsoidART(BaseART):
         assert isinstance(params["r_hat"], float)
 
     @staticmethod
-    def category_distance(i: np.ndarray, centroid: np.ndarray, major_axis: np.ndarray, params):
+    def category_distance(i: np.ndarray, centroid: np.ndarray, major_axis: np.ndarray, params: dict) -> float:
+        """
+        Calculate the distance between a sample and the cluster centroid.
+
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        centroid : np.ndarray
+            Centroid of the cluster.
+        major_axis : np.ndarray
+            Major axis of the cluster.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+
+        Returns
+        -------
+        float
+            Distance between the sample and the cluster centroid.
+
+        """
         ic_dist = (i - centroid)
 
         if major_axis.any():
@@ -90,15 +112,23 @@ class EllipsoidART(BaseART):
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         centroid = w[:self.dim_]
@@ -115,16 +145,25 @@ class EllipsoidART(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         radius = w[-1]
@@ -137,16 +176,23 @@ class EllipsoidART(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         centroid = w[:self.dim_]
@@ -169,20 +215,33 @@ class EllipsoidART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            New cluster weight.
 
         """
         return np.concatenate([i, np.zeros_like(i), [0.]])
 
     def get_2d_ellipsoids(self) -> list[tuple]:
+        """
+        Get the 2D ellipsoids for visualization.
+
+        Returns
+        -------
+        list of tuple
+            Each tuple contains the centroid, width, height, and angle of an ellipsoid.
+
+        """
         ellipsoids = []
         for w in self.W:
             centroid = w[:2]
@@ -199,20 +258,28 @@ class EllipsoidART(BaseART):
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         return [w[:self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         from matplotlib.patches import Ellipse
@@ -229,9 +296,4 @@ class EllipsoidART(BaseART):
                 facecolor='none'
             )
             ax.add_patch(ellip)
-
-
-
-
-
 

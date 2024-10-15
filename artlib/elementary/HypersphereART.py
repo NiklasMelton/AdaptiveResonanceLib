@@ -19,22 +19,21 @@ class HypersphereART(BaseART):
     (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
     Hyperpshere ART clusters data in Hyper-spheres similar to k-means with a dynamic k.
 
-
-    Parameters:
-        rho: float [0,1] for the vigilance parameter.
-        alpha: float choice parameter. 1e-7 recommended value.
-        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
-        mu: float ratio between the major and minor axes
-        r_hat: float maximum possible radius
-
     """
     def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
         """
-        Parameters:
-        - rho: vigilance parameter
-        - alpha: choice parameter
-        - beta: learning rate
-        - r_hat: maximum possible category radius
+        Initialize the Hypersphere ART model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter.
+        alpha : float
+            Choice parameter.
+        beta : float
+            Learning rate.
+        r_hat : float
+            Maximum possible category radius.
 
         """
         params = {
@@ -48,10 +47,12 @@ class HypersphereART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -68,20 +69,48 @@ class HypersphereART(BaseART):
 
     @staticmethod
     def category_distance(i: np.ndarray, centroid: np.ndarray, radius: float, params) -> float:
+        """
+        Compute the category distance between a data sample and a centroid.
+
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        centroid : np.ndarray
+            Cluster centroid.
+        radius : float
+            Cluster radius.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+
+        Returns
+        -------
+        float
+            Category distance.
+
+        """
         return np.sqrt(l2norm2(i-centroid))
 
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         centroid = w[:-1]
@@ -99,16 +128,25 @@ class HypersphereART(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         radius = w[-1]
@@ -122,16 +160,23 @@ class HypersphereART(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         centroid = w[:-1]
@@ -149,36 +194,48 @@ class HypersphereART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            New cluster weight.
 
         """
         return np.concatenate([i, [0.]])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         return [w[:-1] for w in self.W]
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         from matplotlib.patches import Circle

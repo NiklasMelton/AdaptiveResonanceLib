@@ -19,22 +19,20 @@ from sklearn.base import BaseEstimator, BiclusterMixin
 from scipy.stats import pearsonr
 
 class BARTMAP(BaseEstimator, BiclusterMixin):
-    """BARTMAP for Biclustering
+    """
+    BARTMAP for Biclustering
 
-    This module implements BARTMAP as first published in
+    This class implements BARTMAP as first published in:
     Xu, R., & Wunsch II, D. C. (2011).
     BARTMAP: A viable structure for biclustering.
     Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
-    BARTMAP accepts two instantiated ART modules module_a and module_b which will cluster the rows (samples) and
-    columns (features) respectively. The features are clustered independently but the samples are clustered by
-    considering samples already within a row cluster as well as the candidate sample and enforcing a minimum correlation
-    within the subset of features belonging to at least one of the feature clusters.
 
-
-    Parameters:
-        module_a: The instantiated ART module used for clustering the rows (samples)
-        module_b: The instantiated ART module used for clustering the columns (features)
-        eta: float the minimum pearson correlation
+    BARTMAP accepts two instantiated ART modules `module_a` and `module_b` which
+    cluster the rows (samples) and columns (features) respectively. The features
+    are clustered independently, but the samples are clustered by considering
+    samples already within a row cluster as well as the candidate sample and
+    enforcing a minimum correlation within the subset of features belonging to
+    at least one of the feature clusters.
 
     """
     rows_: np.ndarray #bool
@@ -42,11 +40,16 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def __init__(self, module_a: BaseART, module_b: BaseART, eta: float):
         """
+        Initialize the BARTMAP model.
 
-        Parameters:
-        - module_a: The instantiated ART module used for clustering the rows (samples)
-        - module_b: The instantiated ART module used for clustering the columns (features)
-        - eta: minimum correlation
+        Parameters
+        ----------
+        module_a : BaseART
+            The instantiated ART module used for clustering the rows (samples).
+        module_b : BaseART
+            The instantiated ART module used for clustering the columns (features).
+        eta : float
+            The minimum Pearson correlation required for row clustering.
 
         """
         params: dict = {"eta": eta}
@@ -72,12 +75,18 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def get_params(self, deep: bool = True) -> dict:
         """
+        Get parameters for this estimator.
 
-        Parameters:
-        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+        Parameters
+        ----------
+        deep : bool, default=True
+            If True, return the parameters for this estimator and contained subobjects
+            that are estimators.
 
-        Returns:
-            Parameter names mapped to their values.
+        Returns
+        -------
+        dict
+            Dictionary of parameter names mapped to their values.
 
         """
         out = self.params
@@ -92,15 +101,21 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return out
 
     def set_params(self, **params):
-        """Set the parameters of this estimator.
+        """
+        Set the parameters of this estimator.
 
-        Specific redefinition of sklearn.BaseEstimator.set_params for ART classes
+        Specific redefinition of `sklearn.BaseEstimator.set_params` for ART classes.
 
-        Parameters:
-        - **params : Estimator parameters.
+        Parameters
+        ----------
+        **params : dict
+            Estimator parameters as keyword arguments.
 
-        Returns:
-        - self : estimator instance
+        Returns
+        -------
+        self : object
+            The estimator instance.
+
         """
 
         if not params:
@@ -132,12 +147,14 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return self
 
     @staticmethod
-    def validate_params(params):
+    def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "eta" in params
@@ -161,30 +178,41 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def _get_x_cb(self, x: np.ndarray, c_b: int):
         """
-        get the components of a vector belonging to a b-side cluster
+        Get the components of a vector belonging to a b-side cluster.
 
-        Parameters:
-        - x: a sample vector
-        - c_b: b-side cluster label
+        Parameters
+        ----------
+        x : np.ndarray
+            A sample vector.
+        c_b : int
+            The b-side cluster label.
 
-        Returns:
-            x filtered to features belonging to the b-side cluster c_b
+        Returns
+        -------
+        np.ndarray
+            The sample vector `x` filtered to include only features belonging to
+            the b-side cluster `c_b`.
 
         """
         b_components = self.module_b.labels_ == c_b
         return x[b_components]
 
     @staticmethod
-    def _pearsonr(a: np.ndarray, b: np.ndarray):
+    def _pearsonr(a: np.ndarray, b: np.ndarray) -> float:
         """
-        get the correlation between two vectors
+        Get the Pearson correlation between two vectors.
 
-        Parameters:
-        - a: some vector
-        - b: some vector
+        Parameters
+        ----------
+        a : np.ndarray
+            A vector.
+        b : np.ndarray
+            Another vector.
 
-        Returns:
-            Pearson correlation
+        Returns
+        -------
+        float
+            The Pearson correlation between the two vectors `a` and `b`.
 
         """
         r, _ = pearsonr(a, b)
@@ -192,12 +220,22 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def _average_pearson_corr(self, X: np.ndarray, k: int, c_b: int) -> float:
         """
-        get the average correlation between for a sample for all features in cluster b
+        Get the average Pearson correlation for a sample across all features in cluster b.
 
-        Parameters:
-        - X: data set A
-        - k: sample index
-        - c_b: b-side cluster to check
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset A.
+        k : int
+            The sample index.
+        c_b : int
+            The b-side cluster to check.
+
+        Returns
+        -------
+        float
+            The average Pearson correlation for the sample at index `k` across all
+            features in cluster `c_b`.
 
         """
         X_a = X[self.column_labels_ == c_b, :]
@@ -215,11 +253,14 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def validate_data(self, X_a: np.ndarray, X_b: np.ndarray):
         """
-        validates the data prior to clustering
+        Validate the data prior to clustering.
 
-        Parameters:
-        - X: data set A
-        - y: data set B
+        Parameters
+        ----------
+        X_a : np.ndarray
+            Dataset A, containing the samples.
+        X_b : np.ndarray
+            Dataset B, containing the features.
 
         """
         self.module_a.validate_data(X_a)
@@ -227,16 +268,23 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def match_criterion_bin(self, X: np.ndarray, k: int, c_b: int, params: dict) -> bool:
         """
-        get the binary match criterion of the cluster
+        Get the binary match criterion of the cluster.
 
-        Parameters:
-        - X: data set
-        - k: sample index
-        - c_b: b-side cluster to check
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+        k : int
+            The sample index.
+        c_b : int
+            The b-side cluster to check.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster match criterion binary
+        Returns
+        -------
+        bool
+            Binary value indicating whether the cluster match criterion is met.
 
         """
         M = self._average_pearson_corr(X, k, c_b)
@@ -252,18 +300,27 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             cache: Optional[dict] = None
     ) -> bool:
         """
-        Permits external factors to influence cluster creation.
+        Permit external factors to influence cluster creation.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - cluster_a: a-side cluster label
-        - params: dict containing parameters for the algorithm
-        - extra: additional parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        cluster_a : int
+            A-side cluster label.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        extra : dict
+            Additional parameters for the algorithm.
+        cache : dict, optional
+            Dictionary containing values cached from previous calculations.
 
-        Returns:
-            true if match is permitted
+        Returns
+        -------
+        bool
+            True if the match is permitted, otherwise False.
 
         """
         k = extra["k"]
@@ -274,14 +331,19 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def step_fit(self, X: np.ndarray, k: int) -> int:
         """
-        fit the model to a single sample
+        Fit the model to a single sample.
 
-        Parameters:
-        - X: data set
-        - k: sample index
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+        k : int
+            The sample index.
 
-        Returns:
-            cluster label of the input sample
+        Returns
+        -------
+        int
+            The cluster label of the input sample.
 
         """
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
@@ -292,11 +354,14 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     def fit(self, X: np.ndarray, max_iter=1):
         """
-        Fit the model to the data
+        Fit the model to the data.
 
-        Parameters:
-        - X: data set
-        - max_iter: number of iterations to fit the model on the same data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset to fit the model on.
+        max_iter : int
+            The number of iterations to fit the model on the same dataset.
 
         """
         # Check that X and y have correct shape
@@ -343,10 +408,12 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             cmap: Optional[Colormap] = None
     ):
         """
-        Visualize the clustering of the data
+        Visualize the clustering of the data.
 
-        Parameters:
-        - cmap: some colormap
+        Parameters
+        ----------
+        cmap : matplotlib.colors.Colormap or str
+            The colormap to use for visualization.
 
         """
         import matplotlib.pyplot as plt

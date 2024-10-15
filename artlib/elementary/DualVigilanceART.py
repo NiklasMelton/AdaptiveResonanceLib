@@ -23,18 +23,18 @@ class DualVigilanceART(BaseART):
     permits clusters to be combined to form arbitrary shapes. For example if the base ART module is fuzzy ART, a
     Dual Vigilance Fuzzy ART clustering result would look like a series of hyper-boxes forming an arbitrary geometry.
 
-
-    Parameters:
-        base_module: BaseART the instantiated ART module that wil serve as the base for dual vigilance
-        rho_lower_bound: float the lower vigilance value that will "merge" the base_module clusters
-
     """
 
     def __init__(self, base_module: BaseART, rho_lower_bound: float):
         """
-        Parameters:
-        - base_module: BaseART the instantiated ART module that wil serve as the base for dual vigilance
-        - rho_lower_bound: float the lower vigilance value that will "merge" the base_module clusters
+        Initialize the Dual Vigilance ART model.
+
+        Parameters
+        ----------
+        base_module : BaseART
+            The instantiated ART module that will serve as the base for dual vigilance.
+        rho_lower_bound : float
+            The lower vigilance value that will "merge" the base_module clusters.
 
         """
         assert isinstance(base_module, BaseART)
@@ -55,35 +55,50 @@ class DualVigilanceART(BaseART):
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
-        prepare data for clustering
+        Prepare data for clustering.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
-        Returns:
-            base modules prepare_data
+        Returns
+        -------
+        np.ndarray
+            Prepared data from the base module.
+
         """
         return self.base_module.prepare_data(X)
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
         """
-        restore data to state prior to preparation
+        Restore data to its state prior to preparation.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
-        Returns:
-            restored data
+        Returns
+        -------
+        np.ndarray
+            Restored data from the base module.
+
         """
         return self.base_module.restore_data(X)
 
     def get_params(self, deep: bool = True) -> dict:
         """
+        Get the parameters of the estimator.
 
-        Parameters:
-        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+        Parameters
+        ----------
+        deep : bool, optional
+            If True, return the parameters for this class and contained subobjects that are estimators, by default True.
 
-        Returns:
+        Returns
+        -------
+        dict
             Parameter names mapped to their values.
 
         """
@@ -100,15 +115,27 @@ class DualVigilanceART(BaseART):
     @property
     def n_clusters(self) -> int:
         """
-        get the current number of clusters
+        Get the current number of clusters.
 
-        Returns:
-            the number of clusters
+        Returns
+        -------
+        int
+            The number of clusters.
+
         """
         return len(set(c for c in self.map.values()))
 
     @property
     def dim_(self):
+        """
+        Get the dimensionality of the data from the base module.
+
+        Returns
+        -------
+        int
+            Dimensionality of the data.
+
+        """
         return self.base_module.dim_
 
     @dim_.setter
@@ -117,6 +144,15 @@ class DualVigilanceART(BaseART):
 
     @property
     def labels_(self):
+        """
+        Get the labels from the base module.
+
+        Returns
+        -------
+        np.ndarray
+            Labels for the data.
+
+        """
         return self.base_module.labels_
 
     @labels_.setter
@@ -129,24 +165,37 @@ class DualVigilanceART(BaseART):
 
     @W.setter
     def W(self, new_W: list[np.ndarray]):
+        """
+        Get the weights from the base module.
+
+        Returns
+        -------
+        list of np.ndarray
+            Weights of the clusters.
+
+        """
         self.base_module.W = new_W
 
     def check_dimensions(self, X: np.ndarray):
         """
-        check the data has the correct dimensions
+        Check that the data has the correct dimensions.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         self.base_module.check_dimensions(X)
 
     def validate_data(self, X: np.ndarray):
         """
-        validates the data prior to clustering
+        Validate the data prior to clustering.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         self.base_module.validate_data(X)
@@ -154,10 +203,12 @@ class DualVigilanceART(BaseART):
 
     def validate_params(self, params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
 
@@ -167,6 +218,26 @@ class DualVigilanceART(BaseART):
         assert isinstance(params["rho_lower_bound"], float)
 
     def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        """
+        Adjust match tracking based on the method and epsilon value.
+
+        Parameters
+        ----------
+        cache : dict
+            Cache containing intermediate results, including the match criterion.
+        epsilon : float
+            Adjustment factor for the match criterion.
+        params : dict
+            Dictionary containing algorithm parameters.
+        method : {"MT+", "MT-", "MT0", "MT1", "MT~"}
+            Match tracking method to use.
+
+        Returns
+        -------
+        bool
+            True if match tracking continues, False otherwise.
+
+        """
         M = cache["match_criterion"]
         if method == "MT+":
             self.base_module.params["rho"] = M+epsilon
@@ -193,16 +264,24 @@ class DualVigilanceART(BaseART):
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None,match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
         """
-        fit the model to a single sample
+        Fit the model to a single sample.
 
-        Parameters:
-        - x: data sample
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample.
+        match_reset_func : callable, optional
+            A callable accepting the data sample, a cluster weight, the params dict, and the cache dict.
+            Returns True if the cluster is valid for the sample, False otherwise.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+            Method for resetting match criterion, by default "MT+".
+        epsilon : float, optional
+            Epsilon value used for adjusting match criterion, by default 0.0.
 
-        Returns:
-            cluster label of the input sample
+        Returns
+        -------
+        int
+            Cluster label of the input sample.
 
         """
         base_params = self._deep_copy_params()
@@ -262,13 +341,17 @@ class DualVigilanceART(BaseART):
 
     def step_pred(self, x) -> int:
         """
-        predict the label for a single sample
+        Predict the label for a single sample.
 
-        Parameters:
-        - x: data sample
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample.
 
-        Returns:
-            cluster label of the input sample
+        Returns
+        -------
+        int
+            Cluster label of the input sample.
 
         """
         assert len(self.base_module.W) >= 0, "ART module is not fit."
@@ -283,20 +366,28 @@ class DualVigilanceART(BaseART):
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         colors_base = []

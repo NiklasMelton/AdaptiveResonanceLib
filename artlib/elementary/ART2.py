@@ -31,19 +31,19 @@ class ART2A(BaseART):
     Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7. ART2-A is similar to ART1 but designed for
     analog data. This method is implemented for historical purposes and is not recommended for use.
 
-
-    Parameters:
-        rho: float [0,1] for the vigilance parameter.
-        alpha: float choice parameter. 1e-7 recommended value.
-        beta: float [0,1] learning parameters. beta = 1 is fast learning and the recommended value.
-
     """
     def __init__(self, rho: float, alpha: float, beta: float):
         """
-        Parameters:
-        - rho: vigilance parameter
-        - alpha: choice parameter
-        - beta: learning rate
+        Initialize the ART2-A model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter in the range [0, 1].
+        alpha : float
+            Choice parameter, recommended value is 1e-7.
+        beta : float
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
 
         """
         warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
@@ -58,10 +58,12 @@ class ART2A(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -76,10 +78,12 @@ class ART2A(BaseART):
         
     def check_dimensions(self, X: np.ndarray):
         """
-        check the data has the correct dimensions
+        Check that the data has the correct dimensions.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         if not hasattr(self, "dim_"):
@@ -90,15 +94,23 @@ class ART2A(BaseART):
         
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         activation = float(np.dot(i, w))
@@ -107,16 +119,25 @@ class ART2A(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         if cache is None:
@@ -133,39 +154,54 @@ class ART2A(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         return params["beta"]*i + (1-params["beta"])*w
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         return i
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         return self.W

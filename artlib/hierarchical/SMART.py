@@ -23,22 +23,22 @@ class SMART(DeepARTMAP):
     vigilance values that monotonically increase in their restrictiveness. SMART is a special case of DeepARTMAP,
     which forms the backbone of this class, where all channels receive the same data.
 
-
-    Parameters:
-        base_ART_class: An uninstatiated BaseART class. e.g. FuzzyART
-        rho_values: Union[list[float], np.ndarray] a set of monotonically increasing vigilance values
-        base_params: all other params used to instantiate the base ART (will be identical across all layers)
-
     """
 
     def __init__(self, base_ART_class: Type, rho_values: Union[list[float], np.ndarray], base_params: dict, **kwargs):
         """
+        Initialize the SMART model.
 
-        Parameters:
-        - base_ART_class: some ART class
-        - rho_values: rho parameters for each sub-module
-        - base_params: base param dict for each sub-module
-
+        Parameters
+        ----------
+        base_ART_class : Type
+            Some ART class to instantiate the layers.
+        rho_values : list of float or np.ndarray
+            The vigilance parameter values for each layer, must be monotonically increasing for most ART modules.
+        base_params : dict
+            Parameters for the base ART module, used to instantiate each layer.
+        **kwargs :
+            Additional keyword arguments for ART module initialization.
         """
         if base_ART_class.__name__ != "BayesianART":
             assert all(np.diff(rho_values) > 0), "rho_values must be monotonically increasing"
@@ -54,62 +54,102 @@ class SMART(DeepARTMAP):
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
-        prepare data for clustering
+        Prepare data for clustering.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset to prepare.
 
-        Returns:
-            prepared data
+        Returns
+        -------
+        np.ndarray
+            Prepared data.
         """
         X_, _ = super(SMART, self).prepare_data([X]*self.n_modules)
         return X_[0]
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
         """
-        restore data to state prior to preparation
+        Restore data to its original form before preparation.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset to restore.
 
-        Returns:
-            restored data
+        Returns
+        -------
+        np.ndarray
+            Restored data.
         """
         X_, _ = super(SMART, self).restore_data([X] * self.n_modules)
         return X_[0]
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
-        Fit the model to the data
+        Fit the SMART model to the data.
 
-        Parameters:
-        - X: data set A
-        - y: not used
-        - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset to fit the model on.
+        y : np.ndarray, optional
+            Not used, present for compatibility.
+        max_iter : int, optional
+            The number of iterations to run the model on the data.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+            The match reset method to use when adjusting vigilance.
+        epsilon : float, optional
+            A small value to adjust vigilance during match tracking.
 
+        Returns
+        -------
+        SMART
+            Fitted SMART model.
         """
         X_list = [X]*self.n_modules
         return super().fit(X_list, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
     def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+        """
+        Partial fit the SMART model to the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset to partially fit the model on.
+        y : np.ndarray, optional
+            Not used, present for compatibility.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+            The match reset method to use when adjusting vigilance.
+        epsilon : float, optional
+            A small value to adjust vigilance during match tracking.
+
+        Returns
+        -------
+        SMART
+            Partially fitted SMART model.
+        """
         X_list = [X] * self.n_modules
         return super(SMART, self).partial_fit(X_list, match_reset_method=match_reset_method, epsilon=epsilon)
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the cluster boundaries.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : Axes
+            The matplotlib axes on which to plot the cluster boundaries.
+        colors : Iterable
+            The colors to use for each cluster.
+        linewidth : int, optional
+            The width of the boundary lines.
 
+        Returns
+        -------
+        None
         """
         for j in range(len(self.modules)):
             layer_colors = []
@@ -131,16 +171,26 @@ class SMART(DeepARTMAP):
             colors: Optional[Iterable] = None
     ):
         """
-        Visualize the clustering of the data
+        Visualize the clustering of the data with cluster boundaries.
 
-        Parameters:
-        - X: data set
-        - y: sample labels
-        - ax: figure axes
-        - marker_size: size used for data points
-        - linewidth: width of boundary line
-        - colors: colors to use for each cluster
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset to visualize.
+        y : np.ndarray
+            The cluster labels for the data points.
+        ax : Axes, optional
+            The matplotlib axes on which to plot the visualization.
+        marker_size : int, optional
+            The size of the data points in the plot.
+        linewidth : int, optional
+            The width of the cluster boundary lines.
+        colors : Iterable, optional
+            The colors to use for each cluster.
 
+        Returns
+        -------
+        None
         """
         import matplotlib.pyplot as plt
 

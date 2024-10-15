@@ -12,11 +12,17 @@ def plot_convex_polygon(vertices: np.ndarray, ax: Axes, line_color: str = 'b', l
     """
     Plots a convex polygon given its vertices using Matplotlib.
 
-    Parameters:
-    - vertices: A list of vertices representing a convex polygon.
-    - ax: A matplotlib Axes object to plot on. If None, creates a new figure and axes.
-    - line_color: The color of the polygon lines.
-    - line_width: The width of the polygon lines.
+    Parameters
+    ----------
+    vertices : np.ndarray
+        A list of vertices representing a convex polygon.
+    ax : matplotlib.axes.Axes
+        A matplotlib Axes object to plot on.
+    line_color : str, optional
+        The color of the polygon lines, by default 'b'.
+    line_width : float, optional
+        The width of the polygon lines, by default 1.0.
+
     """
     vertices = np.array(vertices)
     # Close the polygon by appending the first vertex at the end
@@ -25,15 +31,20 @@ def plot_convex_polygon(vertices: np.ndarray, ax: Axes, line_color: str = 'b', l
     ax.plot(vertices[:, 0], vertices[:, 1], linestyle='-', color=line_color, linewidth=line_width)
 
 
-def volume_of_simplex(vertices):
+def volume_of_simplex(vertices: np.ndarray) -> float:
     """
     Calculates the n-dimensional volume of a simplex defined by its vertices.
 
-    Parameters:
-    - vertices: An (n+1) x n array representing the coordinates of the simplex vertices.
+    Parameters
+    ----------
+    vertices : np.ndarray
+        An (n+1) x n array representing the coordinates of the simplex vertices.
 
-    Returns:
-    - Volume of the simplex.
+    Returns
+    -------
+    float
+        Volume of the simplex.
+
     """
     vertices = np.asarray(vertices)
     # Subtract the first vertex from all vertices to form a matrix
@@ -42,7 +53,23 @@ def volume_of_simplex(vertices):
     return np.abs(np.linalg.det(matrix)) / np.math.factorial(len(vertices) - 1)
 
 
-def minimum_distance(a1, a2):
+def minimum_distance(a1: np.ndarray, a2: np.ndarray) -> float:
+    """
+    Calculates the minimum distance between points or line segments.
+
+    Parameters
+    ----------
+    a1 : np.ndarray
+        Array representing one point or line segment.
+    a2 : np.ndarray
+        Array representing another point or line segment.
+
+    Returns
+    -------
+    float
+        Minimum distance between the two inputs.
+
+    """
     def point_to_point_distance(P, Q):
         """Calculate the Euclidean distance between two points P and Q."""
         return np.linalg.norm(P - Q)
@@ -93,6 +120,15 @@ def minimum_distance(a1, a2):
 
 class PseudoConvexHull:
     def __init__(self, points: np.ndarray):
+        """
+        Initializes a PseudoConvexHull object.
+
+        Parameters
+        ----------
+        points : np.ndarray
+            An array of points representing the convex hull.
+
+        """
         self.points = points
 
     @property
@@ -110,11 +146,16 @@ def centroid_of_convex_hull(hull: HullTypes):
     """
     Finds the centroid of the volume of a convex hull in n-dimensional space.
 
-    Parameters:
-    - vertices: An array of shape (m, n), where m is the number of vertices and n is the dimension.
+    Parameters
+    ----------
+    hull : HullTypes
+        A ConvexHull or PseudoConvexHull object.
 
-    Returns:
-    - Centroid coordinates as a numpy array of length n.
+    Returns
+    -------
+    np.ndarray
+        Centroid coordinates.
+
     """
     hull_vertices = hull.points[hull.vertices]
 
@@ -137,10 +178,19 @@ def centroid_of_convex_hull(hull: HullTypes):
 
 
 class ConvexHullART(BaseART):
+    """
+    ConvexHull ART for Clustering
+    """
     def __init__(self, rho: float, merge_rho: float):
         """
-        Parameters:
-        - rho: vigilance parameter
+        Initializes the ConvexHullART object.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter.
+        merge_rho : float
+            Merge vigilance parameter.
 
         """
         params = {
@@ -152,10 +202,12 @@ class ConvexHullART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validates clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -164,15 +216,23 @@ class ConvexHullART(BaseART):
 
     def category_choice(self, i: np.ndarray, w: HullTypes, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : HullTypes
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         if isinstance(w, PseudoConvexHull):
@@ -194,16 +254,25 @@ class ConvexHullART(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: HullTypes, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : HullTypes
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values cached from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         return cache["activation"], cache
@@ -211,37 +280,52 @@ class ConvexHullART(BaseART):
 
     def update(self, i: np.ndarray, w: HullTypes, params: dict, cache: Optional[dict] = None) -> HullTypes:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : HullTypes
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values cached from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        HullTypes
+            Updated cluster weight.
 
         """
         return cache["new_w"]
 
     def new_weight(self, i: np.ndarray, params: dict) -> HullTypes:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        HullTypes
+            New cluster weight.
 
         """
         new_w = PseudoConvexHull(i.reshape((1,-1)))
         return new_w
 
     def merge_clusters(self):
+        """
+        Merge clusters based on certain conditions.
+
+        """
         def can_merge(w1, w2):
             combined_points = np.vstack([w1.points[w1.vertices,:], w2.points[w2.vertices,:]])
 
@@ -287,10 +371,12 @@ class ConvexHullART(BaseART):
 
     def post_fit(self, X: np.ndarray):
         """
-        function called after fit. Useful for cluster pruning
+        Function called after fit. Useful for cluster pruning.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set.
 
         """
         self.merge_clusters()
@@ -300,9 +386,13 @@ class ConvexHullART(BaseART):
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         centers = []
         for w in self.W:
@@ -311,12 +401,16 @@ class ConvexHullART(BaseART):
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         for c, w in zip(colors, self.W):

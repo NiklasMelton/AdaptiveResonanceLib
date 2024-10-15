@@ -20,16 +20,6 @@ class TD_FALCON(FALCON):
     TD-FALCON is based on a FALCON backbone but includes specific function for temporal-difference learning.
     Currently, only SARSA is implemented and only Fuzzy ART base modules are supported.
 
-
-    Parameters:
-        state_art: BaseART the instantiated ART module that wil cluster the state-space
-        action_art: BaseART the instantiated ART module that wil cluster the action-space
-        reward_art: BaseART the instantiated ART module that wil cluster the reward-space
-        gamma_values: Union[List[float], np.ndarray] the activation ratio for each channel
-        channel_dims: Union[List[int], np.ndarray] the dimension of each channel
-        td_alpha: float the learning rate for the temporal difference estimator
-        td_lambda: float the future-cost factor
-
     """
 
     def __init__(
@@ -43,23 +33,60 @@ class TD_FALCON(FALCON):
             td_lambda: float = 1.0,
     ):
         """
-        Parameters:
-        - state_art: BaseART the instantiated ART module that wil cluster the state-space
-        - action_art: BaseART the instantiated ART module that wil cluster the action-space
-        - reward_art: BaseART the instantiated ART module that wil cluster the reward-space
-        - gamma_values: Union[List[float], np.ndarray] the activation ratio for each channel
-        - channel_dims: Union[List[int], np.ndarray] the dimension of each channel
-        - td_alpha: float the learning rate for the temporal difference estimator
-        - td_lambda: float the future-cost factor
+        Initialize the TD-FALCON model.
+
+        Parameters
+        ----------
+        state_art : BaseART
+            The instantiated ART module that will cluster the state-space.
+        action_art : BaseART
+            The instantiated ART module that will cluster the action-space.
+        reward_art : BaseART
+            The instantiated ART module that will cluster the reward-space.
+        gamma_values : list of float or np.ndarray, optional
+            The activation ratio for each channel, by default [0.33, 0.33, 0.34].
+        channel_dims : list of int or np.ndarray
+            The dimension of each channel.
+        td_alpha : float, optional
+            The learning rate for the temporal difference estimator, by default 1.0.
+        td_lambda : float, optional
+            The future-cost factor for temporal difference learning, by default 1.0.
         """
         self.td_alpha = td_alpha
         self.td_lambda = td_lambda
         super(TD_FALCON, self).__init__(state_art, action_art, reward_art, gamma_values, channel_dims)
 
     def fit(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray):
+        """
+        Fit the TD-FALCON model to the data.
+
+        Raises
+        ------
+        NotImplementedError
+            TD-FALCON can only be trained with partial fit.
+        """
         raise NotImplementedError("TD-FALCON can only be trained with partial fit")
 
     def calculate_SARSA(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray, single_sample_reward: Optional[float] = None):
+        """
+        Calculate the SARSA values for reinforcement learning.
+
+        Parameters
+        ----------
+        states : np.ndarray
+            The state data.
+        actions : np.ndarray
+            The action data.
+        rewards : np.ndarray
+            The reward data.
+        single_sample_reward : float, optional
+            The reward for a single sample, if applicable, by default None.
+
+        Returns
+        -------
+        tuple of np.ndarray
+            The state, action, and SARSA-adjusted reward data to be used for fitting.
+        """
         # calculate SARSA values
         rewards_dcc = de_compliment_code(rewards)
         if len(states) > 1:
@@ -91,7 +118,25 @@ class TD_FALCON(FALCON):
         return states_fit, actions_fit, sarsa_rewards_fit
 
     def partial_fit(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray, single_sample_reward: Optional[float] = None):
+        """
+        Partially fit the TD-FALCON model using SARSA.
 
+        Parameters
+        ----------
+        states : np.ndarray
+            The state data.
+        actions : np.ndarray
+            The action data.
+        rewards : np.ndarray
+            The reward data.
+        single_sample_reward : float, optional
+            The reward for a single sample, if applicable, by default None.
+
+        Returns
+        -------
+        TD_FALCON
+            The partially fitted TD-FALCON model.
+        """
         states_fit, actions_fit, sarsa_rewards_fit = self.calculate_SARSA(states, actions, rewards, single_sample_reward)
         data = self.fusion_art.join_channel_data([states_fit, actions_fit, sarsa_rewards_fit])
         self.fusion_art = self.fusion_art.partial_fit(data)

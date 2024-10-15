@@ -19,18 +19,18 @@ class BayesianART(BaseART):
     Bayesian ART clusters data in Bayesian Distributions (Hyper-ellipsoids) and is similar to Gaussian ART but differs
     in that it allows arbitrary rotation of the hyper-ellipsoid.
 
-
-    Parameters:
-        rho: float [0,1] for the vigilance parameter.
-        cov_init: np.ndarray the initial estimate of the covariance matrix for each cluster.
-
     """
     pi2 = np.pi * 2
     def __init__(self, rho: float, cov_init: np.ndarray):
         """
-        Parameters:
-        - rho: vigilance parameter
-        - cov_init: initial estimate of covariance matrix
+        Initialize the Bayesian ART model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter in the range [0, 1].
+        cov_init : np.ndarray
+            Initial estimate of the covariance matrix for each cluster.
 
         """
         params = {
@@ -42,10 +42,12 @@ class BayesianART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -56,10 +58,12 @@ class BayesianART(BaseART):
 
     def check_dimensions(self, X: np.ndarray):
         """
-        check the data has the correct dimensions
+        Check that the data has the correct dimensions.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         if not hasattr(self, "dim_"):
@@ -71,15 +75,23 @@ class BayesianART(BaseART):
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         mean = w[:self.dim_]
@@ -104,16 +116,25 @@ class BayesianART(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         # the original paper uses the det(cov_old) for match criterion
@@ -128,16 +149,27 @@ class BayesianART(BaseART):
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
         """
-        get the binary match criterion of the cluster
+        Get the binary match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
+        op : callable, optional
+            Operator for comparison, by default operator.ge.
 
-        Returns:
-            cluster match criterion binary, cache used for later processing
+        Returns
+        -------
+        bool
+            Binary match criterion.
+        dict
+            Cache used for later processing.
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
@@ -150,6 +182,26 @@ class BayesianART(BaseART):
         return M_bin, cache
 
     def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+        """
+        Adjust match tracking based on the method and epsilon value.
+
+        Parameters
+        ----------
+        cache : dict
+            Cache containing intermediate results, including the match criterion.
+        epsilon : float
+            Adjustment factor for the match criterion.
+        params : dict
+            Dictionary containing algorithm parameters.
+        method : {"MT+", "MT-", "MT0", "MT1", "MT~"}
+            Match tracking method to use.
+
+        Returns
+        -------
+        bool
+            True if match tracking continues, False otherwise.
+
+        """
         M = cache["match_criterion"]
         # we have to reverse some signs becayse bayesianART has an inverted vigilence check
         if method == "MT+":
@@ -171,16 +223,23 @@ class BayesianART(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         if cache is None:
@@ -205,35 +264,47 @@ class BayesianART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         return np.concatenate([i, params["cov_init"].flatten(), [1]])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         return [w[:self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         for w, col in zip(self.W, colors):

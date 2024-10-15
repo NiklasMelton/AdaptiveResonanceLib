@@ -22,19 +22,19 @@ class GaussianART(BaseART):
     in that the hyper-ellipsoid always have their principal axes square to the coordinate frame.
     It is also faster than Bayesian ART.
 
-
-    Parameters:
-        rho: float [0,1] for the vigilance parameter.
-        sigma_init: np.ndarray the initial estimate of the variance of each dimension for each cluster.
-        alpha: float an arbitrarily small parameter used to prevent division-by-zero errors. 1e-10 is recommended
-
     """
     def __init__(self, rho: float, sigma_init: np.ndarray, alpha: float = 1e-10):
         """
-        Parameters:
-        - rho: vigilance parameter
-        - sigma_init: initial estimate of the diagonal std
-        - alpha: used to prevent division by zero errors
+        Initialize the Gaussian ART model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter.
+        sigma_init : np.ndarray
+            Initial estimate of the diagonal standard deviations.
+        alpha : float, optional
+            Small parameter to prevent division by zero errors, by default 1e-10.
 
         """
         params = {
@@ -48,10 +48,12 @@ class GaussianART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -65,15 +67,23 @@ class GaussianART(BaseART):
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         mean = w[:self.dim_]
@@ -99,16 +109,25 @@ class GaussianART(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         if cache is None:
@@ -120,16 +139,23 @@ class GaussianART(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         mean = w[:self.dim_]
@@ -149,15 +175,19 @@ class GaussianART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            New cluster weight.
 
         """
         sigma2 = np.multiply(params["sigma_init"], params["sigma_init"])
@@ -167,21 +197,29 @@ class GaussianART(BaseART):
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         return [w[:self.dim_] for w in self.W]
 
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         for w, col in zip(self.W, colors):

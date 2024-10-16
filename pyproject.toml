@@ -38,7 +38,7 @@ sphinx-rtd-theme = "^1.0.0"  # If you're using the Read the Docs theme
 sphinx-autoapi = ">=3.0.0"
 myst-parser = "^1.0"
 cffconvert = "^2.0.0"
-sphinxcontrib-bibtex = "^2.6.3"
+sphinxcontrib-bibtex = "^2.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

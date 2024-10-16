@@ -15,10 +15,8 @@ build:
       # VIRTUAL_ENV needs to be set manually for now.
       # See https://github.com/readthedocs/readthedocs.org/pull/11152/
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with dev
-      # Generate the references.bib file from CITATION.cff using cffconvert
-      - cffconvert --infile CITATION.cff --outfile docs/source/references.bib --format bibtex
-      # Adjust the citation key and entry type in references.bib
-      - "sed -i 's|^@misc{YourReferenceHere,|@software{Melton_AdaptiveResonanceLib_2024,|' docs/source/references.bib"
+      # Generate references.bib using the Python script
+      - python generate_references.py
 
 
 

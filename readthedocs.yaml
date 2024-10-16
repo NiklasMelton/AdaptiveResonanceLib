@@ -18,7 +18,8 @@ build:
       # Generate the references.bib file from CITATION.cff using cffconvert
       - cffconvert --infile CITATION.cff --outfile docs/source/references.bib --format bibtex
       # Adjust the citation key and entry type in references.bib
-      - sed -i 's/^@misc{YourReferenceHere,@software{Melton_AdaptiveResonanceLib_2024,/' docs/source/references.bib
+      - sed -i 's|^@misc{YourReferenceHere,|@software{Melton_AdaptiveResonanceLib_2024,|' docs/source/references.bib
+
 
 
 

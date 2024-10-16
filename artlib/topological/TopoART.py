@@ -18,7 +18,7 @@ import operator
 
 
 class TopoART(BaseART):
-    """Topo ART Clustering
+    """Topo ART for Topological Clustering
 
     This module implements Topo ART as first published in
     Tscherepanow, M. (2010).

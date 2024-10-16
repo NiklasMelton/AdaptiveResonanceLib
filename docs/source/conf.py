@@ -14,18 +14,30 @@ release = '0.1.2'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'autoapi.extension', 'sphinx.ext.napoleon', 'myst_parser']
+extensions = ['sphinx.ext.autodoc', 'autoapi.extension', 'sphinx.ext.napoleon', 'myst_parser', 'sphinx.ext.intersphinx']
 
 templates_path = ['_templates']
-exclude_patterns = ['artlib/experimental/*']
+exclude_patterns = ['artlib/experimental/*', '../../artlib/experimental/*']
 
 autoapi_type = 'python'
 autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code directory
+autoapi_ignore = ['*/experimental', '*/experimental/*']
+
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None)
+}
+
+suppress_warnings = ['ref.duplicate', 'duplicate.object', "myst.duplicate_def"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_static_path = ['../_static']
+
+
+
 
 

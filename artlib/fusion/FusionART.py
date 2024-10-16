@@ -586,7 +586,7 @@ class FusionART(BaseART):
         ]
         return centers
 
-    def get_channel_centers(self, channel: int):
+    def get_channel_centers(self, channel: int) -> List[np.ndarray]:
         """
         Get the center points of clusters for a specific channel.
 
@@ -597,7 +597,7 @@ class FusionART(BaseART):
 
         Returns
         -------
-        np.ndarray
+        list of np.ndarray
             Cluster centers for the specified channel.
         """
         return self.modules[channel].get_cluster_centers()

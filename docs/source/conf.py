@@ -32,7 +32,7 @@ def run_cffconvert(app):
 
 
 def setup(app):
-    app.connect('builder-inited', run_cffconvert)
+    app.connect('env-before-read-docs', run_cffconvert)
 
 project = 'AdaptiveResonanceLib'
 copyright = '2024, Niklas Melton'

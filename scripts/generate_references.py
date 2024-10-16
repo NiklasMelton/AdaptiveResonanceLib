@@ -7,8 +7,6 @@ def generate_references():
         result = subprocess.run(
             [
                 'cffconvert',
-                '--validate',
-                '--ignore-suspect-keys',
                 '--format', 'bibtex',
                 '--infile', 'CITATION.cff'
             ],

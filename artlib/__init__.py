@@ -23,8 +23,7 @@ from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 from artlib.fusion.FusionART import FusionART
 
-from artlib.reinforcement.FALCON import FALCON
-from artlib.reinforcement.TDFALCON import TD_FALCON
+from artlib.reinforcement.FALCON import FALCON, TD_FALCON
 
 from artlib.biclustering.BARTMAP import BARTMAP
 

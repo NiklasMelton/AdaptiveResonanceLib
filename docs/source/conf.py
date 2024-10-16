@@ -10,7 +10,7 @@ import os
 import subprocess
 from sphinx.util import logging
 
-def run_cffconvert(app):
+def run_cffconvert(app, env, docnames):
     logger = logging.getLogger(__name__)
     try:
         result = subprocess.run([

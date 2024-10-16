@@ -8,20 +8,28 @@
 
 import os
 import subprocess
+from sphinx.util import logging
 
 def run_cffconvert(app):
+    logger = logging.getLogger(__name__)
     try:
         result = subprocess.run([
             'cffconvert',
-            '--infile', '../../CITATION.cff',
+            '--infile', '../../CITATION.cff',  # Adjust the path if necessary
             '--outfile', 'references.bib',
             '--format', 'bibtex'
         ], check=True, cwd=app.srcdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        print(result.stdout)
+        logger.info("cffconvert stdout:\n%s", result.stdout)
+        if result.stderr:
+            logger.warning("cffconvert stderr:\n%s", result.stderr)
     except subprocess.CalledProcessError as e:
-        print(f"An error occurred while running cffconvert: {e}")
-        print(f"stdout: {e.stdout}")
-        print(f"stderr: {e.stderr}")
+        logger.error("An error occurred while running cffconvert: %s", e)
+        if e.stdout:
+            logger.error("cffconvert stdout:\n%s", e.stdout)
+        if e.stderr:
+            logger.error("cffconvert stderr:\n%s", e.stderr)
+        raise e  # Ensure that the build fails on error
+
 
 def setup(app):
     app.connect('builder-inited', run_cffconvert)

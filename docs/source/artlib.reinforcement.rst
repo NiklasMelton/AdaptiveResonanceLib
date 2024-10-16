@@ -1,6 +1,14 @@
 artlib.reinforcement package
 ============================
 
+Module contents
+---------------
+
+.. automodule:: artlib.reinforcement
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -12,10 +20,4 @@ artlib.reinforcement.FALCON module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.reinforcement
-   :members:
-   :undoc-members:
-   :show-inheritance:

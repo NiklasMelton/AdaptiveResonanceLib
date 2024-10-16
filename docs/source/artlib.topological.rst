@@ -1,6 +1,14 @@
 artlib.topological package
 ==========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.topological
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -20,10 +28,4 @@ artlib.topological.TopoART module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.topological
-   :members:
-   :undoc-members:
-   :show-inheritance:

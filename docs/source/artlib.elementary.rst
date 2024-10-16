@@ -1,6 +1,14 @@
 artlib.elementary package
 =========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.elementary
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -68,10 +76,4 @@ artlib.elementary.QuadraticNeuronART module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.elementary
-   :members:
-   :undoc-members:
-   :show-inheritance:

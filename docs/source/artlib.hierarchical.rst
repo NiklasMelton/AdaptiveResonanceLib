@@ -1,6 +1,14 @@
 artlib.hierarchical package
 ===========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.hierarchical
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -20,10 +28,4 @@ artlib.hierarchical.SMART module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.hierarchical
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -1,6 +1,14 @@
 artlib.cvi package
 ==================
 
+Module contents
+---------------
+
+.. automodule:: artlib.cvi
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -28,10 +36,4 @@ artlib.cvi.iCVIFuzzyArt module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.cvi
-   :members:
-   :undoc-members:
-   :show-inheritance:

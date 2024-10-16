@@ -1,6 +1,14 @@
 artlib package
 ==============
 
+Module contents
+---------------
+
+.. automodule:: artlib
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -18,10 +26,4 @@ Subpackages
    artlib.supervised
    artlib.topological
 
-Module contents
----------------
 
-.. automodule:: artlib
-   :members:
-   :undoc-members:
-   :show-inheritance:

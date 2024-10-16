@@ -1,6 +1,14 @@
 artlib.experimental package
 ===========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.experimental
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -28,10 +36,4 @@ artlib.experimental.merging module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.experimental
-   :members:
-   :undoc-members:
-   :show-inheritance:

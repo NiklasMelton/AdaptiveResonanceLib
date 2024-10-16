@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-AdaptiveResonanceLib documentation
+AdaptiveResonanceLib Home
 ==================================
 
 .. include:: ../../README.md
@@ -12,4 +12,28 @@ AdaptiveResonanceLib documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Main Contents:
+
+   installation
+   available_models
+   comparison
+   quick_start
+   examples
+   contributing
+   contact
+   license
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference:
+
+   artlib
+   artlib.biclustering
+   artlib.common
+   artlib.cvi
+   artlib.elementary
+   artlib.fusion
+   artlib.hierarchical
+   artlib.reinforcement
+   artlib.supervised
+   artlib.topological

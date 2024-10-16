@@ -1,5 +1,6 @@
-.. include:: ../../README.md
+License
+==================================
+
+.. include:: ../../LICENSE
    :parser: myst_parser.sphinx_
-   :start-after: <!-- START license -->
-   :end-before: <!-- END license -->
 

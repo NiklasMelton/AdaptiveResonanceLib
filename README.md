@@ -9,35 +9,35 @@ Welcome to AdaptiveResonanceLib, a comprehensive and modular Python library for 
 AdaptiveResonanceLib includes implementations for the following ART models:
 
 - #### Elementary Clustering
-    - ART1
-    - ART2
-    - Bayesian ART
-    - Gaussian ART
-    - Hypersphere ART
-    - Ellipsoidal ART
-    - Fuzzy ART
-    - Quadratic Neuron ART
-    - Dual Vigilance ART
+    - [ART1](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART1)
+    - [ART2](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART2A)
+    - [Bayesian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.BayesianART)
+    - [Gaussian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.GaussianART)
+    - [Hypersphere ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.HypersphereART)
+    - [Ellipsoid ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.EllipsoidART)
+    - [Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FuzzyART)
+    - [Quadratic Neuron ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.QuadraticNeuronART)
 - #### Metric Informed 
-    - CVI ART  
-    - iCVI Fuzzy ART  
+    - [CVI ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.CVIART)
+    - [iCVI Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.iCVIFuzzyART)
 - #### Topological
-    - Topo ART
+    - [Topo ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.TopoART)
+    - [Dual Vigilance ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.DualVigilanceART)
 - #### Classification
-    - Simple ARTMAP
+    - [Simple ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.SimpleARTMAP)
 - #### Regression
-    - ARTMAP
-    - Fusion ART
+    - [ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ARTMAP)
+    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FusionART)
 - #### Hierarchical
-    - DeepARTMAP
-    - SMART
+    - [DeepARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.DeepARTMAP)
+    - [SMART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.SMART)
 - #### Data Fusion
-    - Fusion ART
+    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FusionART)
 - #### Reinforcement Learning
-    - FALCON
-    - TD-FALCON
+    - [FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FALCON)
+    - [TD-FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.TD_FALCON)
 - #### Biclustering
-    - Biclustering ARTMAP
+    - [Biclustering ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.biclustering.html#artlib.biclustering.BARTMAP.BARTMAP)
   
 <!-- END available_models -->
 

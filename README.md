@@ -94,7 +94,7 @@ predictions = model.predict(test_X)
 <!-- START documentation -->
 ## Documentation
 
-For more detailed documentation, including the full list of parameters for each model, visit our [documentation page](https://adaptiveresonancelib.readthedocs.io/en/latest/index.html).
+For more detailed documentation, including the full list of parameters for each model, visit our [Read the Docs page](https://adaptiveresonancelib.readthedocs.io/en/latest/index.html).
 <!-- END documentation -->
 
 <!-- START examples -->

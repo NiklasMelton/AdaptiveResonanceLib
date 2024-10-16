@@ -22,7 +22,7 @@ def generate_references():
         bibtex_lines = bibtex_content.splitlines()
         if bibtex_lines:
             # Replace the first line
-            bibtex_lines[0] = '@software{Melton_AdaptiveResonanceLib_2024,'
+            bibtex_lines[0] = '@misc{Melton_AdaptiveResonanceLib_2024,'
             modified_bibtex = '\n'.join(bibtex_lines)
 
             # Write the modified content to references.bib

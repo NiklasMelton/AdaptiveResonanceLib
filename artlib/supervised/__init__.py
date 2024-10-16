@@ -5,8 +5,7 @@ it can make accurate predictions on new, unseen data. Supervised learning tasks 
 two types: classification and regression.
 
 Classification involves predicting discrete labels or categories, such as spam detection or image recognition.
-Regression, on the other hand, deals with predicting continuous values, like stock prices or temperature. Both
-classification and regression are essential tools in many real-world applications.
+Regression, on the other hand, deals with predicting continuous values, like stock prices or temperature.
 
 `Supervised learning <https://en.wikipedia.org/wiki/Supervised_learning>`_
 

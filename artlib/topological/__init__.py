@@ -5,7 +5,7 @@ the data has a non-linear structure or when traditional clustering algorithms fa
 of the data. Topological clustering techniques, such as hierarchical clustering and Mapper, are often used in fields
 like data analysis and computational topology.
 
-The two modules hereing provide contrasting advantages. TopoART allows for the creation of an adjacency matrix which
+The two modules herein provide contrasting advantages. TopoART allows for the creation of an adjacency matrix which
 can be useful when clusters overlap or are in close proximity. Dual Vigilance ART allows for the abstract merging of
 many smaller clusters and is well suited to problems where the clusters take-on complex geometries where other
 clustering approaches would fail.

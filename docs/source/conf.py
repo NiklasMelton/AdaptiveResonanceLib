@@ -6,6 +6,26 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import subprocess
+
+def run_cffconvert(app):
+    try:
+        result = subprocess.run([
+            'cffconvert',
+            '--infile', '../../CITATION.cff',
+            '--outfile', 'references.bib',
+            '--format', 'bibtex'
+        ], check=True, cwd=app.srcdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running cffconvert: {e}")
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+
+def setup(app):
+    app.connect('builder-inited', run_cffconvert)
+
 project = 'AdaptiveResonanceLib'
 copyright = '2024, Niklas Melton'
 author = 'Niklas Melton'
@@ -20,6 +40,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'myst_parser',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex',
 ]
 
 source_suffix = {
@@ -35,6 +56,7 @@ autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code dire
 autoapi_ignore = ['*/experimental', '*/experimental/*']
 autoapi_python_class_content = 'both'
 
+bibtex_bibfiles = ['references.bib']
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

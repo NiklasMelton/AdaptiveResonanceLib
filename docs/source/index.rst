@@ -22,6 +22,7 @@ AdaptiveResonanceLib Home
    contributing
    contact
    license
+   citation
 
 .. toctree::
    :maxdepth: 2

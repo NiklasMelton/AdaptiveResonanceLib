@@ -53,14 +53,14 @@ AdaptiveResonanceLib includes implementations for the following ART models:
 
 To install AdaptiveResonanceLib, simply use pip:
 
-[comment]: <> (```bash)
-
-[comment]: <> (pip install AdaptiveResonanceLib)
-
-[comment]: <> (```)
-
 ```bash
 pip install artlib
+```
+
+Or to install directly from the most recent source:
+
+```bash
+pip install git+https://github.com/NiklasMelton/AdaptiveResonanceLib.git@develop
 ```
 
 Ensure you have Python 3.9 or newer installed.
@@ -124,3 +124,10 @@ For questions and support, please open an issue in the GitHub issue tracker or m
 
 Happy Modeling with AdaptiveResonanceLib!
 <!-- END contact -->
+
+<!-- START citation -->
+## Citing this Repository
+If you use this project in your research, please cite it as:
+
+Melton, N. (2024). AdaptiveResonanceLib (Version 0.1.2)
+<!-- END citation -->

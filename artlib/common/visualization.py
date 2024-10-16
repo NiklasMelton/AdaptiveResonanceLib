@@ -11,16 +11,24 @@ def plot_gaussian_contours_fading(
         linewidth: int = 1
 ):
     """
-    Plots concentric ellipses to represent the contours of a 2D Gaussian distribution, with fading colors.
+    Plot concentric ellipses to represent the contours of a 2D Gaussian distribution with fading colors.
 
-    Parameters:
-    - ax: Matplotlib axis object. If None, creates a new figure and axis.
-    - mean: A numpy array representing the mean (μ) of the distribution.
-    - std_dev: A numpy array representing the standard deviation (σ) of the distribution.
-    - color: A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
-    - max_std: Max standard deviations to draw contours to. Default is 2.
-    - sigma_steps: Step size in standard deviations for each contour. Default is 0.25.
-    - linewidth: width of boundary line
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axis object to plot the ellipses.
+    mean : np.ndarray
+        A numpy array representing the mean (μ) of the distribution.
+    std_dev : np.ndarray
+        A numpy array representing the standard deviation (σ) of the distribution.
+    color : np.ndarray
+        A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
+    max_std : int, optional
+        Maximum number of standard deviations to draw contours to, by default 2.
+    sigma_steps : float, optional
+        Step size in standard deviations for each contour, by default 0.25.
+    linewidth : int, optional
+        Width of the boundary line, by default 1.
 
     """
     from matplotlib.patches import Ellipse
@@ -54,18 +62,25 @@ def plot_gaussian_contours_covariance(
         linewidth: int = 1
 ):
     """
-    Plots concentric ellipses to represent the contours of a 2D Gaussian distribution, with fading colors.
+    Plot concentric ellipses to represent the contours of a 2D Gaussian distribution with fading colors.
     Accepts a covariance matrix to properly represent the distribution's orientation and shape.
 
-
-    Parameters:
-    - ax: Matplotlib axis object. If None, creates a new figure and axis.
-    - mean: A numpy array representing the mean (μ) of the distribution.
-    - covariance: A 2x2 numpy array representing the covariance matrix of the distribution.
-    - color: A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
-    - max_std: Max standard deviations to draw contours to. Default is 2.
-    - sigma_steps: Step size in standard deviations for each contour. Default is 0.25.
-    - linewidth: width of boundary line
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axis object to plot the ellipses.
+    mean : np.ndarray
+        A numpy array representing the mean (μ) of the distribution.
+    covariance : np.ndarray
+        A 2x2 numpy array representing the covariance matrix of the distribution.
+    color : np.ndarray
+        A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
+    max_std : int, optional
+        Maximum number of standard deviations to draw contours to, by default 2.
+    sigma_steps : float, optional
+        Step size in standard deviations for each contour, by default 0.25.
+    linewidth : int, optional
+        Width of the boundary line, by default 1.
 
     """
     from matplotlib.patches import Ellipse
@@ -103,15 +118,23 @@ def plot_weight_matrix_as_ellipse(
         linewidth: int = 1
 ):
     """
-    Plots the transformation of a unit circle by the weight matrix W as an ellipse.
+    Plot the transformation of a unit circle by the weight matrix W as an ellipse.
 
-    Parameters:
-    - ax: Matplotlib axis object. If None, creates a new figure and axis.
-    - mean: The center point (x, y) of the ellipse.
-    - s: Scalar to scale the weight matrix W.
-    - W: 2x2 weight matrix.
-    - color: Color of the ellipse.
-    - linewidth: width of boundary line
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axis object to plot the ellipse.
+    s : float
+        Scalar to scale the weight matrix W.
+    W : np.ndarray
+        2x2 weight matrix.
+    mean : np.ndarray
+        The center point (x, y) of the ellipse.
+    color : np.ndarray
+        Color of the ellipse.
+    linewidth : int, optional
+        Width of the boundary line, by default 1.
+
     """
     # Compute the transformation matrix
     transform_matrix = W[:2, :2]

@@ -12,13 +12,47 @@ update after update is called.
 import numpy as np
 
 
-def delta_add_sample_to_average(average, sample, total_samples):
-    """Calculate the new average if sample is added"""
+def delta_add_sample_to_average(average: float, sample: float, total_samples: int) -> float:
+    """
+    Calculate the new average if a sample is added.
+
+    Parameters
+    ----------
+    average : float
+        Current average.
+    sample : float
+        New sample to be added.
+    total_samples : int
+        Total number of samples including the new one.
+
+    Returns
+    -------
+    float
+        Updated average after adding the sample.
+
+    """
     return (sample - average) / total_samples
 
 
-def delta_remove_sample_from_average(average, sample, total_samples):
-    """Calculate the new average if sample is removed"""
+def delta_remove_sample_from_average(average: float, sample: float, total_samples: int) -> float:
+    """
+    Calculate the new average if a sample is removed.
+
+    Parameters
+    ----------
+    average : float
+        Current average.
+    sample : float
+        Sample to be removed.
+    total_samples : int
+        Total number of samples before removal.
+
+    Returns
+    -------
+    float
+        Updated average after removing the sample.
+
+    """
     return (average - sample) / (total_samples - 1)
 
 
@@ -40,25 +74,17 @@ class iCVI_CH():
     samples in the dataset.
 
     For the Calinski Harabasz validity Index, larger values represent better clusters.
-
-    Parameters:
-        dim: an int storing the dimensionality of the input data.
-        n_samples: an int with the total number of samples.
-        mu: a numpy array representing the average of all data points.
-        CD: ClusterData... a dict holding all the data for each cluster, with the parameters
-            n: the number of samples belonging to each cluster/label.
-            v: the prototypes/centriods of each cluster.
-            CP: the compactness of each cluster. Not really needed since WGSS can be calculated incrementally.
-            G: the vector g of each cluster.
-        WGSS: Within Groupd sum of squares.
-        criterion_value: the calculated CH score.
     """
 
     def __init__(self, x: np.ndarray) -> None:
-        """Create the iCVI object.
+        """
+        Create the iCVI_CH object.
 
-        Args:
-            x: a sample from the dataset used for recording data dimensionality.
+        Parameters
+        ----------
+        x : np.ndarray
+            A sample from the dataset used for recording data dimensionality.
+
         """
         self.dim = x.shape[0]  # Dimension of the input data
         self.n_samples: int = 0  # number of samples encountered
@@ -67,20 +93,22 @@ class iCVI_CH():
         self.WGSS = 0           # within group sum of squares
         self.criterion_value = 0  # calcualted CH index
 
-    def add_sample(self, x, label) -> dict:
-        """Calculate the result of adding a new sample with a given label.
+    def add_sample(self, x: np.ndarray, label: int) -> dict:
+        """
+        Calculate the result of adding a new sample with a given label.
 
-        Create a dictionary containing the updated values after assigning a label to a given sample.
-        To accept the outcome of the sample being added, pass the returned parameter dict to update.
+        Parameters
+        ----------
+        x : np.ndarray
+            The sample to add to the current validity index calculation.
+        label : int
+            The sample category/cluster.
 
-        In general, if newP['criterion_value'] > obj.criterion_value, the clustering has been improved.
+        Returns
+        -------
+        dict
+            A dictionary containing the updated values after the sample is added.
 
-        Args:
-            x: The sample to add to the current validity index calculation
-            label: an int representing the sample category/cluster
-
-        Returns:
-            newP: a dictionary contained the values after the sample is added, to be passed to update call.
         """
         newP = {'x': x, 'label': label}  # New Parameters
         newP['n_samples'] = self.n_samples + 1
@@ -136,15 +164,19 @@ class iCVI_CH():
                 newP['criterion_value'] = (BGSS / WGSS) * (newP['n_samples'] - n_clusters) / (n_clusters - 1)
         return newP
 
-    def update(self, params) -> None:
-        """Update the parameters of the object.
+    def update(self, params: dict) -> None:
 
+        """
+        Update the parameters of the object.
         Takes the updated params from adding/removing a sample or switching its label, and updates the object.
         Switching a label needs more updates, so those dicts have an extra set of things to update, signified with
         the 'label2' key existing
 
-        Args:
-            params: dict containing the parameters to update.
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing the updated parameters to be applied.
+
         """
         self.n_samples = params['n_samples']
         self.mu = params['mu']
@@ -155,8 +187,9 @@ class iCVI_CH():
             self.CD[params['label2']] = params['CD2']
             self.WGSS += params['CP_diff2']
 
-    def switch_label(self, x, label_old, label_new):
-        """Calculates the parameters if a sample has its label changed.
+    def switch_label(self, x: np.ndarray, label_old: int, label_new: int) -> dict:
+        """
+        Calculate the parameters when a sample has its label changed.
 
         This essentially removes a sample with the old label from the clusters, then adds it back with the new sample.
         There are a few optimizations, such as keeping mu the same since adding and removing it doesn't affect any calculations
@@ -165,13 +198,21 @@ class iCVI_CH():
         Otherwise it should work the same as removing a sample and updating, then adding the sample back and updating, without
         the need to create a deep copy of the object if just testing the operation.
 
-        Args:
-            x: The sample to switch the label of for the current validity index calculation
-            label_old: an int representing the sample category/cluster the sample belongs to
-            label_new: an int representing the sample category/cluster the sample will be assigned to
+        Parameters
+        ----------
+        x : np.ndarray
+            The sample whose label is being changed.
+        label_old : int
+            The old label of the sample.
+        label_new : int
+            The new label of the sample.
 
-        Returns:
-            newP: a dictionary contained the values after the sample is added, to be passed to update call."""
+        Returns
+        -------
+        dict
+            A dictionary containing the updated values after switching the label.
+
+        """
         if label_new == label_old:
             return {'n_samples': self.n_samples,
                     'mu': self.mu,
@@ -230,17 +271,22 @@ class iCVI_CH():
                 newP['criterion_value'] = (BGSS / WGSS) * (newP['n_samples'] - n_clusters) / (n_clusters - 1)
         return newP
 
-    def remove_sample(self, x, label):  # This is left here mostly as an extra, and not really meant to be used.
-        """Remove a sample from the clusters
+    def remove_sample(self, x: np.ndarray, label: int) -> dict:  # This is left here mostly as an extra, and not really meant to be used.
+        """
+        Remove a sample from the clusters.
 
-         Calculates parameters after removing a sample from the clusters, or the opposite of an add operation.
+        Parameters
+        ----------
+        x : np.ndarray
+            The sample to remove from the current validity index calculation.
+        label : int
+            The sample category/cluster.
 
-        Args:
-            x: The sample to remove from the current validity index calculation
-            label: an int representing the sample category/cluster
+        Returns
+        -------
+        dict
+            A dictionary containing the updated values after the sample is removed.
 
-        Returns:
-            newP: a dictionary contained the values after the sample is remove, to be passed to update call.
         """
         Data = self.CD[label]
         if Data['n'] <= 1:

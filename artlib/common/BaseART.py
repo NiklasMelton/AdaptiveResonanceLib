@@ -11,12 +11,15 @@ import operator
 
 
 class BaseART(BaseEstimator, ClusterMixin):
-    # Generic implementation of Adaptive Resonance Theory (ART)
+    """
+    Generic implementation of Adaptive Resonance Theory (ART)
+    """
     def __init__(self, params: dict):
         """
-
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         self.validate_params(params)
@@ -44,26 +47,36 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def get_params(self, deep: bool = True) -> dict:
         """
+        Parameters
+        ----------
+        deep : bool, default=True
+            If True, will return the parameters for this class and contained subobjects
+            that are estimators.
 
-        Parameters:
-        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
-
-        Returns:
+        Returns
+        -------
+        dict
             Parameter names mapped to their values.
 
         """
         return self.params
 
     def set_params(self, **params):
-        """Set the parameters of this estimator.
+        """
+        Set the parameters of this estimator.
 
-        Specific redefinition of sklearn.BaseEstimator.set_params for ART classes
+        Specific redefinition of `sklearn.BaseEstimator.set_params` for ART classes.
 
-        Parameters:
-        - **params : Estimator parameters.
+        Parameters
+        ----------
+        **params : dict
+            Estimator parameters.
 
-        Returns:
-        - self : estimator instance
+        Returns
+        -------
+        self : object
+            Estimator instance.
+
         """
         if not params:
             # Simple optimization to gain speed (inspect is slow)
@@ -96,36 +109,49 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
-        prepare data for clustering
+        Prepare data for clustering.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
-        Returns:
-            normalized data
+        Returns
+        -------
+        np.ndarray
+            Normalized data.
+
         """
         normalized, self.d_max_, self.d_min_ = normalize(X, self.d_max_, self.d_min_)
         return normalized
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
         """
-        restore data to state prior to preparation
+        Restore data to state prior to preparation.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
-        Returns:
-            restored data
+        Returns
+        -------
+        np.ndarray
+            Restored data.
+
         """
         return de_normalize(X, d_max=self.d_max_, d_min=self.d_min_)
 
     @property
     def n_clusters(self) -> int:
         """
-        get the current number of clusters
+        Get the current number of clusters.
 
-        Returns:
-            the number of clusters
+        Returns
+        -------
+        int
+            The number of clusters.
+
         """
         if hasattr(self, "W"):
             return len(self.W)
@@ -135,20 +161,24 @@ class BaseART(BaseEstimator, ClusterMixin):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         raise NotImplementedError
 
     def check_dimensions(self, X: np.ndarray):
         """
-        check the data has the correct dimensions
+        Check the data has the correct dimensions.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         if not hasattr(self, "dim_"):
@@ -170,47 +200,67 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        tuple
+            Cluster activation and cache used for later processing.
 
         """
         raise NotImplementedError
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        tuple
+            Cluster match criterion and cache used for later processing.
 
         """
         raise NotImplementedError
 
     def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
         """
-        get the binary match criterion of the cluster
+        Get the binary match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion binary, cache used for later processing
+        Returns
+        -------
+        tuple
+            Binary match criterion and cache used for later processing.
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
@@ -223,41 +273,54 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         raise NotImplementedError
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight.
 
         """
         raise NotImplementedError
 
     def add_weight(self, new_w: np.ndarray):
         """
-        add a new cluster weight
+        Add a new cluster weight.
 
-        Parameters:
-        - new_w: new cluster weight to add
+        Parameters
+        ----------
+        new_w : np.ndarray
+            New cluster weight to add.
 
         """
         self.weight_sample_counter_.append(1)
@@ -265,11 +328,14 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def set_weight(self, idx: int, new_w: np.ndarray):
         """
-        set the value of a cluster weight
+        Set the value of a cluster weight.
 
-        Parameters:
-        - idx: index of cluster to update
-        - new_w: new cluster weight
+        Parameters
+        ----------
+        idx : int
+            Index of cluster to update.
+        new_w : np.ndarray
+            New cluster weight.
 
         """
         self.weight_sample_counter_[idx] += 1
@@ -312,23 +378,23 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
         """
-        fit the model to a single sample
+        Fit the model to a single sample.
 
-        Parameters:
-        - x: data sample
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample.
+        match_reset_func : callable, optional
+            A callable that influences cluster creation.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+            Method for resetting match criterion.
+        epsilon : float, default=0.0
+            Epsilon value used for adjusting match criterion.
 
-
-        Returns:
-            cluster label of the input sample
+        Returns
+        -------
+        int
+            Cluster label of the input sample.
 
         """
         self.sample_counter_ += 1
@@ -381,13 +447,17 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def step_pred(self, x) -> int:
         """
-        predict the label for a single sample
+        Predict the label for a single sample.
 
-        Parameters:
-        - x: data sample
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample.
 
-        Returns:
-            cluster label of the input sample
+        Returns
+        -------
+        int
+            Cluster label of the input sample.
 
         """
         assert len(self.W) >= 0, "ART module is not fit."
@@ -398,10 +468,12 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def pre_step_fit(self, X: np.ndarray):
         """
-        undefined function called prior to each sample fit. Useful for cluster pruning
+        Undefined function called prior to each sample fit. Useful for cluster pruning.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         # this is where pruning steps can go
@@ -409,10 +481,12 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def post_step_fit(self, X: np.ndarray):
         """
-        undefined function called after each sample fit. Useful for cluster pruning
+        Undefined function called after each sample fit. Useful for cluster pruning.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         # this is where pruning steps can go
@@ -420,10 +494,12 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def post_fit(self, X: np.ndarray):
         """
-        undefined function called after fit. Useful for cluster pruning
+        Undefined function called after fit. Useful for cluster pruning.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
         """
         # this is where pruning steps can go
@@ -432,21 +508,24 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0, verbose: bool = False):
         """
-        Fit the model to the data
+        Fit the model to the data.
 
-        Parameters:
-        - X: data set
-        - y: not used. For compatibility.
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
-        - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+        y : np.ndarray, optional
+            Not used. For compatibility.
+        match_reset_func : callable, optional
+            A callable that influences cluster creation.
+        max_iter : int, default=1
+            Number of iterations to fit the model on the same dataset.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+            Method for resetting match criterion.
+        epsilon : float, default=0.0
+            Epsilon value used for adjusting match criterion.
+        verbose : bool, default=False
+            If True, displays progress of the fitting process.
 
         """
         self.validate_data(X)
@@ -472,19 +551,18 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
-        iteratively fit the model to the data
+        Iteratively fit the model to the data.
 
-        Parameters:
-        - X: data set
-        - match_reset_func: a callable accepting the data sample, a cluster weight, the params dict, and the cache dict
-            Permits external factors to influence cluster creation.
-            Returns True if the cluster is valid for the sample, False otherwise
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+        match_reset_func : callable, optional
+            A callable that influences cluster creation.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+            Method for resetting match criterion.
+        epsilon : float, default=0.0
+            Epsilon value used for adjusting match criterion.
 
         """
 
@@ -507,13 +585,17 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
-        predict labels for the data
+        Predict labels for the data.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
 
-        Returns:
-            labels for the data
+        Returns
+        -------
+        np.ndarray
+            Labels for the data.
 
         """
 
@@ -532,21 +614,29 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Undefined function for visualizing the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, default=1
+            Width of boundary line.
 
         """
         raise NotImplementedError
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        undefined function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Undefined function for getting centers of each cluster. Used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         raise NotImplementedError
 
@@ -561,15 +651,22 @@ class BaseART(BaseEstimator, ClusterMixin):
             colors: Optional[Iterable] = None
     ):
         """
-        Visualize the clustering of the data
+        Visualize the clustering of the data.
 
-        Parameters:
-        - X: data set
-        - y: sample labels
-        - ax: figure axes
-        - marker_size: size used for data points
-        - linewidth: width of boundary line
-        - colors: colors to use for each cluster
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+        y : np.ndarray
+            Sample labels.
+        ax : matplotlib.axes.Axes, optional
+            Figure axes.
+        marker_size : int, default=10
+            Size used for data points.
+        linewidth : int, default=1
+            Width of boundary line.
+        colors : iterable, optional
+            Colors to use for each cluster.
 
         """
         import matplotlib.pyplot as plt

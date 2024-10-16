@@ -14,12 +14,29 @@ from artlib.supervised.ARTMAP import ARTMAP
 
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
+    """DeepARTMAP for Hierachical Supervised and Unsupervised Learning
+
+    This module implements DeepARTMAP, a generalization of the ARTMAP class that allows an arbitrary number of
+    data channels to be divisively clustered. DeepARTMAP support both supervised and unsupervised modes.
+    If only two ART modules are provided, DeepARTMAP reverts to standard ARTMAP where the first module is the A module
+    and the second module is the B module.
+    DeepARTMAP does not currently have a direct citation and is an original creation of this library.
+
+    """
+
     def __init__(self, modules: list[BaseART]):
         """
+        Initialize the DeepARTMAP model.
 
-        Parameters:
-        - modules: list of ART modules
+        Parameters
+        ----------
+        modules : list of BaseART
+            A list of instantiated ART modules to use as layers in the DeepARTMAP model.
 
+        Raises
+        ------
+        AssertionError
+            If no ART modules are provided.
         """
         assert len(modules) >= 1, "Must provide at least one ART module"
         self.modules = modules
@@ -28,13 +45,17 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     def get_params(self, deep: bool = True) -> dict:
         """
+        Get parameters for this estimator.
 
-        Parameters:
-        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+        Parameters
+        ----------
+        deep : bool, optional, default=True
+            If True, will return the parameters for this class and contained subobjects that are estimators.
 
-        Returns:
+        Returns
+        -------
+        dict
             Parameter names mapped to their values.
-
         """
         out = dict()
         for i, module in enumerate(self.modules):
@@ -45,15 +66,18 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return out
 
     def set_params(self, **params):
-        """Set the parameters of this estimator.
+        """
+        Set the parameters of this estimator.
 
-        Specific redefinition of sklearn.BaseEstimator.set_params for ARTMAP classes
+        Parameters
+        ----------
+        **params : dict
+            Estimator parameters.
 
-        Parameters:
-        - **params : Estimator parameters.
-
-        Returns:
-        - self : estimator instance
+        Returns
+        -------
+        self : DeepARTMAP
+            The estimator instance.
         """
 
         if not params:
@@ -84,11 +108,27 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return self
 
     @property
-    def labels_(self):
+    def labels_(self) -> np.ndarray:
+        """
+        Get the labels from the first layer.
+
+        Returns
+        -------
+        np.ndarray
+            The labels from the first ART layer.
+        """
         return self.layers[0].labels_
 
     @property
-    def labels_deep_(self):
+    def labels_deep_(self) -> np.ndarray:
+        """
+        Get the deep labels from all layers.
+
+        Returns
+        -------
+        np.ndarray
+            Deep labels from all ART layers concatenated together.
+        """
         return np.concatenate(
             [
                 layer.labels_.reshape((-1, 1))
@@ -100,24 +140,44 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         )
 
     @property
-    def n_modules(self):
+    def n_modules(self) -> int:
+        """
+        Get the number of ART modules.
+
+        Returns
+        -------
+        int
+            The number of ART modules.
+        """
         return len(self.modules)
 
     @property
-    def n_layers(self):
+    def n_layers(self) -> int:
+        """
+        Get the number of layers.
+
+        Returns
+        -------
+        int
+            The number of layers in DeepARTMAP.
+        """
         return len(self.layers)
 
     def map_deep(self, level: int, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
         """
-        map a label from one arbitrary level to the highest (B) level
+        Map a label from one arbitrary level to the highest (B) level.
 
-        Parameters:
-        - level: level the label is from
-        - y_a: the cluster label(s)
+        Parameters
+        ----------
+        level : int
+            The level from which the label is taken.
+        y_a : np.ndarray or int
+            The cluster label(s) at the input level.
 
-        Returns:
-            cluster label(s) at highest level
-
+        Returns
+        -------
+        np.ndarray or int
+            The cluster label(s) at the highest level (B).
         """
         if level < 0:
             level += len(self.layers)
@@ -134,12 +194,19 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             y: Optional[np.ndarray] = None
     ):
         """
-        validates the data prior to clustering
+        Validate the data before clustering.
 
-        Parameters:
-        - X: list of deep data sets
-        - y: optional labels for data
+        Parameters
+        ----------
+        X : list of np.ndarray
+            The input data sets for each module.
+        y : np.ndarray, optional
+            The corresponding labels, by default None.
 
+        Raises
+        ------
+        AssertionError
+            If the input data is inconsistent or does not match the expected format.
         """
         assert len(X) == self.n_modules, \
             f"Must provide {self.n_modules} input matrices for {self.n_modules} ART modules"
@@ -151,44 +218,62 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     def prepare_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
         """
-        prepare data for clustering
+        Prepare the data for clustering.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : list of np.ndarray
+            The input data set for each module.
+        y : np.ndarray, optional
+            The corresponding labels, by default None.
 
-        Returns:
-            prepared data
+        Returns
+        -------
+        tuple of (list of np.ndarray, np.ndarray)
+            The prepared data set and labels (if any).
         """
         return [self.modules[i].prepare_data(X[i]) for i in range(self.n_modules)], y
 
     def restore_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
         """
-        restore data to state prior to preparation
+        Restore the data to its original state before preparation.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : list of np.ndarray
+            The input data set for each module.
+        y : np.ndarray, optional
+            The corresponding labels, by default None.
 
-        Returns:
-            prepared data
+        Returns
+        -------
+        tuple of (list of np.ndarray, np.ndarray)
+            The restored data set and labels (if any).
         """
         return [self.modules[i].restore_data(X[i]) for i in range(self.n_modules)], y
 
 
     def fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
-        Fit the model to the data
+        Fit the DeepARTMAP model to the data.
 
-        Parameters:
-        - X: list of deep datasets
-        - y: optional labels
-        - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : list of np.ndarray
+            The input data sets for each module.
+        y : np.ndarray, optional
+            The corresponding labels for supervised learning, by default None.
+        max_iter : int, optional
+            The number of iterations to fit the model, by default 1.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+            The method to reset vigilance if a mismatch occurs, by default "MT+".
+        epsilon : float, optional
+            A small adjustment factor for match tracking, by default 0.0.
 
+        Returns
+        -------
+        DeepARTMAP
+            The fitted DeepARTMAP model.
         """
         self.validate_data(X, y)
         if y is not None:
@@ -211,18 +296,23 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     def partial_fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
-        Partial fit the model to the data
+        Partially fit the DeepARTMAP model to the data.
 
-        Parameters:
-        - X: list of deep datasets
-        - y: optional labels
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : list of np.ndarray
+            The input data sets for each module.
+        y : np.ndarray, optional
+            The corresponding labels for supervised learning, by default None.
+        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+            The method to reset vigilance if a mismatch occurs, by default "MT+".
+        epsilon : float, optional
+            A small adjustment factor for match tracking, by default 0.0.
 
+        Returns
+        -------
+        DeepARTMAP
+            The partially fitted DeepARTMAP model.
         """
         self.validate_data(X, y)
         if y is not None:
@@ -253,14 +343,17 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     def predict(self, X: Union[np.ndarray, list[np.ndarray]]) -> list[np.ndarray]:
         """
-        predict labels for the data
+        Predict the labels for the input data.
 
-        Parameters:
-        - X: list of deep data sets
+        Parameters
+        ----------
+        X : np.ndarray or list of np.ndarray
+            The input data set for prediction.
 
-        Returns:
-            B labels for the data
-
+        Returns
+        -------
+        list of np.ndarray
+            The predicted labels for each layer.
         """
         if isinstance(X, list):
             x = X[-1]

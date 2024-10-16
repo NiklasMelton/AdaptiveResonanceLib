@@ -14,17 +14,58 @@ release = '0.1.2'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc']
+extensions = [
+    'sphinx.ext.autodoc',
+    'autoapi.extension',
+    'sphinx.ext.napoleon',
+    'myst_parser',
+    'sphinx.ext.intersphinx',
+]
+
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['artlib/experimental/*', '../../artlib/experimental/*']
+
+autoapi_type = 'python'
+autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code directory
+autoapi_ignore = ['*/experimental', '*/experimental/*']
+autoapi_python_class_content = 'both'
+
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "html_admonition",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+    "attrs_block",
+    "attrs_inline",
+    "fieldlist",
+]
 
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None)
+}
+
+suppress_warnings = ['ref.duplicate', 'duplicate.object', 'myst.duplicate_def', 'ref.python']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+html_theme = 'sphinx_rtd_theme'
+html_static_path = ['../_static']
+
+
+
 
 

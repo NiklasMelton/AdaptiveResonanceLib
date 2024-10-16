@@ -17,15 +17,31 @@ from artlib.common.visualization import plot_weight_matrix_as_ellipse
 
 
 class QuadraticNeuronART(BaseART):
-    # implementation of QuadraticNeuronART
+    """Quadratic Neuron ART for Clustering
+
+    This module implements Quadratic Neuron ART as first published in Su, M.-C., & Liu, Y.-C. (2005).
+    A new approach to clustering data with arbitrary shapes.
+    Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
+    Quadratic Neuron ART clusters data in Hyper-ellipsoid by utilizing a quadratic neural network for activation
+    and resonance.
+
+    """
     def __init__(self, rho: float, s_init: float, lr_b: float, lr_w: float, lr_s: float):
         """
-        Parameters:
-        - rho: vigilance parameter
-        - s_init: initial linear activation parameter
-        - lr_b: learning rate for cluster mean
-        - lr_w: learning rate for cluster weights
-        - lr_s: learning rate for cluster activation parameter
+        Initialize the Quadratic Neuron ART model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter.
+        s_init : float
+            Initial quadratic term.
+        lr_b : float
+            Learning rate for cluster mean (bias).
+        lr_w : float
+            Learning rate for cluster weights.
+        lr_s : float
+            Learning rate for the quadratic term.
 
         """
         params = {
@@ -40,10 +56,12 @@ class QuadraticNeuronART(BaseART):
     @staticmethod
     def validate_params(params: dict):
         """
-        validate clustering parameters
+        Validate clustering parameters.
 
-        Parameters:
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
         """
         assert "rho" in params
@@ -63,15 +81,23 @@ class QuadraticNeuronART(BaseART):
 
     def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
         """
-        get the activation of the cluster
+        Get the activation of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            cluster activation, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster activation.
+        dict, optional
+            Cache used for later processing.
 
         """
         dim2 = self.dim_ * self.dim_
@@ -94,16 +120,25 @@ class QuadraticNeuronART(BaseART):
 
     def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
         """
-        get the match criterion of the cluster
+        Get the match criterion of the cluster.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            cluster match criterion, cache used for later processing
+        Returns
+        -------
+        float
+            Cluster match criterion.
+        dict
+            Cache used for later processing.
 
         """
         if cache is None:
@@ -112,16 +147,23 @@ class QuadraticNeuronART(BaseART):
 
     def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
         """
-        get the updated cluster weight
+        Get the updated cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
 
-        Returns:
-            updated cluster weight, cache used for later processing
+        Returns
+        -------
+        np.ndarray
+            Updated cluster weight, cache used for later processing.
 
         """
         s = cache["s"]
@@ -142,15 +184,19 @@ class QuadraticNeuronART(BaseART):
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
-        generate a new cluster weight
+        Generate a new cluster weight.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - params: dict containing parameters for the algorithm
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
 
-        Returns:
-            updated cluster weight
+        Returns
+        -------
+        np.ndarray
+            New cluster weight.
 
         """
         w_new = np.identity(self.dim_)
@@ -158,21 +204,29 @@ class QuadraticNeuronART(BaseART):
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
-        function for getting centers of each cluster. Used for regression
-        Returns:
-            cluster centroid
+        Get the centers of each cluster, used for regression.
+
+        Returns
+        -------
+        list of np.ndarray
+            Cluster centroids.
+
         """
         dim2 = self.dim_ * self.dim_
         return [w[dim2:-1] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
-        undefined function for visualizing the bounds of each cluster
+        Visualize the bounds of each cluster.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Figure axes.
+        colors : iterable
+            Colors to use for each cluster.
+        linewidth : int, optional
+            Width of boundary line, by default 1.
 
         """
         # kinda works

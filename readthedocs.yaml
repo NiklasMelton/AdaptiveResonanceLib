@@ -19,6 +19,3 @@ build:
 sphinx:
   configuration: docs/source/conf.py  # Correctly pointing to conf.py
 
-python:
-  install:
-    - method: poetry  # Use Poetry to install dependencies

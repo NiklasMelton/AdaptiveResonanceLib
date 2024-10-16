@@ -1,6 +1,14 @@
 artlib.fusion package
 =====================
 
+Module contents
+---------------
+
+.. automodule:: artlib.fusion
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -12,10 +20,4 @@ artlib.fusion.FusionART module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.fusion
-   :members:
-   :undoc-members:
-   :show-inheritance:

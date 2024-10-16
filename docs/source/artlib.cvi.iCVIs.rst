@@ -1,6 +1,14 @@
 artlib.cvi.iCVIs package
 ========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.cvi.iCVIs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -12,10 +20,4 @@ artlib.cvi.iCVIs.CalinkskiHarabasz module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.cvi.iCVIs
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -1,6 +1,14 @@
 artlib.biclustering package
 ===========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.biclustering
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -12,10 +20,4 @@ artlib.biclustering.BARTMAP module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.biclustering
-   :members:
-   :undoc-members:
-   :show-inheritance:

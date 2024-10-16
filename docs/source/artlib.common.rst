@@ -1,6 +1,14 @@
 artlib.common package
 =====================
 
+Module contents
+---------------
+
+.. automodule:: artlib.common
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -44,10 +52,3 @@ artlib.common.visualization module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: artlib.common
-   :members:
-   :undoc-members:
-   :show-inheritance:

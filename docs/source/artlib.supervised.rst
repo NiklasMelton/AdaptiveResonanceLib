@@ -1,6 +1,14 @@
 artlib.supervised package
 =========================
 
+Module contents
+---------------
+
+.. automodule:: artlib.supervised
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -20,10 +28,4 @@ artlib.supervised.SimpleARTMAP module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: artlib.supervised
-   :members:
-   :undoc-members:
-   :show-inheritance:

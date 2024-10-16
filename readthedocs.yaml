@@ -4,24 +4,28 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
-  jobs:
-    post_create_environment:
-      # Install poetry
-      # https://python-poetry.org/docs/#installing-manually
-      - pip install poetry
-    post_install:
-      # Install dependencies with 'docs' dependency group
-      # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
-      # VIRTUAL_ENV needs to be set manually for now.
-      # See https://github.com/readthedocs/readthedocs.org/pull/11152/
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with dev
-  commands:
-    - sphinx-build -b html docs/source/ $READTHEDOCS_OUTPUT/html  # Correct output path
 
+  # Installing Poetry after the environment is created
+  post_create_environment:
+    - pip install poetry
+
+  # Installing your dependencies using Poetry with the dev flag
+  post_install:
+    # VIRTUAL_ENV needs to be set manually as per the current workaround
+    # https://github.com/readthedocs/readthedocs.org/pull/11152/
+    - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with dev
+
+# Build documentation using Sphinx
 sphinx:
-  configuration: docs/source/conf.py  # Correctly pointing to conf.py
+  configuration: docs/source/conf.py
 
 python:
+  # Installing project dependencies using Poetry, not pip
   install:
-    - method: pip
+    - method: poetry
       path: .
+
+# Commands that should run after dependencies are installed, in post_build
+commands:
+  post_build:
+    - sphinx-build -b html docs/source/ $READTHEDOCS_OUTPUT/html

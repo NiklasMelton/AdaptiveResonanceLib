@@ -4,6 +4,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
+  jobs:
+    install:
+      - poetry install --with dev
   commands:
     - pip install sphinx
     - sphinx-build -b html docs/source/ $READTHEDOCS_OUTPUT/html  # Correct output path
@@ -13,5 +16,5 @@ sphinx:
 
 python:
   install:
-    - method: pip
+    - method: poetry
       path: .

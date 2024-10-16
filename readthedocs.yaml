@@ -15,17 +15,10 @@ build:
     # https://github.com/readthedocs/readthedocs.org/pull/11152/
     - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with dev
 
-# Build documentation using Sphinx
+# Sphinx configuration
 sphinx:
-  configuration: docs/source/conf.py
+  configuration: docs/source/conf.py  # Correctly pointing to conf.py
 
 python:
-  # Installing project dependencies using Poetry, not pip
   install:
-    - method: poetry
-      path: .
-
-# Commands that should run after dependencies are installed, in post_build
-commands:
-  post_build:
-    - sphinx-build -b html docs/source/ $READTHEDOCS_OUTPUT/html
+    - method: poetry  # Use Poetry to install dependencies

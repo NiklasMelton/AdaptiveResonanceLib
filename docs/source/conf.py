@@ -6,34 +6,6 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-import os
-import subprocess
-from sphinx.util import logging
-
-def run_cffconvert(app, env, docnames):
-    logger = logging.getLogger(__name__)
-    try:
-        result = subprocess.run([
-            'cffconvert',
-            '--infile', '../../CITATION.cff',  # Adjust the path if necessary
-            '--outfile', 'references.bib',
-            '--format', 'bibtex'
-        ], check=True, cwd=app.srcdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        logger.info("cffconvert stdout:\n%s", result.stdout)
-        if result.stderr:
-            logger.warning("cffconvert stderr:\n%s", result.stderr)
-    except subprocess.CalledProcessError as e:
-        logger.error("An error occurred while running cffconvert: %s", e)
-        if e.stdout:
-            logger.error("cffconvert stdout:\n%s", e.stdout)
-        if e.stderr:
-            logger.error("cffconvert stderr:\n%s", e.stderr)
-        raise e  # Ensure that the build fails on error
-
-
-def setup(app):
-    app.connect('env-before-read-docs', run_cffconvert)
-
 project = 'AdaptiveResonanceLib'
 copyright = '2024, Niklas Melton'
 author = 'Niklas Melton'

@@ -33,9 +33,9 @@ matplotlib = ">=3.3.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
-sphinx = "^5.0"
+sphinx = "^6.2.1"
 sphinx-rtd-theme = "^1.0.0"  # If you're using the Read the Docs theme
-sphinx-autoapi = ">=1.8.1"
+sphinx-autoapi = ">=3.0.0"
 myst-parser = "^1.0"
 
 [build-system]

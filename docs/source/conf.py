@@ -35,22 +35,6 @@ autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code dire
 autoapi_ignore = ['*/experimental', '*/experimental/*']
 autoapi_python_class_content = 'both'
 
-myst_enable_extensions = [
-    "colon_fence",
-    "deflist",
-    "html_admonition",
-    "html_image",
-    "linkify",
-    "replacements",
-    "smartquotes",
-    "strikethrough",
-    "substitution",
-    "tasklist",
-    "attrs_block",
-    "attrs_inline",
-    "fieldlist",
-]
-
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

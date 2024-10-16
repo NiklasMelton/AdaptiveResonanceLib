@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from typing import Optional
-from artlib.elementary.DualVigilanceART import DualVigilanceART
+from artlib.topological.DualVigilanceART import DualVigilanceART
 from artlib.common.BaseART import BaseART
 
 # Mock BaseART class for testing purposes

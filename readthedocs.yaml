@@ -16,7 +16,7 @@ build:
       # See https://github.com/readthedocs/readthedocs.org/pull/11152/
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with dev
       # Generate references.bib using the Python script
-      - python generate_references.py
+      - python scripts/generate_references.py
 
 
 

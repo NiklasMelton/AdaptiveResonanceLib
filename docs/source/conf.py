@@ -20,6 +20,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'myst_parser',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex',
 ]
 
 source_suffix = {
@@ -35,6 +36,7 @@ autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code dire
 autoapi_ignore = ['*/experimental', '*/experimental/*']
 autoapi_python_class_content = 'both'
 
+bibtex_bibfiles = ['references.bib']
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

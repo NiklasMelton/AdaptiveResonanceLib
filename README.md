@@ -53,14 +53,14 @@ AdaptiveResonanceLib includes implementations for the following ART models:
 
 To install AdaptiveResonanceLib, simply use pip:
 
-[comment]: <> (```bash)
-
-[comment]: <> (pip install AdaptiveResonanceLib)
-
-[comment]: <> (```)
-
 ```bash
 pip install artlib
+```
+
+Or to install directly from the most recent source:
+
+```bash
+pip install git+https://github.com/NiklasMelton/AdaptiveResonanceLib.git@develop
 ```
 
 Ensure you have Python 3.9 or newer installed.
@@ -100,7 +100,7 @@ For more detailed documentation, including the full list of parameters for each 
 <!-- START examples -->
 ## Examples
 
-For examples of how to use each model in AdaptiveResonanceLib, check out the `/examples` directory in our repository.
+For examples of how to use each model in AdaptiveResonanceLib, check out the [`/examples`](https://github.com/NiklasMelton/AdaptiveResonanceLib/tree/develop/examples) directory in our repository.
 <!-- END examples -->
 
 <!-- START contributing -->
@@ -114,7 +114,7 @@ You can also join our [Discord server](https://discord.gg/E465HBwEuN) and partic
 <!-- START license -->
 ## License
 
-AdaptiveResonanceLib is open source and available under the MIT license. See the `LICENSE` file for more info.
+AdaptiveResonanceLib is open source and available under the MIT license. See the [`LICENSE`](https://github.com/NiklasMelton/AdaptiveResonanceLib/blob/develop/LICENSE) file for more info.
 <!-- END license -->
 
 <!-- START contact -->
@@ -124,3 +124,10 @@ For questions and support, please open an issue in the GitHub issue tracker or m
 
 Happy Modeling with AdaptiveResonanceLib!
 <!-- END contact -->
+
+<!-- START citation -->
+## Citing this Repository
+If you use this project in your research, please cite it as:
+
+Melton, N. (2024). AdaptiveResonanceLib (Version 0.1.2)
+<!-- END citation -->

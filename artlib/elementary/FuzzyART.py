@@ -1,11 +1,9 @@
-"""Fuzzy ART.
+"""Fuzzy ART :cite:`carpenter1991fuzzy`."""
+# Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
+# Fuzzy ART: Fast stable learning and categorization of analog patterns by an
+# adaptive resonance system.
+# Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
-Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
-Fuzzy ART: Fast stable learning and categorization of analog patterns by an adaptive
-resonance system.
-Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
-
-"""
 import numpy as np
 from typing import Optional, Iterable, List, Tuple, Union, Dict
 from matplotlib.axes import Axes
@@ -58,13 +56,16 @@ def get_bounding_box(
 class FuzzyART(BaseART):
     """Fuzzy ART for Clustering.
 
-    This module implements Fuzzy ART as first published in
-    Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
-    Fuzzy ART: Fast stable learning and categorization of analog patterns by an
-    adaptive resonance system.
-    Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
+    This module implements Fuzzy ART as first published in:
+    :cite:`carpenter1991fuzzy`.
 
-    Fuzzy ART is a hyper-box based clustering method.
+    .. # Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
+    .. # Fuzzy ART: Fast stable learning and categorization of analog patterns by an
+    .. # adaptive resonance system.
+    .. # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
+
+    Fuzzy ART is a hyper-box based clustering method that is exceptionally fast and
+    explainable.
 
     """
 

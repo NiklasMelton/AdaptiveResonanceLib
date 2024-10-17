@@ -1,10 +1,9 @@
-"""SMART.
-
-Bartfai, G. (1994). Hierarchical clustering with ART neural networks. In Proc. IEEE
-International Conference on Neural Networks (ICNN) (pp. 940–944). volume 2.
-doi:10.1109/ICNN.1994.374307.
-
-"""
+"""SMART :cite:`bartfai1994hierarchical`."""
+# Bartfai, G. (1994).
+# Hierarchical clustering with ART neural networks.
+# In Proc. IEEE International Conference on Neural Networks (ICNN)
+# (pp. 940–944). volume 2.
+# doi:10.1109/ICNN.1994.374307.
 
 import numpy as np
 from typing import Union, Type, Optional, Literal, Tuple
@@ -17,13 +16,19 @@ from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 class SMART(DeepARTMAP):
     """SMART for Hierachical Clustering.
 
-    This module implements SMART as first published in Bartfai, G. (1994). Hierarchical
-    clustering with ART neural networks. In Proc. IEEE International Conference on
-    Neural Networks (ICNN) (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307. SMART
-    accepts an uninstatiated ART class and hierarchically clusters data in a divisive
-    fashion by using a set of vigilance values that monotonically increase in their
-    restrictiveness. SMART is a special case of DeepARTMAP, which forms the backbone of
-    this class, where all channels receive the same data.
+    This module implements SMART as first published in: :cite:`bartfai1994hierarchical`
+
+    .. # Bartfai, G. (1994).
+    .. # Hierarchical clustering with ART neural networks.
+    .. # In Proc. IEEE International Conference on Neural Networks (ICNN)
+    .. # (pp. 940–944). volume 2.
+    .. # doi:10.1109/ICNN.1994.374307.
+
+    SMART accepts an uninstantiated :class:`~artlib.common.BaseART.BaseART` class and
+    hierarchically clusters data in a divisive fashion by using a set of vigilance
+    values that monotonically increase in their restrictiveness. SMART is a special
+    case of :class:`~artlib.hierarchical.DeepARTMAP.DeepARTMAP`, which forms the
+    backbone of this class, where all channels receive the same data.
 
     """
 

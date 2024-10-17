@@ -1,9 +1,7 @@
-"""Dual Vigilance ART.
-
-Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy
-adaptive resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
-
-"""
+"""Dual Vigilance ART :cite:`da2019dual`."""
+# Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
+# Dual vigilance fuzzy adaptive resonance theory.
+# Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 import numpy as np
 from typing import Optional, Callable, List, Literal, Union, Dict
 from warnings import warn
@@ -16,16 +14,22 @@ from artlib.common.utils import IndexableOrKeyable
 class DualVigilanceART(BaseART):
     """Dual Vigilance ART for Clustering.
 
-    This module implements Dual Vigilance ART as first published in Brito da Silva, L.
-    E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy adaptive
-    resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015. Dual
-    Vigilance ART allows a base ART module to cluster with both an upper and lower
-    vigilance value. The upper-vigilance value allows the base ART module to cluster
-    normally, however, data is simultaneously clustered using the lower vigilance level
-    to combine multiple base ART categories into a single abstracted category. This
-    permits clusters to be combined to form arbitrary shapes. For example if the base
-    ART module is fuzzy ART, a Dual Vigilance Fuzzy ART clustering result would look
-    like a series of hyper-boxes forming an arbitrary geometry.
+    This module implements Dual Vigilance ART as first published in: :cite:`da2019dual`.
+
+    .. # Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
+    .. # Dual vigilance fuzzy adaptive resonance theory.
+    .. # Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+
+    Dual Vigilance ART allows a :class:`~artlib.common.BaseART.BaseART` module to
+    cluster with both an upper and lower vigilance value. The upper-vigilance value
+    allows the :class:`~artlib.common.BaseART.BaseART` module to cluster normally,
+    however, data is simultaneously clustered using the lower vigilance level to
+    combine multiple base ART categories into a single abstracted category. This
+    permits clusters to be combined to form arbitrary shapes. For example if the
+    :class:`~artlib.common.BaseART.BaseART` module is
+    :class:`~artlib.elementary.FuzzyART.FuzzyART`, a Dual Vigilance Fuzzy ART
+    clustering result would look  like a series of hyper-boxes forming an arbitrary
+    geometry.
 
     """
 

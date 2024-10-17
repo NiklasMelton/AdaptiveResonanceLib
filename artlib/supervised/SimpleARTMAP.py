@@ -1,10 +1,7 @@
-"""Simple ARTMAP.
-
-Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
-Adaptive Resonance Theory Microchips: Circuit Design Techniques.
-Norwell, MA, USA: Kluwer Academic Publishers.
-
-"""
+"""Simple ARTMAP :cite:`gotarredona1998adaptive`."""
+# Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+# Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+# Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
 from typing import Optional, Literal, Dict, Union, Tuple
 from matplotlib.axes import Axes
@@ -18,16 +15,20 @@ from sklearn.utils.multiclass import unique_labels
 class SimpleARTMAP(BaseARTMAP):
     """SimpleARTMAP for Classification.
 
-    This module implements SimpleARTMAP as first published in
-    Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
-    Adaptive Resonance Theory Microchips: Circuit Design Techniques.
-    Norwell, MA, USA: Kluwer Academic Publishers.
+    This module implements SimpleARTMAP as first published in:
+    :cite:`gotarredona1998adaptive`.
 
-    SimpleARTMAP allows the clustering of data samples while enforcing a many-to-one
-    mapping from sample clusters to labels. It accepts an instantiated ART module and
-    dynamically adapts the vigilance function to prevent resonance when the many-to-one
-    mapping is violated. This enables SimpleARTMAP to identify discrete clusters
-    belonging to each category label.
+    .. # Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+    .. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+    .. # Norwell, MA, USA: Kluwer Academic Publishers.
+
+    SimpleARTMAP is a special case of :class:`~artlib.supervised.ARTMAP.ARTMAP`
+    specifically for classification. It allows the clustering of data samples while
+    enforcing a many-to-one mapping from sample clusters to labels. It accepts an
+    instantiated :class:`~artlib.common.BaseART.BaseART` module and dynamically adapts
+    the vigilance function to prevent resonance when the many-to-one mapping is
+    violated. This enables SimpleARTMAP to identify discrete clusters belonging to
+    each category label.
 
     """
 
@@ -308,9 +309,7 @@ class SimpleARTMAP(BaseARTMAP):
             )
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(
-                x, c_b, match_tracking=match_tracking, epsilon=epsilon
-            )
+            c_a = self.step_fit(x, c_b, match_tracking=match_tracking, epsilon=epsilon)
             self.module_a.labels_[i + j] = c_a
             self.module_a.post_step_fit(X)
         return self

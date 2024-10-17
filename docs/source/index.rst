@@ -22,6 +22,7 @@ AdaptiveResonanceLib Home
    contributing
    contact
    license
+   references
    citation
 
 .. toctree::

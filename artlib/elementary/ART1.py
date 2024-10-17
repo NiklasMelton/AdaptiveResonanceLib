@@ -1,10 +1,10 @@
-"""ART1.
+"""ART1 :cite:`carpenter1987massively`."""
 
-Carpenter, G. A., & Grossberg, S. (1987a). A massively parallel architecture for a self-
-organizing neural pattern recognition machine. Computer Vision, Graphics, and Image
-Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
-
-"""
+# Carpenter, G. A., & Grossberg, S. (1987a).
+# A massively parallel architecture for a self-organizing neural pattern
+# recognition machine.
+# Computer Vision, Graphics, and Image
+# Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
 
 import numpy as np
 from typing import Optional, List, Tuple, Union, Dict
@@ -13,13 +13,18 @@ from artlib.common.utils import l1norm
 
 
 class ART1(BaseART):
-    """ART1 for Clustering.
+    """ART1 for Binary Clustering.
 
-    This module implements ART1 as first published in Carpenter, G. A., & Grossberg, S.
-    (1987a). A massively parallel architecture for a self-organizing neural pattern
-    recognition machine. Computer Vision, Graphics, and Image Processing, 37, 54 – 115.
-    doi:10. 1016/S0734-189X(87)80014-2. ART1 is intended for binary data clustering
-    only.
+    This module implements ART1 as first published in: :cite:`carpenter1987massively`.
+
+
+    .. # Carpenter, G. A., & Grossberg, S. (1987a).
+    .. # A massively parallel architecture for a self-organizing neural pattern
+    .. # recognition machine.
+    .. # Computer Vision, Graphics, and Image
+    .. # Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+
+    ART1 is exclusively for clustering binary data.
 
     """
 

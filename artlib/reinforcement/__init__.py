@@ -13,6 +13,7 @@ planning and long-term reward optimization seen in traditional RL.
 The modules herein only provide for reactive and SARSA style learning.
 
 `SARSA <https://en.wikipedia.org/wiki/Reinforcement_learning#SARSA>`_
+
 `Reactive agents <https://en.wikipedia.org/wiki/Reactive_planning>`_
 
 """

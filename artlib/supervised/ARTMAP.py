@@ -1,11 +1,8 @@
-"""ARTMAP.
-
-Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-ARTMAP: Supervised real-time learning and classification of nonstationary data by a
-self-organizing neural network.
-Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
-
-"""
+"""ARTMAP :cite:`carpenter1991artmap`."""
+# Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+# ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+# self-organizing neural network.
+# Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 import numpy as np
 from typing import Literal, Tuple, Dict, Union, Optional
 from artlib.common.BaseART import BaseART
@@ -16,19 +13,22 @@ from sklearn.utils.validation import check_is_fitted
 class ARTMAP(SimpleARTMAP):
     """ARTMAP for Classification and Regression.
 
-    This module implements ARTMAP as first published in
-    Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-    ARTMAP: Supervised real-time learning and classification of nonstationary data by a
-    self-organizing neural network.
-    Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+    This module implements ARTMAP as first published in: :cite:`carpenter1991artmap`.
 
-    ARTMAP joins accepts two ART modules A and B which cluster the dependent channel
-    (samples) and the independent channel (labels) respectively while linking them with
-    a many-to-one mapping. If your labels are integers, use SimpleARTMAP for a faster
-    and more direct implementation. ARTMAP also provides the ability to fit a regression
-    model to data and specific functions have been implemented to allow this. However,
-    FusionART provides substantially better fit for regression problems which are not
-    monotonic.
+    .. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+    .. # ARTMAP: Supervised real-time learning and classification of nonstationary data
+    .. # by a self-organizing neural network.
+    .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+
+    ARTMAP accepts two :class:`~artlib.common.BaseART.BaseART` modules A and B which
+    cluster the dependent
+    channel (samples) and the independent channel (labels) respectively while linking
+    them with a many-to-one mapping. If your labels are integers,
+    use :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` for a faster and more
+    direct implementation. ARTMAP also provides the ability to fit a regression model to
+    data and specific functions have been implemented to allow this. However,
+    :class:`~artlib.fusion.FusionART.FusionART` provides substantially better fit for
+    regression problems which are not monotonic.
 
     """
 
@@ -248,9 +248,7 @@ class ARTMAP(SimpleARTMAP):
 
         """
         self.validate_data(X, y)
-        self.module_b.partial_fit(
-            y, match_tracking=match_tracking, epsilon=epsilon
-        )
+        self.module_b.partial_fit(y, match_tracking=match_tracking, epsilon=epsilon)
         super(ARTMAP, self).partial_fit(
             X,
             self.labels_b,

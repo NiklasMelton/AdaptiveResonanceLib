@@ -1,8 +1,9 @@
-"""
-Bartfai, G. (1994).
-Hierarchical clustering with ART neural networks.
-In Proc. IEEE International Conference on Neural Networks (ICNN)
-(pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307.
+"""Bartfai, G.
+
+(1994). Hierarchical clustering with ART neural networks. In Proc. IEEE International
+Conference on Neural Networks (ICNN) (pp. 940–944). volume 2.
+doi:10.1109/ICNN.1994.374307.
+
 """
 
 import numpy as np
@@ -13,16 +14,15 @@ from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 
 class SMART(DeepARTMAP):
-    """SMART for Hierachical Clustering
+    """SMART for Hierachical Clustering.
 
-    This module implements SMART as first published in
-    Bartfai, G. (1994).
-    Hierarchical clustering with ART neural networks.
-    In Proc. IEEE International Conference on Neural Networks (ICNN)
-    (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307.
-    SMART accepts an uninstatiated ART class and hierarchically clusters data in a divisive fashion by using a set of
-    vigilance values that monotonically increase in their restrictiveness. SMART is a special case of DeepARTMAP,
-    which forms the backbone of this class, where all channels receive the same data.
+    This module implements SMART as first published in Bartfai, G. (1994). Hierarchical
+    clustering with ART neural networks. In Proc. IEEE International Conference on
+    Neural Networks (ICNN) (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307. SMART
+    accepts an uninstatiated ART class and hierarchically clusters data in a divisive
+    fashion by using a set of vigilance values that monotonically increase in their
+    restrictiveness. SMART is a special case of DeepARTMAP, which forms the backbone of
+    this class, where all channels receive the same data.
 
     """
 
@@ -33,8 +33,7 @@ class SMART(DeepARTMAP):
         base_params: dict,
         **kwargs
     ):
-        """
-        Initialize the SMART model.
+        """Initialize the SMART model.
 
         Parameters
         ----------
@@ -46,6 +45,7 @@ class SMART(DeepARTMAP):
             Parameters for the base ART module, used to instantiate each layer.
         **kwargs :
             Additional keyword arguments for ART module initialization.
+
         """
         if base_ART_class.__name__ != "BayesianART":
             assert all(
@@ -66,8 +66,7 @@ class SMART(DeepARTMAP):
         super().__init__(modules)
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -78,13 +77,13 @@ class SMART(DeepARTMAP):
         -------
         np.ndarray
             Prepared data.
+
         """
         X_, _ = super(SMART, self).prepare_data([X] * self.n_modules)
         return X_[0]
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to its original form before preparation.
+        """Restore data to its original form before preparation.
 
         Parameters
         ----------
@@ -95,6 +94,7 @@ class SMART(DeepARTMAP):
         -------
         np.ndarray
             Restored data.
+
         """
         X_, _ = super(SMART, self).restore_data([X] * self.n_modules)
         return X_[0]
@@ -107,8 +107,7 @@ class SMART(DeepARTMAP):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
-        """
-        Fit the SMART model to the data.
+        """Fit the SMART model to the data.
 
         Parameters
         ----------
@@ -127,6 +126,7 @@ class SMART(DeepARTMAP):
         -------
         SMART
             Fitted SMART model.
+
         """
         X_list = [X] * self.n_modules
         return super().fit(
@@ -143,8 +143,7 @@ class SMART(DeepARTMAP):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
-        """
-        Partial fit the SMART model to the data.
+        """Partial fit the SMART model to the data.
 
         Parameters
         ----------
@@ -161,6 +160,7 @@ class SMART(DeepARTMAP):
         -------
         SMART
             Partially fitted SMART model.
+
         """
         X_list = [X] * self.n_modules
         return super(SMART, self).partial_fit(
@@ -168,8 +168,7 @@ class SMART(DeepARTMAP):
         )
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the cluster boundaries.
+        """Visualize the cluster boundaries.
 
         Parameters
         ----------
@@ -183,6 +182,7 @@ class SMART(DeepARTMAP):
         Returns
         -------
         None
+
         """
         for j in range(len(self.modules)):
             layer_colors = []
@@ -202,8 +202,7 @@ class SMART(DeepARTMAP):
         linewidth: int = 1,
         colors: Optional[Iterable] = None,
     ):
-        """
-        Visualize the clustering of the data with cluster boundaries.
+        """Visualize the clustering of the data with cluster boundaries.
 
         Parameters
         ----------
@@ -223,6 +222,7 @@ class SMART(DeepARTMAP):
         Returns
         -------
         None
+
         """
         import matplotlib.pyplot as plt
 

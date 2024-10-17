@@ -1,10 +1,12 @@
-"""
-Add Reference in correct format.
-The original matlab code can be found at https://github.com/ACIL-Group/iCVI-toolbox/tree/master
-The formulation is available at
-https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations Pages 314-316 and 319-320
-Extended icvi offline mode can be found at
+"""Add Reference in correct format.
+
+The original matlab code can be found at
+https://github.com/ACIL-Group/iCVI-toolbox/tree/master
+ The formulation is available at
+https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
+ Pages 314-316 and 319-320 Extended icvi offline mode can be found at
 https://ieeexplore.ieee.org/document/9745260
+
 """
 import numpy as np
 from typing import Optional, Literal, Callable
@@ -13,7 +15,7 @@ from artlib.cvi.iCVIs.CalinkskiHarabasz import iCVI_CH
 
 
 class iCVIFuzzyART(FuzzyART):
-    """iCVI Fuzzy Art For Clustering"""
+    """ICVI Fuzzy Art For Clustering."""
 
     CALINSKIHARABASZ = 1
 
@@ -25,8 +27,7 @@ class iCVIFuzzyART(FuzzyART):
         validity: int,
         offline: bool = True,
     ):
-        """
-        Initialize the iCVIFuzzyART model.
+        """Initialize the iCVIFuzzyART model.
 
         Parameters
         ----------
@@ -53,8 +54,7 @@ class iCVIFuzzyART(FuzzyART):
         assert isinstance(self.params["validity"], int)
 
     def iCVI_match(self, x, w, c_, params, cache):
-        """
-        Apply iCVI (incremental Cluster Validity Index) matching criteria.
+        """Apply iCVI (incremental Cluster Validity Index) matching criteria.
 
         Parameters
         ----------
@@ -93,8 +93,7 @@ class iCVIFuzzyART(FuzzyART):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
-        """
-        Fit the model to the data.
+        """Fit the model to the data.
 
         Parameters
         ----------

@@ -1,7 +1,9 @@
-"""
-Carpenter, G. A., & Grossberg, S. (1987a).
-A massively parallel architecture for a self-organizing neural pattern recognition machine.
-Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+"""Carpenter, G.
+
+A., & Grossberg, S. (1987a). A massively parallel architecture for a self-organizing
+neural pattern recognition machine. Computer Vision, Graphics, and Image Processing, 37,
+54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+
 """
 
 import numpy as np
@@ -11,19 +13,18 @@ from artlib.common.utils import l1norm
 
 
 class ART1(BaseART):
-    """ART1 for Clustering
+    """ART1 for Clustering.
 
-    This module implements ART1 as first published in
-    Carpenter, G. A., & Grossberg, S. (1987a).
-    A massively parallel architecture for a self-organizing neural pattern recognition machine.
-    Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
-    ART1 is intended for binary data clustering only.
+    This module implements ART1 as first published in Carpenter, G. A., & Grossberg, S.
+    (1987a). A massively parallel architecture for a self-organizing neural pattern
+    recognition machine. Computer Vision, Graphics, and Image Processing, 37, 54 – 115.
+    doi:10. 1016/S0734-189X(87)80014-2. ART1 is intended for binary data clustering
+    only.
 
     """
 
     def __init__(self, rho: float, beta: float, L: float):
-        """
-        Initialize the ART1 model.
+        """Initialize the ART1 model.
 
         Parameters
         ----------
@@ -40,8 +41,7 @@ class ART1(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -60,8 +60,7 @@ class ART1(BaseART):
         assert isinstance(params["L"], float)
 
     def validate_data(self, X: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -75,8 +74,7 @@ class ART1(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -105,8 +103,7 @@ class ART1(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -137,8 +134,7 @@ class ART1(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -164,8 +160,7 @@ class ART1(BaseART):
         return np.concatenate([w_bu_new, w_td_new])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -185,8 +180,7 @@ class ART1(BaseART):
         return np.concatenate([w_bu_new, w_td_new])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------

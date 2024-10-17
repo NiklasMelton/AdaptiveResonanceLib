@@ -7,8 +7,7 @@ def normalize(
     d_max: Optional[np.ndarray] = None,
     d_min: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Normalize data column-wise between 0 and 1.
+    """Normalize data column-wise between 0 and 1.
 
     Parameters
     ----------
@@ -39,8 +38,7 @@ def normalize(
 
 
 def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.ndarray:
-    """
-    Restore column-wise normalized data to original scale.
+    """Restore column-wise normalized data to original scale.
 
     Parameters
     ----------
@@ -61,8 +59,7 @@ def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.n
 
 
 def compliment_code(data: np.ndarray) -> np.ndarray:
-    """
-    Compliment code the data.
+    """Compliment code the data.
 
     Parameters
     ----------
@@ -80,8 +77,7 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
 
 
 def de_compliment_code(data: np.ndarray) -> np.ndarray:
-    """
-    Find the centroid of compliment coded data.
+    """Find the centroid of compliment coded data.
 
     Parameters
     ----------
@@ -114,8 +110,7 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
 
 
 def l1norm(x: np.ndarray) -> float:
-    """
-    Get the L1 norm of a vector.
+    """Get the L1 norm of a vector.
 
     Parameters
     ----------
@@ -132,8 +127,7 @@ def l1norm(x: np.ndarray) -> float:
 
 
 def l2norm2(data: np.ndarray) -> float:
-    """
-    Get the squared L2 norm of a vector.
+    """Get the squared L2 norm of a vector.
 
     Parameters
     ----------
@@ -150,8 +144,7 @@ def l2norm2(data: np.ndarray) -> float:
 
 
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """
-    Get the fuzzy AND operation between two vectors.
+    """Get the fuzzy AND operation between two vectors.
 
     Parameters
     ----------

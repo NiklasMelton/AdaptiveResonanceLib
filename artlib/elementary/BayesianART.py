@@ -1,7 +1,8 @@
-"""
-Vigdor, B., & Lerner, B. (2007).
-The Bayesian ARTMAP.
-IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
+"""Vigdor, B., & Lerner, B.
+
+(2007). The Bayesian ARTMAP. IEEE Transactions on Neural Networks, 18, 1628–1644.
+doi:10.1109/TNN.2007.900234.
+
 """
 import numpy as np
 from typing import Optional, Iterable, List, Callable, Literal, Tuple
@@ -12,20 +13,20 @@ from artlib.common.visualization import plot_gaussian_contours_covariance
 
 
 class BayesianART(BaseART):
-    """Bayesian ART for Clustering
+    """Bayesian ART for Clustering.
 
-    This module implements Bayesian ART as first published in Vigdor, B., & Lerner, B. (2007).
-    The Bayesian ARTMAP. IEEE Transactions on Neural Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
-    Bayesian ART clusters data in Bayesian Distributions (Hyper-ellipsoids) and is similar to Gaussian ART but differs
-    in that it allows arbitrary rotation of the hyper-ellipsoid.
+    This module implements Bayesian ART as first published in Vigdor, B., & Lerner, B.
+    (2007). The Bayesian ARTMAP. IEEE Transactions on Neural Networks, 18, 1628–1644.
+    doi:10.1109/TNN.2007.900234. Bayesian ART clusters data in Bayesian Distributions
+    (Hyper-ellipsoids) and is similar to Gaussian ART but differs in that it allows
+    arbitrary rotation of the hyper-ellipsoid.
 
     """
 
     pi2 = np.pi * 2
 
     def __init__(self, rho: float, cov_init: np.ndarray):
-        """
-        Initialize the Bayesian ART model.
+        """Initialize the Bayesian ART model.
 
         Parameters
         ----------
@@ -43,8 +44,7 @@ class BayesianART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -59,8 +59,7 @@ class BayesianART(BaseART):
         assert isinstance(params["cov_init"], np.ndarray)
 
     def check_dimensions(self, X: np.ndarray):
-        """
-        Check that the data has the correct dimensions.
+        """Check that the data has the correct dimensions.
 
         Parameters
         ----------
@@ -78,8 +77,7 @@ class BayesianART(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -124,8 +122,7 @@ class BayesianART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -164,8 +161,7 @@ class BayesianART(BaseART):
         cache: Optional[dict] = None,
         op: Callable = operator.ge,
     ) -> tuple[bool, dict]:
-        """
-        Get the binary match criterion of the cluster.
+        """Get the binary match criterion of the cluster.
 
         Parameters
         ----------
@@ -206,8 +202,7 @@ class BayesianART(BaseART):
         params: dict,
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
-        """
-        Adjust match tracking based on the method and epsilon value.
+        """Adjust match tracking based on the method and epsilon value.
 
         Parameters
         ----------
@@ -252,8 +247,7 @@ class BayesianART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -293,8 +287,7 @@ class BayesianART(BaseART):
         return np.concatenate([mean_new, cov_new.flatten(), [n_new]])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -312,8 +305,7 @@ class BayesianART(BaseART):
         return np.concatenate([i, params["cov_init"].flatten(), [1]])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -324,8 +316,7 @@ class BayesianART(BaseART):
         return [w[: self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

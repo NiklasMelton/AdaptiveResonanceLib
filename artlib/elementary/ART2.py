@@ -24,7 +24,7 @@ from artlib.common.BaseART import BaseART
 
 
 class ART2A(BaseART):
-    """ART2-A for Clustering
+    """ART2-A for Clustering.
 
     This module implements ART2-A as first published in Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
     ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition.
@@ -34,8 +34,7 @@ class ART2A(BaseART):
     """
 
     def __init__(self, rho: float, alpha: float, beta: float):
-        """
-        Initialize the ART2-A model.
+        """Initialize the ART2-A model.
 
         Parameters
         ----------
@@ -60,8 +59,7 @@ class ART2A(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -80,8 +78,7 @@ class ART2A(BaseART):
         assert isinstance(params["beta"], float)
 
     def check_dimensions(self, X: np.ndarray):
-        """
-        Check that the data has the correct dimensions.
+        """Check that the data has the correct dimensions.
 
         Parameters
         ----------
@@ -98,8 +95,7 @@ class ART2A(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -129,8 +125,7 @@ class ART2A(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -169,8 +164,7 @@ class ART2A(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -192,8 +186,7 @@ class ART2A(BaseART):
         return params["beta"] * i + (1 - params["beta"]) * w
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -211,8 +204,7 @@ class ART2A(BaseART):
         return i
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------

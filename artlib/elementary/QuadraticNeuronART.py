@@ -1,11 +1,10 @@
-"""
-Su, M.-C., & Liu, T.-K. (2001).
-Application of neural networks using quadratic junctions in cluster analysis.
-Neurocomputing, 37, 165 – 175. doi:10.1016/S0925-2312(00)00343-X.
+"""Su, M.-C., & Liu, T.-K. (2001). Application of neural networks using quadratic
+junctions in cluster analysis. Neurocomputing, 37, 165 – 175.
+doi:10.1016/S0925-2312(00)00343-X.
 
-Su, M.-C., & Liu, Y.-C. (2005).
-A new approach to clustering data with arbitrary shapes.
+Su, M.-C., & Liu, Y.-C. (2005). A new approach to clustering data with arbitrary shapes.
 Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
+
 """
 
 import numpy as np
@@ -17,21 +16,20 @@ from artlib.common.visualization import plot_weight_matrix_as_ellipse
 
 
 class QuadraticNeuronART(BaseART):
-    """Quadratic Neuron ART for Clustering
+    """Quadratic Neuron ART for Clustering.
 
-    This module implements Quadratic Neuron ART as first published in Su, M.-C., & Liu, Y.-C. (2005).
-    A new approach to clustering data with arbitrary shapes.
-    Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
-    Quadratic Neuron ART clusters data in Hyper-ellipsoid by utilizing a quadratic neural network for activation
-    and resonance.
+    This module implements Quadratic Neuron ART as first published in Su, M.-C., & Liu,
+    Y.-C. (2005). A new approach to clustering data with arbitrary shapes. Pattern
+    Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010. Quadratic Neuron ART
+    clusters data in Hyper-ellipsoid by utilizing a quadratic neural network for
+    activation and resonance.
 
     """
 
     def __init__(
         self, rho: float, s_init: float, lr_b: float, lr_w: float, lr_s: float
     ):
-        """
-        Initialize the Quadratic Neuron ART model.
+        """Initialize the Quadratic Neuron ART model.
 
         Parameters
         ----------
@@ -58,8 +56,7 @@ class QuadraticNeuronART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -85,8 +82,7 @@ class QuadraticNeuronART(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -130,8 +126,7 @@ class QuadraticNeuronART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -163,8 +158,7 @@ class QuadraticNeuronART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -201,8 +195,7 @@ class QuadraticNeuronART(BaseART):
         return np.concatenate([w_new.flatten(), b_new, [s_new]])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -221,8 +214,7 @@ class QuadraticNeuronART(BaseART):
         return np.concatenate([w_new.flatten(), i, [params["s_init"]]])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -234,8 +226,7 @@ class QuadraticNeuronART(BaseART):
         return [w[dim2:-1] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

@@ -9,8 +9,7 @@ def VAT(
     data: np.ndarray,
     distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean"),
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Visual Assessment of Cluster Tendency (VAT) algorithm.
+    """Visual Assessment of Cluster Tendency (VAT) algorithm.
 
     Parameters
     ----------

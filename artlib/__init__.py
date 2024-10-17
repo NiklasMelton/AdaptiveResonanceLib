@@ -1,12 +1,13 @@
-"""
-Adaptive Resonance Theory (ART) is a cognitive and neural network model that explains how the brain learns to recognize
-patterns while maintaining stability in the face of new, potentially conflicting information. ART networks are known for
-their ability to perform unsupervised learning and adaptively categorize data without forgetting previously learned
-patterns, a feature known as "plasticity-stability balance."
+"""Adaptive Resonance Theory (ART) is a cognitive and neural network model that explains
+how the brain learns to recognize patterns while maintaining stability in the face of
+new, potentially conflicting information. ART networks are known for their ability to
+perform unsupervised learning and adaptively categorize data without forgetting
+previously learned patterns, a feature known as "plasticity-stability balance.".
 
-The ART modules provided here support classification, clustering, and reinforcement learning tasks by dynamically
-adjusting to incoming data streams. They also offer advanced capabilities, including hierarchical clustering,
-topological clustering, data fusion, and regression, enabling flexible exploration of complex data structures.
+The ART modules provided here support classification, clustering, and reinforcement
+learning tasks by dynamically adjusting to incoming data streams. They also offer
+advanced capabilities, including hierarchical clustering, topological clustering, data
+fusion, and regression, enabling flexible exploration of complex data structures.
 
 `Adaptive Resonance Theory <https://en.wikipedia.org/wiki/Adaptive_resonance_theory>`_
 

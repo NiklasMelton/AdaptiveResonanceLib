@@ -1,5 +1,6 @@
-"""
-Tscherepanow, M. (2010).
+"""Tscherepanow, M.
+
+(2010).
 TopoART: A Topology Learning Hierarchical ART Network.
 In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
 Artificial Neural Networks – ICANN 2010 (pp. 157–167).
@@ -18,7 +19,7 @@ import operator
 
 
 class TopoART(BaseART):
-    """Topo ART for Topological Clustering
+    """Topo ART for Topological Clustering.
 
     This module implements Topo ART as first published in
     Tscherepanow, M. (2010).
@@ -34,8 +35,7 @@ class TopoART(BaseART):
     """
 
     def __init__(self, base_module: BaseART, beta_lower: float, tau: int, phi: int):
-        """
-        Initialize TopoART.
+        """Initialize TopoART.
 
         Parameters
         ----------
@@ -47,6 +47,7 @@ class TopoART(BaseART):
             Number of samples after which clusters are pruned.
         phi : int
             Minimum number of samples a cluster must be associated with to be kept.
+
         """
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
@@ -65,8 +66,7 @@ class TopoART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -77,6 +77,7 @@ class TopoART(BaseART):
         ------
         AssertionError
             If the required parameters are not provided or are invalid.
+
         """
         assert (
             "beta" in params
@@ -93,42 +94,41 @@ class TopoART(BaseART):
 
     @property
     def W(self) -> List[np.ndarray]:
-        """
-        Get the weight matrix of the base module.
+        """Get the weight matrix of the base module.
 
         Returns
         -------
         list[np.ndarray]
             The weight matrix of the base ART module.
+
         """
         return self.base_module.W
 
     @W.setter
     def W(self, new_W: list[np.ndarray]):
-        """
-        Set the weight matrix of the base module.
+        """Set the weight matrix of the base module.
 
         Parameters
         ----------
         new_W : list[np.ndarray]
             The new weight matrix.
+
         """
         self.base_module.W = new_W
 
     def validate_data(self, X: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
         X : np.ndarray
             The input dataset.
+
         """
         self.base_module.validate_data(X)
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -139,12 +139,12 @@ class TopoART(BaseART):
         -------
         np.ndarray
             Prepared (normalized) data.
+
         """
         return self.base_module.prepare_data(X)
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to the state prior to preparation.
+        """Restore data to the state prior to preparation.
 
         Parameters
         ----------
@@ -155,14 +155,14 @@ class TopoART(BaseART):
         -------
         np.ndarray
             Restored data.
+
         """
         return self.base_module.restore_data(X)
 
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -177,6 +177,7 @@ class TopoART(BaseART):
         -------
         tuple[float, Optional[dict]]
             Cluster activation and cache used for later processing.
+
         """
         return self.base_module.category_choice(i, w, params)
 
@@ -187,8 +188,7 @@ class TopoART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -205,6 +205,7 @@ class TopoART(BaseART):
         -------
         tuple[float, dict]
             Cluster match criterion and cache used for later processing.
+
         """
         return self.base_module.match_criterion(i, w, params, cache)
 
@@ -216,8 +217,7 @@ class TopoART(BaseART):
         cache: Optional[dict] = None,
         op: Callable = operator.ge,
     ) -> tuple[bool, dict]:
-        """
-        Get the binary match criterion of the cluster.
+        """Get the binary match criterion of the cluster.
 
         Parameters
         ----------
@@ -236,6 +236,7 @@ class TopoART(BaseART):
         -------
         tuple[bool, dict]
             Binary match criterion and cache used for later processing.
+
         """
         return self.base_module.match_criterion_bin(i, w, params, cache, op)
 
@@ -246,8 +247,7 @@ class TopoART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Update the cluster weight.
+        """Update the cluster weight.
 
         Parameters
         ----------
@@ -264,14 +264,14 @@ class TopoART(BaseART):
         -------
         np.ndarray
             Updated cluster weight.
+
         """
         if cache.get("resonant_c", -1) >= 0:
             self.adjacency[cache["resonant_c"], cache["current_c"]] += 1
         return self.base_module.update(i, w, params, cache)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -284,18 +284,19 @@ class TopoART(BaseART):
         -------
         np.ndarray
             Newly generated cluster weight.
+
         """
 
         return self.base_module.new_weight(i, params)
 
     def add_weight(self, new_w: np.ndarray):
-        """
-        Add a new cluster weight.
+        """Add a new cluster weight.
 
         Parameters
         ----------
         new_w : np.ndarray
             New cluster weight to add.
+
         """
         if len(self.W) == 0:
             self.adjacency = np.zeros((1, 1))
@@ -306,13 +307,13 @@ class TopoART(BaseART):
         self.W.append(new_w)
 
     def prune(self, X: np.ndarray):
-        """
-        Prune clusters based on the number of associated samples.
+        """Prune clusters based on the number of associated samples.
 
         Parameters
         ----------
         X : np.ndarray
             The input dataset.
+
         """
         a = (
             np.array(self.weight_sample_counter_).reshape(
@@ -354,13 +355,14 @@ class TopoART(BaseART):
                 self.labels_[i] = -1
 
     def post_step_fit(self, X: np.ndarray):
-        """
-        Perform post-fit operations, such as cluster pruning, after fitting each sample.
+        """Perform post-fit operations, such as cluster pruning, after fitting each
+        sample.
 
         Parameters
         ----------
         X : np.ndarray
             The input dataset.
+
         """
         if self.sample_counter_ > 0 and self.sample_counter_ % self.tau == 0:
             self.prune(X)
@@ -372,8 +374,7 @@ class TopoART(BaseART):
         params: dict,
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
-        """
-        Adjust the vigilance parameter based on match tracking methods.
+        """Adjust the vigilance parameter based on match tracking methods.
 
         Parameters
         ----------
@@ -390,6 +391,7 @@ class TopoART(BaseART):
         -------
         bool
             True if the match tracking continues, False otherwise.
+
         """
         M = cache["match_criterion"]
         if method == "MT+":
@@ -410,24 +412,24 @@ class TopoART(BaseART):
             raise ValueError(f"Invalid Match Tracking Method: {method}")
 
     def _set_params(self, new_params):
-        """
-        Set new parameters for the base module.
+        """Set new parameters for the base module.
 
         Parameters
         ----------
         new_params : dict
             New parameters to set.
+
         """
         self.base_module.params = new_params
 
     def _deep_copy_params(self) -> dict:
-        """
-        Create a deep copy of the parameters.
+        """Create a deep copy of the parameters.
 
         Returns
         -------
         dict
             Deep copy of the parameters.
+
         """
         return deepcopy(self.base_module.params)
 
@@ -438,8 +440,7 @@ class TopoART(BaseART):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -456,6 +457,7 @@ class TopoART(BaseART):
         -------
         int
             Cluster label of the input sample.
+
         """
         base_params = self._deep_copy_params()
         mt_operator = self._match_tracking_operator(match_reset_method)
@@ -534,19 +536,18 @@ class TopoART(BaseART):
             return resonant_c
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster.
+        """Get the centers of each cluster.
 
         Returns
         -------
         List[np.ndarray]
             Cluster centroids.
+
         """
         return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the boundaries of each cluster.
+        """Visualize the boundaries of each cluster.
 
         Parameters
         ----------
@@ -556,6 +557,7 @@ class TopoART(BaseART):
             Colors to use for each cluster.
         linewidth : int, default=1
             Width of boundary lines.
+
         """
         try:
             self.base_module.plot_cluster_bounds(

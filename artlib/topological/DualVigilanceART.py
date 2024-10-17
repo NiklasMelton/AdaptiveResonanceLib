@@ -1,7 +1,8 @@
-"""
-Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
-Dual vigilance fuzzy adaptive resonance theory.
-Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+"""Brito da Silva, L.
+
+E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy adaptive resonance
+theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+
 """
 import numpy as np
 from typing import Optional, Callable, Iterable, List, Literal
@@ -12,22 +13,23 @@ from artlib.common.BaseART import BaseART
 
 
 class DualVigilanceART(BaseART):
-    """Dual Vigilance ART for Clustering
+    """Dual Vigilance ART for Clustering.
 
-    This module implements Dual Vigilance ART as first published in
-    Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
-    Dual vigilance fuzzy adaptive resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
-    Dual Vigilance ART allows a base ART module to cluster with both an upper and lower vigilance value.
-    The upper-vigilance value allows the base ART module to cluster normally, however, data is simultaneously clustered
-    using the lower vigilance level to combine multiple base ART categories into a single abstracted category. This
-    permits clusters to be combined to form arbitrary shapes. For example if the base ART module is fuzzy ART, a
-    Dual Vigilance Fuzzy ART clustering result would look like a series of hyper-boxes forming an arbitrary geometry.
+    This module implements Dual Vigilance ART as first published in Brito da Silva, L.
+    E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy adaptive
+    resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015. Dual
+    Vigilance ART allows a base ART module to cluster with both an upper and lower
+    vigilance value. The upper-vigilance value allows the base ART module to cluster
+    normally, however, data is simultaneously clustered using the lower vigilance level
+    to combine multiple base ART categories into a single abstracted category. This
+    permits clusters to be combined to form arbitrary shapes. For example if the base
+    ART module is fuzzy ART, a Dual Vigilance Fuzzy ART clustering result would look
+    like a series of hyper-boxes forming an arbitrary geometry.
 
     """
 
     def __init__(self, base_module: BaseART, rho_lower_bound: float):
-        """
-        Initialize the Dual Vigilance ART model.
+        """Initialize the Dual Vigilance ART model.
 
         Parameters
         ----------
@@ -55,8 +57,7 @@ class DualVigilanceART(BaseART):
         self.map: dict[int, int] = dict()
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -72,8 +73,7 @@ class DualVigilanceART(BaseART):
         return self.base_module.prepare_data(X)
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to its state prior to preparation.
+        """Restore data to its state prior to preparation.
 
         Parameters
         ----------
@@ -89,8 +89,7 @@ class DualVigilanceART(BaseART):
         return self.base_module.restore_data(X)
 
     def get_params(self, deep: bool = True) -> dict:
-        """
-        Get the parameters of the estimator.
+        """Get the parameters of the estimator.
 
         Parameters
         ----------
@@ -115,8 +114,7 @@ class DualVigilanceART(BaseART):
 
     @property
     def n_clusters(self) -> int:
-        """
-        Get the current number of clusters.
+        """Get the current number of clusters.
 
         Returns
         -------
@@ -128,8 +126,7 @@ class DualVigilanceART(BaseART):
 
     @property
     def dim_(self):
-        """
-        Get the dimensionality of the data from the base module.
+        """Get the dimensionality of the data from the base module.
 
         Returns
         -------
@@ -145,8 +142,7 @@ class DualVigilanceART(BaseART):
 
     @property
     def labels_(self):
-        """
-        Get the labels from the base module.
+        """Get the labels from the base module.
 
         Returns
         -------
@@ -166,8 +162,7 @@ class DualVigilanceART(BaseART):
 
     @W.setter
     def W(self, new_W: list[np.ndarray]):
-        """
-        Get the weights from the base module.
+        """Get the weights from the base module.
 
         Returns
         -------
@@ -178,8 +173,7 @@ class DualVigilanceART(BaseART):
         self.base_module.W = new_W
 
     def check_dimensions(self, X: np.ndarray):
-        """
-        Check that the data has the correct dimensions.
+        """Check that the data has the correct dimensions.
 
         Parameters
         ----------
@@ -190,8 +184,7 @@ class DualVigilanceART(BaseART):
         self.base_module.check_dimensions(X)
 
     def validate_data(self, X: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -203,8 +196,7 @@ class DualVigilanceART(BaseART):
         self.check_dimensions(X)
 
     def validate_params(self, params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -226,8 +218,7 @@ class DualVigilanceART(BaseART):
         params: dict,
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
-        """
-        Adjust match tracking based on the method and epsilon value.
+        """Adjust match tracking based on the method and epsilon value.
 
         Parameters
         ----------
@@ -277,8 +268,7 @@ class DualVigilanceART(BaseART):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -376,8 +366,7 @@ class DualVigilanceART(BaseART):
             return self.map[c_new]
 
     def step_pred(self, x) -> int:
-        """
-        Predict the label for a single sample.
+        """Predict the label for a single sample.
 
         Parameters
         ----------
@@ -401,8 +390,7 @@ class DualVigilanceART(BaseART):
         return self.map[c_]
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -413,8 +401,7 @@ class DualVigilanceART(BaseART):
         return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

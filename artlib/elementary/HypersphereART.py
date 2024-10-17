@@ -1,8 +1,9 @@
-"""
-Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
-Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning.
-In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-(pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
+"""Anagnostopoulos, G.
+
+C., & Georgiopulos, M. (2000). Hypersphere ART and ARTMAP for unsupervised and
+supervised, incremental learning. In Proc. IEEE International Joint Conference on Neural
+Networks (IJCNN) (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
+
 """
 import numpy as np
 from typing import Optional, Iterable, List
@@ -12,19 +13,18 @@ from artlib.common.utils import l2norm2
 
 
 class HypersphereART(BaseART):
-    """Hypersphere ART for Clustering
+    """Hypersphere ART for Clustering.
 
-    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
-    Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning.
-    In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-    (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
-    Hyperpshere ART clusters data in Hyper-spheres similar to k-means with a dynamic k.
+    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., &
+    Georgiopulos, M. (2000). Hypersphere ART and ARTMAP for unsupervised and supervised,
+    incremental learning. In Proc. IEEE International Joint Conference on Neural
+    Networks (IJCNN) (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373. Hyperpshere
+    ART clusters data in Hyper-spheres similar to k-means with a dynamic k.
 
     """
 
     def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
-        """
-        Initialize the Hypersphere ART model.
+        """Initialize the Hypersphere ART model.
 
         Parameters
         ----------
@@ -48,8 +48,7 @@ class HypersphereART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -73,8 +72,7 @@ class HypersphereART(BaseART):
     def category_distance(
         i: np.ndarray, centroid: np.ndarray, radius: float, params
     ) -> float:
-        """
-        Compute the category distance between a data sample and a centroid.
+        """Compute the category distance between a data sample and a centroid.
 
         Parameters
         ----------
@@ -98,8 +96,7 @@ class HypersphereART(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -139,8 +136,7 @@ class HypersphereART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -175,8 +171,7 @@ class HypersphereART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -210,8 +205,7 @@ class HypersphereART(BaseART):
         return np.concatenate([centroid_new, [radius_new]])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -229,8 +223,7 @@ class HypersphereART(BaseART):
         return np.concatenate([i, [0.0]])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -241,8 +234,7 @@ class HypersphereART(BaseART):
         return [w[:-1] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

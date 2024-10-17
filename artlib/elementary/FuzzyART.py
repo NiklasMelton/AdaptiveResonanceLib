@@ -1,7 +1,9 @@
-"""
-Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
+"""Carpenter, G.
+
+A., Grossberg, S., & Rosen, D. B. (1991c).
 Fuzzy ART: Fast stable learning and categorization of analog patterns by an adaptive resonance system.
 Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
+
 """
 import numpy as np
 from typing import Optional, Iterable, List
@@ -19,8 +21,7 @@ from artlib.common.utils import (
 def get_bounding_box(
     w: np.ndarray, n: Optional[int] = None
 ) -> tuple[list[int], list[int]]:
-    """
-    Extract the bounding boxes from a FuzzyART weight.
+    """Extract the bounding boxes from a FuzzyART weight.
 
     Parameters
     ----------
@@ -54,7 +55,7 @@ def get_bounding_box(
 
 
 class FuzzyART(BaseART):
-    """Fuzzy ART for Clustering
+    """Fuzzy ART for Clustering.
 
     This module implements Fuzzy ART as first published in Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991c).
     Fuzzy ART: Fast stable learning and categorization of analog patterns by an adaptive resonance system.
@@ -63,8 +64,7 @@ class FuzzyART(BaseART):
     """
 
     def __init__(self, rho: float, alpha: float, beta: float):
-        """
-        Initialize the Fuzzy ART model.
+        """Initialize the Fuzzy ART model.
 
         Parameters
         ----------
@@ -84,8 +84,7 @@ class FuzzyART(BaseART):
         super().__init__(params)
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -103,8 +102,7 @@ class FuzzyART(BaseART):
         return cc_data
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to its state prior to preparation.
+        """Restore data to its state prior to preparation.
 
         Parameters
         ----------
@@ -122,8 +120,7 @@ class FuzzyART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -142,8 +139,7 @@ class FuzzyART(BaseART):
         assert isinstance(params["beta"], float)
 
     def check_dimensions(self, X: np.ndarray):
-        """
-        Check that the data has the correct dimensions.
+        """Check that the data has the correct dimensions.
 
         Parameters
         ----------
@@ -158,8 +154,7 @@ class FuzzyART(BaseART):
             assert X.shape[1] == self.dim_
 
     def validate_data(self, X: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -178,8 +173,7 @@ class FuzzyART(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -207,8 +201,7 @@ class FuzzyART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -238,8 +231,7 @@ class FuzzyART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -264,8 +256,7 @@ class FuzzyART(BaseART):
         return b * fuzzy_and(i, w) + (1 - b) * w
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -285,8 +276,7 @@ class FuzzyART(BaseART):
     def get_bounding_boxes(
         self, n: Optional[int] = None
     ) -> List[tuple[list[int], list[int]]]:
-        """
-        Get the bounding boxes for each cluster.
+        """Get the bounding boxes for each cluster.
 
         Parameters
         ----------
@@ -302,8 +292,7 @@ class FuzzyART(BaseART):
         return list(map(lambda w: get_bounding_box(w, n=n), self.W))
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -314,8 +303,7 @@ class FuzzyART(BaseART):
         return [self.restore_data(w.reshape((1, -1))).reshape((-1,)) for w in self.W]
 
     def shrink_clusters(self, shrink_ratio: float = 0.1):
-        """
-        Shrink the clusters by adjusting the bounding box.
+        """Shrink the clusters by adjusting the bounding box.
 
         Parameters
         ----------
@@ -340,8 +328,7 @@ class FuzzyART(BaseART):
         return self
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

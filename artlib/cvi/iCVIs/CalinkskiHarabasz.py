@@ -1,13 +1,14 @@
-"""
-Some things to consider in the future.
+"""Some things to consider in the future.
 
 Removing entire labels from the dataset should be possible.
 
-Right now I think its not possible for Fuzzy Art to delete a cluster, so no need to do so now.
+Right now I think its not possible for Fuzzy Art to delete a cluster, so no need to do
+so now.
 
-Creating functions to explictly add a sample, remove or switch, instead of requiring the update call would be nice
-Or at least change the function names for add, remove, and switch, since they imply that its done, not that it will
-update after update is called.
+Creating functions to explictly add a sample, remove or switch, instead of requiring the
+update call would be nice Or at least change the function names for add, remove, and
+switch, since they imply that its done, not that it will update after update is called.
+
 """
 import numpy as np
 
@@ -15,8 +16,7 @@ import numpy as np
 def delta_add_sample_to_average(
     average: float, sample: float, total_samples: int
 ) -> float:
-    """
-    Calculate the new average if a sample is added.
+    """Calculate the new average if a sample is added.
 
     Parameters
     ----------
@@ -39,8 +39,7 @@ def delta_add_sample_to_average(
 def delta_remove_sample_from_average(
     average: float, sample: float, total_samples: int
 ) -> float:
-    """
-    Calculate the new average if a sample is removed.
+    """Calculate the new average if a sample is removed.
 
     Parameters
     ----------
@@ -63,11 +62,14 @@ def delta_remove_sample_from_average(
 class iCVI_CH:
     """Implementation of the Calinski Harabasz Validity Index in incremental form.
 
-    Expanded implementation of the incremental version of the Calinski Harabasz Cluster Validity Index.
+    Expanded implementation of the incremental version of the Calinski Harabasz Cluster
+    Validity Index.
 
-    The original matlab code can be found at https://github.com/ACIL-Group/iCVI-toolbox/blob/master/classes/CVI_CH.m
-    The formulation is available at
-    https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations Pages 314-316 and 319-320
+    The original matlab code can be found at
+    https://github.com/ACIL-Group/iCVI-toolbox/blob/master/classes/CVI_CH.m
+     The formulation is available at
+    https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
+    Pages 314-316 and 319-320
 
     This implementation returns a dictionary of updated parameters when calling functions, which can then be passed with
     the update function to accept the changes. This allows for testing changes/additions to the categories without doing a
@@ -78,11 +80,11 @@ class iCVI_CH:
     samples in the dataset.
 
     For the Calinski Harabasz validity Index, larger values represent better clusters.
+
     """
 
     def __init__(self, x: np.ndarray) -> None:
-        """
-        Create the iCVI_CH object.
+        """Create the iCVI_CH object.
 
         Parameters
         ----------
@@ -98,8 +100,7 @@ class iCVI_CH:
         self.criterion_value = 0  # calcualted CH index
 
     def add_sample(self, x: np.ndarray, label: int) -> dict:
-        """
-        Calculate the result of adding a new sample with a given label.
+        """Calculate the result of adding a new sample with a given label.
 
         Parameters
         ----------
@@ -181,11 +182,10 @@ class iCVI_CH:
         return newP
 
     def update(self, params: dict) -> None:
-        """
-        Update the parameters of the object.
-        Takes the updated params from adding/removing a sample or switching its label, and updates the object.
-        Switching a label needs more updates, so those dicts have an extra set of things to update, signified with
-        the 'label2' key existing
+        """Update the parameters of the object. Takes the updated params from
+        adding/removing a sample or switching its label, and updates the object.
+        Switching a label needs more updates, so those dicts have an extra set of things
+        to update, signified with the 'label2' key existing.
 
         Parameters
         ----------
@@ -203,8 +203,7 @@ class iCVI_CH:
             self.WGSS += params["CP_diff2"]
 
     def switch_label(self, x: np.ndarray, label_old: int, label_new: int) -> dict:
-        """
-        Calculate the parameters when a sample has its label changed.
+        """Calculate the parameters when a sample has its label changed.
 
         This essentially removes a sample with the old label from the clusters, then adds it back with the new sample.
         There are a few optimizations, such as keeping mu the same since adding and removing it doesn't affect any calculations
@@ -303,8 +302,7 @@ class iCVI_CH:
     def remove_sample(
         self, x: np.ndarray, label: int
     ) -> dict:  # This is left here mostly as an extra, and not really meant to be used.
-        """
-        Remove a sample from the clusters.
+        """Remove a sample from the clusters.
 
         Parameters
         ----------

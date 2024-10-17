@@ -1,13 +1,12 @@
-"""
-Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
-Ellipsoid ART and ARTMAP for incremental clustering and classification.
-In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-(pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
+"""Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a). Ellipsoid ART and ARTMAP for
+incremental clustering and classification. In Proc. IEEE International Joint Conference
+on Neural Networks (IJCNN) (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
 
-Anagnostopoulos, G. C., & Georgiopoulos, M. (2001b).
-Ellipsoid ART and ARTMAP for incremental unsupervised and supervised learning.
-In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
-International Society for Optics and Photonics. doi:10.1117/12.421180.
+Anagnostopoulos, G. C., & Georgiopoulos, M. (2001b). Ellipsoid ART and ARTMAP for
+incremental unsupervised and supervised learning. In Aerospace/Defense Sensing,
+Simulation, and Controls (pp. 293– 304). International Society for Optics and Photonics.
+doi:10.1117/12.421180.
+
 """
 import numpy as np
 from typing import Optional, Iterable, List
@@ -17,20 +16,19 @@ from artlib.common.utils import l2norm2
 
 
 class EllipsoidART(BaseART):
-    """Ellipsoid ART for Clustering
+    """Ellipsoid ART for Clustering.
 
-    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
-    Ellipsoid ART and ARTMAP for incremental clustering and classification.
-    In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-    (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
-    Ellipsoid ART clusters data in Hyper-ellipsoids. It is highly sensitive to sample presentation order as the second
-    sample will determine the orientation of the principal axes.
+    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., &
+    Georgiopoulos, M. (2001a). Ellipsoid ART and ARTMAP for incremental clustering and
+    classification. In Proc. IEEE International Joint Conference on Neural Networks
+    (IJCNN) (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535. Ellipsoid ART
+    clusters data in Hyper-ellipsoids. It is highly sensitive to sample presentation
+    order as the second sample will determine the orientation of the principal axes.
 
     """
 
     def __init__(self, rho: float, alpha: float, beta: float, mu: float, r_hat: float):
-        """
-        Initialize the Ellipsoid ART model.
+        """Initialize the Ellipsoid ART model.
 
         Parameters
         ----------
@@ -57,8 +55,7 @@ class EllipsoidART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -88,8 +85,7 @@ class EllipsoidART(BaseART):
         major_axis: np.ndarray,
         params: dict,
     ) -> float:
-        """
-        Calculate the distance between a sample and the cluster centroid.
+        """Calculate the distance between a sample and the cluster centroid.
 
         Parameters
         ----------
@@ -122,8 +118,7 @@ class EllipsoidART(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -160,8 +155,7 @@ class EllipsoidART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -196,8 +190,7 @@ class EllipsoidART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -237,8 +230,7 @@ class EllipsoidART(BaseART):
         return np.concatenate([centroid_new, major_axis_new, [radius_new]])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -256,8 +248,7 @@ class EllipsoidART(BaseART):
         return np.concatenate([i, np.zeros_like(i), [0.0]])
 
     def get_2d_ellipsoids(self) -> list[tuple]:
-        """
-        Get the 2D ellipsoids for visualization.
+        """Get the 2D ellipsoids for visualization.
 
         Returns
         -------
@@ -280,8 +271,7 @@ class EllipsoidART(BaseART):
         return ellipsoids
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -292,8 +282,7 @@ class EllipsoidART(BaseART):
         return [w[: self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

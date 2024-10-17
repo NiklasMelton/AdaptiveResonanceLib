@@ -7,10 +7,10 @@ from artlib.common.BaseART import BaseART
 
 
 class CVIART(BaseART):
-    """CVI Art Classification
+    """CVI Art Classification.
 
-    Expanded version of Art that uses Cluster Validity Indicies to help with cluster selection.
-    PBM is not implemented, can be seen here.
+    Expanded version of Art that uses Cluster Validity Indicies to help with cluster
+    selection. PBM is not implemented, can be seen here.
     https://git.mst.edu/acil-group/CVI-Fuzzy-ART/-/blob/master/PBM_index.m?ref_type=heads
 
     Note, the default step_fit function in base ART evaluates the matching function even if
@@ -24,8 +24,7 @@ class CVIART(BaseART):
     # PBM = 4
 
     def __init__(self, base_module: BaseART, validity: int):
-        """
-        Initialize the CVIART model.
+        """Initialize the CVIART model.
 
         Parameters
         ----------
@@ -41,8 +40,7 @@ class CVIART(BaseART):
         print(self.params)
 
     def validate_params(self, params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -60,8 +58,7 @@ class CVIART(BaseART):
         ]
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -77,8 +74,7 @@ class CVIART(BaseART):
         return self.base_module.prepare_data(X)
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to state prior to preparation.
+        """Restore data to state prior to preparation.
 
         Parameters
         ----------
@@ -110,8 +106,7 @@ class CVIART(BaseART):
         self.base_module.labels_ = new_labels_
 
     def CVI_match(self, x, w, c_, params, extra, cache):
-        """
-        Evaluate the cluster validity index (CVI) for a match.
+        """Evaluate the cluster validity index (CVI) for a match.
 
         Parameters
         ----------
@@ -162,8 +157,7 @@ class CVIART(BaseART):
         params: dict,
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
-        """
-        Adjust the vigilance parameter (rho) based on the match tracking method.
+        """Adjust the vigilance parameter (rho) based on the match tracking method.
 
         Parameters
         ----------
@@ -215,8 +209,7 @@ class CVIART(BaseART):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
-        """
-        Fit the model to the data.
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -284,8 +277,7 @@ class CVIART(BaseART):
                 self.post_step_fit(X)
 
     def pre_step_fit(self, X: np.ndarray):
-        """
-        Preprocessing step before fitting each sample.
+        """Preprocessing step before fitting each sample.
 
         Parameters
         ----------
@@ -296,8 +288,7 @@ class CVIART(BaseART):
         return self.base_module.pre_step_fit(X)
 
     def post_step_fit(self, X: np.ndarray):
-        """
-        Postprocessing step after fitting each sample.
+        """Postprocessing step after fitting each sample.
 
         Parameters
         ----------
@@ -314,8 +305,7 @@ class CVIART(BaseART):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -338,8 +328,7 @@ class CVIART(BaseART):
         raise NotImplementedError
 
     def step_pred(self, x: np.ndarray) -> int:
-        """
-        Predict the label for a single sample.
+        """Predict the label for a single sample.
 
         Parameters
         ----------
@@ -355,8 +344,7 @@ class CVIART(BaseART):
         return self.base_module.step_pred(x)
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of the clusters.
+        """Get the centers of the clusters.
 
         Returns
         -------
@@ -367,8 +355,7 @@ class CVIART(BaseART):
         return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Plot the boundaries of each cluster.
+        """Plot the boundaries of each cluster.
 
         Parameters
         ----------

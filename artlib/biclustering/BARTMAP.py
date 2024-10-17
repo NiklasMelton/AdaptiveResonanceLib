@@ -20,8 +20,7 @@ from scipy.stats import pearsonr
 
 
 class BARTMAP(BaseEstimator, BiclusterMixin):
-    """
-    BARTMAP for Biclustering
+    """BARTMAP for Biclustering.
 
     This class implements BARTMAP as first published in:
     Xu, R., & Wunsch II, D. C. (2011).
@@ -41,8 +40,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     columns_: np.ndarray  # bool
 
     def __init__(self, module_a: BaseART, module_b: BaseART, eta: float):
-        """
-        Initialize the BARTMAP model.
+        """Initialize the BARTMAP model.
 
         Parameters
         ----------
@@ -78,8 +76,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             super().__setattr__(key, value)
 
     def get_params(self, deep: bool = True) -> dict:
-        """
-        Get parameters for this estimator.
+        """Get parameters for this estimator.
 
         Parameters
         ----------
@@ -105,8 +102,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return out
 
     def set_params(self, **params):
-        """
-        Set the parameters of this estimator.
+        """Set the parameters of this estimator.
 
         Specific redefinition of `sklearn.BaseEstimator.set_params` for ART classes.
 
@@ -152,8 +148,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -181,8 +176,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return self.module_b.n_clusters
 
     def _get_x_cb(self, x: np.ndarray, c_b: int):
-        """
-        Get the components of a vector belonging to a b-side cluster.
+        """Get the components of a vector belonging to a b-side cluster.
 
         Parameters
         ----------
@@ -203,8 +197,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     @staticmethod
     def _pearsonr(a: np.ndarray, b: np.ndarray) -> float:
-        """
-        Get the Pearson correlation between two vectors.
+        """Get the Pearson correlation between two vectors.
 
         Parameters
         ----------
@@ -223,8 +216,8 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return r
 
     def _average_pearson_corr(self, X: np.ndarray, k: int, c_b: int) -> float:
-        """
-        Get the average Pearson correlation for a sample across all features in cluster b.
+        """Get the average Pearson correlation for a sample across all features in
+        cluster b.
 
         Parameters
         ----------
@@ -253,8 +246,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return float(mean_r)
 
     def validate_data(self, X_a: np.ndarray, X_b: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -270,8 +262,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     def match_criterion_bin(
         self, X: np.ndarray, k: int, c_b: int, params: dict
     ) -> bool:
-        """
-        Get the binary match criterion of the cluster.
+        """Get the binary match criterion of the cluster.
 
         Parameters
         ----------
@@ -302,8 +293,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         extra: dict,
         cache: Optional[dict] = None,
     ) -> bool:
-        """
-        Permit external factors to influence cluster creation.
+        """Permit external factors to influence cluster creation.
 
         Parameters
         ----------
@@ -333,8 +323,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return False
 
     def step_fit(self, X: np.ndarray, k: int) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -356,8 +345,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return c_a
 
     def fit(self, X: np.ndarray, max_iter=1):
-        """
-        Fit the model to the data.
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -405,8 +393,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return self
 
     def visualize(self, cmap: Optional[Colormap] = None):
-        """
-        Visualize the clustering of the data.
+        """Visualize the clustering of the data.
 
         Parameters
         ----------

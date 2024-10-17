@@ -1,7 +1,9 @@
-"""
-Williamson, J. R. (1996).
+"""Williamson, J.
+
+R. (1996).
 Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps.
 Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
+
 """
 
 import numpy as np
@@ -13,7 +15,7 @@ from artlib.common.visualization import plot_gaussian_contours_fading
 
 
 class GaussianART(BaseART):
-    """Gaussian ART for Clustering
+    """Gaussian ART for Clustering.
 
     This module implements Gaussian ART as first published in Williamson, J. R. (1996).
     Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy Multidimensional Maps.
@@ -25,8 +27,7 @@ class GaussianART(BaseART):
     """
 
     def __init__(self, rho: float, sigma_init: np.ndarray, alpha: float = 1e-10):
-        """
-        Initialize the Gaussian ART model.
+        """Initialize the Gaussian ART model.
 
         Parameters
         ----------
@@ -43,8 +44,7 @@ class GaussianART(BaseART):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -63,8 +63,7 @@ class GaussianART(BaseART):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -108,8 +107,7 @@ class GaussianART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -142,8 +140,7 @@ class GaussianART(BaseART):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -180,8 +177,7 @@ class GaussianART(BaseART):
         return np.concatenate([mean_new, sigma_new, inv_sig, [det_sig], [n_new]])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -204,8 +200,7 @@ class GaussianART(BaseART):
         )
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -216,8 +211,7 @@ class GaussianART(BaseART):
         return [w[: self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------

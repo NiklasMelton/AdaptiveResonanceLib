@@ -11,9 +11,7 @@ import operator
 
 
 class BaseART(BaseEstimator, ClusterMixin):
-    """
-    Generic implementation of Adaptive Resonance Theory (ART)
-    """
+    """Generic implementation of Adaptive Resonance Theory (ART)"""
 
     def __init__(self, params: dict):
         """
@@ -64,8 +62,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self.params
 
     def set_params(self, **params):
-        """
-        Set the parameters of this estimator.
+        """Set the parameters of this estimator.
 
         Specific redefinition of `sklearn.BaseEstimator.set_params` for ART classes.
 
@@ -109,8 +106,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -127,8 +123,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return normalized
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to state prior to preparation.
+        """Restore data to state prior to preparation.
 
         Parameters
         ----------
@@ -145,8 +140,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     @property
     def n_clusters(self) -> int:
-        """
-        Get the current number of clusters.
+        """Get the current number of clusters.
 
         Returns
         -------
@@ -161,8 +155,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -173,8 +166,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def check_dimensions(self, X: np.ndarray):
-        """
-        Check the data has the correct dimensions.
+        """Check the data has the correct dimensions.
 
         Parameters
         ----------
@@ -188,8 +180,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             assert X.shape[1] == self.dim_
 
     def validate_data(self, X: np.ndarray):
-        """
-        validates the data prior to clustering
+        """Validates the data prior to clustering.
 
         Parameters:
         - X: data set
@@ -202,8 +193,7 @@ class BaseART(BaseEstimator, ClusterMixin):
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -229,8 +219,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         params: dict,
         cache: Optional[dict] = None,
     ) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -259,8 +248,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         cache: Optional[dict] = None,
         op: Callable = operator.ge,
     ) -> tuple[bool, dict]:
-        """
-        Get the binary match criterion of the cluster.
+        """Get the binary match criterion of the cluster.
 
         Parameters
         ----------
@@ -294,8 +282,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         params: dict,
         cache: Optional[dict] = None,
     ) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -317,8 +304,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -336,8 +322,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def add_weight(self, new_w: np.ndarray):
-        """
-        Add a new cluster weight.
+        """Add a new cluster weight.
 
         Parameters
         ----------
@@ -349,8 +334,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.W.append(new_w)
 
     def set_weight(self, idx: int, new_w: np.ndarray):
-        """
-        Set the value of a cluster weight.
+        """Set the value of a cluster weight.
 
         Parameters
         ----------
@@ -412,8 +396,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -487,8 +470,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             return c_new
 
     def step_pred(self, x) -> int:
-        """
-        Predict the label for a single sample.
+        """Predict the label for a single sample.
 
         Parameters
         ----------
@@ -508,8 +490,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         return c_
 
     def pre_step_fit(self, X: np.ndarray):
-        """
-        Undefined function called prior to each sample fit. Useful for cluster pruning.
+        """Undefined function called prior to each sample fit. Useful for cluster
+        pruning.
 
         Parameters
         ----------
@@ -521,8 +503,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
     def post_step_fit(self, X: np.ndarray):
-        """
-        Undefined function called after each sample fit. Useful for cluster pruning.
+        """Undefined function called after each sample fit. Useful for cluster pruning.
 
         Parameters
         ----------
@@ -534,8 +515,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
     def post_fit(self, X: np.ndarray):
-        """
-        Undefined function called after fit. Useful for cluster pruning.
+        """Undefined function called after fit. Useful for cluster pruning.
 
         Parameters
         ----------
@@ -556,8 +536,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         epsilon: float = 0.0,
         verbose: bool = False,
     ):
-        """
-        Fit the model to the data.
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -610,8 +589,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
-        """
-        Iteratively fit the model to the data.
+        """Iteratively fit the model to the data.
 
         Parameters
         ----------
@@ -648,8 +626,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predict labels for the data.
+        """Predict labels for the data.
 
         Parameters
         ----------
@@ -677,8 +654,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Undefined function for visualizing the bounds of each cluster.
+        """Undefined function for visualizing the bounds of each cluster.
 
         Parameters
         ----------
@@ -693,8 +669,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Undefined function for getting centers of each cluster. Used for regression.
+        """Undefined function for getting centers of each cluster. Used for regression.
 
         Returns
         -------
@@ -713,8 +688,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         linewidth: int = 1,
         colors: Optional[Iterable] = None,
     ):
-        """
-        Visualize the clustering of the data.
+        """Visualize the clustering of the data.
 
         Parameters
         ----------

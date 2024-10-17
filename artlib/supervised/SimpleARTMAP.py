@@ -1,7 +1,9 @@
-"""
-Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+"""Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A.
+
+G. (1998).
 Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 Norwell, MA, USA: Kluwer Academic Publishers.
+
 """
 import numpy as np
 from typing import Optional, Iterable, Literal, Dict
@@ -13,7 +15,7 @@ from sklearn.utils.multiclass import unique_labels
 
 
 class SimpleARTMAP(BaseARTMAP):
-    """SimpleARTMAP for Classification
+    """SimpleARTMAP for Classification.
 
     This module implements SimpleARTMAP as first published in
     Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
@@ -28,13 +30,13 @@ class SimpleARTMAP(BaseARTMAP):
     """
 
     def __init__(self, module_a: BaseART):
-        """
-        Initialize SimpleARTMAP.
+        """Initialize SimpleARTMAP.
 
         Parameters
         ----------
         module_a : BaseART
             The instantiated ART module used for clustering the independent channel.
+
         """
         self.module_a = module_a
         super().__init__()
@@ -48,8 +50,7 @@ class SimpleARTMAP(BaseARTMAP):
         extra: dict,
         cache: Optional[dict] = None,
     ) -> bool:
-        """
-        Permits external factors to influence cluster creation.
+        """Permits external factors to influence cluster creation.
 
         Parameters
         ----------
@@ -70,6 +71,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         bool
             True if the match is permitted, False otherwise.
+
         """
         cluster_b = extra["cluster_b"]
         if cluster_a in self.map and self.map[cluster_a] != cluster_b:
@@ -77,8 +79,7 @@ class SimpleARTMAP(BaseARTMAP):
         return True
 
     def get_params(self, deep: bool = True) -> dict:
-        """
-        Get parameters of the model.
+        """Get parameters of the model.
 
         Parameters
         ----------
@@ -89,6 +90,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         dict
             Parameter names mapped to their values.
+
         """
         out = {"module_a": self.module_a}
         if deep:
@@ -99,8 +101,7 @@ class SimpleARTMAP(BaseARTMAP):
     def validate_data(
         self, X: np.ndarray, y: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Validate data prior to clustering.
+        """Validate data prior to clustering.
 
         Parameters
         ----------
@@ -113,14 +114,14 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         tuple[np.ndarray, np.ndarray]
             The validated datasets X and y.
+
         """
         X, y = check_X_y(X, y, dtype=None)
         self.module_a.validate_data(X)
         return X, y
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -131,12 +132,12 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         np.ndarray
             Prepared data.
+
         """
         return self.module_a.prepare_data(X)
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to state prior to preparation.
+        """Restore data to state prior to preparation.
 
         Parameters
         ----------
@@ -147,6 +148,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         np.ndarray
             Restored data.
+
         """
         return self.module_a.restore_data(X)
 
@@ -157,8 +159,7 @@ class SimpleARTMAP(BaseARTMAP):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -175,6 +176,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         int
             Side A cluster label.
+
         """
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
             i,
@@ -205,8 +207,7 @@ class SimpleARTMAP(BaseARTMAP):
         epsilon: float = 1e-10,
         verbose: bool = False,
     ):
-        """
-        Fit the model to the data.
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -227,6 +228,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         self : SimpleARTMAP
             The fitted model.
+
         """
         # Check that X and y have correct shape
         SimpleARTMAP.validate_data(self, X, y)
@@ -263,8 +265,7 @@ class SimpleARTMAP(BaseARTMAP):
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
-        """
-        Partial fit the model to the data.
+        """Partial fit the model to the data.
 
         Parameters
         ----------
@@ -281,6 +282,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         self : SimpleARTMAP
             The partially fitted model.
+
         """
         SimpleARTMAP.validate_data(self, X, y)
         if not hasattr(self, "labels_"):
@@ -306,79 +308,78 @@ class SimpleARTMAP(BaseARTMAP):
 
     @property
     def labels_a(self) -> np.ndarray:
-        """
-        Get labels from side A (module A).
+        """Get labels from side A (module A).
 
         Returns
         -------
         np.ndarray
             Labels from module A.
+
         """
         return self.module_a.labels_
 
     @property
     def labels_b(self) -> np.ndarray:
-        """
-        Get labels from side B.
+        """Get labels from side B.
 
         Returns
         -------
         np.ndarray
             Labels from side B.
+
         """
         return self.labels_
 
     @property
     def labels_ab(self) -> Dict[str, np.ndarray]:
-        """
-        Get labels from both A-side and B-side.
+        """Get labels from both A-side and B-side.
 
         Returns
         -------
         dict
             A dictionary with keys "A" and "B" containing labels from sides A and B, respectively.
+
         """
         return {"A": self.labels_a, "B": self.labels_}
 
     @property
     def n_clusters(self) -> int:
-        """
-        Get the number of clusters in side A.
+        """Get the number of clusters in side A.
 
         Returns
         -------
         int
             Number of clusters.
+
         """
         return self.module_a.n_clusters
 
     @property
     def n_clusters_a(self) -> int:
-        """
-        Get the number of clusters in side A.
+        """Get the number of clusters in side A.
 
         Returns
         -------
         int
             Number of clusters in side A.
+
         """
         return self.n_clusters
 
     @property
     def n_clusters_b(self) -> int:
-        """
-        Get the number of clusters in side B.
+        """Get the number of clusters in side B.
 
         Returns
         -------
         int
             Number of clusters in side B.
+
         """
         return len(set(c for c in self.map.values()))
 
     def step_pred(self, x: np.ndarray) -> tuple[int, int]:
-        """
-        Predict the label for a single sample.
+        """Predict the label for a single sample.
 
         Parameters
         ----------
@@ -389,14 +390,14 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         tuple[int, int]
             Side A cluster label, side B cluster label.
+
         """
         c_a = self.module_a.step_pred(x)
         c_b = self.map[c_a]
         return c_a, c_b
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predict labels for the data.
+        """Predict labels for the data.
 
         Parameters
         ----------
@@ -407,6 +408,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         np.ndarray
             B labels for the data.
+
         """
         check_is_fitted(self)
         y_b = np.zeros((X.shape[0],), dtype=int)
@@ -416,8 +418,7 @@ class SimpleARTMAP(BaseARTMAP):
         return y_b
 
     def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Predict labels for the data, both A-side and B-side.
+        """Predict labels for the data, both A-side and B-side.
 
         Parameters
         ----------
@@ -428,6 +429,7 @@ class SimpleARTMAP(BaseARTMAP):
         -------
         tuple[np.ndarray, np.ndarray]
             A labels for the data, B labels for the data.
+
         """
         check_is_fitted(self)
         y_a = np.zeros((X.shape[0],), dtype=int)
@@ -439,8 +441,7 @@ class SimpleARTMAP(BaseARTMAP):
         return y_a, y_b
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the cluster boundaries.
+        """Visualize the cluster boundaries.
 
         Parameters
         ----------
@@ -450,6 +451,7 @@ class SimpleARTMAP(BaseARTMAP):
             Colors to use for each cluster.
         linewidth : int, default=1
             Width of boundary lines.
+
         """
         colors_a = []
         for k_a in range(self.n_clusters):
@@ -465,8 +467,7 @@ class SimpleARTMAP(BaseARTMAP):
         linewidth: int = 1,
         colors: Optional[Iterable] = None,
     ):
-        """
-        Visualize the clustering of the data.
+        """Visualize the clustering of the data.
 
         Parameters
         ----------
@@ -482,6 +483,7 @@ class SimpleARTMAP(BaseARTMAP):
             Width of boundary lines.
         colors : Optional[Iterable], default=None
             Colors to use for each cluster.
+
         """
         import matplotlib.pyplot as plt
 

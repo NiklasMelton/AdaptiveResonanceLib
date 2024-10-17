@@ -11,8 +11,8 @@ def plot_gaussian_contours_fading(
     sigma_steps: float = 0.25,
     linewidth: int = 1,
 ):
-    """
-    Plot concentric ellipses to represent the contours of a 2D Gaussian distribution with fading colors.
+    """Plot concentric ellipses to represent the contours of a 2D Gaussian distribution
+    with fading colors.
 
     Parameters
     ----------
@@ -73,9 +73,9 @@ def plot_gaussian_contours_covariance(
     sigma_steps: float = 0.25,
     linewidth: int = 1,
 ):
-    """
-    Plot concentric ellipses to represent the contours of a 2D Gaussian distribution with fading colors.
-    Accepts a covariance matrix to properly represent the distribution's orientation and shape.
+    """Plot concentric ellipses to represent the contours of a 2D Gaussian distribution
+    with fading colors. Accepts a covariance matrix to properly represent the
+    distribution's orientation and shape.
 
     Parameters
     ----------
@@ -145,8 +145,7 @@ def plot_weight_matrix_as_ellipse(
     color: np.ndarray,
     linewidth: int = 1,
 ):
-    """
-    Plot the transformation of a unit circle by the weight matrix W as an ellipse.
+    """Plot the transformation of a unit circle by the weight matrix W as an ellipse.
 
     Parameters
     ----------

@@ -13,21 +13,20 @@ def art_model():
 
 def test_initialization(art_model):
     # Test that the model initializes correctly
-    assert art_model.params['rho'] == 0.7
-    assert np.array_equal(art_model.params['cov_init'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+    assert art_model.params["rho"] == 0.7
+    assert np.array_equal(
+        art_model.params["cov_init"], np.array([[1.0, 0.0], [0.0, 1.0]])
+    )
 
 
 def test_validate_params():
     # Test the validate_params method
-    valid_params = {
-        "rho": 0.7,
-        "cov_init": np.array([[1.0, 0.0], [0.0, 1.0]])
-    }
+    valid_params = {"rho": 0.7, "cov_init": np.array([[1.0, 0.0], [0.0, 1.0]])}
     BayesianART.validate_params(valid_params)
 
     invalid_params = {
         "rho": -0.5,  # Invalid vigilance parameter
-        "cov_init": "not_a_matrix"  # Invalid covariance matrix
+        "cov_init": "not_a_matrix",  # Invalid covariance matrix
     }
     with pytest.raises(AssertionError):
         BayesianART.validate_params(invalid_params)
@@ -45,13 +44,15 @@ def test_category_choice(art_model):
     # Test the category_choice method
     art_model.dim_ = 2
     i = np.array([0.2, 0.3])
-    w = np.array([0.25, 0.35, 1.0, 0.0, 0.0, 1.0, 5])  # Mock weight (mean, covariance, and sample count)
+    w = np.array(
+        [0.25, 0.35, 1.0, 0.0, 0.0, 1.0, 5]
+    )  # Mock weight (mean, covariance, and sample count)
     art_model.W = [w]
     params = {"rho": 0.7}
 
     activation, cache = art_model.category_choice(i, w, params)
-    assert 'cov' in cache
-    assert 'det_cov' in cache
+    assert "cov" in cache
+    assert "det_cov" in cache
     assert isinstance(activation, float)
 
 
@@ -59,11 +60,15 @@ def test_match_criterion(art_model):
     # Test the match_criterion method
     art_model.dim_ = 2
     i = np.array([0.2, 0.3])
-    w = np.array([0.25, 0.35, 1.0, 0.0, 0.0, 1.0, 5])  # Mock weight (mean, covariance, and sample count)
+    w = np.array(
+        [0.25, 0.35, 1.0, 0.0, 0.0, 1.0, 5]
+    )  # Mock weight (mean, covariance, and sample count)
     params = {"rho": 0.7}
     cache = {}
 
-    match_criterion, new_cache = art_model.match_criterion(i, w, params, cache=cache)
+    match_criterion, new_cache = art_model.match_criterion(
+        i, w, params, cache=cache
+    )
     assert isinstance(match_criterion, float)
 
 
@@ -71,12 +76,16 @@ def test_update(art_model):
     # Test the update method
     art_model.dim_ = 2
     i = np.array([0.2, 0.3])
-    w = np.array([0.25, 0.35, 1.0, 0.0, 0.0, 1.0, 5])  # Mock weight (mean, covariance, and sample count)
+    w = np.array(
+        [0.25, 0.35, 1.0, 0.0, 0.0, 1.0, 5]
+    )  # Mock weight (mean, covariance, and sample count)
     params = {"rho": 0.7}
     cache = {}
 
     updated_weight = art_model.update(i, w, params, cache=cache)
-    assert len(updated_weight) == 7  # Mean (2D), covariance (4 values), and sample count
+    assert (
+        len(updated_weight) == 7
+    )  # Mean (2D), covariance (4 values), and sample count
 
 
 def test_new_weight(art_model):
@@ -86,7 +95,9 @@ def test_new_weight(art_model):
     params = {"cov_init": np.array([[1.0, 0.0], [0.0, 1.0]])}
 
     new_weight = art_model.new_weight(i, params)
-    assert len(new_weight) == 7  # Mean (2D), covariance (4 values), and sample count
+    assert (
+        len(new_weight) == 7
+    )  # Mean (2D), covariance (4 values), and sample count
     assert new_weight[-1] == 1  # Initial sample count should be 1
 
 

@@ -1,20 +1,20 @@
+"""Base class for all ART objects."""
 import numpy as np
-from typing import Optional, Callable, Iterable, Literal, List, Tuple
+from typing import Optional, Callable, Literal, List, Tuple, Union, Dict
 from copy import deepcopy
 from collections import defaultdict
 from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
-from artlib.common.utils import normalize, de_normalize
+from artlib.common.utils import normalize, de_normalize, IndexableOrKeyable
 import operator
 
 
 class BaseART(BaseEstimator, ClusterMixin):
-    """
-    Generic implementation of Adaptive Resonance Theory (ART)
-    """
-    def __init__(self, params: dict):
+    """Generic implementation of Adaptive Resonance Theory (ART)"""
+
+    def __init__(self, params: Dict):
         """
         Parameters
         ----------
@@ -25,7 +25,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.validate_params(params)
         self.params = params
         self.sample_counter_ = 0
-        self.weight_sample_counter_: list[int] = []
+        self.weight_sample_counter_: List[int] = []
         self.d_min_ = None
         self.d_max_ = None
 
@@ -34,18 +34,19 @@ class BaseART(BaseEstimator, ClusterMixin):
             return self.params[key]
         else:
             # If the key is not in params, raise an AttributeError
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{key}'"
+            )
 
     def __setattr__(self, key, value):
-        if key in self.__dict__.get('params', {}):
+        if key in self.__dict__.get("params", {}):
             # If key is in params, set its value
             self.params[key] = value
         else:
             # Otherwise, proceed with normal attribute setting
             super().__setattr__(key, value)
 
-
-    def get_params(self, deep: bool = True) -> dict:
+    def get_params(self, deep: bool = True) -> Dict:
         """
         Parameters
         ----------
@@ -62,8 +63,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self.params
 
     def set_params(self, **params):
-        """
-        Set the parameters of this estimator.
+        """Set the parameters of this estimator.
 
         Specific redefinition of `sklearn.BaseEstimator.set_params` for ART classes.
 
@@ -88,7 +88,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         for key, value in params.items():
             key, delim, sub_key = key.partition("__")
             if key not in valid_params:
-                local_valid_params = list(valid_params.keys())
+                local_valid_params = List(valid_params.keys())
                 raise ValueError(
                     f"Invalid parameter {key!r} for estimator {self}. "
                     f"Valid parameters are: {local_valid_params!r}."
@@ -106,10 +106,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.validate_params(local_params)
         return self
 
-
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -126,8 +124,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return normalized
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to state prior to preparation.
+        """Restore data to state prior to preparation.
 
         Parameters
         ----------
@@ -144,8 +141,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
     @property
     def n_clusters(self) -> int:
-        """
-        Get the current number of clusters.
+        """Get the current number of clusters.
 
         Returns
         -------
@@ -159,9 +155,8 @@ class BaseART(BaseEstimator, ClusterMixin):
             return 0
 
     @staticmethod
-    def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+    def validate_params(params: Dict):
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -172,8 +167,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def check_dimensions(self, X: np.ndarray):
-        """
-        Check the data has the correct dimensions.
+        """Check the data has the correct dimensions.
 
         Parameters
         ----------
@@ -187,8 +181,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             assert X.shape[1] == self.dim_
 
     def validate_data(self, X: np.ndarray):
-        """
-        validates the data prior to clustering
+        """Validates the data prior to clustering.
 
         Parameters:
         - X: data set
@@ -198,9 +191,10 @@ class BaseART(BaseEstimator, ClusterMixin):
         assert np.all(X <= 1.0), "Data has not been normalized"
         self.check_dimensions(X)
 
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+    def category_choice(
+        self, i: np.ndarray, w: np.ndarray, params: Dict
+    ) -> Tuple[float, Optional[Dict]]:
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -219,9 +213,14 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: Dict,
+        cache: Optional[Dict] = None,
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -242,9 +241,15 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
-        """
-        Get the binary match criterion of the cluster.
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: Dict,
+        cache: Optional[Dict] = None,
+        op: Callable = operator.ge,
+    ) -> Tuple[bool, Dict]:
+        """Get the binary match criterion of the cluster.
 
         Parameters
         ----------
@@ -271,9 +276,14 @@ class BaseART(BaseEstimator, ClusterMixin):
         cache["match_criterion_bin"] = M_bin
         return M_bin, cache
 
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: Dict,
+        cache: Optional[Dict] = None,
+    ) -> np.ndarray:
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -294,9 +304,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
-    def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+    def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -314,8 +323,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def add_weight(self, new_w: np.ndarray):
-        """
-        Add a new cluster weight.
+        """Add a new cluster weight.
 
         Parameters
         ----------
@@ -327,8 +335,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.W.append(new_w)
 
     def set_weight(self, idx: int, new_w: np.ndarray):
-        """
-        Set the value of a cluster weight.
+        """Set the value of a cluster weight.
 
         Parameters
         ----------
@@ -341,10 +348,37 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
 
-    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+    def _match_tracking(
+        self,
+        cache: Union[List[Dict], Dict],
+        epsilon: float,
+        params: Union[List[Dict], Dict],
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
+        """Perform match tracking using the specified method.
+
+        Parameters
+        ----------
+        cache : dict
+            Cached match criterion value.
+        epsilon : float
+            Small adjustment factor for match tracking.
+        params : dict
+            Parameters
+        method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"]
+            Match tracking method to apply.
+
+        Returns
+        -------
+        bool
+            Whether to continue searching for a match.
+
+        """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
         M = cache["match_criterion"]
         if method == "MT+":
-            self.params["rho"] = M+epsilon
+            self.params["rho"] = M + epsilon
             return True
         elif method == "MT-":
             self.params["rho"] = M - epsilon
@@ -361,8 +395,10 @@ class BaseART(BaseEstimator, ClusterMixin):
             raise ValueError(f"Invalid Match Tracking Method: {method}")
 
     @staticmethod
-    def _match_tracking_operator(method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> Callable:
-        if method in ["MT+", "MT-","MT1"]:
+    def _match_tracking_operator(
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]
+    ) -> Callable:
+        if method in ["MT+", "MT-", "MT1"]:
             return operator.ge
         elif method in ["MT0", "MT~"]:
             return operator.gt
@@ -372,13 +408,17 @@ class BaseART(BaseEstimator, ClusterMixin):
     def _set_params(self, new_params):
         self.params = new_params
 
-    def _deep_copy_params(self) -> dict:
+    def _deep_copy_params(self) -> Dict:
         return deepcopy(self.params)
 
-
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
-        """
-        Fit the model to a single sample.
+    def step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ) -> int:
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -405,28 +445,32 @@ class BaseART(BaseEstimator, ClusterMixin):
             self.add_weight(w_new)
             return 0
         else:
-
             if match_reset_method in ["MT~"] and match_reset_func is not None:
-                T_values, T_cache = zip(*[
-                    self.category_choice(x, w, params=self.params)
-                    if match_reset_func(x, w, c_, params=self.params, cache=None)
-                    else (np.nan, None)
-                    for c_, w in enumerate(self.W)
-                ])
+                T_values, T_cache = zip(
+                    *[
+                        self.category_choice(x, w, params=self.params)
+                        if match_reset_func(x, w, c_, params=self.params, cache=None)
+                        else (np.nan, None)
+                        for c_, w in enumerate(self.W)
+                    ]
+                )
             else:
-                T_values, T_cache = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+                T_values, T_cache = zip(
+                    *[self.category_choice(x, w, params=self.params) for w in self.W]
+                )
             T = np.array(T_values)
             while any(~np.isnan(T)):
                 c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(x, w, params=self.params, cache=cache, op=mt_operator)
+                m, cache = self.match_criterion_bin(
+                    x, w, params=self.params, cache=cache, op=mt_operator
+                )
                 if match_reset_method in ["MT~"] and match_reset_func is not None:
                     no_match_reset = True
                 else:
-                    no_match_reset = (
-                            match_reset_func is None or
-                            match_reset_func(x, w, c_, params=self.params, cache=cache)
+                    no_match_reset = match_reset_func is None or match_reset_func(
+                        x, w, c_, params=self.params, cache=cache
                     )
                 if m and no_match_reset:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
@@ -435,7 +479,9 @@ class BaseART(BaseEstimator, ClusterMixin):
                 else:
                     T[c_] = np.nan
                     if m and not no_match_reset:
-                        keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
+                        keep_searching = self._match_tracking(
+                            cache, epsilon, self.params, match_reset_method
+                        )
                         if not keep_searching:
                             T[:] = np.nan
 
@@ -446,8 +492,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             return c_new
 
     def step_pred(self, x) -> int:
-        """
-        Predict the label for a single sample.
+        """Predict the label for a single sample.
 
         Parameters
         ----------
@@ -467,8 +512,8 @@ class BaseART(BaseEstimator, ClusterMixin):
         return c_
 
     def pre_step_fit(self, X: np.ndarray):
-        """
-        Undefined function called prior to each sample fit. Useful for cluster pruning.
+        """Undefined function called prior to each sample fit. Useful for cluster
+        pruning.
 
         Parameters
         ----------
@@ -480,8 +525,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
     def post_step_fit(self, X: np.ndarray):
-        """
-        Undefined function called after each sample fit. Useful for cluster pruning.
+        """Undefined function called after each sample fit. Useful for cluster pruning.
 
         Parameters
         ----------
@@ -493,8 +537,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         pass
 
     def post_fit(self, X: np.ndarray):
-        """
-        Undefined function called after fit. Useful for cluster pruning.
+        """Undefined function called after fit. Useful for cluster pruning.
 
         Parameters
         ----------
@@ -505,10 +548,17 @@ class BaseART(BaseEstimator, ClusterMixin):
         # this is where pruning steps can go
         pass
 
-
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0, verbose: bool = False):
-        """
-        Fit the model to the data.
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        match_reset_func: Optional[Callable] = None,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+        verbose: bool = False,
+    ):
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -532,26 +582,36 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.check_dimensions(X)
         self.is_fitted_ = True
 
-        self.W: list[np.ndarray] = []
-        self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+        self.W: List[np.ndarray] = []
+        self.labels_ = np.zeros((X.shape[0],), dtype=int)
         for _ in range(max_iter):
             if verbose:
                 from tqdm import tqdm
+
                 x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
             else:
                 x_iter = enumerate(X)
             for i, x in x_iter:
                 self.pre_step_fit(X)
-                c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
+                c = self.step_fit(
+                    x,
+                    match_reset_func=match_reset_func,
+                    match_reset_method=match_reset_method,
+                    epsilon=epsilon,
+                )
                 self.labels_[i] = c
                 self.post_step_fit(X)
         self.post_fit(X)
         return self
 
-
-    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
-        """
-        Iteratively fit the model to the data.
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
+        """Iteratively fit the model to the data.
 
         Parameters
         ----------
@@ -565,27 +625,29 @@ class BaseART(BaseEstimator, ClusterMixin):
             Epsilon value used for adjusting match criterion.
 
         """
-
         self.validate_data(X)
         self.check_dimensions(X)
-        self.is_fitted_ =  True
+        self.is_fitted_ = True
 
-        if not hasattr(self, 'W'):
-            self.W: list[np.ndarray] = []
-            self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+        if not hasattr(self, "W"):
+            self.W = []
+            self.labels_ = np.zeros((X.shape[0],), dtype=int)
             j = 0
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode="constant")
         for i, x in enumerate(X):
-            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
-            self.labels_[i+j] = c
+            c = self.step_fit(
+                x,
+                match_reset_func=match_reset_func,
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
+            self.labels_[i + j] = c
         return self
 
-
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predict labels for the data.
+        """Predict labels for the data.
 
         Parameters
         ----------
@@ -598,7 +660,6 @@ class BaseART(BaseEstimator, ClusterMixin):
             Labels for the data.
 
         """
-
         check_is_fitted(self)
         self.validate_data(X)
         self.check_dimensions(X)
@@ -610,11 +671,26 @@ class BaseART(BaseEstimator, ClusterMixin):
         return y
 
     def shrink_clusters(self, shrink_ratio: float = 0.1):
+        """Shrink the clusters by a specified ratio.
+
+        Parameters
+        ----------
+        shrink_ratio : float, optional
+            The ratio by which to shrink the clusters. Must be between 0 and 1.
+            Default is 0.1.
+
+        Returns
+        -------
+        self : object
+            Returns the instance with shrunken clusters.
+
+        """
         return self
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Undefined function for visualizing the bounds of each cluster.
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
+        """Undefined function for visualizing the bounds of each cluster.
 
         Parameters
         ----------
@@ -629,8 +705,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         raise NotImplementedError
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Undefined function for getting centers of each cluster. Used for regression.
+        """Undefined function for getting centers of each cluster. Used for regression.
 
         Returns
         -------
@@ -640,18 +715,16 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
-
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
-        """
-        Visualize the clustering of the data.
+        """Visualize the clustering of the data.
 
         Parameters
         ----------
@@ -676,20 +749,20 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         if colors is None:
             from matplotlib.pyplot import cm
+
             colors = cm.rainbow(np.linspace(0, 1, self.n_clusters))
 
         for k, col in enumerate(colors):
             cluster_data = y == k
-            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+            plt.scatter(
+                X[cluster_data, 0],
+                X[cluster_data, 1],
+                color=col,
+                marker=".",
+                s=marker_size,
+            )
 
         try:
             self.plot_cluster_bounds(ax, colors, linewidth)
         except NotImplementedError:
             warn(f"{self.__class__.__name__} does not support plotting cluster bounds.")
-
-
-
-
-
-
-

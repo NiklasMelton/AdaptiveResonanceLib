@@ -138,5 +138,7 @@ def test_map_deep(deep_artmap_model):
     X_prep, _ = deep_artmap_model.prepare_data(X)
     deep_artmap_model.fit(X_prep, y, max_iter=1)
 
-    mapped_label = deep_artmap_model.map_deep(0, deep_artmap_model.layers[0].labels_a[0])
+    mapped_label = deep_artmap_model.map_deep(
+        0, deep_artmap_model.layers[0].labels_a[0]
+    )
     assert isinstance(mapped_label.tolist(), int)

@@ -1,50 +1,48 @@
-"""
-Carpenter, G. A., & Grossberg, S. (1987a).
-A massively parallel architecture for a self-organizing neural pattern recognition machine.
-Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+"""ART1.
+
+Carpenter, G. A., & Grossberg, S. (1987a). A massively parallel architecture for a self-
+organizing neural pattern recognition machine. Computer Vision, Graphics, and Image
+Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+
 """
 
 import numpy as np
-from typing import Optional, List
+from typing import Optional, List, Tuple, Union, Dict
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l1norm
 
 
 class ART1(BaseART):
-    """ART1 for Clustering
+    """ART1 for Clustering.
 
-    This module implements ART1 as first published in
-    Carpenter, G. A., & Grossberg, S. (1987a).
-    A massively parallel architecture for a self-organizing neural pattern recognition machine.
-    Computer Vision, Graphics, and Image Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
-    ART1 is intended for binary data clustering only.
+    This module implements ART1 as first published in Carpenter, G. A., & Grossberg, S.
+    (1987a). A massively parallel architecture for a self-organizing neural pattern
+    recognition machine. Computer Vision, Graphics, and Image Processing, 37, 54 – 115.
+    doi:10. 1016/S0734-189X(87)80014-2. ART1 is intended for binary data clustering
+    only.
 
     """
+
     def __init__(self, rho: float, beta: float, L: float):
-        """
-        Initialize the ART1 model.
+        """Initialize the ART1 model.
 
         Parameters
         ----------
         rho : float
             Vigilance parameter in the range [0, 1].
         beta : float
-            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast
+            learning.
         L : float
             Uncommitted node bias, a value greater than or equal to 1.
 
         """
-        params = {
-            "rho": rho,
-            "beta": beta,
-            "L": L
-        }
+        params = {"rho": rho, "beta": beta, "L": L}
         super().__init__(params)
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -55,16 +53,15 @@ class ART1(BaseART):
         assert "rho" in params
         assert "beta" in params
         assert "L" in params
-        assert 1. >= params["rho"] >= 0.
-        assert 1. >= params["beta"] >= 0.
-        assert params["L"] >= 1.
+        assert 1.0 >= params["rho"] >= 0.0
+        assert 1.0 >= params["beta"] >= 0.0
+        assert params["L"] >= 1.0
         assert isinstance(params["rho"], float)
         assert isinstance(params["beta"], float)
         assert isinstance(params["L"], float)
 
     def validate_data(self, X: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -75,9 +72,10 @@ class ART1(BaseART):
         assert np.array_equal(X, X.astype(bool)), "ART1 only supports binary data"
         self.check_dimensions(X)
 
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
-        """
-        Get the activation of the cluster.
+    def category_choice(
+        self, i: np.ndarray, w: np.ndarray, params: dict
+    ) -> tuple[float, Optional[dict]]:
+        """Get the activation of the cluster.
 
         Parameters
         ----------
@@ -96,12 +94,17 @@ class ART1(BaseART):
             Cache used for later processing.
 
         """
-        w_bu = w[:self.dim_]
+        w_bu = w[: self.dim_]
         return float(np.dot(i, w_bu)), None
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
-        """
-        Get the match criterion of the cluster.
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+        """Get the match criterion of the cluster.
 
         Parameters
         ----------
@@ -122,13 +125,17 @@ class ART1(BaseART):
             Cache used for later processing.
 
         """
-        w_td = w[self.dim_:]
+        w_td = w[self.dim_ :]
         return l1norm(np.logical_and(i, w_td)) / l1norm(i), cache
 
-
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
-        """
-        Get the updated cluster weight.
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> np.ndarray:
+        """Get the updated cluster weight.
 
         Parameters
         ----------
@@ -147,16 +154,14 @@ class ART1(BaseART):
             Updated cluster weight.
 
         """
-        w_td = w[self.dim_:]
+        w_td = w[self.dim_ :]
 
         w_td_new = np.logical_and(i, w_td)
-        w_bu_new = (params["L"] / (params["L"] - 1 + l1norm(w_td_new)))*w_td_new
+        w_bu_new = (params["L"] / (params["L"] - 1 + l1norm(w_td_new))) * w_td_new
         return np.concatenate([w_bu_new, w_td_new])
 
-
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """
-        Generate a new cluster weight.
+        """Generate a new cluster weight.
 
         Parameters
         ----------
@@ -172,12 +177,11 @@ class ART1(BaseART):
 
         """
         w_td_new = i
-        w_bu_new = (params["L"] / (params["L"] - 1 + self.dim_))*w_td_new
+        w_bu_new = (params["L"] / (params["L"] - 1 + self.dim_)) * w_td_new
         return np.concatenate([w_bu_new, w_td_new])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
-        """
-        Get the centers of each cluster, used for regression.
+        """Get the centers of each cluster, used for regression.
 
         Returns
         -------
@@ -185,4 +189,4 @@ class ART1(BaseART):
             Cluster centroids.
 
         """
-        return [w[self.dim_:] for w in self.W]
+        return [w[self.dim_ :] for w in self.W]

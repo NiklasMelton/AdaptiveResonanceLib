@@ -1,4 +1,5 @@
-"""
+"""BARTMAP.
+
 Xu, R., & Wunsch II, D. C. (2011).
 BARTMAP: A viable structure for biclustering.
 Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
@@ -8,6 +9,7 @@ Methods and systems for biclustering algorithm.
 U.S. Patent 9,043,326 Filed January 28, 2012,
 claiming priority to Provisional U.S. Patent Application,
 January 28, 2011, issued May 26, 2015.
+
 """
 
 import numpy as np
@@ -18,9 +20,9 @@ from artlib.common.BaseART import BaseART
 from sklearn.base import BaseEstimator, BiclusterMixin
 from scipy.stats import pearsonr
 
+
 class BARTMAP(BaseEstimator, BiclusterMixin):
-    """
-    BARTMAP for Biclustering
+    """BARTMAP for Biclustering.
 
     This class implements BARTMAP as first published in:
     Xu, R., & Wunsch II, D. C. (2011).
@@ -35,12 +37,12 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     at least one of the feature clusters.
 
     """
-    rows_: np.ndarray #bool
-    columns_: np.ndarray #bool
+
+    rows_: np.ndarray  # bool
+    columns_: np.ndarray  # bool
 
     def __init__(self, module_a: BaseART, module_b: BaseART, eta: float):
-        """
-        Initialize the BARTMAP model.
+        """Initialize the BARTMAP model.
 
         Parameters
         ----------
@@ -63,10 +65,12 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             return self.params[key]
         else:
             # If the key is not in params, raise an AttributeError
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{key}'"
+            )
 
     def __setattr__(self, key, value):
-        if key in self.__dict__.get('params', {}):
+        if key in self.__dict__.get("params", {}):
             # If key is in params, set its value
             self.params[key] = value
         else:
@@ -74,8 +78,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             super().__setattr__(key, value)
 
     def get_params(self, deep: bool = True) -> dict:
-        """
-        Get parameters for this estimator.
+        """Get parameters for this estimator.
 
         Parameters
         ----------
@@ -101,8 +104,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return out
 
     def set_params(self, **params):
-        """
-        Set the parameters of this estimator.
+        """Set the parameters of this estimator.
 
         Specific redefinition of `sklearn.BaseEstimator.set_params` for ART classes.
 
@@ -117,7 +119,6 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             The estimator instance.
 
         """
-
         if not params:
             # Simple optimization to gain speed (inspect is slow)
             return self
@@ -148,8 +149,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     @staticmethod
     def validate_params(params: dict):
-        """
-        Validate clustering parameters.
+        """Validate clustering parameters.
 
         Parameters
         ----------
@@ -161,24 +161,55 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         assert isinstance(params["eta"], float)
 
     @property
-    def column_labels_(self):
+    def column_labels_(self) -> np.ndarray:
+        """Cluster labels for the columns.
+
+        Returns
+        -------
+        column_labels_ : ndarray of shape (n_columns,)
+            Array of cluster labels assigned to each column.
+
+        """
         return self.module_b.labels_
 
     @property
-    def row_labels_(self):
+    def row_labels_(self) -> np.ndarray:
+        """Cluster labels for the rows.
+
+        Returns
+        -------
+        row_labels_ : ndarray of shape (n_rows,)
+            Array of cluster labels assigned to each row.
+
+        """
         return self.module_a.labels_
 
     @property
-    def n_row_clusters(self):
+    def n_row_clusters(self) -> int:
+        """Number of row clusters.
+
+        Returns
+        -------
+        n_row_clusters : int
+            The number of clusters for the rows.
+
+        """
         return self.module_a.n_clusters
 
     @property
-    def n_column_clusters(self):
+    def n_column_clusters(self) -> int:
+        """Number of column clusters.
+
+        Returns
+        -------
+        n_column_clusters : int
+            The number of clusters for the columns.
+
+        """
         return self.module_b.n_clusters
 
     def _get_x_cb(self, x: np.ndarray, c_b: int):
-        """
-        Get the components of a vector belonging to a b-side cluster.
+        """Get the components of a vector belonging to a b-side cluster.
 
         Parameters
         ----------
@@ -199,8 +230,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
     @staticmethod
     def _pearsonr(a: np.ndarray, b: np.ndarray) -> float:
-        """
-        Get the Pearson correlation between two vectors.
+        """Get the Pearson correlation between two vectors.
 
         Parameters
         ----------
@@ -219,8 +249,8 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return r
 
     def _average_pearson_corr(self, X: np.ndarray, k: int, c_b: int) -> float:
-        """
-        Get the average Pearson correlation for a sample across all features in cluster b.
+        """Get the average Pearson correlation for a sample across all features in
+        cluster b.
 
         Parameters
         ----------
@@ -241,19 +271,15 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         X_a = X[self.column_labels_ == c_b, :]
         if len(X_a) == 0:
             raise ValueError("X_a has length 0")
-        X_k_cb = self._get_x_cb(X[k,:], c_b)
+        X_k_cb = self._get_x_cb(X[k, :], c_b)
         mean_r = np.mean(
-            [
-                self._pearsonr(X_k_cb, self._get_x_cb(x_a_l, c_b))
-                for x_a_l in X_a
-            ]
+            [self._pearsonr(X_k_cb, self._get_x_cb(x_a_l, c_b)) for x_a_l in X_a]
         )
 
         return float(mean_r)
 
     def validate_data(self, X_a: np.ndarray, X_b: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -266,9 +292,10 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         self.module_a.validate_data(X_a)
         self.module_b.validate_data(X_b)
 
-    def match_criterion_bin(self, X: np.ndarray, k: int, c_b: int, params: dict) -> bool:
-        """
-        Get the binary match criterion of the cluster.
+    def match_criterion_bin(
+        self, X: np.ndarray, k: int, c_b: int, params: dict
+    ) -> bool:
+        """Get the binary match criterion of the cluster.
 
         Parameters
         ----------
@@ -291,16 +318,15 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return M >= self.params["eta"]
 
     def match_reset_func(
-            self,
-            i: np.ndarray,
-            w: np.ndarray,
-            cluster_a,
-            params: dict,
-            extra: dict,
-            cache: Optional[dict] = None
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        cluster_a,
+        params: dict,
+        extra: dict,
+        cache: Optional[dict] = None,
     ) -> bool:
-        """
-        Permit external factors to influence cluster creation.
+        """Permit external factors to influence cluster creation.
 
         Parameters
         ----------
@@ -330,8 +356,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return False
 
     def step_fit(self, X: np.ndarray, k: int) -> int:
-        """
-        Fit the model to a single sample.
+        """Fit the model to a single sample.
 
         Parameters
         ----------
@@ -353,8 +378,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         return c_a
 
     def fit(self, X: np.ndarray, max_iter=1):
-        """
-        Fit the model to the data.
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -371,7 +395,6 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         X_a = self.module_a.prepare_data(X)
         X_b = self.module_b.prepare_data(X.T)
         self.validate_data(X_a, X_b)
-
 
         self.module_b = self.module_b.fit(X_b, max_iter=max_iter)
 
@@ -402,13 +425,8 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         )
         return self
 
-
-    def visualize(
-            self,
-            cmap: Optional[Colormap] = None
-    ):
-        """
-        Visualize the clustering of the data.
+    def visualize(self, cmap: Optional[Colormap] = None):
+        """Visualize the clustering of the data.
 
         Parameters
         ----------
@@ -419,8 +437,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         import matplotlib.pyplot as plt
 
         if cmap is None:
-            from matplotlib.pyplot import cm
-            cmap=plt.cm.Blues
+            cmap = plt.cm.Blues
 
         plt.matshow(
             np.outer(np.sort(self.row_labels_) + 1, np.sort(self.column_labels_) + 1),

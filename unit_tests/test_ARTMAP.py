@@ -4,6 +4,7 @@ from artlib.supervised.ARTMAP import ARTMAP
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.BaseART import BaseART
 
+
 # Fixture to initialize an ARTMAP instance for testing
 @pytest.fixture
 def artmap_model():
@@ -11,16 +12,19 @@ def artmap_model():
     module_b = FuzzyART(0.5, 0.01, 1.0)
     return ARTMAP(module_a=module_a, module_b=module_b)
 
+
 def test_initialization(artmap_model):
     # Test that the model initializes correctly
     assert isinstance(artmap_model.module_a, BaseART)
     assert isinstance(artmap_model.module_b, BaseART)
+
 
 def test_get_params(artmap_model):
     # Test the get_params method
     params = artmap_model.get_params()
     assert "module_a" in params
     assert "module_b" in params
+
 
 def test_labels_properties(artmap_model):
     # Test the labels properties
@@ -29,7 +33,11 @@ def test_labels_properties(artmap_model):
 
     assert np.array_equal(artmap_model.labels_a, artmap_model.module_a.labels_)
     assert np.array_equal(artmap_model.labels_b, artmap_model.module_b.labels_)
-    assert artmap_model.labels_ab == {"A": artmap_model.module_a.labels_, "B": artmap_model.module_b.labels_}
+    assert artmap_model.labels_ab == {
+        "A": artmap_model.module_a.labels_,
+        "B": artmap_model.module_b.labels_,
+    }
+
 
 def test_validate_data(artmap_model):
     # Test the validate_data method
@@ -45,6 +53,7 @@ def test_validate_data(artmap_model):
     with pytest.raises(AssertionError):
         artmap_model.validate_data(X_invalid, y)
 
+
 def test_prepare_and_restore_data(artmap_model):
     # Test prepare_data and restore_data methods
     np.random.seed(42)
@@ -56,6 +65,7 @@ def test_prepare_and_restore_data(artmap_model):
     X_restored, y_restored = artmap_model.restore_data(X_prep, y_prep)
     assert np.allclose(X_restored, X)
     assert np.allclose(y_restored, y)
+
 
 def test_fit(artmap_model):
     # Test the fit method
@@ -70,6 +80,7 @@ def test_fit(artmap_model):
     assert artmap_model.module_a.labels_.shape[0] == X.shape[0]
     assert artmap_model.module_b.labels_.shape[0] == y.shape[0]
 
+
 def test_partial_fit(artmap_model):
     # Test the partial_fit method
     np.random.seed(42)
@@ -82,6 +93,7 @@ def test_partial_fit(artmap_model):
 
     assert artmap_model.module_a.labels_.shape[0] == X.shape[0]
     assert artmap_model.module_b.labels_.shape[0] == y.shape[0]
+
 
 def test_predict(artmap_model):
     # Test the predict method
@@ -96,6 +108,7 @@ def test_predict(artmap_model):
     predictions = artmap_model.predict(X_prep)
     assert predictions.shape[0] == X.shape[0]
 
+
 def test_predict_ab(artmap_model):
     # Test the predict_ab method
     np.random.seed(42)
@@ -109,6 +122,7 @@ def test_predict_ab(artmap_model):
     predictions_a, predictions_b = artmap_model.predict_ab(X_prep)
     assert predictions_a.shape[0] == X.shape[0]
     assert predictions_b.shape[0] == X.shape[0]
+
 
 def test_predict_regression(artmap_model):
     # Test the predict_regression method

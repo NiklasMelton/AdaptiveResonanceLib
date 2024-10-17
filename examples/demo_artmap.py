@@ -9,17 +9,15 @@ def cluster_iris():
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import classification_report
     import umap.plot
+
     data, target = load_iris(return_X_y=True)
     print("Data has shape:", data.shape)
 
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, target, test_size=0.33, random_state=0
+    )
 
-    X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.33, random_state=0)
-
-    params = {
-        "rho": 0.0,
-        "alpha": 0.0,
-        "beta": 1.0
-    }
+    params = {"rho": 0.0, "alpha": 0.0, "beta": 1.0}
     art = FuzzyART(**params)
     # params = {
     #     "rho": 0.0,
@@ -45,19 +43,23 @@ def cluster_iris():
 
     mapper = umap.UMAP().fit(X_test)
 
-    umap.plot.points(mapper, labels=y_pred, color_key_cmap='Paired', background='black')
+    umap.plot.points(
+        mapper, labels=y_pred, color_key_cmap="Paired", background="black"
+    )
     umap.plot.plt.show()
 
 
 def cluster_blobs():
-    data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
+    data, target = make_blobs(
+        n_samples=150,
+        centers=3,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
     print("Data has shape:", data.shape)
 
-    params = {
-        "rho": 0.9,
-        "alpha": 0.0,
-        "beta": 1.0
-    }
+    params = {"rho": 0.9, "alpha": 0.0, "beta": 1.0}
     art = FuzzyART(**params)
 
     # params = {
@@ -87,7 +89,6 @@ def cluster_blobs():
 def main():
     # cluster_iris()
     cluster_blobs()
-
 
 
 if __name__ == "__main__":

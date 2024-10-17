@@ -1,5 +1,6 @@
 from typing import List, Callable
 
+
 def find(parent: List[int], i: int) -> int:
     """
     Find the root of the set containing element i using path compression.

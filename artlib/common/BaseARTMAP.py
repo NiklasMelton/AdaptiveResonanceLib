@@ -1,19 +1,21 @@
+"""Base class for all ARTMAP objects."""
 import numpy as np
-from typing import Union, Optional, Iterable, Literal
+from typing import Union, Optional, Literal
 from collections import defaultdict
 from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
+from artlib.common.utils import IndexableOrKeyable
+
 
 class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
-    """
-    Generic implementation of Adaptive Resonance Theory MAP (ARTMAP)
-    """
+    """Generic implementation of Adaptive Resonance Theory MAP (ARTMAP)"""
+
     def __init__(self):
+        """Instantiate the BaseARTMAP object."""
         self.map: dict[int, int] = dict()
 
     def set_params(self, **params):
-        """
-        Set the parameters of this estimator.
+        """Set the parameters of this estimator.
 
         Specific redefinition of `sklearn.BaseEstimator.set_params` for ARTMAP classes.
 
@@ -28,7 +30,6 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             Estimator instance.
 
         """
-
         if not params:
             # Simple optimization to gain speed (inspect is slow)
             return self
@@ -57,8 +58,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return self
 
     def map_a2b(self, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
-        """
-        Map an a-side label to a b-side label.
+        """Map an a-side label to a b-side label.
 
         Parameters
         ----------
@@ -77,8 +77,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return np.array([self.map[x] for x in u], dtype=int)[inv].reshape(y_a.shape)
 
     def validate_data(self, X: np.ndarray, y: np.ndarray):
-        """
-        Validate the data prior to clustering.
+        """Validate the data prior to clustering.
 
         Parameters
         ----------
@@ -90,9 +89,15 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
-        """
-        Fit the model to the data.
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
+        """Fit the model to the data.
 
         Parameters
         ----------
@@ -110,9 +115,14 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
-        """
-        Partial fit the model to the data.
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
+        """Partial fit the model to the data.
 
         Parameters
         ----------
@@ -129,8 +139,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         raise NotImplementedError
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predict labels for the data.
+        """Predict labels for the data.
 
         Parameters
         ----------
@@ -146,8 +155,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         raise NotImplementedError
 
     def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Predict labels for the data, both A-side and B-side.
+        """Predict labels for the data, both A-side and B-side.
 
         Parameters
         ----------
@@ -162,9 +170,10 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the bounds of each cluster.
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
+        """Visualize the bounds of each cluster.
 
         Parameters
         ----------
@@ -179,16 +188,15 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         raise NotImplementedError
 
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
-        """
-        Visualize the clustering of the data.
+        """Visualize the clustering of the data.
 
         Parameters
         ----------

@@ -1,60 +1,76 @@
-"""
-Bartfai, G. (1994).
-Hierarchical clustering with ART neural networks.
-In Proc. IEEE International Conference on Neural Networks (ICNN)
-(pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307.
+"""SMART.
+
+Bartfai, G. (1994). Hierarchical clustering with ART neural networks. In Proc. IEEE
+International Conference on Neural Networks (ICNN) (pp. 940–944). volume 2.
+doi:10.1109/ICNN.1994.374307.
+
 """
 
 import numpy as np
-from typing import Union, Type, Optional, Iterable, Literal
+from typing import Union, Type, Optional, Literal, Tuple
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import IndexableOrKeyable
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
-class SMART(DeepARTMAP):
-    """SMART for Hierachical Clustering
 
-    This module implements SMART as first published in
-    Bartfai, G. (1994).
-    Hierarchical clustering with ART neural networks.
-    In Proc. IEEE International Conference on Neural Networks (ICNN)
-    (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307.
-    SMART accepts an uninstatiated ART class and hierarchically clusters data in a divisive fashion by using a set of
-    vigilance values that monotonically increase in their restrictiveness. SMART is a special case of DeepARTMAP,
-    which forms the backbone of this class, where all channels receive the same data.
+class SMART(DeepARTMAP):
+    """SMART for Hierachical Clustering.
+
+    This module implements SMART as first published in Bartfai, G. (1994). Hierarchical
+    clustering with ART neural networks. In Proc. IEEE International Conference on
+    Neural Networks (ICNN) (pp. 940–944). volume 2. doi:10.1109/ICNN.1994.374307. SMART
+    accepts an uninstatiated ART class and hierarchically clusters data in a divisive
+    fashion by using a set of vigilance values that monotonically increase in their
+    restrictiveness. SMART is a special case of DeepARTMAP, which forms the backbone of
+    this class, where all channels receive the same data.
 
     """
 
-    def __init__(self, base_ART_class: Type, rho_values: Union[list[float], np.ndarray], base_params: dict, **kwargs):
-        """
-        Initialize the SMART model.
+    def __init__(
+        self,
+        base_ART_class: Type,
+        rho_values: Union[list[float], np.ndarray],
+        base_params: dict,
+        **kwargs
+    ):
+        """Initialize the SMART model.
 
         Parameters
         ----------
         base_ART_class : Type
             Some ART class to instantiate the layers.
         rho_values : list of float or np.ndarray
-            The vigilance parameter values for each layer, must be monotonically increasing for most ART modules.
+            The vigilance parameter values for each layer, must be monotonically
+            increasing for most ART modules.
         base_params : dict
             Parameters for the base ART module, used to instantiate each layer.
         **kwargs :
             Additional keyword arguments for ART module initialization.
+
         """
         if base_ART_class.__name__ != "BayesianART":
-            assert all(np.diff(rho_values) > 0), "rho_values must be monotonically increasing"
+            assert all(
+                np.diff(rho_values) > 0
+            ), "rho_values must be monotonically increasing"
         else:
-            assert all(np.diff(rho_values) < 0), "rho_values must be monotonically decreasing for BayesianART"
+            assert all(
+                np.diff(rho_values) < 0
+            ), "rho_values must be monotonically decreasing for BayesianART"
         self.rho_values = rho_values
 
         layer_params = [dict(base_params, **{"rho": rho}) for rho in self.rho_values]
         modules = [base_ART_class(**params, **kwargs) for params in layer_params]
         for module in modules:
-            assert isinstance(module, BaseART), "Only elementary ART-like objects are supported"
+            assert isinstance(
+                module, BaseART
+            ), "Only elementary ART-like objects are supported"
         super().__init__(modules)
 
-    def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Prepare data for clustering.
+    def prepare_data(
+        self, X: Union[np.ndarray, list[np.ndarray]], y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[list[np.ndarray], Optional[np.ndarray]]]:
+        """Prepare data for clustering.
 
         Parameters
         ----------
@@ -65,13 +81,15 @@ class SMART(DeepARTMAP):
         -------
         np.ndarray
             Prepared data.
+
         """
-        X_, _ = super(SMART, self).prepare_data([X]*self.n_modules)
+        X_, _ = super(SMART, self).prepare_data([X] * self.n_modules)
         return X_[0]
 
-    def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        Restore data to its original form before preparation.
+    def restore_data(
+        self, X: Union[np.ndarray, list[np.ndarray]], y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[list[np.ndarray], Optional[np.ndarray]]]:
+        """Restore data to its original form before preparation.
 
         Parameters
         ----------
@@ -82,13 +100,20 @@ class SMART(DeepARTMAP):
         -------
         np.ndarray
             Restored data.
+
         """
         X_, _ = super(SMART, self).restore_data([X] * self.n_modules)
         return X_[0]
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
-        """
-        Fit the SMART model to the data.
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
+        """Fit the SMART model to the data.
 
         Parameters
         ----------
@@ -107,13 +132,24 @@ class SMART(DeepARTMAP):
         -------
         SMART
             Fitted SMART model.
-        """
-        X_list = [X]*self.n_modules
-        return super().fit(X_list, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
 
-    def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
         """
-        Partial fit the SMART model to the data.
+        X_list = [X] * self.n_modules
+        return super().fit(
+            X_list,
+            max_iter=max_iter,
+            match_reset_method=match_reset_method,
+            epsilon=epsilon,
+        )
+
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
+        """Partial fit the SMART model to the data.
 
         Parameters
         ----------
@@ -130,13 +166,17 @@ class SMART(DeepARTMAP):
         -------
         SMART
             Partially fitted SMART model.
+
         """
         X_list = [X] * self.n_modules
-        return super(SMART, self).partial_fit(X_list, match_reset_method=match_reset_method, epsilon=epsilon)
+        return super(SMART, self).partial_fit(
+            X_list, match_reset_method=match_reset_method, epsilon=epsilon
+        )
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        Visualize the cluster boundaries.
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
+        """Visualize the cluster boundaries.
 
         Parameters
         ----------
@@ -150,6 +190,7 @@ class SMART(DeepARTMAP):
         Returns
         -------
         None
+
         """
         for j in range(len(self.modules)):
             layer_colors = []
@@ -160,18 +201,16 @@ class SMART(DeepARTMAP):
                     layer_colors.append(colors[self.map_deep(j - 1, k)])
             self.modules[j].plot_cluster_bounds(ax, layer_colors, linewidth)
 
-
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
-        """
-        Visualize the clustering of the data with cluster boundaries.
+        """Visualize the clustering of the data with cluster boundaries.
 
         Parameters
         ----------
@@ -191,6 +230,7 @@ class SMART(DeepARTMAP):
         Returns
         -------
         None
+
         """
         import matplotlib.pyplot as plt
 
@@ -199,10 +239,17 @@ class SMART(DeepARTMAP):
 
         if colors is None:
             from matplotlib.pyplot import cm
+
             colors = cm.rainbow(np.linspace(0, 1, self.modules[0].n_clusters))
 
         for k, col in enumerate(colors):
             cluster_data = y == k
-            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+            plt.scatter(
+                X[cluster_data, 0],
+                X[cluster_data, 1],
+                color=col,
+                marker=".",
+                s=marker_size,
+            )
 
         self.plot_cluster_bounds(ax, colors, linewidth)

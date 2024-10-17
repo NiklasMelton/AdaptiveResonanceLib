@@ -1,6 +1,10 @@
 import pytest
 import numpy as np
-from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
+from sklearn.metrics import (
+    calinski_harabasz_score,
+    davies_bouldin_score,
+    silhouette_score,
+)
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.BaseART import BaseART
 from artlib.cvi.CVIART import CVIART
@@ -72,7 +76,14 @@ def test_cviart_CVI_match(cviart_model):
     cviart_model.base_module.W = w
 
     # Test that CVI_match correctly works with Calinski-Harabasz
-    result = cviart_model.CVI_match(x, w, 1, cviart_model.params, {"validity": CVIART.CALINSKIHARABASZ, "index": 0}, {})
+    result = cviart_model.CVI_match(
+        x,
+        w,
+        1,
+        cviart_model.params,
+        {"validity": CVIART.CALINSKIHARABASZ, "index": 0},
+        {},
+    )
     assert isinstance(result, np.bool_)
 
 
@@ -86,4 +97,3 @@ def test_cviart_get_cluster_centers(cviart_model):
 
     assert len(centers) == 1
     assert np.allclose(centers[0], np.array([0.3, 0.5]))
-

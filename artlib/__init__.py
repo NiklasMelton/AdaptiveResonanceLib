@@ -1,12 +1,13 @@
-"""
-Adaptive Resonance Theory (ART) is a cognitive and neural network model that explains how the brain learns to recognize
-patterns while maintaining stability in the face of new, potentially conflicting information. ART networks are known for
-their ability to perform unsupervised learning and adaptively categorize data without forgetting previously learned
-patterns, a feature known as "plasticity-stability balance."
+"""Adaptive Resonance Theory (ART) is a cognitive and neural network model that explains
+how the brain learns to recognize patterns while maintaining stability in the face of
+new, potentially conflicting information. ART networks are known for their ability to
+perform unsupervised learning and adaptively categorize data without forgetting
+previously learned patterns, a feature known as "plasticity-stability balance.".
 
-The ART modules provided here support classification, clustering, and reinforcement learning tasks by dynamically
-adjusting to incoming data streams. They also offer advanced capabilities, including hierarchical clustering,
-topological clustering, data fusion, and regression, enabling flexible exploration of complex data structures.
+The ART modules provided here support classification, clustering, and reinforcement
+learning tasks by dynamically adjusting to incoming data streams. They also offer
+advanced capabilities, including hierarchical clustering, topological clustering, data
+fusion, and regression, enabling flexible exploration of complex data structures.
 
 `Adaptive Resonance Theory <https://en.wikipedia.org/wiki/Adaptive_resonance_theory>`_
 
@@ -15,7 +16,12 @@ topological clustering, data fusion, and regression, enabling flexible explorati
 
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
-from artlib.common.utils import normalize, compliment_code, de_compliment_code, de_normalize
+from artlib.common.utils import (
+    normalize,
+    compliment_code,
+    de_compliment_code,
+    de_normalize,
+)
 from artlib.common.VAT import VAT
 
 from artlib.elementary.ART1 import ART1
@@ -30,7 +36,8 @@ from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 from artlib.cvi.iCVIFuzzyArt import iCVIFuzzyART
 from artlib.cvi.CVIART import CVIART
 
-from artlib.supervised.ARTMAP import ARTMAP, SimpleARTMAP
+from artlib.supervised.ARTMAP import ARTMAP
+from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 
 from artlib.hierarchical.SMART import SMART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
@@ -49,6 +56,9 @@ __all__ = [
     "BaseARTMAP",
     "normalize",
     "compliment_code",
+    "de_compliment_code",
+    "de_normalize",
+    "VAT",
     "ART1",
     "ART2A",
     "BayesianART",
@@ -68,5 +78,5 @@ __all__ = [
     "iCVIFuzzyART",
     "CVIART",
     "FALCON",
-    "TD_FALCON"
+    "TD_FALCON",
 ]

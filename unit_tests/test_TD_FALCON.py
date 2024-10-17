@@ -11,7 +11,12 @@ def td_falcon_model():
     action_art = FuzzyART(0.7, 0.01, 1.0)
     reward_art = FuzzyART(0.9, 0.01, 1.0)
     channel_dims = [4, 4, 2]
-    return TD_FALCON(state_art=state_art, action_art=action_art, reward_art=reward_art, channel_dims=channel_dims)
+    return TD_FALCON(
+        state_art=state_art,
+        action_art=action_art,
+        reward_art=reward_art,
+        channel_dims=channel_dims,
+    )
 
 
 def test_td_falcon_initialization(td_falcon_model):
@@ -41,12 +46,16 @@ def test_td_falcon_partial_fit(td_falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     td_falcon_model.partial_fit(states_prep, actions_prep, rewards_prep)
 
     assert len(td_falcon_model.fusion_art.W) > 0
-    assert td_falcon_model.fusion_art.labels_.shape[0] == states_prep.shape[0]-1
+    assert (
+        td_falcon_model.fusion_art.labels_.shape[0] == states_prep.shape[0] - 1
+    )
 
 
 def test_td_falcon_calculate_SARSA(td_falcon_model):
@@ -55,17 +64,29 @@ def test_td_falcon_calculate_SARSA(td_falcon_model):
     actions = np.random.rand(10, 2)
     rewards = np.random.rand(10, 1)
 
-    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     # Test with multiple samples
-    states_fit, actions_fit, sarsa_rewards_fit = td_falcon_model.calculate_SARSA(states_prep, actions_prep, rewards_prep)
+    (
+        states_fit,
+        actions_fit,
+        sarsa_rewards_fit,
+    ) = td_falcon_model.calculate_SARSA(states_prep, actions_prep, rewards_prep)
 
     assert states_fit.shape == (9, 4)  # Last sample is discarded for SARSA
     assert actions_fit.shape == (9, 4)
     assert sarsa_rewards_fit.shape == (9, 2)
 
     # Test with single sample
-    states_fit, actions_fit, sarsa_rewards_fit = td_falcon_model.calculate_SARSA(states_prep[:1], actions_prep[:1], rewards_prep[:1])
+    (
+        states_fit,
+        actions_fit,
+        sarsa_rewards_fit,
+    ) = td_falcon_model.calculate_SARSA(
+        states_prep[:1], actions_prep[:1], rewards_prep[:1]
+    )
 
     assert states_fit.shape == (1, 4)
     assert actions_fit.shape == (1, 4)
@@ -79,11 +100,15 @@ def test_td_falcon_get_actions_and_rewards(td_falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     td_falcon_model.partial_fit(states_prep, actions_prep, rewards_prep)
 
-    action_space, rewards = td_falcon_model.get_actions_and_rewards(states_prep[0, :])
+    action_space, rewards = td_falcon_model.get_actions_and_rewards(
+        states_prep[0, :]
+    )
 
     assert action_space.shape[0] > 0
     assert rewards.shape[0] > 0
@@ -96,7 +121,9 @@ def test_td_falcon_get_action(td_falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     td_falcon_model.partial_fit(states_prep, actions_prep, rewards_prep)
 
@@ -112,7 +139,9 @@ def test_td_falcon_get_probabilistic_action(td_falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     td_falcon_model.partial_fit(states_prep, actions_prep, rewards_prep)
 
@@ -128,7 +157,9 @@ def test_td_falcon_get_rewards(td_falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = td_falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     td_falcon_model.partial_fit(states_prep, actions_prep, rewards_prep)
 

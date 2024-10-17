@@ -1,21 +1,29 @@
-# Bezdek, J. C., & Hathaway, R. J. (2002). VAT: A tool for visual assessment of cluster tendency.
-# Proceedings of the 2002 International Joint Conference on Neural Networks. doi:10.1109/IJCNN.2002.1007487
+"""VAT.
+
+Bezdek, J. C., & Hathaway, R. J. (2002).
+VAT: A tool for visual assessment of cluster tendency.
+Proceedings of the 2002 International Joint Conference on Neural Networks.
+doi:10.1109/IJCNN.2002.1007487
+
+"""
 import numpy as np
 from typing import Optional, Tuple, Callable
 from scipy.spatial.distance import pdist, squareform
 
 
-def VAT(data: np.ndarray, distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean")) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Visual Assessment of Cluster Tendency (VAT) algorithm.
+def VAT(
+    data: np.ndarray,
+    distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean"),
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Visual Assessment of Cluster Tendency (VAT) algorithm.
 
     Parameters
     ----------
     data : np.ndarray
         Input dataset as a 2D numpy array where each row is a sample.
     distance_metric : callable, optional
-        Callable function to calculate pairwise distances. Defaults to Euclidean distance
-        using `pdist`. If None, assumes data is a pre-computed distance matrix.
+        Callable function to calculate pairwise distances. Defaults to Euclidean
+        distance using `pdist`. If None, assumes data is a pre-computed distance matrix.
 
     Returns
     -------
@@ -44,5 +52,3 @@ def VAT(data: np.ndarray, distance_metric: Optional[Callable] = lambda X: pdist(
         remaining.pop(jx)
 
     return pairwise_dist[np.ix_(indicies, indicies)], np.array(indicies)
-
-

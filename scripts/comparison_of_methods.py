@@ -17,23 +17,36 @@ import artlib
 n_samples = 500
 seed = 30
 noisy_circles = datasets.make_circles(
-    n_samples=n_samples, factor=0.5, noise=0.05, random_state=seed, shuffle=False
+    n_samples=n_samples,
+    factor=0.5,
+    noise=0.05,
+    random_state=seed,
+    shuffle=False,
 )
-noisy_moons = datasets.make_moons(n_samples=n_samples, noise=0.05, random_state=seed, shuffle=False)
-blobs = datasets.make_blobs(n_samples=n_samples, random_state=seed, shuffle=False)
+noisy_moons = datasets.make_moons(
+    n_samples=n_samples, noise=0.05, random_state=seed, shuffle=False
+)
+blobs = datasets.make_blobs(
+    n_samples=n_samples, random_state=seed, shuffle=False
+)
 rng = np.random.RandomState(seed)
 no_structure = rng.rand(n_samples, 2), None
 
 # Anisotropicly distributed data
 random_state = 170
-X, y = datasets.make_blobs(n_samples=n_samples, random_state=random_state, shuffle=False)
+X, y = datasets.make_blobs(
+    n_samples=n_samples, random_state=random_state, shuffle=False
+)
 transformation = [[0.6, -0.6], [-0.4, 0.8]]
 X_aniso = np.dot(X, transformation)
 aniso = (X_aniso, y)
 
 # blobs with varied variances
 varied = datasets.make_blobs(
-    n_samples=n_samples, cluster_std=[1.0, 2.5, 0.5], random_state=random_state, shuffle=False
+    n_samples=n_samples,
+    cluster_std=[1.0, 2.5, 0.5],
+    random_state=random_state,
+    shuffle=False,
 )
 
 # ============
@@ -50,335 +63,229 @@ datasets = [
     (
         noisy_circles,
         {
-            "BayesianART":
-                {
-                    "rho": 9e-5,
-                    "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
-                },
-            "DualVigilanceART":
-                {
-                    "FuzzyART":
-                        {
-                            "rho": 0.95,
-
-                            "alpha": 0.8,
-                            "beta": 1.0
-                        },
-                    "rho_lower_bound": 0.9,
-
-                },
-            "EllipsoidART":
-                {
-                    "rho": 0.1,
-                    "alpha": 1.0,
-                    "beta": 1.0,
-                    "r_hat": 0.9,
-                    "mu": 0.3
-                },
-            "FuzzyART":
-                {
-                    "rho": 0.266,
-                    "alpha": 0.15,
-                    "beta": 1.0
-                },
-            "GaussianART":
-                {
-                    "rho": 0.1,
-                    "sigma_init": np.array([0.5, 0.5]),
-                },
-            "HypersphereART":
-                {
-                    "rho": 0.433,
-                    "alpha": 0.7,
-                    "beta": 1.0,
-                    "r_hat": 0.8
-                },
-            "QuadraticNeuronART":
-                {
-                    "rho": 0.99,
-                    "s_init": 0.8,
-                    "lr_b": 0.2,
-                    "lr_w": 0.1,
-                    "lr_s": 0.2
-                },
+            "BayesianART": {
+                "rho": 9e-5,
+                "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
+            },
+            "DualVigilanceART": {
+                "FuzzyART": {"rho": 0.95, "alpha": 0.8, "beta": 1.0},
+                "rho_lower_bound": 0.9,
+            },
+            "EllipsoidART": {
+                "rho": 0.1,
+                "alpha": 1.0,
+                "beta": 1.0,
+                "r_hat": 0.9,
+                "mu": 0.3,
+            },
+            "FuzzyART": {"rho": 0.266, "alpha": 0.15, "beta": 1.0},
+            "GaussianART": {
+                "rho": 0.1,
+                "sigma_init": np.array([0.5, 0.5]),
+            },
+            "HypersphereART": {
+                "rho": 0.433,
+                "alpha": 0.7,
+                "beta": 1.0,
+                "r_hat": 0.8,
+            },
+            "QuadraticNeuronART": {
+                "rho": 0.99,
+                "s_init": 0.8,
+                "lr_b": 0.2,
+                "lr_w": 0.1,
+                "lr_s": 0.2,
+            },
         },
     ),
     (
         noisy_moons,
         {
-            "BayesianART":
-                {
-                    "rho": 9e-5,
-                    "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
-                },
-            "DualVigilanceART":
-                {
-                    "FuzzyART":
-                        {
-                            "rho": 0.85,
-
-                            "alpha": 0.8,
-                            "beta": 1.0
-                        },
-                    "rho_lower_bound": 0.78,
-
-                },
-            "EllipsoidART":
-                {
-                    "rho": 0.166,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.9,
-                    "mu": 0.4
-                },
-            "FuzzyART":
-                {
-                    "rho": 0.33,
-                    "alpha": 0.0,
-                    "beta": 1.0
-                },
-            "GaussianART":
-                {
-                    "rho": 0.133,
-                    "sigma_init": np.array([0.5, 0.5]),
-                },
-            "HypersphereART":
-                {
-                    "rho": 0.2,
-                    "alpha": 0.7,
-                    "beta": 1.0,
-                    "r_hat": 0.7
-                },
-            "QuadraticNeuronART":
-                {
-                    "rho": 0.9,
-                    "s_init": 0.9,
-                    "lr_b": 0.1,
-                    "lr_w": 0.1,
-                    "lr_s": 0.1
-                },
+            "BayesianART": {
+                "rho": 9e-5,
+                "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
+            },
+            "DualVigilanceART": {
+                "FuzzyART": {"rho": 0.85, "alpha": 0.8, "beta": 1.0},
+                "rho_lower_bound": 0.78,
+            },
+            "EllipsoidART": {
+                "rho": 0.166,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.9,
+                "mu": 0.4,
+            },
+            "FuzzyART": {"rho": 0.33, "alpha": 0.0, "beta": 1.0},
+            "GaussianART": {
+                "rho": 0.133,
+                "sigma_init": np.array([0.5, 0.5]),
+            },
+            "HypersphereART": {
+                "rho": 0.2,
+                "alpha": 0.7,
+                "beta": 1.0,
+                "r_hat": 0.7,
+            },
+            "QuadraticNeuronART": {
+                "rho": 0.9,
+                "s_init": 0.9,
+                "lr_b": 0.1,
+                "lr_w": 0.1,
+                "lr_s": 0.1,
+            },
         },
     ),
     (
         varied,
         {
-            "BayesianART":
-                {
-                    "rho": 3e-4,
-                    "cov_init": np.array([[1e-3, 0.0], [0.0, 1e-3]]),
-                },
-            "DualVigilanceART":
-                {
-                    "FuzzyART":
-                        {
-                            "rho": 0.95,
-                            "alpha": 0.8,
-                            "beta": 1.0
-                        },
-                    "rho_lower_bound": 0.88,
-
-                },
-            "EllipsoidART":
-                {
-                    "rho": 0.05,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.7,
-                    "mu": 1.0
-                },
-            "FuzzyART":
-                {
-                    "rho": 0.4,
-                    "alpha": 0.1,
-                    "beta": 1.0
-                },
-            "GaussianART":
-                {
-                    "rho": 0.08,
-                    "sigma_init": np.array([0.5, 0.5]),
-                },
-            "HypersphereART":
-                {
-                    "rho": 0.2,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.3
-                },
-            "QuadraticNeuronART":
-                {
-                    "rho": 0.933,
-                    "s_init": 0.9,
-                    "lr_b": 0.1,
-                    "lr_w": 0.1,
-                    "lr_s": 0.1
-                },
+            "BayesianART": {
+                "rho": 3e-4,
+                "cov_init": np.array([[1e-3, 0.0], [0.0, 1e-3]]),
+            },
+            "DualVigilanceART": {
+                "FuzzyART": {"rho": 0.95, "alpha": 0.8, "beta": 1.0},
+                "rho_lower_bound": 0.88,
+            },
+            "EllipsoidART": {
+                "rho": 0.05,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.7,
+                "mu": 1.0,
+            },
+            "FuzzyART": {"rho": 0.4, "alpha": 0.1, "beta": 1.0},
+            "GaussianART": {
+                "rho": 0.08,
+                "sigma_init": np.array([0.5, 0.5]),
+            },
+            "HypersphereART": {
+                "rho": 0.2,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.3,
+            },
+            "QuadraticNeuronART": {
+                "rho": 0.933,
+                "s_init": 0.9,
+                "lr_b": 0.1,
+                "lr_w": 0.1,
+                "lr_s": 0.1,
+            },
         },
     ),
     (
         aniso,
         {
-            "BayesianART":
-                {
-                    "rho": 2e-5,
-                    "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
-                },
-            "DualVigilanceART":
-                {
-                    "FuzzyART":
-                        {
-                            "rho": 0.95,
-
-                            "alpha": 0.8,
-                            "beta": 1.0
-                        },
-                    "rho_lower_bound": 0.9,
-
-                 },
-            "EllipsoidART":
-                {
-                    "rho": 5e-5,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.9,
-                    "mu": 0.9
-                },
-            "FuzzyART":
-                {
-                    "rho": 0.5667,
-                    "alpha": 0.4,
-                    "beta": 1.0
-                },
-            "GaussianART":
-                {
-                    "rho": 0.3,
-                    "sigma_init": np.array([0.5, 0.5]),
-                },
-            "HypersphereART":
-                {
-                    "rho": 0.1,
-                    "alpha": 0.05,
-                    "beta": 1.0,
-                    "r_hat": 0.4667
-                },
-            "QuadraticNeuronART":
-                {
-                    "rho": 0.933,
-                    "s_init": 0.8,
-                    "lr_b": 0.4,
-                    "lr_w": 0.1,
-                    "lr_s": 0.2
-                },
+            "BayesianART": {
+                "rho": 2e-5,
+                "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
+            },
+            "DualVigilanceART": {
+                "FuzzyART": {"rho": 0.95, "alpha": 0.8, "beta": 1.0},
+                "rho_lower_bound": 0.9,
+            },
+            "EllipsoidART": {
+                "rho": 5e-5,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.9,
+                "mu": 0.9,
+            },
+            "FuzzyART": {"rho": 0.5667, "alpha": 0.4, "beta": 1.0},
+            "GaussianART": {
+                "rho": 0.3,
+                "sigma_init": np.array([0.5, 0.5]),
+            },
+            "HypersphereART": {
+                "rho": 0.1,
+                "alpha": 0.05,
+                "beta": 1.0,
+                "r_hat": 0.4667,
+            },
+            "QuadraticNeuronART": {
+                "rho": 0.933,
+                "s_init": 0.8,
+                "lr_b": 0.4,
+                "lr_w": 0.1,
+                "lr_s": 0.2,
+            },
         },
     ),
     (
         blobs,
         {
-            "BayesianART":
-                {
-                    "rho": 6e-5,
-                    "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
-                },
-            "DualVigilanceART":
-                {
-                    "FuzzyART":
-                        {
-                            "rho": 0.91,
-                            "alpha": 0.8,
-                            "beta": 1.0
-                        },
-                    "rho_lower_bound": 0.82,
-
-                 },
-            "EllipsoidART":
-                {
-                    "rho": 0.01,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.6,
-                    "mu": 1.0
-                },
-            "FuzzyART":
-                {
-                    "rho": 0.433,
-                    "alpha": 0.2,
-                    "beta": 1.0
-                },
-            "GaussianART":
-                {
-                    "rho": 5e-4,
-                    "sigma_init": np.array([0.5, 0.5]),
-                },
-            "HypersphereART":
-                {
-                    "rho": 0.1,
-                    "alpha": 0.05,
-                    "beta": 1.0,
-                    "r_hat": 0.433
-                },
-            "QuadraticNeuronART":
-                {
-                    "rho": 0.95,
-                    "s_init": 0.8,
-                    "lr_b": 0.05,
-                    "lr_w": 0.1,
-                    "lr_s": 0.05
-                },
+            "BayesianART": {
+                "rho": 6e-5,
+                "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
+            },
+            "DualVigilanceART": {
+                "FuzzyART": {"rho": 0.91, "alpha": 0.8, "beta": 1.0},
+                "rho_lower_bound": 0.82,
+            },
+            "EllipsoidART": {
+                "rho": 0.01,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.6,
+                "mu": 1.0,
+            },
+            "FuzzyART": {"rho": 0.433, "alpha": 0.2, "beta": 1.0},
+            "GaussianART": {
+                "rho": 5e-4,
+                "sigma_init": np.array([0.5, 0.5]),
+            },
+            "HypersphereART": {
+                "rho": 0.1,
+                "alpha": 0.05,
+                "beta": 1.0,
+                "r_hat": 0.433,
+            },
+            "QuadraticNeuronART": {
+                "rho": 0.95,
+                "s_init": 0.8,
+                "lr_b": 0.05,
+                "lr_w": 0.1,
+                "lr_s": 0.05,
+            },
         },
     ),
     (
         no_structure,
         {
-            "BayesianART":
-                {
-                    "rho": 2e-5,
-                    "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
-                },
-            "DualVigilanceART":
-                {
-                    "FuzzyART":
-                        {
-                            "rho": 0.85,
-
-                            "alpha": 0.8,
-                            "beta": 1.0
-                        },
-                    "rho_lower_bound": 0.78,
-
-                },
-            "EllipsoidART":
-                {
-                    "rho": 0.2,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.6,
-                    "mu": 0.8
-                },
-            "FuzzyART":
-                {
-                    "rho": 0.7,
-                    "alpha": 0.0,
-                    "beta": 1.0
-                },
-            "GaussianART":
-                {
-                    "rho": 0.15,
-                    "sigma_init": np.array([0.5, 0.5]),
-                },
-            "HypersphereART":
-                {
-                    "rho": 0.7,
-                    "alpha": 0.0,
-                    "beta": 1.0,
-                    "r_hat": 0.8
-                },
-            "QuadraticNeuronART":
-                {
-                    "rho": 0.9,
-                    "s_init": 0.9,
-                    "lr_b": 0.1,
-                    "lr_w": 0.1,
-                    "lr_s": 0.1
-                },
+            "BayesianART": {
+                "rho": 2e-5,
+                "cov_init": np.array([[1e-4, 0.0], [0.0, 1e-4]]),
+            },
+            "DualVigilanceART": {
+                "FuzzyART": {"rho": 0.85, "alpha": 0.8, "beta": 1.0},
+                "rho_lower_bound": 0.78,
+            },
+            "EllipsoidART": {
+                "rho": 0.2,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.6,
+                "mu": 0.8,
+            },
+            "FuzzyART": {"rho": 0.7, "alpha": 0.0, "beta": 1.0},
+            "GaussianART": {
+                "rho": 0.15,
+                "sigma_init": np.array([0.5, 0.5]),
+            },
+            "HypersphereART": {
+                "rho": 0.7,
+                "alpha": 0.0,
+                "beta": 1.0,
+                "r_hat": 0.8,
+            },
+            "QuadraticNeuronART": {
+                "rho": 0.9,
+                "s_init": 0.9,
+                "lr_b": 0.1,
+                "lr_w": 0.1,
+                "lr_s": 0.1,
+            },
         },
     ),
 ]
@@ -404,10 +311,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     fuzzy = artlib.FuzzyART(**params["FuzzyART"])
     fuzzyDV = artlib.DualVigilanceART(
         artlib.FuzzyART(**params["DualVigilanceART"]["FuzzyART"]),
-        rho_lower_bound=params["DualVigilanceART"]["rho_lower_bound"]
+        rho_lower_bound=params["DualVigilanceART"]["rho_lower_bound"],
     )
-
-
 
     clustering_algorithms = (
         ("Hypersphere\nART", hypersphere),

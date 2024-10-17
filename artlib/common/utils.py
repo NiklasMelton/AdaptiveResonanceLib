@@ -1,11 +1,16 @@
+"""General utilities used throughout ARTLib."""
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Mapping, Sequence, Union, Any
+
+IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
 
-def normalize(data: np.ndarray, d_max: Optional[np.ndarray] = None, d_min: Optional[np.ndarray] = None) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Normalize data column-wise between 0 and 1.
+def normalize(
+    data: np.ndarray,
+    d_max: Optional[np.ndarray] = None,
+    d_min: Optional[np.ndarray] = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Normalize data column-wise between 0 and 1.
 
     Parameters
     ----------
@@ -36,8 +41,7 @@ def normalize(data: np.ndarray, d_max: Optional[np.ndarray] = None, d_min: Optio
 
 
 def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.ndarray:
-    """
-    Restore column-wise normalized data to original scale.
+    """Restore column-wise normalized data to original scale.
 
     Parameters
     ----------
@@ -56,9 +60,9 @@ def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.n
     """
     return data * (d_max - d_min) + d_min
 
+
 def compliment_code(data: np.ndarray) -> np.ndarray:
-    """
-    Compliment code the data.
+    """Compliment code the data.
 
     Parameters
     ----------
@@ -71,12 +75,12 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
         Compliment coded data.
 
     """
-    cc_data = np.hstack([data, 1.0-data])
+    cc_data = np.hstack([data, 1.0 - data])
     return cc_data
 
+
 def de_compliment_code(data: np.ndarray) -> np.ndarray:
-    """
-    Find the centroid of compliment coded data.
+    """Find the centroid of compliment coded data.
 
     Parameters
     ----------
@@ -100,16 +104,16 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
 
     # Split the array into two arrays of shape n x m
     arr1 = data[:, :m]
-    arr2 = 1-data[:, m:]
+    arr2 = 1 - data[:, m:]
 
     # Find the element-wise mean
     mean_array = (arr1 + arr2) / 2
 
     return mean_array
 
+
 def l1norm(x: np.ndarray) -> float:
-    """
-    Get the L1 norm of a vector.
+    """Get the L1 norm of a vector.
 
     Parameters
     ----------
@@ -124,9 +128,9 @@ def l1norm(x: np.ndarray) -> float:
     """
     return float(np.sum(np.absolute(x)))
 
+
 def l2norm2(data: np.ndarray) -> float:
-    """
-    Get the squared L2 norm of a vector.
+    """Get the squared L2 norm of a vector.
 
     Parameters
     ----------
@@ -141,9 +145,9 @@ def l2norm2(data: np.ndarray) -> float:
     """
     return float(np.matmul(data, data))
 
+
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """
-    Get the fuzzy AND operation between two vectors.
+    """Get the fuzzy AND operation between two vectors.
 
     Parameters
     ----------

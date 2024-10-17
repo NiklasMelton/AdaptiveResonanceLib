@@ -29,10 +29,11 @@ class TopoART(BaseART):
     .. # Berlin, Heidelberg: Springer Berlin Heidelberg.
     .. # doi:10.1007/978-3-642-15825-4_21.
 
-    Topo ART clusters accepts an instatiated base ART module and generates a topological
-    clustering by recording the first and second resonant cluster relationships in an
-    adjacency matrix. Further, it updates the second resonant cluster with a lower
-    learning rate than the first, providing for a distributed learning model.
+    Topo ART clusters accepts an instatiated :class:`BaseART` module and generates a
+    topological clustering by recording the first and second resonant cluster
+    relationships in an adjacency matrix. Further, it updates the second resonant
+    cluster with a lower learning rate than the first, providing for a distributed
+    learning model.
 
     """
 

@@ -20,21 +20,16 @@ class FALCON:
     """FALCON for Reinforcement Learning.
 
     This module implements the reactive FALCON as first described in:
-    :cite:`tan2004falcon`, :cite:`tan2008integrating`.
+    :cite:`tan2004falcon`.
 
     .. # Tan, A.-H. (2004).
     .. # FALCON: a fusion architecture for learning, cognition, and navigation.
     .. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
     .. # (pp. 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
 
-    .. # Tan, A.-H., Lu, N., & Xiao, D. (2008).
-    .. # Integrating Temporal Difference Methods and Self-Organizing Neural Networks for
-    .. # Reinforcement Learning With Delayed Evaluative Feedback.
-    .. # IEEE Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839
-
-    FALCON is based on a Fusion-ART backbone but only accepts 3 channels: State, Action,
-    and Reward. Specific functions are implemented for getting optimal reward and action
-    predictions.
+    FALCON is based on a :class:`FusionART` backbone but only accepts 3 channels:
+    State, Action, and Reward. Specific functions are implemented for getting optimal
+    reward and action predictions.
 
     """
 
@@ -297,13 +292,17 @@ class FALCON:
 class TD_FALCON(FALCON):
     """TD-FALCON for Reinforcement Learning.
 
-    This module implements TD-FALCON as first described in Tan, A.-H., Lu, N., & Xiao,
-    D. (2008). Integrating Temporal Difference Methods and Self-Organizing Neural
-    Networks for Reinforcement Learning With Delayed Evaluative Feedback. IEEE
-    Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839. TD-
-    FALCON is based on a FALCON backbone but includes specific function for temporal-
-    difference learning. Currently, only SARSA is implemented and only Fuzzy ART base
-    modules are supported.
+    This module implements TD-FALCON as first described in:
+    :cite:`tan2008integrating`.
+
+    .. # Tan, A.-H., Lu, N., & Xiao, D. (2008).
+    .. # Integrating Temporal Difference Methods and Self-Organizing Neural Networks for
+    .. # Reinforcement Learning With Delayed Evaluative Feedback.
+    .. # IEEE Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839
+
+    TD-FALCON is based on a :class:`FALCON` backbone but includes specific function for
+    temporal-difference learning. Currently, only SARSA is implemented and only
+    :class:`FuzzyART` base modules are supported.
 
     """
 

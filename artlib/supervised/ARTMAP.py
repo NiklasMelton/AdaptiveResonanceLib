@@ -20,13 +20,13 @@ class ARTMAP(SimpleARTMAP):
     .. # by a self-organizing neural network.
     .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
-    ARTMAP joins accepts two ART modules A and B which cluster the dependent channel
-    (samples) and the independent channel (labels) respectively while linking them with
-    a many-to-one mapping. If your labels are integers, use SimpleARTMAP for a faster
-    and more direct implementation. ARTMAP also provides the ability to fit a regression
-    model to data and specific functions have been implemented to allow this. However,
-    FusionART provides substantially better fit for regression problems which are not
-    monotonic.
+    ARTMAP accepts two :class:`BaseART` modules A and B which cluster the dependent
+    channel (samples) and the independent channel (labels) respectively while linking
+    them with a many-to-one mapping. If your labels are integers,
+    use :class:`SimpleARTMAP` for a faster and more direct implementation. ARTMAP
+    also provides the ability to fit a regression model to data and specific
+    functions have been implemented to allow this. However, :class:`FusionART` provides
+    substantially better fit for regression problems which are not monotonic.
 
     """
 

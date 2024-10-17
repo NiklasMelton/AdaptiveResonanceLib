@@ -24,8 +24,8 @@ class BayesianART(BaseART):
     .. # Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
     Bayesian ART clusters data in Bayesian Distributions (Hyper-ellipsoids) and is
-    similar to Gaussian ART but differs in that it allows arbitrary rotation of the
-    hyper-ellipsoid.
+    similar to :class:`GaussianART` but differs in that it allows arbitrary rotation of
+    the hyper-ellipsoid.
 
     """
 

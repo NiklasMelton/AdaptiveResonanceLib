@@ -45,8 +45,8 @@ class ART2A(BaseART):
     .. # Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
 
 
-    ART2-A is similar to ART1 but designed for analog data. This method is implemented
-    for historical purposes and is not recommended for use.
+    ART2-A is similar to :class:`ART1` but designed for analog data. This method is
+    implemented for historical purposes and is not recommended for use.
 
     """
 

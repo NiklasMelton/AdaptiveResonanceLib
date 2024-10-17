@@ -26,8 +26,8 @@ class SMART(DeepARTMAP):
 
     SMART accepts an uninstantiated ART class and hierarchically clusters data in a
     divisive fashion by using a set of vigilance values that monotonically increase
-    in their restrictiveness. SMART is a special case of DeepARTMAP, which forms the
-    backbone of this class, where all channels receive the same data.
+    in their restrictiveness. SMART is a special case of :class:`DeepARTMAP`, which
+    forms the backbone of this class, where all channels receive the same data.
 
     """
 

@@ -35,7 +35,7 @@ matplotlib = ">=3.3.3"
 pytest = "^6.2.2"
 pre-commit = "^4.0.0"
 
-[tool.poetry.docs-dependencies]
+[tool.poetry.group.docs.dependencies]
 sphinx = "^6.2.1"
 sphinx-rtd-theme = "^1.0.0"  # If you're using the Read the Docs theme
 sphinx-autoapi = ">=3.0.0"

@@ -11,6 +11,7 @@ switch, since they imply that its done, not that it will update after update is 
 
 """
 import numpy as np
+from typing import Dict
 
 
 def delta_add_sample_to_average(
@@ -97,11 +98,11 @@ class iCVI_CH:
         self.dim = x.shape[0]  # Dimension of the input data
         self.n_samples: int = 0  # number of samples encountered
         self.mu = np.array([])  # geometric mean of the data
-        self.CD = {}  # Dict for each cluster label containing n,v,CP, and G
+        self.CD: Dict = {}  # Dict for each cluster label containing n,v,CP, and G
         self.WGSS = 0  # within group sum of squares
         self.criterion_value = 0  # calcualted CH index
 
-    def add_sample(self, x: np.ndarray, label: int) -> dict:
+    def add_sample(self, x: np.ndarray, label: int) -> Dict:
         """Calculate the result of adding a new sample with a given label.
 
         Parameters
@@ -126,7 +127,7 @@ class iCVI_CH:
                 self.mu, x, newP["n_samples"]
             )
 
-        CD = {}
+        CD: Dict = {}
         newP["CD"] = CD
         SEP = []  # separation between each cluster and the mean of the data
         if label not in self.CD:

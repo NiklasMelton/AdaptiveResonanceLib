@@ -6,10 +6,11 @@ Norwell, MA, USA: Kluwer Academic Publishers.
 
 """
 import numpy as np
-from typing import Optional, Iterable, Literal, Dict
+from typing import Optional, Literal, Dict, Union, Tuple
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
+from artlib.common.utils import IndexableOrKeyable
 from sklearn.utils.validation import check_is_fitted, check_X_y
 from sklearn.utils.multiclass import unique_labels
 
@@ -122,13 +123,17 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.validate_data(X)
         return X, y
 
-    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+    def prepare_data(
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Prepare data for clustering.
 
         Parameters
         ----------
         X : np.ndarray
             Data set.
+        y : Optional[np.ndarray]
+            Data set B. Not used in SimpleARTMAP
 
         Returns
         -------
@@ -138,7 +143,9 @@ class SimpleARTMAP(BaseARTMAP):
         """
         return self.module_a.prepare_data(X)
 
-    def restore_data(self, X: np.ndarray) -> np.ndarray:
+    def restore_data(
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Restore data to state prior to preparation.
 
         Parameters
@@ -443,7 +450,9 @@ class SimpleARTMAP(BaseARTMAP):
             y_b[i] = c_b
         return y_a, y_b
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
         """Visualize the cluster boundaries.
 
         Parameters
@@ -468,7 +477,7 @@ class SimpleARTMAP(BaseARTMAP):
         ax: Optional[Axes] = None,
         marker_size: int = 10,
         linewidth: int = 1,
-        colors: Optional[Iterable] = None,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
         """Visualize the clustering of the data.
 

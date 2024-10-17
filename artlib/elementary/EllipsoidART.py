@@ -11,10 +11,10 @@ doi:10.1117/12.421180.
 
 """
 import numpy as np
-from typing import Optional, Iterable, List
+from typing import Optional, List, Tuple, Union, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import l2norm2
+from artlib.common.utils import l2norm2, IndexableOrKeyable
 
 
 class EllipsoidART(BaseART):
@@ -157,7 +157,7 @@ class EllipsoidART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters
@@ -250,7 +250,7 @@ class EllipsoidART(BaseART):
         """
         return np.concatenate([i, np.zeros_like(i), [0.0]])
 
-    def get_2d_ellipsoids(self) -> list[tuple]:
+    def get_2d_ellipsoids(self) -> List[Tuple[np.ndarray, float, float, float]]:
         """Get the 2D ellipsoids for visualization.
 
         Returns
@@ -284,7 +284,9 @@ class EllipsoidART(BaseART):
         """
         return [w[: self.dim_] for w in self.W]
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
         """Visualize the bounds of each cluster.
 
         Parameters

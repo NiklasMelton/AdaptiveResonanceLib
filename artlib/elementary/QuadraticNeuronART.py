@@ -9,7 +9,7 @@ Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
 """
 
 import numpy as np
-from typing import Optional, Iterable, List
+from typing import Optional, Iterable, List, Tuple, Union, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
@@ -126,7 +126,7 @@ class QuadraticNeuronART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters
@@ -178,6 +178,7 @@ class QuadraticNeuronART(BaseART):
             Updated cluster weight, cache used for later processing.
 
         """
+        assert cache is not None
         s = cache["s"]
         w_ = cache["w"]
         b = cache["b"]

@@ -5,11 +5,12 @@ adaptive resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.201
 
 """
 import numpy as np
-from typing import Optional, Callable, Iterable, List, Literal
+from typing import Optional, Callable, List, Literal, Union, Dict
 from warnings import warn
 from copy import deepcopy
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import IndexableOrKeyable
 
 
 class DualVigilanceART(BaseART):
@@ -199,7 +200,8 @@ class DualVigilanceART(BaseART):
         self.base_module.validate_data(X)
         self.check_dimensions(X)
 
-    def validate_params(self, params: dict):
+    @staticmethod
+    def validate_params(params: dict):
         """Validate clustering parameters.
 
         Parameters
@@ -216,9 +218,9 @@ class DualVigilanceART(BaseART):
 
     def _match_tracking(
         self,
-        cache: dict,
+        cache: Union[List[Dict], Dict],
         epsilon: float,
-        params: dict,
+        params: Union[List[Dict], Dict],
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
         """Adjust match tracking based on the method and epsilon value.
@@ -240,6 +242,8 @@ class DualVigilanceART(BaseART):
             True if match tracking continues, False otherwise.
 
         """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
         M = cache["match_criterion"]
         if method == "MT+":
             self.base_module.params["rho"] = M + epsilon
@@ -404,7 +408,9 @@ class DualVigilanceART(BaseART):
         """
         return self.base_module.get_cluster_centers()
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
         """Visualize the bounds of each cluster.
 
         Parameters

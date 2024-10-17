@@ -7,7 +7,7 @@ Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 """
 import numpy as np
-from typing import Optional, Iterable, List
+from typing import Optional, Iterable, List, Tuple, Union, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import (
@@ -205,7 +205,7 @@ class FuzzyART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

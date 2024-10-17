@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Callable, Tuple
+from typing import Optional, Callable, Tuple, Union, Dict
 from artlib import BaseART
 import operator
 import re
@@ -234,7 +234,7 @@ class SeqART(BaseART):
 
     def match_criterion(
         self, i: str, w: str, params: dict, cache: Optional[dict] = None
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """
         Get the match criterion of the cluster.
 

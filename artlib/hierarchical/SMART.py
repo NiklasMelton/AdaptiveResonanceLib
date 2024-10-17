@@ -7,9 +7,10 @@ doi:10.1109/ICNN.1994.374307.
 """
 
 import numpy as np
-from typing import Union, Type, Optional, Iterable, Literal
+from typing import Union, Type, Optional, Literal, Tuple
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import IndexableOrKeyable
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
 
@@ -66,7 +67,9 @@ class SMART(DeepARTMAP):
             ), "Only elementary ART-like objects are supported"
         super().__init__(modules)
 
-    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+    def prepare_data(
+        self, X: Union[np.ndarray, list[np.ndarray]], y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[list[np.ndarray], Optional[np.ndarray]]]:
         """Prepare data for clustering.
 
         Parameters
@@ -83,7 +86,9 @@ class SMART(DeepARTMAP):
         X_, _ = super(SMART, self).prepare_data([X] * self.n_modules)
         return X_[0]
 
-    def restore_data(self, X: np.ndarray) -> np.ndarray:
+    def restore_data(
+        self, X: Union[np.ndarray, list[np.ndarray]], y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[list[np.ndarray], Optional[np.ndarray]]]:
         """Restore data to its original form before preparation.
 
         Parameters
@@ -168,7 +173,9 @@ class SMART(DeepARTMAP):
             X_list, match_reset_method=match_reset_method, epsilon=epsilon
         )
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
         """Visualize the cluster boundaries.
 
         Parameters
@@ -201,7 +208,7 @@ class SMART(DeepARTMAP):
         ax: Optional[Axes] = None,
         marker_size: int = 10,
         linewidth: int = 1,
-        colors: Optional[Iterable] = None,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
         """Visualize the clustering of the data with cluster boundaries.
 

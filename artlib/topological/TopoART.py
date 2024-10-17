@@ -10,11 +10,12 @@ doi:10.1007/978-3-642-15825-4_21.
 """
 
 import numpy as np
-from typing import Optional, Callable, Iterable, List, Literal
+from typing import Optional, Callable, List, Literal, Tuple, Union, Dict
 from matplotlib.axes import Axes
 from warnings import warn
 from copy import deepcopy
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import IndexableOrKeyable
 import operator
 
 
@@ -192,7 +193,7 @@ class TopoART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters
@@ -271,6 +272,7 @@ class TopoART(BaseART):
             Updated cluster weight.
 
         """
+        assert cache is not None
         if cache.get("resonant_c", -1) >= 0:
             self.adjacency[cache["resonant_c"], cache["current_c"]] += 1
         return self.base_module.update(i, w, params, cache)
@@ -373,9 +375,9 @@ class TopoART(BaseART):
 
     def _match_tracking(
         self,
-        cache: dict,
+        cache: Union[List[Dict], Dict],
         epsilon: float,
-        params: dict,
+        params: Union[List[Dict], Dict],
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
         """Adjust the vigilance parameter based on match tracking methods.
@@ -397,6 +399,8 @@ class TopoART(BaseART):
             True if the match tracking continues, False otherwise.
 
         """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
         M = cache["match_criterion"]
         if method == "MT+":
             self.base_module.params["rho"] = M + epsilon
@@ -550,7 +554,9 @@ class TopoART(BaseART):
         """
         return self.base_module.get_cluster_centers()
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
         """Visualize the boundaries of each cluster.
 
         Parameters

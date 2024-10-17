@@ -9,7 +9,7 @@ doi:10.1007/ 978-3-540-72383-7_128.
 
 """
 import numpy as np
-from typing import Optional, Union, Callable, List, Literal
+from typing import Optional, Union, Callable, List, Literal, Tuple, Dict
 from copy import deepcopy
 from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted
@@ -17,8 +17,8 @@ import operator
 
 
 def get_channel_position_tuples(
-    channel_dims: list[int],
-) -> list[tuple[int, int]]:
+    channel_dims: List[int],
+) -> List[Tuple[int, int]]:
     """Generate the start and end positions for each channel in the input data.
 
     Parameters
@@ -89,7 +89,7 @@ class FusionART(BaseART):
         self._channel_indices = get_channel_position_tuples(self.channel_dims)
         self.dim_ = sum(channel_dims)
 
-    def get_params(self, deep: bool = True) -> dict:
+    def get_params(self, deep: bool = True) -> Dict:
         """Get the parameters of the FusionART model.
 
         Parameters
@@ -158,7 +158,7 @@ class FusionART(BaseART):
                 self.modules[k].W = []
 
     @staticmethod
-    def validate_params(params: dict):
+    def validate_params(params: Dict):
         """Validate clustering parameters.
 
         Parameters
@@ -241,9 +241,9 @@ class FusionART(BaseART):
         self,
         i: np.ndarray,
         w: np.ndarray,
-        params: dict,
+        params: Dict,
         skip_channels: List[int] = [],
-    ) -> tuple[float, Optional[dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the activation of the cluster.
 
         Parameters
@@ -285,10 +285,10 @@ class FusionART(BaseART):
         self,
         i: np.ndarray,
         w: np.ndarray,
-        params: dict,
-        cache: Optional[dict] = None,
+        params: Dict,
+        cache: Optional[Dict] = None,
         skip_channels: List[int] = [],
-    ) -> tuple[list[float], dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion for the cluster.
 
         Parameters
@@ -332,11 +332,11 @@ class FusionART(BaseART):
         self,
         i: np.ndarray,
         w: np.ndarray,
-        params: dict,
-        cache: Optional[dict] = None,
-        skip_channels: List[int] = [],
+        params: Dict,
+        cache: Optional[Dict] = None,
         op: Callable = operator.ge,
-    ) -> tuple[bool, dict]:
+        skip_channels: List[int] = [],
+    ) -> Tuple[bool, Dict]:
         """Get the binary match criterion for the cluster.
 
         Parameters
@@ -349,10 +349,10 @@ class FusionART(BaseART):
             Parameters for the ART algorithm.
         cache : dict, optional
             Cache for previous calculations (default is None).
-        skip_channels : list of int, optional
-            Channels to be skipped (default is []).
         op : Callable, optional
             Operator for comparison (default is operator.ge).
+        skip_channels : list of int, optional
+            Channels to be skipped (default is []).
 
         Returns
         -------
@@ -381,9 +381,9 @@ class FusionART(BaseART):
 
     def _match_tracking(
         self,
-        cache: List[dict],
+        cache: Union[List[Dict], Dict],
         epsilon: float,
-        params: List[dict],
+        params: Union[List[Dict], Dict],
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
         """Perform match tracking for all channels using the specified method.
@@ -416,7 +416,7 @@ class FusionART(BaseART):
                 keep_searching.append(True)
         return all(keep_searching)
 
-    def _set_params(self, new_params: List[dict]):
+    def _set_params(self, new_params: List[Dict]):
         """Set the parameters for each module in FusionART.
 
         Parameters
@@ -428,7 +428,7 @@ class FusionART(BaseART):
         for i in range(self.n):
             self.modules[i].params = new_params[i]
 
-    def _deep_copy_params(self) -> dict:
+    def _deep_copy_params(self) -> Dict:
         """Create a deep copy of the parameters for each module.
 
         Returns
@@ -466,7 +466,7 @@ class FusionART(BaseART):
         self.is_fitted_ = True
 
         if not hasattr(self.modules[0], "W"):
-            self.W: list[np.ndarray] = []
+            self.W: List[np.ndarray] = []
             self.labels_ = np.zeros((X.shape[0],), dtype=int)
             j = 0
         else:
@@ -541,8 +541,8 @@ class FusionART(BaseART):
         self,
         i: np.ndarray,
         w: np.ndarray,
-        params: dict,
-        cache: Optional[dict] = None,
+        params: Dict,
+        cache: Optional[Dict] = None,
     ) -> np.ndarray:
         """Update the cluster weight.
 
@@ -563,6 +563,7 @@ class FusionART(BaseART):
             Updated cluster weight.
 
         """
+        assert cache is not None
         W = [
             self.modules[k].update(
                 i[self._channel_indices[k][0] : self._channel_indices[k][1]],
@@ -574,7 +575,7 @@ class FusionART(BaseART):
         ]
         return np.concatenate(W)
 
-    def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
+    def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
         """Generate a new cluster weight.
 
         Parameters

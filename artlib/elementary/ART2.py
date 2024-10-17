@@ -126,7 +126,7 @@ class ART2A(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> tuple[float, Optional[dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

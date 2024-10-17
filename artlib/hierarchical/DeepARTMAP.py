@@ -218,8 +218,8 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         ), "Inconsistent sample number in input matrices"
 
     def prepare_data(
-        self, X: list[np.ndarray], y: Optional[np.ndarray] = None
-    ) -> Tuple[list[np.ndarray], Optional[np.ndarray]]:
+        self, X: Union[np.ndarray, list[np.ndarray]], y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[list[np.ndarray], Optional[np.ndarray]]]:
         """Prepare the data for clustering.
 
         Parameters
@@ -238,8 +238,8 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         return [self.modules[i].prepare_data(X[i]) for i in range(self.n_modules)], y
 
     def restore_data(
-        self, X: list[np.ndarray], y: Optional[np.ndarray] = None
-    ) -> Tuple[list[np.ndarray], Optional[np.ndarray]]:
+        self, X: Union[np.ndarray, list[np.ndarray]], y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[list[np.ndarray], Optional[np.ndarray]]]:
         """Restore the data to its original state before preparation.
 
         Parameters

@@ -7,7 +7,7 @@ Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
 """
 
 import numpy as np
-from typing import Optional, List
+from typing import Optional, List, Tuple, Union, Dict
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l1norm
 
@@ -103,7 +103,7 @@ class ART1(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

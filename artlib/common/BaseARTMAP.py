@@ -1,9 +1,10 @@
 """Base class for all ARTMAP objects."""
 import numpy as np
-from typing import Union, Optional, Iterable, Literal
+from typing import Union, Optional, Literal
 from collections import defaultdict
 from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
+from artlib.common.utils import IndexableOrKeyable
 
 
 class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
@@ -169,7 +170,9 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
         """Visualize the bounds of each cluster.
 
         Parameters
@@ -191,7 +194,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         ax: Optional[Axes] = None,
         marker_size: int = 10,
         linewidth: int = 1,
-        colors: Optional[Iterable] = None,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
         """Visualize the clustering of the data.
 

@@ -5,7 +5,7 @@ Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
 """
 import numpy as np
-from typing import Optional, Iterable, List, Callable, Literal
+from typing import Optional, Iterable, List, Callable, Literal, Tuple, Union, Dict
 import operator
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
@@ -121,7 +121,7 @@ class BayesianART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters
@@ -146,11 +146,10 @@ class BayesianART(BaseART):
         # the original paper uses the det(cov_old) for match criterion
         # however, it makes logical sense to use the new_cov and results are
         # improved when doing so
+        assert cache is not None
         new_w = self.update(i, w, params, cache)
         new_cov = new_w[self.dim_ : -1].reshape((self.dim_, self.dim_))
         cache["new_w"] = new_w
-        # if cache is None:
-        #     raise ValueError("No cache provided")
         # return cache["det_cov"]
         return np.linalg.det(new_cov), cache
 
@@ -198,9 +197,9 @@ class BayesianART(BaseART):
 
     def _match_tracking(
         self,
-        cache: dict,
+        cache: Union[List[Dict], Dict],
         epsilon: float,
-        params: dict,
+        params: Union[List[Dict], Dict],
         method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
     ) -> bool:
         """Adjust match tracking based on the method and epsilon value.
@@ -222,6 +221,8 @@ class BayesianART(BaseART):
             True if match tracking continues, False otherwise.
 
         """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
         M = cache["match_criterion"]
         # we have to reverse some signs because bayesianART has an inverted
         # vigilence check
@@ -268,8 +269,7 @@ class BayesianART(BaseART):
             Updated cluster weight.
 
         """
-        if cache is None:
-            raise ValueError("No cache provided")
+        assert cache is not None
 
         if "new_w" in cache:
             return cache["new_w"]

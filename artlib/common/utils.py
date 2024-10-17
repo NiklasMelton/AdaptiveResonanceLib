@@ -1,6 +1,8 @@
 """General utilities used throughout ARTLib."""
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Mapping, Sequence, Union, Any
+
+IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
 
 def normalize(

@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.axes import Axes
 from copy import deepcopy
-from typing import Optional, Iterable, List, Union
+from typing import Optional, Iterable, List, Tuple, Union, Dict
 from scipy.spatial import ConvexHull
 
 from artlib.common.BaseART import BaseART
@@ -271,7 +271,7 @@ class ConvexHullART(BaseART):
         w: HullTypes,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> tuple[float, dict]:
+    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
         """
         Get the match criterion of the cluster.
 

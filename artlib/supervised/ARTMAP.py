@@ -7,7 +7,7 @@ Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
 """
 import numpy as np
-from typing import Literal, Tuple, Dict
+from typing import Literal, Tuple, Dict, Union, Optional
 from artlib.common.BaseART import BaseART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.validation import check_is_fitted
@@ -125,8 +125,8 @@ class ARTMAP(SimpleARTMAP):
         self.module_b.validate_data(y)
 
     def prepare_data(
-        self, X: np.ndarray, y: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Prepare data for clustering by normalizing and transforming.
 
         Parameters
@@ -142,11 +142,12 @@ class ARTMAP(SimpleARTMAP):
             Normalized data for both channels.
 
         """
+        assert y is not None
         return self.module_a.prepare_data(X), self.module_b.prepare_data(y)
 
     def restore_data(
-        self, X: np.ndarray, y: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """Restore data to its original state before preparation.
 
         Parameters
@@ -162,6 +163,7 @@ class ARTMAP(SimpleARTMAP):
             Restored data for both channels.
 
         """
+        assert y is not None
         return self.module_a.restore_data(X), self.module_b.restore_data(y)
 
     def fit(
@@ -171,6 +173,7 @@ class ARTMAP(SimpleARTMAP):
         max_iter=1,
         match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
+        verbose: bool = False,
     ):
         """Fit the ARTMAP model to the data.
 
@@ -186,6 +189,8 @@ class ARTMAP(SimpleARTMAP):
             Method for resetting the vigilance parameter when match criterion fails.
         epsilon : float, optional
             Small increment to modify the vigilance parameter.
+        verbose : bool, default=False
+            If True, displays a progress bar during training.
 
         Returns
         -------
@@ -211,6 +216,7 @@ class ARTMAP(SimpleARTMAP):
             max_iter=max_iter,
             match_reset_method=match_reset_method,
             epsilon=epsilon,
+            verbose=verbose,
         )
 
         return self

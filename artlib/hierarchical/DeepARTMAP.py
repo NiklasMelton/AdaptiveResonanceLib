@@ -262,7 +262,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         X: list[np.ndarray],
         y: Optional[np.ndarray] = None,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Fit the DeepARTMAP model to the data.
@@ -275,7 +275,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             The corresponding labels for supervised learning, by default None.
         max_iter : int, optional
             The number of iterations to fit the model, by default 1.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             The method to reset vigilance if a mismatch occurs, by default "MT+".
         epsilon : float, optional
             A small adjustment factor for match tracking, by default 0.0.
@@ -294,7 +294,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 X[0],
                 y,
                 max_iter=max_iter,
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
         else:
@@ -312,7 +312,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 X[1],
                 X[0],
                 max_iter=max_iter,
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
 
@@ -322,7 +322,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 X[art_i],
                 y_i,
                 max_iter=max_iter,
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
 
@@ -332,7 +332,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         self,
         X: list[np.ndarray],
         y: Optional[np.ndarray] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Partially fit the DeepARTMAP model to the data.
@@ -343,7 +343,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             The input data sets for each module.
         y : np.ndarray, optional
             The corresponding labels for supervised learning, by default None.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             The method to reset vigilance if a mismatch occurs, by default "MT+".
         epsilon : float, optional
             A small adjustment factor for match tracking, by default 0.0.
@@ -366,7 +366,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 "Must continue to provide labels for partial fit."
             )
             self.layers[0] = self.layers[0].partial_fit(
-                X[0], y, match_reset_method=match_reset_method, epsilon=epsilon
+                X[0], y, match_tracking=match_tracking, epsilon=epsilon
             )
             x_i = 1
         else:
@@ -389,7 +389,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             self.layers[0] = self.layers[0].partial_fit(
                 X[1],
                 X[0],
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
             x_i = 2
@@ -400,7 +400,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             self.layers[art_i] = self.layers[art_i].partial_fit(
                 X[x_i],
                 y_i,
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
             x_i += 1

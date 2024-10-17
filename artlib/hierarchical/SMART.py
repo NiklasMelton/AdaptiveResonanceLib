@@ -110,7 +110,7 @@ class SMART(DeepARTMAP):
         X: np.ndarray,
         y: Optional[np.ndarray] = None,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Fit the SMART model to the data.
@@ -123,7 +123,7 @@ class SMART(DeepARTMAP):
             Not used, present for compatibility.
         max_iter : int, optional
             The number of iterations to run the model on the data.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             The match reset method to use when adjusting vigilance.
         epsilon : float, optional
             A small value to adjust vigilance during match tracking.
@@ -138,7 +138,7 @@ class SMART(DeepARTMAP):
         return super().fit(
             X_list,
             max_iter=max_iter,
-            match_reset_method=match_reset_method,
+            match_tracking=match_tracking,
             epsilon=epsilon,
         )
 
@@ -146,7 +146,7 @@ class SMART(DeepARTMAP):
         self,
         X: np.ndarray,
         y: Optional[np.ndarray] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Partial fit the SMART model to the data.
@@ -157,7 +157,7 @@ class SMART(DeepARTMAP):
             The dataset to partially fit the model on.
         y : np.ndarray, optional
             Not used, present for compatibility.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             The match reset method to use when adjusting vigilance.
         epsilon : float, optional
             A small value to adjust vigilance during match tracking.
@@ -170,7 +170,7 @@ class SMART(DeepARTMAP):
         """
         X_list = [X] * self.n_modules
         return super(SMART, self).partial_fit(
-            X_list, match_reset_method=match_reset_method, epsilon=epsilon
+            X_list, match_tracking=match_tracking, epsilon=epsilon
         )
 
     def plot_cluster_bounds(

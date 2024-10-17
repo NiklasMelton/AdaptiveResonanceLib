@@ -92,7 +92,7 @@ class iCVIFuzzyART(FuzzyART):
         y: Optional[np.ndarray] = None,
         match_reset_func: Optional[Callable] = None,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Fit the model to the data.
@@ -109,7 +109,7 @@ class iCVIFuzzyART(FuzzyART):
             Returns True if the cluster is valid for the sample, False otherwise.
         max_iter : int, optional
             Number of iterations to fit the model on the same dataset, by default 1.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion.
         epsilon : float, optional
             Epsilon value used for adjusting match criterion, by default 0.0.
@@ -136,7 +136,7 @@ class iCVIFuzzyART(FuzzyART):
                 c = self.step_fit(
                     x,
                     match_reset_func=self.iCVI_match,
-                    match_reset_method=match_reset_method,
+                    match_tracking=match_tracking,
                     epsilon=epsilon,
                 )
             else:
@@ -147,7 +147,7 @@ class iCVIFuzzyART(FuzzyART):
                 c = self.step_fit(
                     x,
                     match_reset_func=match_reset_func_,
-                    match_reset_method=match_reset_method,
+                    match_tracking=match_tracking,
                     epsilon=epsilon,
                 )
 

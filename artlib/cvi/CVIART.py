@@ -224,7 +224,7 @@ class CVIART(BaseART):
         y: Optional[np.ndarray] = None,
         match_reset_func: Optional[Callable] = None,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Fit the model to the data.
@@ -241,7 +241,7 @@ class CVIART(BaseART):
             Returns True if the cluster is valid for the sample, False otherwise.
         max_iter : int, optional
             Number of iterations to fit the model on the same dataset, by default 1.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion.
         epsilon : float, optional
             Epsilon value used for adjusting match criterion, by default 0.0.
@@ -289,7 +289,7 @@ class CVIART(BaseART):
                 c = self.base_module.step_fit(
                     x,
                     match_reset_func=cvi_match_reset_func,
-                    match_reset_method=match_reset_method,
+                    match_tracking=match_tracking,
                     epsilon=epsilon,
                 )
                 self.labels_[index] = c
@@ -321,7 +321,7 @@ class CVIART(BaseART):
         self,
         x: np.ndarray,
         match_reset_func: Optional[Callable] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
         """Fit the model to a single sample.
@@ -334,7 +334,7 @@ class CVIART(BaseART):
             A callable accepting the data sample, a cluster weight, the params dict,
             and the cache dict.
             Returns True if the cluster is valid for the sample, False otherwise.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion.
         epsilon : float, optional
             Epsilon value used for adjusting match criterion, by default 0.0.

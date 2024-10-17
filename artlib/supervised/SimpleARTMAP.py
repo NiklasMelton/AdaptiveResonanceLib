@@ -165,7 +165,7 @@ class SimpleARTMAP(BaseARTMAP):
         self,
         x: np.ndarray,
         c_b: int,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ) -> int:
         """Fit the model to a single sample.
@@ -176,7 +176,7 @@ class SimpleARTMAP(BaseARTMAP):
             Data sample for side A.
         c_b : int
             Side B label.
-        match_reset_method : Literal, default="MT+"
+        match_tracking : Literal, default="MT+"
             Method to reset the match.
         epsilon : float, default=1e-10
             Small value to adjust the vigilance.
@@ -198,7 +198,7 @@ class SimpleARTMAP(BaseARTMAP):
         c_a = self.module_a.step_fit(
             x,
             match_reset_func=match_reset_func,
-            match_reset_method=match_reset_method,
+            match_tracking=match_tracking,
             epsilon=epsilon,
         )
         if c_a not in self.map:
@@ -212,7 +212,7 @@ class SimpleARTMAP(BaseARTMAP):
         X: np.ndarray,
         y: np.ndarray,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
     ):
@@ -226,7 +226,7 @@ class SimpleARTMAP(BaseARTMAP):
             Data set B.
         max_iter : int, default=1
             Number of iterations to fit the model on the same data set.
-        match_reset_method : Literal, default="MT+"
+        match_tracking : Literal, default="MT+"
             Method to reset the match.
         epsilon : float, default=1e-10
             Small value to adjust the vigilance.
@@ -260,7 +260,7 @@ class SimpleARTMAP(BaseARTMAP):
                 c_a = self.step_fit(
                     x,
                     c_b,
-                    match_reset_method=match_reset_method,
+                    match_tracking=match_tracking,
                     epsilon=epsilon,
                 )
                 self.module_a.labels_[i] = c_a
@@ -271,7 +271,7 @@ class SimpleARTMAP(BaseARTMAP):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
         """Partial fit the model to the data.
@@ -282,7 +282,7 @@ class SimpleARTMAP(BaseARTMAP):
             Data set A.
         y : np.ndarray
             Data set B.
-        match_reset_method : Literal, default="MT+"
+        match_tracking : Literal, default="MT+"
             Method to reset the match.
         epsilon : float, default=1e-10
             Small value to adjust the vigilance.
@@ -309,7 +309,7 @@ class SimpleARTMAP(BaseARTMAP):
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
             c_a = self.step_fit(
-                x, c_b, match_reset_method=match_reset_method, epsilon=epsilon
+                x, c_b, match_tracking=match_tracking, epsilon=epsilon
             )
             self.module_a.labels_[i + j] = c_a
             self.module_a.post_step_fit(X)

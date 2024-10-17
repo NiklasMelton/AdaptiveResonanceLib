@@ -415,7 +415,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self,
         x: np.ndarray,
         match_reset_func: Optional[Callable] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
         """Fit the model to a single sample.
@@ -426,7 +426,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             Data sample.
         match_reset_func : callable, optional
             A callable that influences cluster creation.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
             Method for resetting match criterion.
         epsilon : float, default=0.0
             Epsilon value used for adjusting match criterion.
@@ -439,13 +439,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         self.sample_counter_ += 1
         base_params = self._deep_copy_params()
-        mt_operator = self._match_tracking_operator(match_reset_method)
+        mt_operator = self._match_tracking_operator(match_tracking)
         if len(self.W) == 0:
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
             return 0
         else:
-            if match_reset_method in ["MT~"] and match_reset_func is not None:
+            if match_tracking in ["MT~"] and match_reset_func is not None:
                 T_values, T_cache = zip(
                     *[
                         self.category_choice(x, w, params=self.params)
@@ -466,7 +466,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                 m, cache = self.match_criterion_bin(
                     x, w, params=self.params, cache=cache, op=mt_operator
                 )
-                if match_reset_method in ["MT~"] and match_reset_func is not None:
+                if match_tracking in ["MT~"] and match_reset_func is not None:
                     no_match_reset = True
                 else:
                     no_match_reset = match_reset_func is None or match_reset_func(
@@ -480,7 +480,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                     T[c_] = np.nan
                     if m and not no_match_reset:
                         keep_searching = self._match_tracking(
-                            cache, epsilon, self.params, match_reset_method
+                            cache, epsilon, self.params, match_tracking
                         )
                         if not keep_searching:
                             T[:] = np.nan
@@ -554,7 +554,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         y: Optional[np.ndarray] = None,
         match_reset_func: Optional[Callable] = None,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
         verbose: bool = False,
     ):
@@ -570,7 +570,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             A callable that influences cluster creation.
         max_iter : int, default=1
             Number of iterations to fit the model on the same dataset.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
             Method for resetting match criterion.
         epsilon : float, default=0.0
             Epsilon value used for adjusting match criterion.
@@ -596,7 +596,7 @@ class BaseART(BaseEstimator, ClusterMixin):
                 c = self.step_fit(
                     x,
                     match_reset_func=match_reset_func,
-                    match_reset_method=match_reset_method,
+                    match_tracking=match_tracking,
                     epsilon=epsilon,
                 )
                 self.labels_[i] = c
@@ -608,7 +608,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self,
         X: np.ndarray,
         match_reset_func: Optional[Callable] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Iteratively fit the model to the data.
@@ -619,7 +619,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             The dataset.
         match_reset_func : callable, optional
             A callable that influences cluster creation.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
             Method for resetting match criterion.
         epsilon : float, default=0.0
             Epsilon value used for adjusting match criterion.
@@ -640,7 +640,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             c = self.step_fit(
                 x,
                 match_reset_func=match_reset_func,
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
             self.labels_[i + j] = c

@@ -272,7 +272,7 @@ class DualVigilanceART(BaseART):
         self,
         x: np.ndarray,
         match_reset_func: Optional[Callable] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
         """Fit the model to a single sample.
@@ -285,7 +285,7 @@ class DualVigilanceART(BaseART):
             A callable accepting the data sample, a cluster weight, the params dict,
             and the cache dict.
             Returns True if the cluster is valid for the sample, False otherwise.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion, by default "MT+".
         epsilon : float, optional
             Epsilon value used for adjusting match criterion, by default 0.0.
@@ -297,7 +297,7 @@ class DualVigilanceART(BaseART):
 
         """
         base_params = self._deep_copy_params()
-        mt_operator = self._match_tracking_operator(match_reset_method)
+        mt_operator = self._match_tracking_operator(match_tracking)
         self.sample_counter_ += 1
         if len(self.base_module.W) == 0:
             new_w = self.base_module.new_weight(x, self.base_module.params)
@@ -360,7 +360,7 @@ class DualVigilanceART(BaseART):
                             return self.map[c_new]
                 else:
                     keep_searching = self._match_tracking(
-                        cache, epsilon, self.params, match_reset_method
+                        cache, epsilon, self.params, match_tracking
                     )
                     if not keep_searching:
                         T[:] = np.nan

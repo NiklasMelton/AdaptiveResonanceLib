@@ -22,6 +22,7 @@ class ART1(BaseART):
 
     This module implements ART1 as first published in:
 
+
     .. # Carpenter, G. A., & Grossberg, S. (1987a).
     .. # A massively parallel architecture for a self-organizing neural pattern
     .. # recognition machine.
@@ -30,6 +31,7 @@ class ART1(BaseART):
 
     .. bibliography:: ../../references.bib
        :filter: citation_key == "carpenter1987massively"
+
 
     ART1 is exclusively for clustering binary data.
 

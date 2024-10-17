@@ -35,6 +35,7 @@ class ART2A(BaseART):
 
     This module implements ART2-A as first published in:
 
+
     .. # Carpenter, G. A., & Grossberg, S. (1987b).
     .. # ART 2: self-organization of stable category recognition codes for analog input
     .. # patterns.
@@ -49,6 +50,7 @@ class ART2A(BaseART):
        :filter: \
                 (citation_key == "carpenter1987art" or \
                  citation_key == "carpenter1991art")
+
 
     ART2-A is similar to ART1 but designed for analog data. This method is implemented
     for historical purposes and is not recommended for use.

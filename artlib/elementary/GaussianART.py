@@ -23,9 +23,9 @@ class GaussianART(BaseART):
     .. # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 
     Guassian ART clusters data in Gaussian Distributions (Hyper-ellipsoids) and is
-    similar to :class:`artlib.elementary.BayesianART.BayesianART` but differs in that
+    similar to :class:`~artlib.elementary.BayesianART.BayesianART` but differs in that
     the hyper-ellipsoid always have their principal axes square to the coordinate
-    frame. It is also faster than :class:`artlib.elementary.BayesianART.BayesianART`.
+    frame. It is also faster than :class:`~artlib.elementary.BayesianART.BayesianART`.
 
     """
 

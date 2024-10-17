@@ -24,11 +24,11 @@ class SMART(DeepARTMAP):
     .. # (pp. 940–944). volume 2.
     .. # doi:10.1109/ICNN.1994.374307.
 
-    SMART accepts an uninstantiated :class:`artlib.common.BaseART.BaseART` class and
+    SMART accepts an uninstantiated :class:`~artlib.common.BaseART.BaseART` class and
     hierarchically clusters data in a divisive fashion by using a set of vigilance
     values that monotonically increase in their restrictiveness. SMART is a special
-    case of :class:`artlib.hierarchical.DeepARTMAP.DeepARTMAP`, which forms the backbone
-    of this class, where all channels receive the same data.
+    case of :class:`~artlib.hierarchical.DeepARTMAP.DeepARTMAP`, which forms the
+    backbone of this class, where all channels receive the same data.
 
     """
 

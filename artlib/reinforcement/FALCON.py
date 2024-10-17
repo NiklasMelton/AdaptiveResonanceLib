@@ -27,7 +27,7 @@ class FALCON:
     .. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
     .. # (pp. 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
 
-    FALCON is based on a :class:`artlib.fusion.FusionART.FusionART` backbone but only
+    FALCON is based on a :class:`~artlib.fusion.FusionART.FusionART` backbone but only
     accepts 3 channels: State, Action, and Reward. Specific functions are implemented
     for getting optimal reward and action predictions.
 
@@ -302,7 +302,7 @@ class TD_FALCON(FALCON):
 
     TD-FALCON is based on a :class:`FALCON` backbone but includes specific function for
     temporal-difference learning. Currently, only SARSA is implemented and only
-    :class:`FuzzyART` base modules are supported.
+    :class:`~artlib.elementary.FuzzyART.FuzzyART` base modules are supported.
 
     """
 

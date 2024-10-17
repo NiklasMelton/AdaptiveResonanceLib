@@ -29,6 +29,14 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     second module is the B module. DeepARTMAP does not currently have a direct citation
     and is an original creation of this library.
 
+    .. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+    .. # ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+    .. # self-organizing neural network.
+    .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+
+    .. bibliography:: ../../references.bib
+       :filter: citation_key == "carpenter1991artmap"
+
     """
 
     def __init__(self, modules: list[BaseART]):

@@ -25,14 +25,17 @@ import operator
 class TopoART(BaseART):
     """Topo ART for Topological Clustering.
 
-    This module implements Topo ART as first published in
+    This module implements Topo ART as first published in:
 
-    Tscherepanow, M. (2010).
-    TopoART: A Topology Learning Hierarchical ART Network.
-    In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
-    Artificial Neural Networks – ICANN 2010 (pp. 157–167).
-    Berlin, Heidelberg: Springer Berlin Heidelberg.
-    doi:10.1007/978-3-642-15825-4_21.
+    .. # Tscherepanow, M. (2010).
+    .. # TopoART: A Topology Learning Hierarchical ART Network.
+    .. # In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
+    .. # Artificial Neural Networks – ICANN 2010 (pp. 157–167).
+    .. # Berlin, Heidelberg: Springer Berlin Heidelberg.
+    .. # doi:10.1007/978-3-642-15825-4_21.
+
+    .. bibliography:: ../../references.bib
+       :filter: citation_key == "tscherepanow2010topoart"
 
     Topo ART clusters accepts an instatiated base ART module and generates a topological
     clustering by recording the first and second resonant cluster relationships in an

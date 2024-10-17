@@ -26,11 +26,23 @@ from artlib.common.visualization import plot_weight_matrix_as_ellipse
 class QuadraticNeuronART(BaseART):
     """Quadratic Neuron ART for Clustering.
 
-    This module implements Quadratic Neuron ART as first published in Su, M.-C., & Liu,
-    Y.-C. (2005). A new approach to clustering data with arbitrary shapes. Pattern
-    Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010. Quadratic Neuron ART
-    clusters data in Hyper-ellipsoid by utilizing a quadratic neural network for
-    activation and resonance.
+    This module implements Quadratic Neuron ART as first published in:
+
+     .. # Su, M.-C., & Liu, T.-K. (2001).
+    .. # Application of neural networks using quadratic junctions in cluster analysis.
+    .. # Neurocomputing, 37, 165 – 175. doi:10.1016/S0925-2312(00)00343-X.
+
+    .. # Su, M.-C., & Liu, Y.-C. (2005).
+    .. # A new approach to clustering data with arbitrary shapes.
+    .. # Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
+
+    .. bibliography:: ../../references.bib
+       :filter: \
+                (citation_key == "su2001application" or \
+                 citation_key == "su2005new")
+
+    Quadratic Neuron ART clusters data in Hyper-ellipsoid by utilizing a quadratic
+    neural network for activation and resonance.
 
     """
 

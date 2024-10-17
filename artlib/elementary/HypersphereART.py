@@ -19,11 +19,18 @@ from artlib.common.utils import l2norm2
 class HypersphereART(BaseART):
     """Hypersphere ART for Clustering.
 
-    This module implements Ellipsoid ART as first published in Anagnostopoulos, G. C., &
-    Georgiopulos, M. (2000). Hypersphere ART and ARTMAP for unsupervised and supervised,
-    incremental learning. In Proc. IEEE International Joint Conference on Neural
-    Networks (IJCNN) (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373. Hyperpshere
-    ART clusters data in Hyper-spheres similar to k-means with a dynamic k.
+    This module implements Ellipsoid ART as first published in:
+
+    .. # Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
+    .. # Hypersphere ART and ARTMAP for unsupervised and supervised, incremental
+    .. # learning.
+    .. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+    .. # (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
+
+    .. bibliography:: ../../references.bib
+       :filter: citation_key == "anagnostopoulos2000hypersphere"
+
+    Hyperpshere ART clusters data in Hyper-spheres similar to k-means with a dynamic k.
 
     """
 

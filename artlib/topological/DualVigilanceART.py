@@ -20,10 +20,16 @@ from artlib.common.utils import IndexableOrKeyable
 class DualVigilanceART(BaseART):
     """Dual Vigilance ART for Clustering.
 
-    This module implements Dual Vigilance ART as first published in Brito da Silva, L.
-    E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy adaptive
-    resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015. Dual
-    Vigilance ART allows a base ART module to cluster with both an upper and lower
+    This module implements Dual Vigilance ART as first published in:
+
+    .. # Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019).
+    .. # Dual vigilance fuzzy adaptive resonance theory.
+    .. # Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+
+    .. bibliography:: ../../references.bib
+       :filter: citation_key == "da2019dual"
+
+    Dual Vigilance ART allows a base ART module to cluster with both an upper and lower
     vigilance value. The upper-vigilance value allows the base ART module to cluster
     normally, however, data is simultaneously clustered using the lower vigilance level
     to combine multiple base ART categories into a single abstracted category. This

@@ -33,11 +33,22 @@ from artlib.common.BaseART import BaseART
 class ART2A(BaseART):
     """ART2-A for Clustering.
 
-    This module implements ART2-A as first published in
-    Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
-    ART 2-A: An adaptive resonance algorithm for rapid category learning and
-    recognition.
-    Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+    This module implements ART2-A as first published in:
+
+    .. # Carpenter, G. A., & Grossberg, S. (1987b).
+    .. # ART 2: self-organization of stable category recognition codes for analog input
+    .. # patterns.
+    .. # Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
+
+    .. # Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
+    .. # ART 2-A: An adaptive resonance algorithm for rapid category learning and
+    .. # recognition.
+    .. # Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+
+    .. bibliography:: ../../references.bib
+       :filter: \
+                (citation_key == "carpenter1987art" or \
+                 citation_key == "carpenter1991art")
 
     ART2-A is similar to ART1 but designed for analog data. This method is implemented
     for historical purposes and is not recommended for use.

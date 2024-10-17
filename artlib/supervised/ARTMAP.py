@@ -19,11 +19,15 @@ from sklearn.utils.validation import check_is_fitted
 class ARTMAP(SimpleARTMAP):
     """ARTMAP for Classification and Regression.
 
-    This module implements ARTMAP as first published in
-    Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-    ARTMAP: Supervised real-time learning and classification of nonstationary data by a
-    self-organizing neural network.
-    Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+    This module implements ARTMAP as first published in:
+
+    .. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+    .. # ARTMAP: Supervised real-time learning and classification of nonstationary data
+    .. # by a self-organizing neural network.
+    .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+
+    .. bibliography:: ../../references.bib
+       :filter: citation_key == "carpenter1991artmap"
 
     ARTMAP joins accepts two ART modules A and B which cluster the dependent channel
     (samples) and the independent channel (labels) respectively while linking them with

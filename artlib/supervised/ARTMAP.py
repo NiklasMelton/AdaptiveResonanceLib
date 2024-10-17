@@ -1,9 +1,12 @@
 """ARTMAP.
 
-Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-ARTMAP: Supervised real-time learning and classification of nonstationary data by a
-self-organizing neural network.
-Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+.. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+.. # ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+.. # self-organizing neural network.
+.. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
+
+.. bibliography::
+   :filter: docname in docnames and citation_key == "carpenter1991artmap"
 
 """
 import numpy as np

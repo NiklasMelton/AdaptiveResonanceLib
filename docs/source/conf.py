@@ -45,7 +45,7 @@ autoapi_ignore = ['*/experimental', '*/experimental/*']
 # autoapi_python_class_content = 'both'
 # autoclass_content = 'both'
 
-bibtex_bibfiles = ['artlib_citation.bib']
+bibtex_bibfiles = ['artlib_citation.bib', '../../references.bib']
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

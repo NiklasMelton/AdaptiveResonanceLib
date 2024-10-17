@@ -1,11 +1,15 @@
 """Fusion ART.
 
-Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
-Intelligence Through Interaction: Towards a Unified Theory for Learning.
-In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.),
-Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
-Berlin, Heidelberg: Springer Berlin Heidelberg.
-doi:10.1007/ 978-3-540-72383-7_128.
+.. # Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
+.. # Intelligence Through Interaction: Towards a Unified Theory for Learning.
+.. # In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.),
+.. # Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
+.. # Berlin, Heidelberg: Springer Berlin Heidelberg.
+.. # doi:10.1007/ 978-3-540-72383-7_128.
+
+.. bibliography::
+   :filter: docname in docnames and citation_key == "tan2007intelligence"
+
 
 """
 import numpy as np

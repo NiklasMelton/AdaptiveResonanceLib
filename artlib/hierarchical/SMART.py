@@ -1,10 +1,13 @@
 """SMART.
 
-Bartfai, G. (1994).
-Hierarchical clustering with ART neural networks.
-In Proc. IEEE International Conference on Neural Networks (ICNN)
-(pp. 940–944). volume 2.
-doi:10.1109/ICNN.1994.374307.
+.. # Bartfai, G. (1994).
+.. # Hierarchical clustering with ART neural networks.
+.. # In Proc. IEEE International Conference on Neural Networks (ICNN)
+.. # (pp. 940–944). volume 2.
+.. # doi:10.1109/ICNN.1994.374307.
+
+.. bibliography::
+   :filter: docname in docnames and citation_key == "bartfai1994hierarchical"
 
 """
 

@@ -1,8 +1,11 @@
 """Simple ARTMAP.
 
-Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
-Adaptive Resonance Theory Microchips: Circuit Design Techniques.
-Norwell, MA, USA: Kluwer Academic Publishers.
+.. # Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+.. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+.. # Norwell, MA, USA: Kluwer Academic Publishers.
+
+.. bibliography::
+   :filter: docname in docnames and citation_key == "gotarredona1998adaptive"
 
 """
 import numpy as np

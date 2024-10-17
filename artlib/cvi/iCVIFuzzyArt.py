@@ -1,10 +1,10 @@
 """iCVI Fuzzy ART
 
-da Silva, Leonardo Enzo Brito, Nagasharath Rayapati, and Donald C. Wunsch.
-"iCVI-ARTMAP: using incremental cluster validity indices and adaptive resonance
-theory reset mechanism to accelerate validation and achieve multiprototype unsupervised
-representations."
-IEEE Transactions on Neural Networks and Learning Systems 34.12 (2022): 9757-9770.
+.. # da Silva, Leonardo Enzo Brito, Nagasharath Rayapati, and Donald C. Wunsch.
+.. # "iCVI-ARTMAP: using incremental cluster validity indices and adaptive resonance
+.. # theory reset mechanism to accelerate validation and achieve multiprototype
+.. # unsupervised representations."
+.. # IEEE Transactions on Neural Networks and Learning Systems 34.12 (2022): 9757-9770.
 
 The original matlab code can be found at
 https://github.com/ACIL-Group/iCVI-toolbox/tree/master
@@ -12,6 +12,9 @@ https://github.com/ACIL-Group/iCVI-toolbox/tree/master
 scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
  Pages 314-316 and 319-320 Extended icvi offline mode can be found at
 https://ieeexplore.ieee.org/document/9745260
+
+.. bibliography::
+   :filter: docname in docnames and citation_key == "da2022icvi"
 
 """
 import numpy as np

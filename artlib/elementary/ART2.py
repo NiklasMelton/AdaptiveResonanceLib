@@ -1,29 +1,25 @@
-"""ART2.
+"""ART2 :cite:`carpenter1987art`, :cite:`carpenter1991art`.
 
-.. # Carpenter, G. A., & Grossberg, S. (1987b).
-.. # ART 2: self-organization of stable category recognition codes for analog input
-.. # patterns.
-.. # Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
-
-.. # Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
-.. # ART 2-A: An adaptive resonance algorithm for rapid category learning and
-.. # recognition.
-.. # Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
-
-.. bibliography:: ../../references.bib
-   :filter: \
-            (citation_key == "carpenter1987art" or \
-             citation_key == "carpenter1991art")
-
-
-==================================================================
-DISCLAIMER: DO NOT USE ART2!!!
-IT DOES NOT WORK
-It is provided for completeness only.
-Stephan Grossberg himself has said ART2 does not work.
-==================================================================
+::
+    ==================================================================
+    DISCLAIMER: DO NOT USE ART2!!!
+    IT DOES NOT WORK
+    It is provided for completeness only.
+    Stephan Grossberg himself has said ART2 does not work.
+    ==================================================================
 
 """
+
+# Carpenter, G. A., & Grossberg, S. (1987b).
+# ART 2: self-organization of stable category recognition codes for analog input
+# patterns.
+# Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
+
+# Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
+# ART 2-A: An adaptive resonance algorithm for rapid category learning and
+# recognition.
+# Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+
 import numpy as np
 from typing import Optional, List
 from warnings import warn

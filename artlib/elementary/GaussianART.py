@@ -1,14 +1,8 @@
-"""Gaussian ART.
-
-.. # Williamson, J. R. (1996).
-.. # Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy
-.. # Multidimensional Maps.
-.. # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
-
-.. bibliography:: ../../references.bib
-   :filter: citation_key == "williamson1996gaussian"
-
-"""
+"""Gaussian ART :cite:`williamson1996gaussian`."""
+# Williamson, J. R. (1996).
+# Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy
+# Multidimensional Maps.
+# Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 
 import numpy as np
 from typing import Optional, Iterable, List, Tuple, Union, Dict
@@ -21,14 +15,12 @@ class GaussianART(BaseART):
     """Gaussian ART for Clustering.
 
     This module implements Gaussian ART as first published in:
+    :cite:`williamson1996gaussian`.
 
     .. # Williamson, J. R. (1996).
     .. # Gaussian ARTMAP: A Neural Network for Fast Incremental Learning of Noisy
     .. # Multidimensional Maps.
     .. # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
-
-    .. bibliography:: ../../references.bib
-       :filter: citation_key == "williamson1996gaussian"
 
     Guassian ART clusters data in Gaussian Distributions (Hyper-ellipsoids) and is
     similar to Bayesian ART but differs in that the hyper-ellipsoid always have their

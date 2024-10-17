@@ -1,16 +1,11 @@
-"""Fusion ART.
+"""Fusion ART :cite:`tan2007intelligence`."""
+# Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
+# Intelligence Through Interaction: Towards a Unified Theory for Learning.
+# In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.),
+# Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
+# Berlin, Heidelberg: Springer Berlin Heidelberg.
+# doi:10.1007/ 978-3-540-72383-7_128.
 
-.. # Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
-.. # Intelligence Through Interaction: Towards a Unified Theory for Learning.
-.. # In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.),
-.. # Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
-.. # Berlin, Heidelberg: Springer Berlin Heidelberg.
-.. # doi:10.1007/ 978-3-540-72383-7_128.
-
-.. bibliography:: ../../references.bib
-   :filter: citation_key == "tan2007intelligence"
-
-"""
 import numpy as np
 from typing import Optional, Union, Callable, List, Literal, Tuple, Dict
 from copy import deepcopy
@@ -49,6 +44,7 @@ class FusionART(BaseART):
     """Fusion ART for Data Fusion and Regression.
 
     This module implements Fusion ART as first described in:
+    :cite:`tan2007intelligence`.
 
     .. # Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
     .. # Intelligence Through Interaction: Towards a Unified Theory for Learning.
@@ -56,9 +52,6 @@ class FusionART(BaseART):
     .. # Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
     .. # Berlin, Heidelberg: Springer Berlin Heidelberg.
     .. # doi:10.1007/ 978-3-540-72383-7_128.
-
-    .. bibliography:: ../../references.bib
-       :filter: citation_key == "tan2007intelligence"
 
     Fusion ART accepts an arbitrary number of ART modules, each assigned a different
     data channel. The activation and match functions for all ART modules are then fused

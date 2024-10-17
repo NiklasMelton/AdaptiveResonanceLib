@@ -1,14 +1,8 @@
-"""Deep ARTMAP.
-
-.. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-.. # ARTMAP: Supervised real-time learning and classification of nonstationary data by a
-.. # self-organizing neural network.
-.. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
-
-.. bibliography:: ../../references.bib
-   :filter: citation_key == "carpenter1991artmap"
-
-"""
+"""Deep ARTMAP :cite:`carpenter1991artmap`."""
+# Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+# ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+# self-organizing neural network.
+# Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
 from typing import Optional, cast, Union, Literal, Tuple
@@ -22,20 +16,18 @@ from artlib.supervised.ARTMAP import ARTMAP
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     """DeepARTMAP for Hierachical Supervised and Unsupervised Learning.
 
-    This module implements DeepARTMAP, a generalization of the ARTMAP class that allows
-    an arbitrary number of data channels to be divisively clustered. DeepARTMAP support
-    both supervised and unsupervised modes. If only two ART modules are provided,
-    DeepARTMAP reverts to standard ARTMAP where the first module is the A module and the
-    second module is the B module. DeepARTMAP does not currently have a direct citation
-    and is an original creation of this library.
+    This module implements DeepARTMAP, a generalization of the ARTMAP class
+    :cite:`carpenter1991artmap` that allows an arbitrary number of data channels to
+    be divisively clustered. DeepARTMAP support both supervised and unsupervised
+    modes. If only two ART modules are provided, DeepARTMAP reverts to standard
+    ARTMAP where the first module is the A module and the second module is the B
+    module. DeepARTMAP does not currently have a direct citation and is an original
+    creation of this library.
 
     .. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
     .. # ARTMAP: Supervised real-time learning and classification of nonstationary data
     .. # by a self-organizing neural network.
     .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
-
-    .. bibliography:: ../../references.bib
-       :filter: citation_key == "carpenter1991artmap"
 
     """
 

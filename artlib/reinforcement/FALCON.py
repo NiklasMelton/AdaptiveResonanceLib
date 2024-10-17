@@ -1,21 +1,13 @@
-"""FALCON.
+"""FALCON :cite:`tan2004falcon`, :cite:`tan2008integrating`."""
+# Tan, A.-H. (2004).
+# FALCON: a fusion architecture for learning, cognition, and navigation.
+# In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+# (pp. 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
 
-.. # Tan, A.-H. (2004).
-.. # FALCON: a fusion architecture for learning, cognition, and navigation.
-.. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-.. # (pp. 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
-
-.. # Tan, A.-H., Lu, N., & Xiao, D. (2008).
-.. # Integrating Temporal Difference Methods and Self-Organizing Neural Networks for
-.. # Reinforcement Learning With Delayed Evaluative Feedback.
-.. # IEEE Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839
-
-.. bibliography:: ../../references.bib
-   :filter: \
-            (citation_key == "tan2004falcon" or \
-             citation_key == "tan2008integrating")
-
-"""
+# Tan, A.-H., Lu, N., & Xiao, D. (2008).
+# Integrating Temporal Difference Methods and Self-Organizing Neural Networks for
+# Reinforcement Learning With Delayed Evaluative Feedback.
+# IEEE Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839
 
 import numpy as np
 from typing import Optional, Literal, Tuple, Union, List
@@ -28,6 +20,7 @@ class FALCON:
     """FALCON for Reinforcement Learning.
 
     This module implements the reactive FALCON as first described in:
+    :cite:`tan2004falcon`, :cite:`tan2008integrating`.
 
     .. # Tan, A.-H. (2004).
     .. # FALCON: a fusion architecture for learning, cognition, and navigation.
@@ -38,11 +31,6 @@ class FALCON:
     .. # Integrating Temporal Difference Methods and Self-Organizing Neural Networks for
     .. # Reinforcement Learning With Delayed Evaluative Feedback.
     .. # IEEE Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839
-
-    .. bibliography:: ../../references.bib
-       :filter: \
-                (citation_key == "tan2004falcon" or \
-                 citation_key == "tan2008integrating")
 
     FALCON is based on a Fusion-ART backbone but only accepts 3 channels: State, Action,
     and Reward. Specific functions are implemented for getting optimal reward and action

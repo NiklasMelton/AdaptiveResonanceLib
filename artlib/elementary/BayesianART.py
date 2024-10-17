@@ -1,14 +1,9 @@
-"""Bayesian ART.
+"""Bayesian ART :cite:`vigdor2007bayesian`."""
+# Vigdor, B., & Lerner, B. (2007).
+# The Bayesian ARTMAP.
+# IEEE Transactions on Neural
+# Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
-.. # Vigdor, B., & Lerner, B. (2007).
-.. # The Bayesian ARTMAP.
-.. # IEEE Transactions on Neural
-.. # Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
-
-.. bibliography:: ../../references.bib
-   :filter: citation_key == "vigdor2007bayesian"
-
-"""
 import numpy as np
 from typing import Optional, Iterable, List, Callable, Literal, Tuple, Union, Dict
 import operator
@@ -21,14 +16,12 @@ class BayesianART(BaseART):
     """Bayesian ART for Clustering.
 
     This module implements Bayesian ART as first published in:
+    :cite:`vigdor2007bayesian`.
 
      .. # Vigdor, B., & Lerner, B. (2007).
     .. # The Bayesian ARTMAP.
     .. # IEEE Transactions on Neural
     .. # Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
-
-    .. bibliography:: ../../references.bib
-       :filter: citation_key == "vigdor2007bayesian"
 
     Bayesian ART clusters data in Bayesian Distributions (Hyper-ellipsoids) and is
     similar to Gaussian ART but differs in that it allows arbitrary rotation of the

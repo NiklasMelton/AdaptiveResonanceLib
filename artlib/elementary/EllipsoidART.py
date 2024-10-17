@@ -1,21 +1,14 @@
-"""Ellipsoid ART.
+"""Ellipsoid ART :cite:`anagnostopoulos2001a`, :cite:`anagnostopoulos2001b`."""
+# Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
+# Ellipsoid ART and ARTMAP for incremental clustering and classification.
+# In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+# (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
 
-.. # Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
-.. # Ellipsoid ART and ARTMAP for incremental clustering and classification.
-.. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
-.. # (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
+# Anagnostopoulos, G. C., & Georgiopoulos, M. (2001b).
+# Ellipsoid ART and ARTMAP for incremental unsupervised and supervised learning.
+# In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
+# International Society for Optics and Photonics. doi:10.1117/12.421180.
 
-.. # Anagnostopoulos, G. C., & Georgiopoulos, M. (2001b).
-.. # Ellipsoid ART and ARTMAP for incremental unsupervised and supervised learning.
-.. # In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
-.. # International Society for Optics and Photonics. doi:10.1117/12.421180.
-
-.. bibliography:: ../../references.bib
-   :filter: \
-            (citation_key == "anagnostopoulos2001a" or \
-             citation_key == "anagnostopoulos2001b")
-
-"""
 import numpy as np
 from typing import Optional, List, Tuple, Union, Dict
 from matplotlib.axes import Axes
@@ -27,8 +20,9 @@ class EllipsoidART(BaseART):
     """Ellipsoid ART for Clustering.
 
     This module implements Ellipsoid ART as first published in:
+    :cite:`anagnostopoulos2001a`, :cite:`anagnostopoulos2001b`.
 
-     .. # Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
+    .. # Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a).
     .. # Ellipsoid ART and ARTMAP for incremental clustering and classification.
     .. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
     .. # (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
@@ -37,11 +31,6 @@ class EllipsoidART(BaseART):
     .. # Ellipsoid ART and ARTMAP for incremental unsupervised and supervised learning.
     .. # In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
     .. # International Society for Optics and Photonics. doi:10.1117/12.421180.
-
-    .. bibliography:: ../../references.bib
-       :filter: \
-                (citation_key == "anagnostopoulos2001a" or \
-                 citation_key == "anagnostopoulos2001b")
 
     Ellipsoid ART clusters data in Hyper-ellipsoids. It is highly sensitive to sample
     presentation order as the second sample will determine the orientation of the

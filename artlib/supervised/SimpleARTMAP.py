@@ -1,13 +1,7 @@
-"""Simple ARTMAP.
-
-.. # Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
-.. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
-.. # Norwell, MA, USA: Kluwer Academic Publishers.
-
-.. bibliography:: ../../references.bib
-   :filter: citation_key == "gotarredona1998adaptive"
-
-"""
+"""Simple ARTMAP :cite:`gotarredona1998adaptive`."""
+# Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+# Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+# Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
 from typing import Optional, Literal, Dict, Union, Tuple
 from matplotlib.axes import Axes
@@ -22,13 +16,11 @@ class SimpleARTMAP(BaseARTMAP):
     """SimpleARTMAP for Classification.
 
     This module implements SimpleARTMAP as first published in:
+    :cite:`gotarredona1998adaptive`.
 
     .. # Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
     .. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
     .. # Norwell, MA, USA: Kluwer Academic Publishers.
-
-    .. bibliography:: ../../references.bib
-       :filter: citation_key == "gotarredona1998adaptive"
 
     SimpleARTMAP allows the clustering of data samples while enforcing a many-to-one
     mapping from sample clusters to labels. It accepts an instantiated ART module and

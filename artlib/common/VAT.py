@@ -1,12 +1,8 @@
 """VAT.
 
-.. # Bezdek, J. C., & Hathaway, R. J. (2002).
-.. # VAT: A tool for visual assessment of cluster tendency.
-.. # Proceedings of the 2002 International Joint Conference on Neural Networks.
-.. # doi:10.1109/IJCNN.2002.1007487
-
-.. bibliography:: ../../references.bib
-   :filter: citation_key == "bezdek2002vat"
+.. # Bezdek, J. C., & Hathaway, R. J. (2002). .. # VAT: A tool for visual assessment of
+cluster tendency. .. # Proceedings of the 2002 International Joint Conference on Neural
+Networks. .. # doi:10.1109/IJCNN.2002.1007487
 
 """
 import numpy as np

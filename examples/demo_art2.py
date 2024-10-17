@@ -11,8 +11,15 @@ Stephan Grossberg himself has said ART2 does not work.
 ==================================================================
 """
 
+
 def cluster_blobs():
-    data, target = make_blobs(n_samples=150, centers=2, cluster_std=0.50, random_state=0, shuffle=False)
+    data, target = make_blobs(
+        n_samples=150,
+        centers=2,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
     print("Data has shape:", data.shape)
 
     params = {

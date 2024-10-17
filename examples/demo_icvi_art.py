@@ -5,14 +5,20 @@ from artlib import iCVIFuzzyART
 
 
 def cluster_blobs():
-    data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
+    data, target = make_blobs(
+        n_samples=150,
+        centers=3,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
     print("Data has shape:", data.shape)
 
     params = {
         "rho": 0.0,
         "alpha": 0.0,
         "beta": 1.0,
-        "validity": iCVIFuzzyART.CALINSKIHARABASZ
+        "validity": iCVIFuzzyART.CALINSKIHARABASZ,
     }
     cls = iCVIFuzzyART(**params)
 

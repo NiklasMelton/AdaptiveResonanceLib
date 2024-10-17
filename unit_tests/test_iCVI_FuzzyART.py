@@ -8,21 +8,31 @@ from artlib.cvi.iCVIs.CalinkskiHarabasz import iCVI_CH
 @pytest.fixture
 def icvi_fuzzyart_model():
     # Initialize iCVIFuzzyART with Calinski-Harabasz validity index and offline mode
-    return iCVIFuzzyART(rho=0.5, alpha=0.01, beta=1.0, validity=iCVIFuzzyART.CALINSKIHARABASZ, offline=True)
+    return iCVIFuzzyART(
+        rho=0.5,
+        alpha=0.01,
+        beta=1.0,
+        validity=iCVIFuzzyART.CALINSKIHARABASZ,
+        offline=True,
+    )
 
 
 def test_icvi_fuzzyart_initialization(icvi_fuzzyart_model):
     # Test that the model initializes correctly
     assert isinstance(icvi_fuzzyart_model, iCVIFuzzyART)
-    assert icvi_fuzzyart_model.params['validity'] == iCVIFuzzyART.CALINSKIHARABASZ
+    assert (
+        icvi_fuzzyart_model.params["validity"] == iCVIFuzzyART.CALINSKIHARABASZ
+    )
     assert icvi_fuzzyart_model.offline is True
 
 
 def test_icvi_fuzzyart_validate_params(icvi_fuzzyart_model):
     # Test if validity parameter is validated correctly
-    assert 'validity' in icvi_fuzzyart_model.params
-    assert isinstance(icvi_fuzzyart_model.params['validity'], int)
-    assert icvi_fuzzyart_model.params['validity'] == iCVIFuzzyART.CALINSKIHARABASZ
+    assert "validity" in icvi_fuzzyart_model.params
+    assert isinstance(icvi_fuzzyart_model.params["validity"], int)
+    assert (
+        icvi_fuzzyart_model.params["validity"] == iCVIFuzzyART.CALINSKIHARABASZ
+    )
 
 
 def test_icvi_fuzzyart_prepare_and_restore_data(icvi_fuzzyart_model):
@@ -60,7 +70,9 @@ def test_icvi_fuzzyart_iCVI_match(icvi_fuzzyart_model):
     w = icvi_fuzzyart_model.W[0]
 
     # Test iCVI_match functionality
-    result = icvi_fuzzyart_model.iCVI_match(x, w, 0, icvi_fuzzyart_model.params, {})
+    result = icvi_fuzzyart_model.iCVI_match(
+        x, w, 0, icvi_fuzzyart_model.params, {}
+    )
     assert isinstance(result, np.bool_)
 
 

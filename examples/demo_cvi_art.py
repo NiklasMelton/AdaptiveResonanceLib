@@ -5,7 +5,13 @@ from artlib import CVIART, FuzzyART
 
 
 def cluster_blobs():
-    data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
+    data, target = make_blobs(
+        n_samples=150,
+        centers=3,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
     print("Data has shape:", data.shape)
 
     params = {

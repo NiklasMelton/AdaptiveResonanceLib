@@ -3,6 +3,7 @@ from typing import Optional
 from artlib import BaseART
 from artlib.common.utils import normalize
 
+
 def prepare_data(data: np.ndarray) -> np.ndarray:
     normalized = normalize(data)
     return normalized
@@ -32,7 +33,9 @@ class myART(BaseART):
         """
         raise NotImplementedError
 
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+    def category_choice(
+        self, i: np.ndarray, w: np.ndarray, params: dict
+    ) -> tuple[float, Optional[dict]]:
         """
         get the activation of the cluster
 
@@ -47,7 +50,13 @@ class myART(BaseART):
         """
         raise NotImplementedError
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> tuple[float, dict]:
         """
         get the match criterion of the cluster
 
@@ -63,7 +72,13 @@ class myART(BaseART):
         """
         raise NotImplementedError
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[bool, dict]:
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> tuple[bool, dict]:
         """
         get the binary match criterion of the cluster
 
@@ -79,7 +94,13 @@ class myART(BaseART):
         """
         raise NotImplementedError
 
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> np.ndarray:
         """
         get the updated cluster weight
 

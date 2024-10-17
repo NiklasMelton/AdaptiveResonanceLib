@@ -11,6 +11,7 @@ from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
 
+
 class SMART(DeepARTMAP):
     """SMART for Hierachical Clustering
 
@@ -25,7 +26,13 @@ class SMART(DeepARTMAP):
 
     """
 
-    def __init__(self, base_ART_class: Type, rho_values: Union[list[float], np.ndarray], base_params: dict, **kwargs):
+    def __init__(
+        self,
+        base_ART_class: Type,
+        rho_values: Union[list[float], np.ndarray],
+        base_params: dict,
+        **kwargs
+    ):
         """
         Initialize the SMART model.
 
@@ -41,15 +48,21 @@ class SMART(DeepARTMAP):
             Additional keyword arguments for ART module initialization.
         """
         if base_ART_class.__name__ != "BayesianART":
-            assert all(np.diff(rho_values) > 0), "rho_values must be monotonically increasing"
+            assert all(
+                np.diff(rho_values) > 0
+            ), "rho_values must be monotonically increasing"
         else:
-            assert all(np.diff(rho_values) < 0), "rho_values must be monotonically decreasing for BayesianART"
+            assert all(
+                np.diff(rho_values) < 0
+            ), "rho_values must be monotonically decreasing for BayesianART"
         self.rho_values = rho_values
 
         layer_params = [dict(base_params, **{"rho": rho}) for rho in self.rho_values]
         modules = [base_ART_class(**params, **kwargs) for params in layer_params]
         for module in modules:
-            assert isinstance(module, BaseART), "Only elementary ART-like objects are supported"
+            assert isinstance(
+                module, BaseART
+            ), "Only elementary ART-like objects are supported"
         super().__init__(modules)
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
@@ -66,7 +79,7 @@ class SMART(DeepARTMAP):
         np.ndarray
             Prepared data.
         """
-        X_, _ = super(SMART, self).prepare_data([X]*self.n_modules)
+        X_, _ = super(SMART, self).prepare_data([X] * self.n_modules)
         return X_[0]
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
@@ -86,7 +99,14 @@ class SMART(DeepARTMAP):
         X_, _ = super(SMART, self).restore_data([X] * self.n_modules)
         return X_[0]
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Fit the SMART model to the data.
 
@@ -108,10 +128,21 @@ class SMART(DeepARTMAP):
         SMART
             Fitted SMART model.
         """
-        X_list = [X]*self.n_modules
-        return super().fit(X_list, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
+        X_list = [X] * self.n_modules
+        return super().fit(
+            X_list,
+            max_iter=max_iter,
+            match_reset_method=match_reset_method,
+            epsilon=epsilon,
+        )
 
-    def partial_fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Partial fit the SMART model to the data.
 
@@ -132,7 +163,9 @@ class SMART(DeepARTMAP):
             Partially fitted SMART model.
         """
         X_list = [X] * self.n_modules
-        return super(SMART, self).partial_fit(X_list, match_reset_method=match_reset_method, epsilon=epsilon)
+        return super(SMART, self).partial_fit(
+            X_list, match_reset_method=match_reset_method, epsilon=epsilon
+        )
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
@@ -160,15 +193,14 @@ class SMART(DeepARTMAP):
                     layer_colors.append(colors[self.map_deep(j - 1, k)])
             self.modules[j].plot_cluster_bounds(ax, layer_colors, linewidth)
 
-
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[Iterable] = None,
     ):
         """
         Visualize the clustering of the data with cluster boundaries.
@@ -199,10 +231,17 @@ class SMART(DeepARTMAP):
 
         if colors is None:
             from matplotlib.pyplot import cm
+
             colors = cm.rainbow(np.linspace(0, 1, self.modules[0].n_clusters))
 
         for k, col in enumerate(colors):
             cluster_data = y == k
-            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+            plt.scatter(
+                X[cluster_data, 0],
+                X[cluster_data, 1],
+                color=col,
+                marker=".",
+                s=marker_size,
+            )
 
         self.plot_cluster_bounds(ax, colors, linewidth)

@@ -5,30 +5,34 @@ from artlib.elementary.FuzzyART import FuzzyART
 
 # Assuming BaseART is imported and available in the current namespace
 
+
 @pytest.fixture
 def art_model():
     # Fixture that sets up the model before each test
     params = {
-        'rho': 0.5,
-        'alpha': 0.0,
-        'beta': 1.0,
+        "rho": 0.5,
+        "alpha": 0.0,
+        "beta": 1.0,
     }
     return FuzzyART(**params)
 
+
 def test_initialization(art_model):
     # Test that the ART model initializes correctly
-    assert art_model.params == {'rho': 0.5, 'alpha': 0.0, 'beta': 1.0}
+    assert art_model.params == {"rho": 0.5, "alpha": 0.0, "beta": 1.0}
     assert art_model.sample_counter_ == 0
     assert art_model.weight_sample_counter_ == []
 
+
 def test_set_get_params(art_model):
     # Test set_params and get_params functions
-    new_params = {'rho': 0.7, 'alpha': 0.05, 'beta': 0.9}
+    new_params = {"rho": 0.7, "alpha": 0.05, "beta": 0.9}
     art_model.set_params(**new_params)
     assert art_model.get_params() == new_params
     assert art_model.rho == 0.7
     assert art_model.alpha == 0.05
     assert art_model.beta == 0.9
+
 
 def test_attribute_access(art_model):
     # Test dynamic attribute access and setting using params
@@ -36,10 +40,12 @@ def test_attribute_access(art_model):
     art_model.rho = 0.8
     assert art_model.rho == 0.8
 
+
 def test_invalid_attribute(art_model):
     # Test accessing an invalid attribute
     with pytest.raises(AttributeError):
         art_model.non_existing_attribute
+
 
 def test_prepare_restore_data(art_model):
     # Test data normalization and denormalization
@@ -47,6 +53,7 @@ def test_prepare_restore_data(art_model):
     normalized_X = art_model.prepare_data(X)
     restored_X = art_model.restore_data(normalized_X)
     np.testing.assert_array_almost_equal(restored_X, X)
+
 
 def test_check_dimensions(art_model):
     # Test check_dimensions with valid data
@@ -59,23 +66,35 @@ def test_check_dimensions(art_model):
     with pytest.raises(AssertionError):
         art_model.check_dimensions(X_invalid)
 
+
 def test_match_tracking(art_model):
     # Test match tracking with different methods
-    cache = {'match_criterion': 0.5}
-    art_model._match_tracking(cache, epsilon=0.01, params=art_model.params, method='MT+')
+    cache = {"match_criterion": 0.5}
+    art_model._match_tracking(
+        cache, epsilon=0.01, params=art_model.params, method="MT+"
+    )
     assert art_model.rho == 0.51
 
-    art_model._match_tracking(cache, epsilon=0.01, params=art_model.params, method='MT-')
+    art_model._match_tracking(
+        cache, epsilon=0.01, params=art_model.params, method="MT-"
+    )
     assert art_model.rho == 0.49
 
-    art_model._match_tracking(cache, epsilon=0.01, params=art_model.params, method='MT0')
+    art_model._match_tracking(
+        cache, epsilon=0.01, params=art_model.params, method="MT0"
+    )
     assert art_model.rho == 0.5
 
-    art_model._match_tracking(cache, epsilon=0.01, params=art_model.params, method='MT~')
+    art_model._match_tracking(
+        cache, epsilon=0.01, params=art_model.params, method="MT~"
+    )
     assert art_model.rho == 0.5
 
-    art_model._match_tracking(cache, epsilon=0.01, params=art_model.params, method='MT1')
+    art_model._match_tracking(
+        cache, epsilon=0.01, params=art_model.params, method="MT1"
+    )
     assert np.isinf(art_model.rho)
+
 
 def test_step_fit(art_model):
     # Test step_fit for creating new clusters
@@ -92,6 +111,7 @@ def test_step_fit(art_model):
     assert label == 0
     art_model.add_weight.assert_called_once()
 
+
 def test_partial_fit(art_model):
     # Test partial_fit
     X = np.array([[0.1, 0.2], [0.3, 0.4]])
@@ -105,6 +125,7 @@ def test_partial_fit(art_model):
     art_model.partial_fit(X)
     art_model.add_weight.assert_called()
 
+
 def test_predict(art_model):
     # Test predict function
     X = np.array([[0.1, 0.2], [0.3, 0.4]])
@@ -117,20 +138,13 @@ def test_predict(art_model):
 
 
 def test_clustering(art_model):
-    new_params = {'rho': 0.9, 'alpha': 0.05, 'beta': 1.0}
+    new_params = {"rho": 0.9, "alpha": 0.05, "beta": 1.0}
     art_model.set_params(**new_params)
 
     data = np.array(
-        [
-            [0.0, 0.0],
-            [0.0, 0.08],
-            [0.0, 1.0],
-            [1.0, 1.0],
-            [1.0, 0.0]
-        ]
+        [[0.0, 0.0], [0.0, 0.08], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]]
     )
     data = art_model.prepare_data(data)
     labels = art_model.fit_predict(data)
 
     assert np.all(np.equal(labels, np.array([0, 0, 1, 2, 3])))
-

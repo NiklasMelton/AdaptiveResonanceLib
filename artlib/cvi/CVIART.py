@@ -17,6 +17,7 @@ class CVIART(BaseART):
     the other criteria has failed. This means it could run slower then it would otherwise.
 
     """
+
     CALINSKIHARABASZ = 1
     DAVIESBOULDIN = 2
     SILHOUETTE = 3
@@ -50,9 +51,13 @@ class CVIART(BaseART):
 
         """
         self.base_module.validate_params(params)
-        assert 'validity' in params
-        assert isinstance(params['validity'], int)
-        assert params["validity"] in [CVIART.CALINSKIHARABASZ, CVIART.DAVIESBOULDIN, CVIART.SILHOUETTE]
+        assert "validity" in params
+        assert isinstance(params["validity"], int)
+        assert params["validity"] in [
+            CVIART.CALINSKIHARABASZ,
+            CVIART.DAVIESBOULDIN,
+            CVIART.SILHOUETTE,
+        ]
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
@@ -104,7 +109,6 @@ class CVIART(BaseART):
     def labels_(self, new_labels_):
         self.base_module.labels_ = new_labels_
 
-
     def CVI_match(self, x, w, c_, params, extra, cache):
         """
         Evaluate the cluster validity index (CVI) for a match.
@@ -133,11 +137,11 @@ class CVIART(BaseART):
         if len(self.W) < 2:
             return True
 
-        if extra['validity'] == self.CALINSKIHARABASZ:
+        if extra["validity"] == self.CALINSKIHARABASZ:
             valid_func = metrics.calinski_harabasz_score
-        elif extra['validity'] == self.DAVIESBOULDIN:
+        elif extra["validity"] == self.DAVIESBOULDIN:
             valid_func = metrics.davies_bouldin_score
-        elif extra['validity'] == self.SILHOUETTE:
+        elif extra["validity"] == self.SILHOUETTE:
             valid_func = metrics.silhouette_score
         else:
             raise ValueError(f"Invalid Validity Parameter: {extra['validity']}")
@@ -146,13 +150,18 @@ class CVIART(BaseART):
         new_labels = np.copy(self.labels_)
         new_labels[extra["index"]] = c_
         new_VI = valid_func(self.data, new_labels)
-        if extra['validity'] != self.DAVIESBOULDIN:
+        if extra["validity"] != self.DAVIESBOULDIN:
             return new_VI > old_VI
         else:
             return new_VI < old_VI
 
-
-    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+    def _match_tracking(
+        self,
+        cache: dict,
+        epsilon: float,
+        params: dict,
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
         """
         Adjust the vigilance parameter (rho) based on the match tracking method.
 
@@ -175,7 +184,7 @@ class CVIART(BaseART):
         """
         M = cache["match_criterion"]
         if method == "MT+":
-            self.base_module.params["rho"] = M+epsilon
+            self.base_module.params["rho"] = M + epsilon
             return True
         elif method == "MT-":
             self.base_module.params["rho"] = M - epsilon
@@ -197,8 +206,15 @@ class CVIART(BaseART):
     def _deep_copy_params(self) -> dict:
         return deepcopy(self.base_module.params)
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None,
-            max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        match_reset_func: Optional[Callable] = None,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Fit the model to the data.
 
@@ -225,18 +241,47 @@ class CVIART(BaseART):
         self.is_fitted_ = True
 
         self.W: list[np.ndarray] = []
-        self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+        self.labels_ = np.zeros((X.shape[0],), dtype=int)
         for _ in range(max_iter):
             for index, x in enumerate(X):
                 self.pre_step_fit(X)
                 if match_reset_func is None:
-                    cvi_match_reset_func = lambda i, w, cluster_a, params, cache: self.CVI_match(i, w, cluster_a, params, {"index": index, "validity":self.params["validity"]}, cache)
+                    cvi_match_reset_func = (
+                        lambda i, w, cluster_a, params, cache: self.CVI_match(
+                            i,
+                            w,
+                            cluster_a,
+                            params,
+                            {
+                                "index": index,
+                                "validity": self.params["validity"],
+                            },
+                            cache,
+                        )
+                    )
                 else:
-                    cvi_match_reset_func = lambda i, w, cluster_a, params, cache: (match_reset_func(i,w,cluster_a,params,cache) and self.CVI_match(i, w, cluster_a, params, {"index": index, "validity":self.params["validity"]}, cache))
-                c = self.base_module.step_fit(x, match_reset_func=cvi_match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
+                    cvi_match_reset_func = lambda i, w, cluster_a, params, cache: (
+                        match_reset_func(i, w, cluster_a, params, cache)
+                        and self.CVI_match(
+                            i,
+                            w,
+                            cluster_a,
+                            params,
+                            {
+                                "index": index,
+                                "validity": self.params["validity"],
+                            },
+                            cache,
+                        )
+                    )
+                c = self.base_module.step_fit(
+                    x,
+                    match_reset_func=cvi_match_reset_func,
+                    match_reset_method=match_reset_method,
+                    epsilon=epsilon,
+                )
                 self.labels_[index] = c
                 self.post_step_fit(X)
-
 
     def pre_step_fit(self, X: np.ndarray):
         """
@@ -262,7 +307,13 @@ class CVIART(BaseART):
         """
         return self.base_module.post_step_fit(X)
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
+    def step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ) -> int:
         """
         Fit the model to a single sample.
 
@@ -329,5 +380,4 @@ class CVIART(BaseART):
             Width of boundary line, by default 1.
 
         """
-        return self.base_module.plot_cluster_bounds(ax, colors,linewidth)
-
+        return self.base_module.plot_cluster_bounds(ax, colors, linewidth)

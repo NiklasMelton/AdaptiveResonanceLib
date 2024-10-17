@@ -19,5 +19,3 @@ artlib.reinforcement.FALCON module
    :members:
    :undoc-members:
    :show-inheritance:
-
-

@@ -13,12 +13,18 @@ from artlib.cvi.iCVIs.CalinkskiHarabasz import iCVI_CH
 
 
 class iCVIFuzzyART(FuzzyART):
-    """iCVI Fuzzy Art For Clustering
+    """iCVI Fuzzy Art For Clustering"""
 
-    """
     CALINSKIHARABASZ = 1
 
-    def __init__(self, rho: float, alpha: float, beta: float, validity: int, offline: bool = True):
+    def __init__(
+        self,
+        rho: float,
+        alpha: float,
+        beta: float,
+        validity: int,
+        offline: bool = True,
+    ):
         """
         Initialize the iCVIFuzzyART model.
 
@@ -37,11 +43,14 @@ class iCVIFuzzyART(FuzzyART):
 
         """
         super().__init__(rho, alpha, beta)
-        self.params['validity'] = validity  # Currently not used. Waiting for more algorithms.
+        self.params[
+            "validity"
+        ] = validity  # Currently not used. Waiting for more algorithms.
         self.offline = offline
-        assert 'validity' in self.params  # Because Fuzzy art doesn't accept validity, and makes the params the way it does, validations have to be done after init.
-        assert isinstance(self.params['validity'], int)
-
+        assert (
+            "validity" in self.params
+        )  # Because Fuzzy art doesn't accept validity, and makes the params the way it does, validations have to be done after init.
+        assert isinstance(self.params["validity"], int)
 
     def iCVI_match(self, x, w, c_, params, cache):
         """
@@ -71,11 +80,19 @@ class iCVIFuzzyART(FuzzyART):
         else:
             new = self.iCVI.add_sample(x, c_)
         # Eventually this should be an icvi function that you pass the params, and it handles if this is true or false.
-        return new['criterion_value'] > self.iCVI.criterion_value
+        return new["criterion_value"] > self.iCVI.criterion_value
         # return self.iCVI.evalLabel(x, c_) This except pass params instead.
 
     # Could add max epochs back in, but only if offline is true, or do something special...
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None, match_reset_func: Optional[Callable] = None, max_iter=1, match_reset_method:Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        match_reset_func: Optional[Callable] = None,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Fit the model to the data.
 
@@ -101,7 +118,7 @@ class iCVIFuzzyART(FuzzyART):
         self.is_fitted_ = True
 
         self.W: list[np.ndarray] = []
-        self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+        self.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         self.iCVI = iCVI_CH(X[0])
 
@@ -114,10 +131,23 @@ class iCVIFuzzyART(FuzzyART):
             self.pre_step_fit(X)
             self.index = i
             if match_reset_func is None:
-                c = self.step_fit(x, match_reset_func=self.iCVI_match, match_reset_method=match_reset_method, epsilon=epsilon)
+                c = self.step_fit(
+                    x,
+                    match_reset_func=self.iCVI_match,
+                    match_reset_method=match_reset_method,
+                    epsilon=epsilon,
+                )
             else:
-                match_reset_func_ = lambda x, w, c_, params, cache: (match_reset_func(x, w, c_, params, cache) & self.iCVI_match(x, w, c_, params, cache))
-                c = self.step_fit(x, match_reset_func=match_reset_func_, match_reset_method=match_reset_method, epsilon=epsilon)
+                match_reset_func_ = lambda x, w, c_, params, cache: (
+                    match_reset_func(x, w, c_, params, cache)
+                    & self.iCVI_match(x, w, c_, params, cache)
+                )
+                c = self.step_fit(
+                    x,
+                    match_reset_func=match_reset_func_,
+                    match_reset_method=match_reset_method,
+                    epsilon=epsilon,
+                )
 
             if self.offline:
                 params = self.iCVI.switch_label(x, self.labels_[i], c)

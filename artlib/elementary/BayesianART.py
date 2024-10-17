@@ -20,7 +20,9 @@ class BayesianART(BaseART):
     in that it allows arbitrary rotation of the hyper-ellipsoid.
 
     """
+
     pi2 = np.pi * 2
+
     def __init__(self, rho: float, cov_init: np.ndarray):
         """
         Initialize the Bayesian ART model.
@@ -73,7 +75,9 @@ class BayesianART(BaseART):
         else:
             assert X.shape[1] == self.dim_
 
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+    def category_choice(
+        self, i: np.ndarray, w: np.ndarray, params: dict
+    ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
 
@@ -94,27 +98,32 @@ class BayesianART(BaseART):
             Cache used for later processing.
 
         """
-        mean = w[:self.dim_]
-        cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))
+        mean = w[: self.dim_]
+        cov = w[self.dim_ : -1].reshape((self.dim_, self.dim_))
         n = w[-1]
         dist = mean - i
 
-        exp_dist_cov_dist = np.exp(-0.5 * np.matmul(dist.T, np.matmul(np.linalg.inv(cov), dist)))
+        exp_dist_cov_dist = np.exp(
+            -0.5 * np.matmul(dist.T, np.matmul(np.linalg.inv(cov), dist))
+        )
         det_cov = np.linalg.det(cov)
 
-        p_i_cj = exp_dist_cov_dist / np.sqrt((self.pi2 ** self.dim_) * det_cov)
+        p_i_cj = exp_dist_cov_dist / np.sqrt((self.pi2**self.dim_) * det_cov)
         p_cj = n / np.sum(w_[-1] for w_ in self.W)
 
         activation = p_i_cj * p_cj
 
-        cache = {
-            "cov": cov,
-            "det_cov": det_cov
-        }
+        cache = {"cov": cov, "det_cov": det_cov}
 
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> tuple[float, dict]:
         """
         Get the match criterion of the cluster.
 
@@ -140,14 +149,21 @@ class BayesianART(BaseART):
         # the original paper uses the det(cov_old) for match criterion
         # however, it makes logical sense to use the new_cov and results are improved when doing so
         new_w = self.update(i, w, params, cache)
-        new_cov = new_w[self.dim_:-1].reshape((self.dim_, self.dim_))
+        new_cov = new_w[self.dim_ : -1].reshape((self.dim_, self.dim_))
         cache["new_w"] = new_w
         # if cache is None:
         #     raise ValueError("No cache provided")
         # return cache["det_cov"]
         return np.linalg.det(new_cov), cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+        op: Callable = operator.ge,
+    ) -> tuple[bool, dict]:
         """
         Get the binary match criterion of the cluster.
 
@@ -173,7 +189,9 @@ class BayesianART(BaseART):
 
         """
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
-        M_bin = op(params["rho"], M) # note that this is backwards from the base ART: rho >= M
+        M_bin = op(
+            params["rho"], M
+        )  # note that this is backwards from the base ART: rho >= M
         if cache is None:
             cache = dict()
         cache["match_criterion"] = M
@@ -181,7 +199,13 @@ class BayesianART(BaseART):
 
         return M_bin, cache
 
-    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+    def _match_tracking(
+        self,
+        cache: dict,
+        epsilon: float,
+        params: dict,
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
         """
         Adjust match tracking based on the method and epsilon value.
 
@@ -221,7 +245,13 @@ class BayesianART(BaseART):
         else:
             raise ValueError(f"Invalid Match Tracking Method: {method}")
 
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> np.ndarray:
         """
         Get the updated cluster weight.
 
@@ -248,15 +278,15 @@ class BayesianART(BaseART):
         if "new_w" in cache:
             return cache["new_w"]
 
-        mean = w[:self.dim_]
-        cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))
+        mean = w[: self.dim_]
+        cov = w[self.dim_ : -1].reshape((self.dim_, self.dim_))
         n = w[-1]
 
-        n_new = n+1
-        mean_new = (1-(1/n_new))*mean + (1/n_new)*i
+        n_new = n + 1
+        mean_new = (1 - (1 / n_new)) * mean + (1 / n_new) * i
 
-        i_mean_dist = i-mean_new
-        i_mean_dist_2 = i_mean_dist.reshape((-1, 1))*i_mean_dist.reshape((1, -1))
+        i_mean_dist = i - mean_new
+        i_mean_dist_2 = i_mean_dist.reshape((-1, 1)) * i_mean_dist.reshape((1, -1))
 
         cov_new = (n / n_new) * cov + (1 / n_new) * i_mean_dist_2
 
@@ -291,7 +321,7 @@ class BayesianART(BaseART):
             Cluster centroids.
 
         """
-        return [w[:self.dim_] for w in self.W]
+        return [w[: self.dim_] for w in self.W]
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
@@ -308,7 +338,7 @@ class BayesianART(BaseART):
 
         """
         for w, col in zip(self.W, colors):
-            mean = w[:self.dim_]
-            cov = w[self.dim_:-1].reshape((self.dim_, self.dim_))
+            mean = w[: self.dim_]
+            cov = w[self.dim_ : -1].reshape((self.dim_, self.dim_))
             # sigma = np.sqrt(np.diag(cov))
             plot_gaussian_contours_covariance(ax, mean, cov, col, linewidth=linewidth)

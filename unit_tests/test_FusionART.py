@@ -12,14 +12,20 @@ def fusionart_model():
     module_b = FuzzyART(0.7, 0.01, 1.0)
     gamma_values = np.array([0.5, 0.5])
     channel_dims = [4, 4]
-    return FusionART(modules=[module_a, module_b], gamma_values=gamma_values, channel_dims=channel_dims)
+    return FusionART(
+        modules=[module_a, module_b],
+        gamma_values=gamma_values,
+        channel_dims=channel_dims,
+    )
 
 
 def test_initialization(fusionart_model):
     # Test that the model initializes correctly
     assert isinstance(fusionart_model.modules[0], BaseART)
     assert isinstance(fusionart_model.modules[1], BaseART)
-    assert np.all(fusionart_model.params["gamma_values"] == np.array([0.5, 0.5]))
+    assert np.all(
+        fusionart_model.params["gamma_values"] == np.array([0.5, 0.5])
+    )
     assert fusionart_model.channel_dims == [4, 4]
 
 
@@ -28,7 +34,9 @@ def test_validate_params():
     valid_params = {"gamma_values": np.array([0.5, 0.5])}
     FusionART.validate_params(valid_params)
 
-    invalid_params = {"gamma_values": np.array([0.6, 0.6])}  # sum of gamma_values must be 1.0
+    invalid_params = {
+        "gamma_values": np.array([0.6, 0.6])
+    }  # sum of gamma_values must be 1.0
     with pytest.raises(AssertionError):
         FusionART.validate_params(invalid_params)
 
@@ -102,7 +110,9 @@ def test_step_fit(fusionart_model):
 
     # Run step_fit for the first sample
     label = fusionart_model.step_fit(X_prep[0])
-    assert isinstance(label, int)  # Ensure the result is an integer cluster label
+    assert isinstance(
+        label, int
+    )  # Ensure the result is an integer cluster label
 
 
 def test_step_pred(fusionart_model):

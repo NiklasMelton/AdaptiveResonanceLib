@@ -18,12 +18,11 @@ sequences = [
     "substitution",
 ]
 
+
 def cluster_sequences():
     X = np.array(sequences, dtype=object)
 
-    params = {
-        "rho": -0.5
-    }
+    params = {"rho": -0.5}
     cls = SeqART(**params)
 
     y = cls.fit_predict(X)
@@ -41,5 +40,3 @@ def cluster_sequences():
 
 if __name__ == "__main__":
     cluster_sequences()
-
-

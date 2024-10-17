@@ -15,7 +15,12 @@ topological clustering, data fusion, and regression, enabling flexible explorati
 
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
-from artlib.common.utils import normalize, compliment_code, de_compliment_code, de_normalize
+from artlib.common.utils import (
+    normalize,
+    compliment_code,
+    de_compliment_code,
+    de_normalize,
+)
 from artlib.common.VAT import VAT
 
 from artlib.elementary.ART1 import ART1
@@ -30,7 +35,8 @@ from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 from artlib.cvi.iCVIFuzzyArt import iCVIFuzzyART
 from artlib.cvi.CVIART import CVIART
 
-from artlib.supervised.ARTMAP import ARTMAP, SimpleARTMAP
+from artlib.supervised.ARTMAP import ARTMAP
+from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 
 from artlib.hierarchical.SMART import SMART
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
@@ -68,5 +74,5 @@ __all__ = [
     "iCVIFuzzyART",
     "CVIART",
     "FALCON",
-    "TD_FALCON"
+    "TD_FALCON",
 ]

@@ -12,6 +12,7 @@ from artlib.common.BaseARTMAP import BaseARTMAP
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.supervised.ARTMAP import ARTMAP
 
+
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
 
     """DeepARTMAP for Hierachical Supervised and Unsupervised Learning
@@ -130,13 +131,9 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             Deep labels from all ART layers concatenated together.
         """
         return np.concatenate(
-            [
-                layer.labels_.reshape((-1, 1))
-                for layer in self.layers
-            ]+[
-                self.layers[-1].labels_a.reshape((-1, 1))
-            ],
-            axis=1
+            [layer.labels_.reshape((-1, 1)) for layer in self.layers]
+            + [self.layers[-1].labels_a.reshape((-1, 1))],
+            axis=1,
         )
 
     @property
@@ -163,7 +160,9 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         return len(self.layers)
 
-    def map_deep(self, level: int, y_a: Union[np.ndarray, int]) -> Union[np.ndarray, int]:
+    def map_deep(
+        self, level: int, y_a: Union[np.ndarray, int]
+    ) -> Union[np.ndarray, int]:
         """
         Map a label from one arbitrary level to the highest (B) level.
 
@@ -183,16 +182,11 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             level += len(self.layers)
         y_b = self.layers[level].map_a2b(y_a)
         if level > 0:
-            return self.map_deep(level-1, y_b)
+            return self.map_deep(level - 1, y_b)
         else:
             return y_b
 
-
-    def validate_data(
-            self,
-            X: list[np.ndarray],
-            y: Optional[np.ndarray] = None
-    ):
+    def validate_data(self, X: list[np.ndarray], y: Optional[np.ndarray] = None):
         """
         Validate the data before clustering.
 
@@ -208,15 +202,20 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         AssertionError
             If the input data is inconsistent or does not match the expected format.
         """
-        assert len(X) == self.n_modules, \
-            f"Must provide {self.n_modules} input matrices for {self.n_modules} ART modules"
+        assert (
+            len(X) == self.n_modules
+        ), f"Must provide {self.n_modules} input matrices for {self.n_modules} ART modules"
         if y is not None:
             n = len(y)
         else:
             n = X[0].shape[0]
-        assert all(x.shape[0] == n for x in X), "Inconsistent sample number in input matrices"
+        assert all(
+            x.shape[0] == n for x in X
+        ), "Inconsistent sample number in input matrices"
 
-    def prepare_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
+    def prepare_data(
+        self, X: list[np.ndarray], y: Optional[np.ndarray] = None
+    ) -> Tuple[list[np.ndarray], Optional[np.ndarray]]:
         """
         Prepare the data for clustering.
 
@@ -234,7 +233,9 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         return [self.modules[i].prepare_data(X[i]) for i in range(self.n_modules)], y
 
-    def restore_data(self,  X: list[np.ndarray], y: Optional[np.ndarray] = None) ->Tuple[list[np.ndarray], Optional[np.ndarray]]:
+    def restore_data(
+        self, X: list[np.ndarray], y: Optional[np.ndarray] = None
+    ) -> Tuple[list[np.ndarray], Optional[np.ndarray]]:
         """
         Restore the data to its original state before preparation.
 
@@ -252,8 +253,14 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         return [self.modules[i].restore_data(X[i]) for i in range(self.n_modules)], y
 
-
-    def fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def fit(
+        self,
+        X: list[np.ndarray],
+        y: Optional[np.ndarray] = None,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Fit the DeepARTMAP model to the data.
 
@@ -279,22 +286,51 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         if y is not None:
             self.is_supervised = True
             self.layers = [SimpleARTMAP(self.modules[i]) for i in range(self.n_modules)]
-            self.layers[0] = self.layers[0].fit(X[0], y, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
+            self.layers[0] = self.layers[0].fit(
+                X[0],
+                y,
+                max_iter=max_iter,
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
         else:
             self.is_supervised = False
-            assert self.n_modules >= 2, "Must provide at least two ART modules when providing cluster labels"
-            self.layers = cast(list[BaseARTMAP], [ARTMAP(self.modules[1], self.modules[0])]) + \
-                           cast(list[BaseARTMAP], [SimpleARTMAP(self.modules[i]) for i in range(2, self.n_modules)])
-            self.layers[0] = self.layers[0].fit(X[1], X[0], max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
+            assert (
+                self.n_modules >= 2
+            ), "Must provide at least two ART modules when providing cluster labels"
+            self.layers = cast(
+                list[BaseARTMAP], [ARTMAP(self.modules[1], self.modules[0])]
+            ) + cast(
+                list[BaseARTMAP],
+                [SimpleARTMAP(self.modules[i]) for i in range(2, self.n_modules)],
+            )
+            self.layers[0] = self.layers[0].fit(
+                X[1],
+                X[0],
+                max_iter=max_iter,
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
 
         for art_i in range(1, self.n_layers):
-            y_i = self.layers[art_i-1].labels_a
-            self.layers[art_i] = self.layers[art_i].fit(X[art_i], y_i, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
+            y_i = self.layers[art_i - 1].labels_a
+            self.layers[art_i] = self.layers[art_i].fit(
+                X[art_i],
+                y_i,
+                max_iter=max_iter,
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
 
         return self
 
-
-    def partial_fit(self, X: list[np.ndarray], y: Optional[np.ndarray] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def partial_fit(
+        self,
+        X: list[np.ndarray],
+        y: Optional[np.ndarray] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Partially fit the DeepARTMAP model to the data.
 
@@ -318,28 +354,51 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         if y is not None:
             if len(self.layers) == 0:
                 self.is_supervised = True
-                self.layers = [SimpleARTMAP(self.modules[i]) for i in range(self.n_modules)]
-            assert self.is_supervised, "Labels were previously provided. Must continue to provide labels for partial fit."
-            self.layers[0] = self.layers[0].partial_fit(X[0], y, match_reset_method=match_reset_method, epsilon=epsilon)
+                self.layers = [
+                    SimpleARTMAP(self.modules[i]) for i in range(self.n_modules)
+                ]
+            assert (
+                self.is_supervised
+            ), "Labels were previously provided. Must continue to provide labels for partial fit."
+            self.layers[0] = self.layers[0].partial_fit(
+                X[0], y, match_reset_method=match_reset_method, epsilon=epsilon
+            )
             x_i = 1
         else:
             if len(self.layers) == 0:
                 self.is_supervised = False
-                assert self.n_modules >= 2, "Must provide at least two ART modules when providing cluster labels"
-                self.layers = cast(list[BaseARTMAP], [ARTMAP(self.modules[1], self.modules[0])]) + \
-                               cast(list[BaseARTMAP], [SimpleARTMAP(self.modules[i]) for i in range(2, self.n_modules)])
-            assert not self.is_supervised, "Labels were not previously provided. Do not provide labels to continue partial fit."
+                assert (
+                    self.n_modules >= 2
+                ), "Must provide at least two ART modules when providing cluster labels"
+                self.layers = cast(
+                    list[BaseARTMAP], [ARTMAP(self.modules[1], self.modules[0])]
+                ) + cast(
+                    list[BaseARTMAP],
+                    [SimpleARTMAP(self.modules[i]) for i in range(2, self.n_modules)],
+                )
+            assert (
+                not self.is_supervised
+            ), "Labels were not previously provided. Do not provide labels to continue partial fit."
 
-            self.layers[0] = self.layers[0].partial_fit(X[1], X[0], match_reset_method=match_reset_method, epsilon=epsilon)
+            self.layers[0] = self.layers[0].partial_fit(
+                X[1],
+                X[0],
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
             x_i = 2
 
         n_samples = X[0].shape[0]
         for art_i in range(1, self.n_layers):
-            y_i = self.layers[art_i-1].labels_a[-n_samples:]
-            self.layers[art_i] = self.layers[art_i].partial_fit(X[x_i], y_i, match_reset_method=match_reset_method, epsilon=epsilon)
+            y_i = self.layers[art_i - 1].labels_a[-n_samples:]
+            self.layers[art_i] = self.layers[art_i].partial_fit(
+                X[x_i],
+                y_i,
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
             x_i += 1
         return self
-
 
     def predict(self, X: Union[np.ndarray, list[np.ndarray]]) -> list[np.ndarray]:
         """
@@ -365,8 +424,3 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             pred.append(layer.map_a2b(pred[-1]))
 
         return pred[::-1]
-
-
-
-
-

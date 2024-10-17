@@ -39,15 +39,14 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a = module_a
         super().__init__()
 
-
     def match_reset_func(
-            self,
-            i: np.ndarray,
-            w: np.ndarray,
-            cluster_a,
-            params: dict,
-            extra: dict,
-            cache: Optional[dict] = None
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        cluster_a,
+        params: dict,
+        extra: dict,
+        cache: Optional[dict] = None,
     ) -> bool:
         """
         Permits external factors to influence cluster creation.
@@ -97,8 +96,9 @@ class SimpleARTMAP(BaseARTMAP):
             out.update(("module_a" + "__" + k, val) for k, val in deep_items)
         return out
 
-
-    def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def validate_data(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Validate data prior to clustering.
 
@@ -150,7 +150,13 @@ class SimpleARTMAP(BaseARTMAP):
         """
         return self.module_a.restore_data(X)
 
-    def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10) -> int:
+    def step_fit(
+        self,
+        x: np.ndarray,
+        c_b: int,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ) -> int:
         """
         Fit the model to a single sample.
 
@@ -171,16 +177,34 @@ class SimpleARTMAP(BaseARTMAP):
             Side A cluster label.
         """
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
-            i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
+            i,
+            w,
+            cluster,
+            params=params,
+            extra={"cluster_b": c_b},
+            cache=cache,
         )
-        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
+        c_a = self.module_a.step_fit(
+            x,
+            match_reset_func=match_reset_func,
+            match_reset_method=match_reset_method,
+            epsilon=epsilon,
+        )
         if c_a not in self.map:
             self.map[c_a] = c_b
         else:
             assert self.map[c_a] == c_b
         return c_a
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10, verbose: bool = False):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+        verbose: bool = False,
+    ):
         """
         Fit the model to the data.
 
@@ -216,17 +240,29 @@ class SimpleARTMAP(BaseARTMAP):
         for _ in range(max_iter):
             if verbose:
                 from tqdm import tqdm
+
                 x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
             else:
                 x_y_iter = enumerate(zip(X, y))
             for i, (x, c_b) in x_y_iter:
                 self.module_a.pre_step_fit(X)
-                c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
+                c_a = self.step_fit(
+                    x,
+                    c_b,
+                    match_reset_method=match_reset_method,
+                    epsilon=epsilon,
+                )
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
         return self
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
         """
         Partial fit the model to the data.
 
@@ -247,20 +283,24 @@ class SimpleARTMAP(BaseARTMAP):
             The partially fitted model.
         """
         SimpleARTMAP.validate_data(self, X, y)
-        if not hasattr(self, 'labels_'):
+        if not hasattr(self, "labels_"):
             self.labels_ = y
             self.module_a.W = []
             self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
             j = 0
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode="constant")
             self.labels_[j:] = y
-            self.module_a.labels_ = np.pad(self.module_a.labels_, [(0, X.shape[0])], mode='constant')
+            self.module_a.labels_ = np.pad(
+                self.module_a.labels_, [(0, X.shape[0])], mode="constant"
+            )
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
-            self.module_a.labels_[i+j] = c_a
+            c_a = self.step_fit(
+                x, c_b, match_reset_method=match_reset_method, epsilon=epsilon
+            )
+            self.module_a.labels_[i + j] = c_a
             self.module_a.post_step_fit(X)
         return self
 
@@ -417,13 +457,13 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.plot_cluster_bounds(ax, colors_a, linewidth)
 
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[Iterable] = None,
     ):
         """
         Visualize the clustering of the data.
@@ -450,10 +490,17 @@ class SimpleARTMAP(BaseARTMAP):
 
         if colors is None:
             from matplotlib.pyplot import cm
+
             colors = cm.rainbow(np.linspace(0, 1, self.n_clusters_b))
 
         for k_b, col in enumerate(colors):
             cluster_data = y == k_b
-            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+            plt.scatter(
+                X[cluster_data, 0],
+                X[cluster_data, 1],
+                color=col,
+                marker=".",
+                s=marker_size,
+            )
 
         self.plot_cluster_bounds(ax, colors, linewidth)

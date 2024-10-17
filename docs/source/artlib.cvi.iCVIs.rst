@@ -19,5 +19,3 @@ artlib.cvi.iCVIs.CalinkskiHarabasz module
    :members:
    :undoc-members:
    :show-inheritance:
-
-

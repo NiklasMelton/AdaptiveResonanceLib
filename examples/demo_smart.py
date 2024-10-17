@@ -5,13 +5,16 @@ from artlib import FuzzyART, SMART
 
 
 def cluster_blobs():
-    data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
+    data, target = make_blobs(
+        n_samples=150,
+        centers=3,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
     print("Data has shape:", data.shape)
 
-    base_params = {
-        "alpha": 0.0,
-        "beta": 1.0
-    }
+    base_params = {"alpha": 0.0, "beta": 1.0}
     rho_values = [0.5, 0.85, 0.9]
     cls = SMART(FuzzyART, rho_values, base_params)
 
@@ -27,7 +30,6 @@ def cluster_blobs():
 
 def main():
     cluster_blobs()
-
 
 
 if __name__ == "__main__":

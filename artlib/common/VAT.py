@@ -5,7 +5,10 @@ from typing import Optional, Tuple, Callable
 from scipy.spatial.distance import pdist, squareform
 
 
-def VAT(data: np.ndarray, distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean")) -> Tuple[np.ndarray, np.ndarray]:
+def VAT(
+    data: np.ndarray,
+    distance_metric: Optional[Callable] = lambda X: pdist(X, "euclidean"),
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Visual Assessment of Cluster Tendency (VAT) algorithm.
 
@@ -44,5 +47,3 @@ def VAT(data: np.ndarray, distance_metric: Optional[Callable] = lambda X: pdist(
         remaining.pop(jx)
 
     return pairwise_dist[np.ix_(indicies, indicies)], np.array(indicies)
-
-

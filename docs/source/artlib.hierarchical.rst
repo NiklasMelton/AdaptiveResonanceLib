@@ -27,5 +27,3 @@ artlib.hierarchical.SMART module
    :members:
    :undoc-members:
    :show-inheritance:
-
-

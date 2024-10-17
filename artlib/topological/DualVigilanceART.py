@@ -43,8 +43,9 @@ class DualVigilanceART(BaseART):
                 f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
                 f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
             )
-        assert "rho" in base_module.params, \
-            "Dual Vigilance ART is only compatible with ART modules relying on 'rho' for vigilance."
+        assert (
+            "rho" in base_module.params
+        ), "Dual Vigilance ART is only compatible with ART modules relying on 'rho' for vigilance."
 
         params = {"rho_lower_bound": rho_lower_bound}
         assert base_module.params["rho"] > params["rho_lower_bound"] >= 0
@@ -104,7 +105,7 @@ class DualVigilanceART(BaseART):
         """
         out = {
             "rho_lower_bound": self.params["rho_lower_bound"],
-            "base_module": self.base_module
+            "base_module": self.base_module,
         }
         if deep:
             deep_items = self.base_module.get_params().items()
@@ -212,12 +213,19 @@ class DualVigilanceART(BaseART):
 
         """
 
-        assert "rho_lower_bound" in params, \
-            "Dual Vigilance ART requires a lower bound 'rho' value"
+        assert (
+            "rho_lower_bound" in params
+        ), "Dual Vigilance ART requires a lower bound 'rho' value"
         assert params["rho_lower_bound"] >= 0
         assert isinstance(params["rho_lower_bound"], float)
 
-    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+    def _match_tracking(
+        self,
+        cache: dict,
+        epsilon: float,
+        params: dict,
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
         """
         Adjust match tracking based on the method and epsilon value.
 
@@ -240,7 +248,7 @@ class DualVigilanceART(BaseART):
         """
         M = cache["match_criterion"]
         if method == "MT+":
-            self.base_module.params["rho"] = M+epsilon
+            self.base_module.params["rho"] = M + epsilon
             return True
         elif method == "MT-":
             self.base_module.params["rho"] = M - epsilon
@@ -262,7 +270,13 @@ class DualVigilanceART(BaseART):
     def _deep_copy_params(self) -> dict:
         return deepcopy(self.base_module.params)
 
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None,match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
+    def step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ) -> int:
         """
         Fit the model to a single sample.
 
@@ -295,7 +309,9 @@ class DualVigilanceART(BaseART):
         else:
             T_values, T_cache = zip(
                 *[
-                    self.base_module.category_choice(x, w, params=self.base_module.params)
+                    self.base_module.category_choice(
+                        x, w, params=self.base_module.params
+                    )
                     for w in self.base_module.W
                 ]
             )
@@ -304,30 +320,50 @@ class DualVigilanceART(BaseART):
                 c_ = int(np.nanargmax(T))
                 w = self.base_module.W[c_]
                 cache = T_cache[c_]
-                m1, cache = self.base_module.match_criterion_bin(x, w, params=self.base_module.params, cache=cache, op=mt_operator)
-                no_match_reset = (
-                    match_reset_func is None or
-                    match_reset_func(x, w, self.map[c_], params=self.base_module.params, cache=cache)
+                m1, cache = self.base_module.match_criterion_bin(
+                    x,
+                    w,
+                    params=self.base_module.params,
+                    cache=cache,
+                    op=mt_operator,
+                )
+                no_match_reset = match_reset_func is None or match_reset_func(
+                    x,
+                    w,
+                    self.map[c_],
+                    params=self.base_module.params,
+                    cache=cache,
                 )
 
                 if no_match_reset:
                     if m1:
-                        new_w = self.base_module.update(x, w, self.base_module.params, cache=cache)
+                        new_w = self.base_module.update(
+                            x, w, self.base_module.params, cache=cache
+                        )
                         self.base_module.set_weight(c_, new_w)
                         self._set_params(base_params)
                         return self.map[c_]
                     else:
-                        lb_params = dict(self.base_module.params, **{"rho": self.rho_lower_bound})
-                        m2, _ = self.base_module.match_criterion_bin(x, w, params=lb_params, cache=cache, op=mt_operator)
+                        lb_params = dict(
+                            self.base_module.params,
+                            **{"rho": self.rho_lower_bound},
+                        )
+                        m2, _ = self.base_module.match_criterion_bin(
+                            x, w, params=lb_params, cache=cache, op=mt_operator
+                        )
                         if m2:
                             c_new = len(self.base_module.W)
-                            w_new = self.base_module.new_weight(x, self.base_module.params)
+                            w_new = self.base_module.new_weight(
+                                x, self.base_module.params
+                            )
                             self.base_module.add_weight(w_new)
                             self.map[c_new] = self.map[c_]
                             self._set_params(base_params)
                             return self.map[c_new]
                 else:
-                    keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
+                    keep_searching = self._match_tracking(
+                        cache, epsilon, self.params, match_reset_method
+                    )
                     if not keep_searching:
                         T[:] = np.nan
                 T[c_] = np.nan
@@ -395,6 +431,10 @@ class DualVigilanceART(BaseART):
             colors_base.append(colors[self.map[k_a]])
 
         try:
-            self.base_module.plot_cluster_bounds(ax=ax, colors=colors_base, linewidth=linewidth)
+            self.base_module.plot_cluster_bounds(
+                ax=ax, colors=colors_base, linewidth=linewidth
+            )
         except NotImplementedError:
-            warn(f"{self.base_module.__class__.__name__} does not support plotting cluster bounds.")
+            warn(
+                f"{self.base_module.__class__.__name__} does not support plotting cluster bounds."
+            )

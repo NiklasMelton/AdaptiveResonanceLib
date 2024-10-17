@@ -25,5 +25,3 @@ Subpackages
    artlib.reinforcement
    artlib.supervised
    artlib.topological
-
-

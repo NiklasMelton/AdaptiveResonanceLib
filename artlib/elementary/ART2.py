@@ -32,6 +32,7 @@ class ART2A(BaseART):
     analog data. This method is implemented for historical purposes and is not recommended for use.
 
     """
+
     def __init__(self, rho: float, alpha: float, beta: float):
         """
         Initialize the ART2-A model.
@@ -46,7 +47,9 @@ class ART2A(BaseART):
             Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
 
         """
-        warn("Do Not Use ART2. It does not work. This module is provided for completeness only")
+        warn(
+            "Do Not Use ART2. It does not work. This module is provided for completeness only"
+        )
 
         params = {
             "rho": rho,
@@ -69,13 +72,13 @@ class ART2A(BaseART):
         assert "rho" in params
         assert "alpha" in params
         assert "beta" in params
-        assert 1. >= params["rho"] >= 0.
-        assert 1. >= params["alpha"] >= 0.
-        assert 1. >= params["beta"] >= 0.
+        assert 1.0 >= params["rho"] >= 0.0
+        assert 1.0 >= params["alpha"] >= 0.0
+        assert 1.0 >= params["beta"] >= 0.0
         assert isinstance(params["rho"], float)
         assert isinstance(params["alpha"], float)
         assert isinstance(params["beta"], float)
-        
+
     def check_dimensions(self, X: np.ndarray):
         """
         Check that the data has the correct dimensions.
@@ -91,8 +94,10 @@ class ART2A(BaseART):
             assert self.params["alpha"] <= 1 / np.sqrt(self.dim_)
         else:
             assert X.shape[1] == self.dim_
-        
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+
+    def category_choice(
+        self, i: np.ndarray, w: np.ndarray, params: dict
+    ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
 
@@ -117,7 +122,13 @@ class ART2A(BaseART):
         cache = {"activation": activation}
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> tuple[float, dict]:
         """
         Get the match criterion of the cluster.
 
@@ -144,15 +155,20 @@ class ART2A(BaseART):
             raise ValueError("No cache provided")
         # TODO: make this more efficient
         M = cache["activation"]
-        M_u = params["alpha"]*np.sum(i)
+        M_u = params["alpha"] * np.sum(i)
         # suppress if uncommitted activation is higher
         if M < M_u:
-            return -1., cache
+            return -1.0, cache
         else:
             return M, cache
 
-
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> np.ndarray:
         """
         Get the updated cluster weight.
 
@@ -173,7 +189,7 @@ class ART2A(BaseART):
             Updated cluster weight.
 
         """
-        return params["beta"]*i + (1-params["beta"])*w
+        return params["beta"] * i + (1 - params["beta"]) * w
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """

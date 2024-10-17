@@ -14,24 +14,20 @@ def art_model():
 
 def test_initialization(art_model):
     # Test that the model initializes correctly
-    assert art_model.params['rho'] == 0.7
-    assert art_model.params['alpha'] == 0.1
-    assert art_model.params['beta'] == 0.5
+    assert art_model.params["rho"] == 0.7
+    assert art_model.params["alpha"] == 0.1
+    assert art_model.params["beta"] == 0.5
 
 
 def test_validate_params():
     # Test the validate_params method
-    valid_params = {
-        "rho": 0.7,
-        "alpha": 0.1,
-        "beta": 0.5
-    }
+    valid_params = {"rho": 0.7, "alpha": 0.1, "beta": 0.5}
     ART2A.validate_params(valid_params)
 
     invalid_params = {
         "rho": -0.7,  # Invalid vigilance parameter
         "alpha": -0.1,  # Invalid alpha
-        "beta": 1.5  # Invalid beta
+        "beta": 1.5,  # Invalid beta
     }
     with pytest.raises(AssertionError):
         ART2A.validate_params(invalid_params)
@@ -53,7 +49,7 @@ def test_category_choice(art_model):
     params = {"rho": 0.7}
 
     activation, cache = art_model.category_choice(i, w, params)
-    assert 'activation' in cache
+    assert "activation" in cache
     assert isinstance(activation, float)
 
 
@@ -65,8 +61,12 @@ def test_match_criterion(art_model):
     params = {"alpha": 0.1}
     cache = {"activation": 0.5}
 
-    match_criterion, new_cache = art_model.match_criterion(i, w, params, cache=cache)
-    assert match_criterion == 0.5  # Since activation is higher than uncommitted activation
+    match_criterion, new_cache = art_model.match_criterion(
+        i, w, params, cache=cache
+    )
+    assert (
+        match_criterion == 0.5
+    )  # Since activation is higher than uncommitted activation
 
 
 def test_update(art_model):
@@ -79,7 +79,9 @@ def test_update(art_model):
 
     updated_weight = art_model.update(i, w, params, cache=cache)
     assert len(updated_weight) == 2  # Check that the weight is updated
-    assert np.allclose(updated_weight, (0.5 * i + 0.5 * w))  # Check the update formula
+    assert np.allclose(
+        updated_weight, (0.5 * i + 0.5 * w)
+    )  # Check the update formula
 
 
 def test_new_weight(art_model):

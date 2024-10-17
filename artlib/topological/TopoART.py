@@ -54,12 +54,14 @@ class TopoART(BaseART):
                 f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
                 f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
             )
-        params = dict(base_module.params, **{"beta_lower": beta_lower, "tau": tau, "phi": phi})
+        params = dict(
+            base_module.params,
+            **{"beta_lower": beta_lower, "tau": tau, "phi": phi},
+        )
         super().__init__(params)
         self.base_module = base_module
         self.adjacency = np.zeros([], dtype=int)
         self._permanent_mask = np.zeros([], dtype=bool)
-
 
     @staticmethod
     def validate_params(params: dict):
@@ -76,7 +78,9 @@ class TopoART(BaseART):
         AssertionError
             If the required parameters are not provided or are invalid.
         """
-        assert "beta" in params, "TopoART is only compatible with ART modules relying on 'beta' for learning."
+        assert (
+            "beta" in params
+        ), "TopoART is only compatible with ART modules relying on 'beta' for learning."
         assert "beta_lower" in params
         assert "tau" in params
         assert "phi" in params
@@ -86,7 +90,6 @@ class TopoART(BaseART):
         assert isinstance(params["beta_lower"], float)
         assert isinstance(params["tau"], int)
         assert isinstance(params["phi"], int)
-
 
     @property
     def W(self) -> List[np.ndarray]:
@@ -100,7 +103,6 @@ class TopoART(BaseART):
         """
         return self.base_module.W
 
-
     @W.setter
     def W(self, new_W: list[np.ndarray]):
         """
@@ -113,7 +115,6 @@ class TopoART(BaseART):
         """
         self.base_module.W = new_W
 
-
     def validate_data(self, X: np.ndarray):
         """
         Validate the data prior to clustering.
@@ -124,7 +125,6 @@ class TopoART(BaseART):
             The input dataset.
         """
         self.base_module.validate_data(X)
-
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """
@@ -142,7 +142,6 @@ class TopoART(BaseART):
         """
         return self.base_module.prepare_data(X)
 
-
     def restore_data(self, X: np.ndarray) -> np.ndarray:
         """
         Restore data to the state prior to preparation.
@@ -159,8 +158,9 @@ class TopoART(BaseART):
         """
         return self.base_module.restore_data(X)
 
-
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict) -> tuple[float, Optional[dict]]:
+    def category_choice(
+        self, i: np.ndarray, w: np.ndarray, params: dict
+    ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
 
@@ -180,8 +180,13 @@ class TopoART(BaseART):
         """
         return self.base_module.category_choice(i, w, params)
 
-
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> tuple[float, dict]:
         """
         Get the match criterion of the cluster.
 
@@ -203,8 +208,14 @@ class TopoART(BaseART):
         """
         return self.base_module.match_criterion(i, w, params, cache)
 
-
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+        op: Callable = operator.ge,
+    ) -> tuple[bool, dict]:
         """
         Get the binary match criterion of the cluster.
 
@@ -228,8 +239,13 @@ class TopoART(BaseART):
         """
         return self.base_module.match_criterion_bin(i, w, params, cache, op)
 
-
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> np.ndarray:
         """
         Update the cluster weight.
 
@@ -253,7 +269,6 @@ class TopoART(BaseART):
             self.adjacency[cache["resonant_c"], cache["current_c"]] += 1
         return self.base_module.update(i, w, params, cache)
 
-
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """
         Generate a new cluster weight.
@@ -273,7 +288,6 @@ class TopoART(BaseART):
 
         return self.base_module.new_weight(i, params)
 
-
     def add_weight(self, new_w: np.ndarray):
         """
         Add a new cluster weight.
@@ -291,7 +305,6 @@ class TopoART(BaseART):
         self.weight_sample_counter_.append(1)
         self.W.append(new_w)
 
-
     def prune(self, X: np.ndarray):
         """
         Prune clusters based on the number of associated samples.
@@ -301,15 +314,27 @@ class TopoART(BaseART):
         X : np.ndarray
             The input dataset.
         """
-        a = np.array(self.weight_sample_counter_).reshape(-1,) >= self.phi
+        a = (
+            np.array(self.weight_sample_counter_).reshape(
+                -1,
+            )
+            >= self.phi
+        )
         b = self._permanent_mask
         print(a.shape, b.shape)
 
-        self._permanent_mask += np.array(self.weight_sample_counter_).reshape(-1,) >= self.phi
+        self._permanent_mask += (
+            np.array(self.weight_sample_counter_).reshape(
+                -1,
+            )
+            >= self.phi
+        )
         perm_labels = np.where(self._permanent_mask)[0]
 
         self.W = [w for w, pm in zip(self.W, self._permanent_mask) if pm]
-        self.weight_sample_counter_ = [self.weight_sample_counter_[i] for i in perm_labels]
+        self.weight_sample_counter_ = [
+            self.weight_sample_counter_[i] for i in perm_labels
+        ]
         self.adjacency = self.adjacency[perm_labels][:, perm_labels]
         self._permanent_mask = self._permanent_mask[perm_labels]
 
@@ -328,7 +353,6 @@ class TopoART(BaseART):
             else:
                 self.labels_[i] = -1
 
-
     def post_step_fit(self, X: np.ndarray):
         """
         Perform post-fit operations, such as cluster pruning, after fitting each sample.
@@ -341,8 +365,13 @@ class TopoART(BaseART):
         if self.sample_counter_ > 0 and self.sample_counter_ % self.tau == 0:
             self.prune(X)
 
-
-    def _match_tracking(self, cache: dict, epsilon: float, params: dict, method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+    def _match_tracking(
+        self,
+        cache: dict,
+        epsilon: float,
+        params: dict,
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
         """
         Adjust the vigilance parameter based on match tracking methods.
 
@@ -364,7 +393,7 @@ class TopoART(BaseART):
         """
         M = cache["match_criterion"]
         if method == "MT+":
-            self.base_module.params["rho"] = M+epsilon
+            self.base_module.params["rho"] = M + epsilon
             return True
         elif method == "MT-":
             self.base_module.params["rho"] = M - epsilon
@@ -380,7 +409,6 @@ class TopoART(BaseART):
         else:
             raise ValueError(f"Invalid Match Tracking Method: {method}")
 
-
     def _set_params(self, new_params):
         """
         Set new parameters for the base module.
@@ -391,7 +419,6 @@ class TopoART(BaseART):
             New parameters to set.
         """
         self.base_module.params = new_params
-
 
     def _deep_copy_params(self) -> dict:
         """
@@ -404,8 +431,13 @@ class TopoART(BaseART):
         """
         return deepcopy(self.base_module.params)
 
-
-    def step_fit(self, x: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0) -> int:
+    def step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ) -> int:
         """
         Fit the model to a single sample.
 
@@ -434,31 +466,47 @@ class TopoART(BaseART):
             new_w = self.new_weight(x, self.params)
             self.add_weight(new_w)
             self.adjacency = np.zeros((1, 1), dtype=int)
-            self._permanent_mask = np.zeros((1, ), dtype=bool)
+            self._permanent_mask = np.zeros((1,), dtype=bool)
             return 0
         else:
-            T_values, T_cache = zip(*[self.category_choice(x, w, params=self.base_module.params) for w in self.W])
+            T_values, T_cache = zip(
+                *[
+                    self.category_choice(x, w, params=self.base_module.params)
+                    for w in self.W
+                ]
+            )
             T = np.array(T_values)
             while any(~np.isnan(T)):
                 c_ = int(np.nanargmax(T))
                 w = self.W[c_]
                 cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(x, w, params=self.base_module.params, cache=cache, op=mt_operator)
-                no_match_reset = (
-                        match_reset_func is None or
-                        match_reset_func(x, w, c_, params=self.base_module.params, cache=cache)
+                m, cache = self.match_criterion_bin(
+                    x,
+                    w,
+                    params=self.base_module.params,
+                    cache=cache,
+                    op=mt_operator,
+                )
+                no_match_reset = match_reset_func is None or match_reset_func(
+                    x, w, c_, params=self.base_module.params, cache=cache
                 )
                 if m and no_match_reset:
                     if resonant_c < 0:
                         params = self.base_module.params
                     else:
-                        params = dict(self.base_module.params, **{"beta": self.params["beta_lower"]})
-                    #TODO: make compatible with DualVigilanceART
+                        params = dict(
+                            self.base_module.params,
+                            **{"beta": self.params["beta_lower"]},
+                        )
+                    # TODO: make compatible with DualVigilanceART
                     new_w = self.update(
                         x,
                         w,
                         params=params,
-                        cache=dict((cache if cache else {}), **{"resonant_c": resonant_c, "current_c": c_})
+                        cache=dict(
+                            (cache if cache else {}),
+                            **{"resonant_c": resonant_c, "current_c": c_},
+                        ),
                     )
                     self.set_weight(c_, new_w)
                     if resonant_c < 0:
@@ -470,7 +518,9 @@ class TopoART(BaseART):
                 else:
                     T[c_] = np.nan
                     if not no_match_reset:
-                        keep_searching = self._match_tracking(cache, epsilon, self.params, match_reset_method)
+                        keep_searching = self._match_tracking(
+                            cache, epsilon, self.params, match_reset_method
+                        )
                         if not keep_searching:
                             T[:] = np.nan
 
@@ -483,7 +533,6 @@ class TopoART(BaseART):
 
             return resonant_c
 
-
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
         Get the centers of each cluster.
@@ -494,7 +543,6 @@ class TopoART(BaseART):
             Cluster centroids.
         """
         return self.base_module.get_cluster_centers()
-
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
         """
@@ -510,6 +558,10 @@ class TopoART(BaseART):
             Width of boundary lines.
         """
         try:
-            self.base_module.plot_cluster_bounds(ax=ax, colors=colors, linewidth=linewidth)
+            self.base_module.plot_cluster_bounds(
+                ax=ax, colors=colors, linewidth=linewidth
+            )
         except NotImplementedError:
-            warn(f"{self.base_module.__class__.__name__} does not support plotting cluster bounds.")
+            warn(
+                f"{self.base_module.__class__.__name__} does not support plotting cluster bounds."
+            )

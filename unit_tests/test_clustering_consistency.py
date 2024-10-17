@@ -2,8 +2,17 @@ import pickle
 import pytest
 import numpy as np
 from pathlib import Path
-from artlib import ART1, ART2A, BayesianART, DualVigilanceART, EllipsoidART, FuzzyART, GaussianART, HypersphereART, \
-    QuadraticNeuronART
+from artlib import (
+    ART1,
+    ART2A,
+    BayesianART,
+    DualVigilanceART,
+    EllipsoidART,
+    FuzzyART,
+    GaussianART,
+    HypersphereART,
+    QuadraticNeuronART,
+)
 
 
 # Factory function to initialize models, handling special cases like DualVigilanceART
@@ -19,7 +28,9 @@ def model_factory(model_class, params):
 def cluster_results():
     # Define the path to the pickle file
     current_file_path = Path(__file__).resolve().parent.parent
-    pickle_file = current_file_path / "unit_tests" / "cluster_results_snapshot.pkl"
+    pickle_file = (
+        current_file_path / "unit_tests" / "cluster_results_snapshot.pkl"
+    )
 
     # Load the results
     with open(pickle_file, "rb") as f:
@@ -52,7 +63,14 @@ def test_clustering_consistency(model_name, cluster_results):
 
     # Generate blob data (same data used when saving the pickle file)
     from sklearn.datasets import make_blobs
-    data, _ = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
+
+    data, _ = make_blobs(
+        n_samples=150,
+        centers=3,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
 
     # Prepare the data
     X = model_instance.prepare_data(data)
@@ -61,5 +79,6 @@ def test_clustering_consistency(model_name, cluster_results):
     predicted_labels = model_instance.fit_predict(X)
 
     # Check that the predicted labels match the stored labels
-    assert np.array_equal(predicted_labels, stored_labels), f"Labels for {model_name} do not match!"
-
+    assert np.array_equal(
+        predicted_labels, stored_labels
+    ), f"Labels for {model_name} do not match!"

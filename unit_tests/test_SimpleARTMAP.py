@@ -5,20 +5,24 @@ from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import NotFittedError
 
+
 # Fixture to initialize a SimpleARTMAP instance for testing
 @pytest.fixture
 def simple_artmap_model():
     module_a = FuzzyART(0.5, 0.01, 1.0)
     return SimpleARTMAP(module_a=module_a)
 
+
 def test_initialization(simple_artmap_model):
     # Test that the model initializes correctly
     assert isinstance(simple_artmap_model.module_a, BaseART)
+
 
 def test_get_params(simple_artmap_model):
     # Test the get_params method
     params = simple_artmap_model.get_params()
     assert "module_a" in params
+
 
 def test_validate_data(simple_artmap_model):
     # Test the validate_data method
@@ -35,6 +39,7 @@ def test_validate_data(simple_artmap_model):
     with pytest.raises(ValueError):
         simple_artmap_model.validate_data(X_invalid, y)
 
+
 def test_prepare_and_restore_data(simple_artmap_model):
     # Test prepare_data and restore_data methods
     X = np.random.rand(10, 5)
@@ -43,6 +48,7 @@ def test_prepare_and_restore_data(simple_artmap_model):
 
     X_restored = simple_artmap_model.restore_data(X_prep)
     assert np.allclose(X_restored, X)
+
 
 def test_fit(simple_artmap_model):
     # Test the fit method
@@ -55,6 +61,7 @@ def test_fit(simple_artmap_model):
 
     assert simple_artmap_model.module_a.labels_.shape[0] == X.shape[0]
 
+
 def test_partial_fit(simple_artmap_model):
     # Test the partial_fit method
     X = np.random.rand(10, 5)
@@ -65,6 +72,7 @@ def test_partial_fit(simple_artmap_model):
     simple_artmap_model.partial_fit(X_prep, y)
 
     assert simple_artmap_model.module_a.labels_.shape[0] == X.shape[0]
+
 
 def test_predict(simple_artmap_model):
     # Test the predict method
@@ -77,6 +85,7 @@ def test_predict(simple_artmap_model):
 
     predictions = simple_artmap_model.predict(X_prep)
     assert predictions.shape[0] == X.shape[0]
+
 
 def test_predict_ab(simple_artmap_model):
     # Test the predict_ab method
@@ -91,12 +100,14 @@ def test_predict_ab(simple_artmap_model):
     assert predictions_a.shape[0] == X.shape[0]
     assert predictions_b.shape[0] == X.shape[0]
 
+
 def test_predict_not_fitted(simple_artmap_model):
     # Test that predict raises an error if the model is not fitted
     X = np.random.rand(10, 5)
 
     with pytest.raises(NotFittedError):
         simple_artmap_model.predict(X)
+
 
 def test_step_fit(simple_artmap_model):
     # Test the step_fit method
@@ -110,6 +121,7 @@ def test_step_fit(simple_artmap_model):
     # Run step_fit for the first sample
     c_a = simple_artmap_model.step_fit(X_prep[0], y[0])
     assert isinstance(c_a, int)  # Ensure the result is an integer cluster label
+
 
 def test_step_pred(simple_artmap_model):
     # Test the step_pred method

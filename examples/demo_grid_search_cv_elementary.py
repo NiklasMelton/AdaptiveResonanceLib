@@ -15,7 +15,13 @@ from artlib import FuzzyART
 
 
 def grid_search_blobs():
-    data, target = make_blobs(n_samples=150, centers=3, cluster_std=0.50, random_state=0, shuffle=False)
+    data, target = make_blobs(
+        n_samples=150,
+        centers=3,
+        cluster_std=0.50,
+        random_state=0,
+        shuffle=False,
+    )
     print("Data has shape:", data.shape)
 
     base_params = {
@@ -41,16 +47,7 @@ def grid_search_blobs():
         verbose=3,
         n_jobs=1,
         scoring="adjusted_rand_score",
-        cv=[
-            (
-                np.array(
-                    list(range(len(X)))
-                ),
-                np.array(
-                    list(range(len(X)))
-                )
-            )
-        ]
+        cv=[(np.array(list(range(len(X)))), np.array(list(range(len(X)))))],
     )
 
     grid.fit(X, target)

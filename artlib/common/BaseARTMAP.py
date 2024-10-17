@@ -4,10 +4,12 @@ from collections import defaultdict
 from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator, ClassifierMixin, ClusterMixin
 
+
 class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     """
     Generic implementation of Adaptive Resonance Theory MAP (ARTMAP)
     """
+
     def __init__(self):
         self.map: dict[int, int] = dict()
 
@@ -90,7 +92,14 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
         """
         Fit the model to the data.
 
@@ -110,7 +119,13 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
         """
         Partial fit the model to the data.
 
@@ -179,13 +194,13 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         raise NotImplementedError
 
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[Iterable] = None,
     ):
         """
         Visualize the clustering of the data.

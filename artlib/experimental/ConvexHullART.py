@@ -8,7 +8,12 @@ from artlib.common.BaseART import BaseART
 from artlib.experimental.merging import merge_objects
 
 
-def plot_convex_polygon(vertices: np.ndarray, ax: Axes, line_color: str = 'b', line_width: float = 1.0):
+def plot_convex_polygon(
+    vertices: np.ndarray,
+    ax: Axes,
+    line_color: str = "b",
+    line_width: float = 1.0,
+):
     """
     Plots a convex polygon given its vertices using Matplotlib.
 
@@ -28,7 +33,13 @@ def plot_convex_polygon(vertices: np.ndarray, ax: Axes, line_color: str = 'b', l
     # Close the polygon by appending the first vertex at the end
     vertices = np.vstack([vertices, vertices[0]])
 
-    ax.plot(vertices[:, 0], vertices[:, 1], linestyle='-', color=line_color, linewidth=line_width)
+    ax.plot(
+        vertices[:, 0],
+        vertices[:, 1],
+        linestyle="-",
+        color=line_color,
+        linewidth=line_width,
+    )
 
 
 def volume_of_simplex(vertices: np.ndarray) -> float:
@@ -70,6 +81,7 @@ def minimum_distance(a1: np.ndarray, a2: np.ndarray) -> float:
         Minimum distance between the two inputs.
 
     """
+
     def point_to_point_distance(P, Q):
         """Calculate the Euclidean distance between two points P and Q."""
         return np.linalg.norm(P - Q)
@@ -115,7 +127,6 @@ def minimum_distance(a1: np.ndarray, a2: np.ndarray) -> float:
         return line_segment_to_line_segment_distance(a1[0], a1[1], a2[0], a2[1])
     else:
         raise RuntimeError("INVALID DISTANCE CALCULATION")
-
 
 
 class PseudoConvexHull:
@@ -181,6 +192,7 @@ class ConvexHullART(BaseART):
     """
     ConvexHull ART for Clustering
     """
+
     def __init__(self, rho: float, merge_rho: float):
         """
         Initializes the ConvexHullART object.
@@ -193,10 +205,7 @@ class ConvexHullART(BaseART):
             Merge vigilance parameter.
 
         """
-        params = {
-            "rho": rho,
-            "merge_rho": merge_rho
-        }
+        params = {"rho": rho, "merge_rho": merge_rho}
         super().__init__(params)
 
     @staticmethod
@@ -211,10 +220,12 @@ class ConvexHullART(BaseART):
 
         """
         assert "rho" in params
-        assert params["rho"] >= 0.
+        assert params["rho"] >= 0.0
         assert isinstance(params["rho"], float)
 
-    def category_choice(self, i: np.ndarray, w: HullTypes, params: dict) -> tuple[float, Optional[dict]]:
+    def category_choice(
+        self, i: np.ndarray, w: HullTypes, params: dict
+    ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
 
@@ -236,23 +247,31 @@ class ConvexHullART(BaseART):
 
         """
         if isinstance(w, PseudoConvexHull):
-            d = minimum_distance(i.reshape((1,-1)), w.points)
-            activation = 1. - d**len(i)
+            d = minimum_distance(i.reshape((1, -1)), w.points)
+            activation = 1.0 - d ** len(i)
             if w.points.shape[0] == 1:
                 new_w = deepcopy(w)
-                new_w.add_points(i.reshape((1,-1)))
+                new_w.add_points(i.reshape((1, -1)))
             else:
-                new_points = np.vstack([w.points[w.vertices,:], i.reshape((1,-1))])
+                new_points = np.vstack(
+                    [w.points[w.vertices, :], i.reshape((1, -1))]
+                )
                 new_w = ConvexHull(new_points, incremental=True)
         else:
-            new_w = ConvexHull(w.points[w.vertices,:], incremental=True)
-            new_w.add_points(i.reshape((1,-1)))
+            new_w = ConvexHull(w.points[w.vertices, :], incremental=True)
+            new_w.add_points(i.reshape((1, -1)))
             activation = w.area / new_w.area
 
         cache = {"new_w": new_w, "activation": activation}
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: HullTypes, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: HullTypes,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> tuple[float, dict]:
         """
         Get the match criterion of the cluster.
 
@@ -277,8 +296,13 @@ class ConvexHullART(BaseART):
         """
         return cache["activation"], cache
 
-
-    def update(self, i: np.ndarray, w: HullTypes, params: dict, cache: Optional[dict] = None) -> HullTypes:
+    def update(
+        self,
+        i: np.ndarray,
+        w: HullTypes,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> HullTypes:
         """
         Get the updated cluster weight.
 
@@ -318,7 +342,7 @@ class ConvexHullART(BaseART):
             New cluster weight.
 
         """
-        new_w = PseudoConvexHull(i.reshape((1,-1)))
+        new_w = PseudoConvexHull(i.reshape((1, -1)))
         return new_w
 
     def merge_clusters(self):
@@ -326,12 +350,17 @@ class ConvexHullART(BaseART):
         Merge clusters based on certain conditions.
 
         """
-        def can_merge(w1, w2):
-            combined_points = np.vstack([w1.points[w1.vertices,:], w2.points[w2.vertices,:]])
 
-            if isinstance(w1, PseudoConvexHull) and isinstance(w2, PseudoConvexHull):
+        def can_merge(w1, w2):
+            combined_points = np.vstack(
+                [w1.points[w1.vertices, :], w2.points[w2.vertices, :]]
+            )
+
+            if isinstance(w1, PseudoConvexHull) and isinstance(
+                w2, PseudoConvexHull
+            ):
                 d = minimum_distance(w1.points, w2.points)
-                activation = 1.0 - d**w1.points.shape[1]
+                activation = 1.0 - d ** w1.points.shape[1]
             else:
                 new_w = ConvexHull(combined_points)
                 if isinstance(w1, ConvexHull):
@@ -342,7 +371,7 @@ class ConvexHullART(BaseART):
                     a2 = w2.area / new_w.area
                 else:
                     a2 = np.nan
-                activation = np.max([a1,a2])
+                activation = np.max([a1, a2])
 
             if activation > self.params["merge_rho"]:
                 return True
@@ -356,7 +385,9 @@ class ConvexHullART(BaseART):
         new_labels = np.copy(self.labels_)
         for i in range(len(merges)):
             new_labels[np.isin(self.labels_, merges[i])] = i
-            new_sample_counter.append(sum(self.weight_sample_counter_[j] for j in merges[i]))
+            new_sample_counter.append(
+                sum(self.weight_sample_counter_[j] for j in merges[i])
+            )
             if len(merges[i]) > 1:
                 new_points = np.vstack([self.W[j].points for j in merges[i]])
                 if new_points.shape[0] > 2:
@@ -381,9 +412,6 @@ class ConvexHullART(BaseART):
         """
         self.merge_clusters()
 
-
-
-
     def get_cluster_centers(self) -> List[np.ndarray]:
         """
         Get the centers of each cluster, used for regression.
@@ -399,7 +427,9 @@ class ConvexHullART(BaseART):
             centers.append(centroid_of_convex_hull(w))
         return centers
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: Iterable, linewidth: int = 1
+    ):
         """
         Visualize the bounds of each cluster.
 
@@ -415,7 +445,9 @@ class ConvexHullART(BaseART):
         """
         for c, w in zip(colors, self.W):
             if isinstance(w, ConvexHull):
-                vertices = w.points[w.vertices,:2]
+                vertices = w.points[w.vertices, :2]
             else:
                 vertices = w.points[:, :2]
-            plot_convex_polygon(vertices, ax, line_width=linewidth, line_color=c)
+            plot_convex_polygon(
+                vertices, ax, line_width=linewidth, line_color=c
+            )

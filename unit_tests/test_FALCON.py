@@ -11,7 +11,12 @@ def falcon_model():
     action_art = FuzzyART(0.7, 0.01, 1.0)
     reward_art = FuzzyART(0.9, 0.01, 1.0)
     channel_dims = [4, 4, 2]
-    return FALCON(state_art=state_art, action_art=action_art, reward_art=reward_art, channel_dims=channel_dims)
+    return FALCON(
+        state_art=state_art,
+        action_art=action_art,
+        reward_art=reward_art,
+        channel_dims=channel_dims,
+    )
 
 
 def test_falcon_initialization(falcon_model):
@@ -29,7 +34,9 @@ def test_falcon_fit(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
 
@@ -44,7 +51,9 @@ def test_falcon_partial_fit(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     falcon_model.partial_fit(states_prep, actions_prep, rewards_prep)
 
@@ -59,12 +68,16 @@ def test_falcon_get_actions_and_rewards(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
-    print(states_prep[0,:])
+    print(states_prep[0, :])
 
-    action_space, rewards = falcon_model.get_actions_and_rewards(states_prep[0,:])
+    action_space, rewards = falcon_model.get_actions_and_rewards(
+        states_prep[0, :]
+    )
 
     assert action_space.shape[0] > 0
     assert rewards.shape[0] > 0
@@ -77,11 +90,13 @@ def test_falcon_get_action(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
 
-    action = falcon_model.get_action(states_prep[0,:])
+    action = falcon_model.get_action(states_prep[0, :])
 
     assert action.shape[0] == actions.shape[1]
 
@@ -93,11 +108,13 @@ def test_falcon_get_probabilistic_action(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
 
-    action = falcon_model.get_probabilistic_action(states_prep[0,:])
+    action = falcon_model.get_probabilistic_action(states_prep[0, :])
 
     assert isinstance(action.tolist(), float)
 
@@ -109,7 +126,9 @@ def test_falcon_get_rewards(falcon_model):
     rewards = np.random.rand(10, 1)
 
     # Prepare data
-    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(states, actions, rewards)
+    states_prep, actions_prep, rewards_prep = falcon_model.prepare_data(
+        states, actions, rewards
+    )
 
     falcon_model.fit(states_prep, actions_prep, rewards_prep)
 

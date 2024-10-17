@@ -13,7 +13,10 @@ from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted
 import operator
 
-def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]]:
+
+def get_channel_position_tuples(
+    channel_dims: list[int],
+) -> list[tuple[int, int]]:
     """
     Generate the start and end positions for each channel in the input data.
 
@@ -35,6 +38,7 @@ def get_channel_position_tuples(channel_dims: list[int]) -> list[tuple[int, int]
         start = end
     return positions
 
+
 class FusionART(BaseART):
     """Fusion ART for Data Fusion and Regression
 
@@ -54,12 +58,11 @@ class FusionART(BaseART):
     """
 
     def __init__(
-            self,
-            modules: List[BaseART],
-            gamma_values: Union[List[float], np.ndarray],
-            channel_dims: Union[List[int], np.ndarray]
+        self,
+        modules: List[BaseART],
+        gamma_values: Union[List[float], np.ndarray],
+        channel_dims: Union[List[int], np.ndarray],
     ):
-
         """
         Initialize the FusionART instance.
 
@@ -125,14 +128,8 @@ class FusionART(BaseART):
             Concatenated weights of all channels from the ART modules.
         """
         W = [
-            np.concatenate(
-                [
-                    self.modules[k].W[i]
-                    for k in range(self.n)
-                 ]
-            )
-            for i
-            in range(self.modules[0].n_clusters)
+            np.concatenate([self.modules[k].W[i] for k in range(self.n)])
+            for i in range(self.modules[0].n_clusters)
         ]
         return W
 
@@ -148,7 +145,9 @@ class FusionART(BaseART):
         """
         for k in range(self.n):
             if len(new_W) > 0:
-                self.modules[k].W = new_W[self._channel_indices[k][0]:self._channel_indices[k][1]]
+                self.modules[k].W = new_W[
+                    self._channel_indices[k][0] : self._channel_indices[k][1]
+                ]
             else:
                 self.modules[k].W = []
 
@@ -167,7 +166,6 @@ class FusionART(BaseART):
         assert sum(params["gamma_values"]) == 1.0
         assert isinstance(params["gamma_values"], np.ndarray)
 
-
     def validate_data(self, X: np.ndarray):
         """
         Validate the input data for clustering.
@@ -179,7 +177,7 @@ class FusionART(BaseART):
         """
         self.check_dimensions(X)
         for k in range(self.n):
-            X_k = X[:, self._channel_indices[k][0]:self._channel_indices[k][1]]
+            X_k = X[:, self._channel_indices[k][0] : self._channel_indices[k][1]]
             self.modules[k].validate_data(X_k)
 
     def check_dimensions(self, X: np.ndarray):
@@ -207,7 +205,9 @@ class FusionART(BaseART):
         np.ndarray
             Processed and concatenated data.
         """
-        prepared_channel_data = [self.modules[i].prepare_data(channel_data[i]) for i in range(self.n)]
+        prepared_channel_data = [
+            self.modules[i].prepare_data(channel_data[i]) for i in range(self.n)
+        ]
         return self.join_channel_data(prepared_channel_data)
 
     def restore_data(self, X: np.ndarray) -> List[np.ndarray]:
@@ -225,10 +225,18 @@ class FusionART(BaseART):
             Restored data for each channel.
         """
         channel_data = self.split_channel_data(X)
-        restored_channel_data = [self.modules[i].restore_data(channel_data[i]) for i in range(self.n)]
+        restored_channel_data = [
+            self.modules[i].restore_data(channel_data[i]) for i in range(self.n)
+        ]
         return restored_channel_data
 
-    def category_choice(self, i: np.ndarray, w: np.ndarray, params: dict, skip_channels: List[int] = []) -> tuple[float, Optional[dict]]:
+    def category_choice(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        skip_channels: List[int] = [],
+    ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
 
@@ -251,20 +259,29 @@ class FusionART(BaseART):
         activations, caches = zip(
             *[
                 self.modules[k].category_choice(
-                    i[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                    w[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                    self.modules[k].params
+                    i[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    w[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    self.modules[k].params,
                 )
                 if k not in skip_channels
-                else (1., dict())
+                else (1.0, dict())
                 for k in range(self.n)
             ]
         )
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
-        activation = sum([a*self.params["gamma_values"][k] for k, a in enumerate(activations)])
+        activation = sum(
+            [a * self.params["gamma_values"][k] for k, a in enumerate(activations)]
+        )
         return activation, cache
 
-    def match_criterion(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = []) -> tuple[list[float], dict]:
+    def match_criterion(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+        skip_channels: List[int] = [],
+    ) -> tuple[list[float], dict]:
         """
         Get the match criterion for the cluster.
 
@@ -291,10 +308,10 @@ class FusionART(BaseART):
         M, caches = zip(
             *[
                 self.modules[k].match_criterion(
-                    i[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                    w[self._channel_indices[k][0]:self._channel_indices[k][1]],
+                    i[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    w[self._channel_indices[k][0] : self._channel_indices[k][1]],
                     self.modules[k].params,
-                    cache[k]
+                    cache[k],
                 )
                 if k not in skip_channels
                 else (np.inf, {"match_criterion": np.inf})
@@ -304,7 +321,15 @@ class FusionART(BaseART):
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return M, cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, skip_channels: List[int] = [], op: Callable = operator.ge) -> tuple[bool, dict]:
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+        skip_channels: List[int] = [],
+        op: Callable = operator.ge,
+    ) -> tuple[bool, dict]:
         """
         Get the binary match criterion for the cluster.
 
@@ -333,11 +358,11 @@ class FusionART(BaseART):
         M_bin, caches = zip(
             *[
                 self.modules[k].match_criterion_bin(
-                    i[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                    w[self._channel_indices[k][0]:self._channel_indices[k][1]],
+                    i[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    w[self._channel_indices[k][0] : self._channel_indices[k][1]],
                     self.modules[k].params,
                     cache[k],
-                    op
+                    op,
                 )
                 if k not in skip_channels
                 else (True, {"match_criterion": np.inf})
@@ -347,8 +372,13 @@ class FusionART(BaseART):
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
         return all(M_bin), cache
 
-
-    def _match_tracking(self, cache: List[dict], epsilon: float, params: List[dict], method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"]) -> bool:
+    def _match_tracking(
+        self,
+        cache: List[dict],
+        epsilon: float,
+        params: List[dict],
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
         """
         Perform match tracking for all channels using the specified method.
 
@@ -371,12 +401,13 @@ class FusionART(BaseART):
         keep_searching = []
         for i in range(len(cache)):
             if cache[i]["match_criterion_bin"]:
-                keep_searching_i = self.modules[i]._match_tracking(cache[i], epsilon, params[i], method)
+                keep_searching_i = self.modules[i]._match_tracking(
+                    cache[i], epsilon, params[i], method
+                )
                 keep_searching.append(keep_searching_i)
             else:
                 keep_searching.append(True)
         return all(keep_searching)
-
 
     def _set_params(self, new_params: List[dict]):
         """
@@ -401,8 +432,13 @@ class FusionART(BaseART):
         """
         return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
 
-
-    def partial_fit(self, X: np.ndarray, match_reset_func: Optional[Callable] = None, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 0.0):
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ):
         """
         Iteratively fit the model to the data.
 
@@ -420,18 +456,23 @@ class FusionART(BaseART):
 
         self.validate_data(X)
         self.check_dimensions(X)
-        self.is_fitted_ =  True
+        self.is_fitted_ = True
 
-        if not hasattr(self.modules[0], 'W'):
+        if not hasattr(self.modules[0], "W"):
             self.W: list[np.ndarray] = []
-            self.labels_ = np.zeros((X.shape[0], ), dtype=int)
+            self.labels_ = np.zeros((X.shape[0],), dtype=int)
             j = 0
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode="constant")
         for i, x in enumerate(X):
-            c = self.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
-            self.labels_[i+j] = c
+            c = self.step_fit(
+                x,
+                match_reset_func=match_reset_func,
+                match_reset_method=match_reset_method,
+                epsilon=epsilon,
+            )
+            self.labels_[i + j] = c
         return self
 
     def step_pred(self, x, skip_channels: List[int] = []) -> int:
@@ -452,7 +493,14 @@ class FusionART(BaseART):
         """
         assert len(self.W) >= 0, "ART module is not fit."
 
-        T, _ = zip(*[self.category_choice(x, w, params=self.params, skip_channels=skip_channels) for w in self.W])
+        T, _ = zip(
+            *[
+                self.category_choice(
+                    x, w, params=self.params, skip_channels=skip_channels
+                )
+                for w in self.W
+            ]
+        )
         c_ = int(np.argmax(T))
         return c_
 
@@ -483,7 +531,13 @@ class FusionART(BaseART):
             y[i] = c
         return y
 
-    def update(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None) -> np.ndarray:
+    def update(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+    ) -> np.ndarray:
         """
         Update the cluster weight.
 
@@ -505,10 +559,10 @@ class FusionART(BaseART):
         """
         W = [
             self.modules[k].update(
-                i[self._channel_indices[k][0]:self._channel_indices[k][1]],
-                w[self._channel_indices[k][0]:self._channel_indices[k][1]],
+                i[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                w[self._channel_indices[k][0] : self._channel_indices[k][1]],
                 self.modules[k].params,
-                cache[k]
+                cache[k],
             )
             for k in range(self.n)
         ]
@@ -532,7 +586,7 @@ class FusionART(BaseART):
         """
         W = [
             self.modules[k].new_weight(
-                i[self._channel_indices[k][0]:self._channel_indices[k][1]],
+                i[self._channel_indices[k][0] : self._channel_indices[k][1]],
                 self.modules[k].params,
             )
             for k in range(self.n)
@@ -548,7 +602,7 @@ class FusionART(BaseART):
 
         """
         for k in range(self.n):
-            new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
+            new_w_k = new_w[self._channel_indices[k][0] : self._channel_indices[k][1]]
             self.modules[k].add_weight(new_w_k)
 
     def set_weight(self, idx: int, new_w: np.ndarray):
@@ -561,7 +615,7 @@ class FusionART(BaseART):
 
         """
         for k in range(self.n):
-            new_w_k = new_w[self._channel_indices[k][0]:self._channel_indices[k][1]]
+            new_w_k = new_w[self._channel_indices[k][0] : self._channel_indices[k][1]]
             self.modules[k].set_weight(idx, new_w_k)
 
     def get_cluster_centers(self) -> List[np.ndarray]:
@@ -575,14 +629,8 @@ class FusionART(BaseART):
         """
         centers_ = [module.get_cluster_centers() for module in self.modules]
         centers = [
-            np.concatenate(
-                [
-                    centers_[k][i]
-                    for k in range(self.n)
-                ]
-            )
-            for i
-            in range(self.n_clusters)
+            np.concatenate([centers_[k][i] for k in range(self.n)])
+            for i in range(self.n_clusters)
         ]
         return centers
 
@@ -602,7 +650,9 @@ class FusionART(BaseART):
         """
         return self.modules[channel].get_cluster_centers()
 
-    def predict_regression(self, X: np.ndarray, target_channels: List[int] = [-1]) -> Union[np.ndarray, List[np.ndarray]]:
+    def predict_regression(
+        self, X: np.ndarray, target_channels: List[int] = [-1]
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Predict regression values for the input data using the target channels.
 
@@ -620,7 +670,7 @@ class FusionART(BaseART):
             Predicted regression values. If only one target channel is used, returns a single np.ndarray.
             If multiple target channels are used, returns a list of np.ndarray, one for each channel.
         """
-        target_channels = [self.n+k if k < 0 else k for k in target_channels]
+        target_channels = [self.n + k if k < 0 else k for k in target_channels]
         C = self.predict(X, skip_channels=target_channels)
         centers = [self.get_channel_centers(k) for k in target_channels]
         if len(target_channels) == 1:
@@ -628,7 +678,9 @@ class FusionART(BaseART):
         else:
             return [np.array([centers[k][c] for c in C]) for k in target_channels]
 
-    def join_channel_data(self, channel_data: List[np.ndarray], skip_channels: List[int] = []) -> np.ndarray:
+    def join_channel_data(
+        self, channel_data: List[np.ndarray], skip_channels: List[int] = []
+    ) -> np.ndarray:
         """
         Concatenate data from different channels into a single array.
 
@@ -644,7 +696,7 @@ class FusionART(BaseART):
         np.ndarray
             Concatenated data.
         """
-        skip_channels = [self.n+k if k < 0 else k for k in skip_channels]
+        skip_channels = [self.n + k if k < 0 else k for k in skip_channels]
         n_samples = channel_data[0].shape[0]
 
         formatted_channel_data = []
@@ -654,12 +706,22 @@ class FusionART(BaseART):
                 formatted_channel_data.append(channel_data[i])
                 i += 1
             else:
-                formatted_channel_data.append(0.5*np.ones((n_samples, self._channel_indices[k][1]-self._channel_indices[k][0])))
+                formatted_channel_data.append(
+                    0.5
+                    * np.ones(
+                        (
+                            n_samples,
+                            self._channel_indices[k][1] - self._channel_indices[k][0],
+                        )
+                    )
+                )
 
         X = np.hstack(formatted_channel_data)
         return X
 
-    def split_channel_data(self, joined_data: np.ndarray, skip_channels: List[int] = []) -> List[np.ndarray]:
+    def split_channel_data(
+        self, joined_data: np.ndarray, skip_channels: List[int] = []
+    ) -> List[np.ndarray]:
         """
         Split the concatenated data into its original channels.
 
@@ -686,7 +748,9 @@ class FusionART(BaseART):
 
             if k not in skip_channels:
                 # Extract the original channel data
-                channel_data.append(joined_data[:, current_col:current_col + channel_width])
+                channel_data.append(
+                    joined_data[:, current_col : current_col + channel_width]
+                )
                 current_col += channel_width
             else:
                 # If this channel was skipped, we know it was filled with 0.5, so we skip those columns

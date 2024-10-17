@@ -25,6 +25,7 @@ class ARTMAP(SimpleARTMAP):
     allow this. However, FusionART provides substantially better fit for regression problems which are not monotonic.
 
     """
+
     def __init__(self, module_a: BaseART, module_b: BaseART):
         """
         Initialize the ARTMAP model with two ART modules.
@@ -65,7 +66,6 @@ class ARTMAP(SimpleARTMAP):
             deep_b_items = self.module_b.get_params().items()
             out.update(("module_b" + "__" + k, val) for k, val in deep_b_items)
         return out
-
 
     @property
     def labels_a(self) -> np.ndarray:
@@ -117,7 +117,9 @@ class ARTMAP(SimpleARTMAP):
         self.module_a.validate_data(X)
         self.module_b.validate_data(y)
 
-    def prepare_data(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def prepare_data(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Prepare data for clustering by normalizing and transforming.
 
@@ -135,7 +137,9 @@ class ARTMAP(SimpleARTMAP):
         """
         return self.module_a.prepare_data(X), self.module_b.prepare_data(y)
 
-    def restore_data(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def restore_data(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Restore data to its original state before preparation.
 
@@ -153,7 +157,14 @@ class ARTMAP(SimpleARTMAP):
         """
         return self.module_a.restore_data(X), self.module_b.restore_data(y)
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        max_iter=1,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
         """
         Fit the ARTMAP model to the data.
 
@@ -178,16 +189,32 @@ class ARTMAP(SimpleARTMAP):
         # Check that X and y have correct shape
         self.validate_data(X, y)
 
-        self.module_b.fit(y, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
+        self.module_b.fit(
+            y,
+            max_iter=max_iter,
+            match_reset_method=match_reset_method,
+            epsilon=epsilon,
+        )
 
         y_c = self.module_b.labels_
 
-        super(ARTMAP, self).fit(X, y_c, max_iter=max_iter, match_reset_method=match_reset_method, epsilon=epsilon)
+        super(ARTMAP, self).fit(
+            X,
+            y_c,
+            max_iter=max_iter,
+            match_reset_method=match_reset_method,
+            epsilon=epsilon,
+        )
 
         return self
 
-
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
         """
         Partially fit the ARTMAP model to the data.
 
@@ -208,10 +235,16 @@ class ARTMAP(SimpleARTMAP):
             Partially fitted ARTMAP model.
         """
         self.validate_data(X, y)
-        self.module_b.partial_fit(y, match_reset_method=match_reset_method, epsilon=epsilon)
-        super(ARTMAP, self).partial_fit(X, self.labels_b, match_reset_method=match_reset_method, epsilon=epsilon)
+        self.module_b.partial_fit(
+            y, match_reset_method=match_reset_method, epsilon=epsilon
+        )
+        super(ARTMAP, self).partial_fit(
+            X,
+            self.labels_b,
+            match_reset_method=match_reset_method,
+            epsilon=epsilon,
+        )
         return self
-
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """

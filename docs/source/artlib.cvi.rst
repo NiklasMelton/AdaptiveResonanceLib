@@ -35,5 +35,3 @@ artlib.cvi.iCVIFuzzyArt module
    :members:
    :undoc-members:
    :show-inheritance:
-
-

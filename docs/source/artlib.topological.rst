@@ -27,5 +27,3 @@ artlib.topological.TopoART module
    :members:
    :undoc-members:
    :show-inheritance:
-
-

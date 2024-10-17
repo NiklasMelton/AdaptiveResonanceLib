@@ -51,4 +51,3 @@ artlib.common.visualization module
    :members:
    :undoc-members:
    :show-inheritance:
-

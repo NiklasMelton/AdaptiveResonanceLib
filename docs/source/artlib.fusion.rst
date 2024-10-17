@@ -19,5 +19,3 @@ artlib.fusion.FusionART module
    :members:
    :undoc-members:
    :show-inheritance:
-
-

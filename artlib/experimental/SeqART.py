@@ -4,6 +4,7 @@ from artlib import BaseART
 import operator
 import re
 
+
 def compress_dashes(input_string: str) -> str:
     """
     Compress consecutive dashes in a string into a single dash.
@@ -18,7 +19,8 @@ def compress_dashes(input_string: str) -> str:
     str
         The string with consecutive dashes compressed into one dash.
     """
-    return re.sub('-+', '-', input_string)
+    return re.sub("-+", "-", input_string)
+
 
 def arr2seq(x: np.ndarray) -> str:
     """
@@ -36,7 +38,14 @@ def arr2seq(x: np.ndarray) -> str:
     """
     return "".join([str(i_) for i_ in x])
 
-def needleman_wunsch(seq1: str, seq2: str, match_score: int =1, gap_cost: int =-1, mismatch_cost: int =-1) -> Tuple[str, float]:
+
+def needleman_wunsch(
+    seq1: str,
+    seq2: str,
+    match_score: int = 1,
+    gap_cost: int = -1,
+    mismatch_cost: int = -1,
+) -> Tuple[str, float]:
     """
     Perform Needleman-Wunsch sequence alignment between two sequences.
 
@@ -65,60 +74,64 @@ def needleman_wunsch(seq1: str, seq2: str, match_score: int =1, gap_cost: int =-
 
     # Initialize the gap penalties for the first row and column
     for i in range(1, m + 1):
-        score_matrix[i][0] = score_matrix[i-1][0] + gap_cost
+        score_matrix[i][0] = score_matrix[i - 1][0] + gap_cost
     for j in range(1, n + 1):
-        score_matrix[0][j] = score_matrix[0][j-1] + gap_cost
+        score_matrix[0][j] = score_matrix[0][j - 1] + gap_cost
 
     # Fill in the scoring matrix
     for i in range(1, m + 1):
         for j in range(1, n + 1):
-            match = score_matrix[i-1][j-1] + (match_score if seq1[i-1] == seq2[j-1] else mismatch_cost)
-            delete = score_matrix[i-1][j] + gap_cost
-            insert = score_matrix[i][j-1] + gap_cost
+            match = score_matrix[i - 1][j - 1] + (
+                match_score if seq1[i - 1] == seq2[j - 1] else mismatch_cost
+            )
+            delete = score_matrix[i - 1][j] + gap_cost
+            insert = score_matrix[i][j - 1] + gap_cost
             score_matrix[i][j] = max(match, delete, insert)
 
     # Traceback to get the alignment
-    align1, align2 = '', ''
+    align1, align2 = "", ""
     i, j = m, n
 
     while i > 0 and j > 0:
         current_score = score_matrix[i][j]
-        diagonal_score = score_matrix[i-1][j-1]
-        up_score = score_matrix[i-1][j]
-        left_score = score_matrix[i][j-1]
+        diagonal_score = score_matrix[i - 1][j - 1]
+        up_score = score_matrix[i - 1][j]
+        left_score = score_matrix[i][j - 1]
 
-        if current_score == diagonal_score + (match_score if seq1[i-1] == seq2[j-1] else mismatch_cost):
-            align1 += seq1[i-1]
-            align2 += seq2[j-1]
+        if current_score == diagonal_score + (
+            match_score if seq1[i - 1] == seq2[j - 1] else mismatch_cost
+        ):
+            align1 += seq1[i - 1]
+            align2 += seq2[j - 1]
             i -= 1
             j -= 1
         elif current_score == up_score + gap_cost:
-            align1 += seq1[i-1]
-            align2 += '-'
+            align1 += seq1[i - 1]
+            align2 += "-"
             i -= 1
         elif current_score == left_score + gap_cost:
-            align1 += '-'
-            align2 += seq2[j-1]
+            align1 += "-"
+            align2 += seq2[j - 1]
             j -= 1
 
     # Fill the remaining sequence if the above while loop finishes
     while i > 0:
-        align1 += seq1[i-1]
-        align2 += '-'
+        align1 += seq1[i - 1]
+        align2 += "-"
         i -= 1
 
     while j > 0:
-        align1 += '-'
-        align2 += seq2[j-1]
+        align1 += "-"
+        align2 += seq2[j - 1]
         j -= 1
 
     # The alignments are built from the end to the beginning, so we need to reverse them
     align1 = align1[::-1]
     align2 = align2[::-1]
-    alignment = ''.join([a if a == b else '-' for a, b in zip(align1, align2)])
+    alignment = "".join([a if a == b else "-" for a, b in zip(align1, align2)])
     l = max(len(seq1), len(seq2))
 
-    return alignment, float(score_matrix[m][n])/l
+    return alignment, float(score_matrix[m][n]) / l
 
 
 def prepare_data(data: np.ndarray) -> np.ndarray:
@@ -159,6 +172,7 @@ class SeqART(BaseART):
         }
         self.metric = metric
         super().__init__(params)
+
     @staticmethod
     def validate_params(params: dict):
         """
@@ -194,8 +208,9 @@ class SeqART(BaseART):
         """
         pass
 
-
-    def category_choice(self, i: str, w: str, params: dict) -> tuple[float, Optional[dict]]:
+    def category_choice(
+        self, i: str, w: str, params: dict
+    ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
 
@@ -214,10 +229,12 @@ class SeqART(BaseART):
             Cluster activation and cache used for later processing.
         """
         alignment, score = self.metric(arr2seq(i), w)
-        cache = {'alignment': alignment, 'score': score}
+        cache = {"alignment": alignment, "score": score}
         return score, cache
 
-    def match_criterion(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> tuple[float, dict]:
+    def match_criterion(
+        self, i: str, w: str, params: dict, cache: Optional[dict] = None
+    ) -> tuple[float, dict]:
         """
         Get the match criterion of the cluster.
 
@@ -239,9 +256,16 @@ class SeqART(BaseART):
         """
         # _, M = self.metric(cache['alignment'], w)
 
-        return cache['score'], cache
+        return cache["score"], cache
 
-    def match_criterion_bin(self, i: np.ndarray, w: np.ndarray, params: dict, cache: Optional[dict] = None, op: Callable = operator.ge) -> tuple[bool, dict]:
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: dict,
+        cache: Optional[dict] = None,
+        op: Callable = operator.ge,
+    ) -> tuple[bool, dict]:
         """
         Get the binary match criterion of the cluster.
 
@@ -272,7 +296,9 @@ class SeqART(BaseART):
 
         return M_bin, cache
 
-    def update(self, i: str, w: str, params: dict, cache: Optional[dict] = None) -> str:
+    def update(
+        self, i: str, w: str, params: dict, cache: Optional[dict] = None
+    ) -> str:
         """
         Update the cluster weight.
 
@@ -293,7 +319,7 @@ class SeqART(BaseART):
             Updated cluster weight.
         """
         # print(cache['alignment'])
-        return compress_dashes(cache['alignment'])
+        return compress_dashes(cache["alignment"])
 
     def new_weight(self, i: str, params: dict) -> str:
         """

@@ -6,7 +6,7 @@
 .. # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "williamson1996gaussian"
+   :filter: citation_key == "williamson1996gaussian"
 
 """
 

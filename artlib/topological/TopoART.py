@@ -8,7 +8,7 @@
 .. # doi:10.1007/978-3-642-15825-4_21.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "tscherepanow2010topoart"
+   :filter: citation_key == "tscherepanow2010topoart"
 
 """
 

@@ -14,7 +14,7 @@ scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertat
 https://ieeexplore.ieee.org/document/9745260
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "da2022icvi"
+   :filter: citation_key == "da2022icvi"
 
 """
 import numpy as np

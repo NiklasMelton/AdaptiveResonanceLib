@@ -6,7 +6,7 @@
 .. # Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "vigdor2007bayesian"
+   :filter: citation_key == "vigdor2007bayesian"
 
 """
 import numpy as np

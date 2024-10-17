@@ -6,7 +6,7 @@
 .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "carpenter1991artmap"
+   :filter: citation_key == "carpenter1991artmap"
 
 """
 import numpy as np

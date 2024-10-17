@@ -9,7 +9,7 @@
 .. # Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
 
 .. bibliography::
-   :filter: docname in docnames and \
+   :filter: \
             (citation_key == "su2001application" or \
              citation_key == "su2005new")
 

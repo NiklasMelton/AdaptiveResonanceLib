@@ -11,7 +11,7 @@
 .. # IEEE Transactions on Neural Networks, 19 , 230–244. doi:10.1109/TNN.2007.905839
 
 .. bibliography::
-   :filter: docname in docnames and \
+   :filter: \
             (citation_key == "tan2004falcon" or \
              citation_key == "tan2008integrating")
 

@@ -6,7 +6,7 @@
 .. # doi:10.1109/IJCNN.2002.1007487
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "bezdek2002vat"
+   :filter: citation_key == "bezdek2002vat"
 
 """
 import numpy as np

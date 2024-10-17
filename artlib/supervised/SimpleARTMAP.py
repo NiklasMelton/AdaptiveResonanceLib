@@ -5,7 +5,7 @@
 .. # Norwell, MA, USA: Kluwer Academic Publishers.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "gotarredona1998adaptive"
+   :filter: citation_key == "gotarredona1998adaptive"
 
 """
 import numpy as np

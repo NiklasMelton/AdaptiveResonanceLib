@@ -11,7 +11,7 @@
 .. # International Society for Optics and Photonics. doi:10.1117/12.421180.
 
 .. bibliography::
-   :filter: docname in docnames and \
+   :filter: \
             (citation_key == "anagnostopoulos2001a" or \
              citation_key == "anagnostopoulos2001b")
 

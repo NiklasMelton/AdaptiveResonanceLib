@@ -5,7 +5,7 @@
 .. # Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "da2019dual"
+   :filter: citation_key == "da2019dual"
 
 """
 import numpy as np

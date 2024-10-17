@@ -8,7 +8,7 @@
 .. # doi:10.1007/ 978-3-540-72383-7_128.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "tan2007intelligence"
+   :filter: citation_key == "tan2007intelligence"
 
 
 """

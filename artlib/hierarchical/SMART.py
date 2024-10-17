@@ -7,7 +7,7 @@
 .. # doi:10.1109/ICNN.1994.374307.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "bartfai1994hierarchical"
+   :filter: citation_key == "bartfai1994hierarchical"
 
 """
 

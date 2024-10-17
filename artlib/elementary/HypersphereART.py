@@ -6,7 +6,7 @@
 .. # (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "anagnostopoulos2000hypersphere"
+   :filter: citation_key == "anagnostopoulos2000hypersphere"
 
 """
 import numpy as np

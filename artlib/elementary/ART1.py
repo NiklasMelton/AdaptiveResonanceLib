@@ -7,7 +7,7 @@
 .. # Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
 
 .. bibliography::
-   :filter: docname in docnames and citation_key == "carpenter1987massively"
+   :filter: citation_key == "carpenter1987massively"
 """
 
 import numpy as np

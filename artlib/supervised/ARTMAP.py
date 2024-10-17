@@ -255,9 +255,7 @@ class ARTMAP(SimpleARTMAP):
 
         """
         self.validate_data(X, y)
-        self.module_b.partial_fit(
-            y, match_tracking=match_tracking, epsilon=epsilon
-        )
+        self.module_b.partial_fit(y, match_tracking=match_tracking, epsilon=epsilon)
         super(ARTMAP, self).partial_fit(
             X,
             self.labels_b,

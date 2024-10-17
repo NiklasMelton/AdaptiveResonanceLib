@@ -10,7 +10,6 @@
 .. bibliography:: ../../references.bib
    :filter: citation_key == "tan2007intelligence"
 
-
 """
 import numpy as np
 from typing import Optional, Union, Callable, List, Literal, Tuple, Dict

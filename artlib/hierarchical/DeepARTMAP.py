@@ -30,8 +30,8 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     and is an original creation of this library.
 
     .. # Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-    .. # ARTMAP: Supervised real-time learning and classification of nonstationary data by a
-    .. # self-organizing neural network.
+    .. # ARTMAP: Supervised real-time learning and classification of nonstationary data
+    .. # by a self-organizing neural network.
     .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
     .. bibliography:: ../../references.bib

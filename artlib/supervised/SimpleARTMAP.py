@@ -315,9 +315,7 @@ class SimpleARTMAP(BaseARTMAP):
             )
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(
-                x, c_b, match_tracking=match_tracking, epsilon=epsilon
-            )
+            c_a = self.step_fit(x, c_b, match_tracking=match_tracking, epsilon=epsilon)
             self.module_a.labels_[i + j] = c_a
             self.module_a.post_step_fit(X)
         return self

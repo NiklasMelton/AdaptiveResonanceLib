@@ -1,9 +1,9 @@
 """Hyperpshere ART.
 
-Anagnostopoulos, G. C., & Georgiopulos, M. (2000). Hypersphere ART and ARTMAP for
-unsupervised and supervised, incremental learning. In Proc. IEEE International Joint
-Conference on Neural Networks (IJCNN) (pp. 59–64). volume 6.
-doi:10.1109/IJCNN.2000.859373.
+Anagnostopoulos, G. C., & Georgiopulos, M. (2000).
+Hypersphere ART and ARTMAP for unsupervised and supervised, incremental learning.
+In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+(pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 
 """
 import numpy as np

@@ -1,9 +1,11 @@
 """Quadratic Neuron ART.
 
-Su, M.-C., & Liu, T.-K. (2001). Application of neural networks using quadratic junctions
-in cluster analysis. Neurocomputing, 37, 165 – 175. doi:10.1016/S0925-2312(00)00343-X.
+Su, M.-C., & Liu, T.-K. (2001).
+Application of neural networks using quadratic junctions in cluster analysis.
+Neurocomputing, 37, 165 – 175. doi:10.1016/S0925-2312(00)00343-X.
 
-Su, M.-C., & Liu, Y.-C. (2005). A new approach to clustering data with arbitrary shapes.
+Su, M.-C., & Liu, Y.-C. (2005).
+A new approach to clustering data with arbitrary shapes.
 Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
 
 """

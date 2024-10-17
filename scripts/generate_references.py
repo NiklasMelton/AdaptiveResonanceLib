@@ -23,7 +23,7 @@ def generate_references():
             modified_bibtex = "\n".join(bibtex_lines)
 
             # Write the modified content to references.bib
-            output_path = os.path.join("docs", "source", "references.bib")
+            output_path = os.path.join("docs", "source", "artlib_citation.bib")
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(modified_bibtex)
         else:

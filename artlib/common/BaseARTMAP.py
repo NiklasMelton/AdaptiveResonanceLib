@@ -94,7 +94,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         X: np.ndarray,
         y: np.ndarray,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
         """Fit the model to the data.
@@ -107,7 +107,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             Dataset B.
         max_iter : int, optional
             Number of iterations to fit the model on the same dataset.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion.
         epsilon : float, optional
             Epsilon value used for adjusting match criterion, by default 1e-10.
@@ -119,7 +119,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
         """Partial fit the model to the data.
@@ -130,7 +130,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             Dataset A.
         y : np.ndarray
             Dataset B.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion.
         epsilon : float, optional
             Epsilon value used for adjusting match criterion, by default 1e-10.

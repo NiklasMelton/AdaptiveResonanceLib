@@ -444,7 +444,7 @@ class FusionART(BaseART):
         self,
         X: np.ndarray,
         match_reset_func: Optional[Callable] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ):
         """Iteratively fit the model to the data.
@@ -455,7 +455,7 @@ class FusionART(BaseART):
             Input dataset.
         match_reset_func : callable, optional
             Function to reset the match criteria based on external factors.
-        match_reset_method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"], optional
+        match_tracking : Literal["MT+", "MT-", "MT0", "MT1", "MT~"], optional
             Method for resetting match criteria (default is "MT+").
         epsilon : float, optional
             Value to adjust the vigilance parameter (default is 0.0).
@@ -476,7 +476,7 @@ class FusionART(BaseART):
             c = self.step_fit(
                 x,
                 match_reset_func=match_reset_func,
-                match_reset_method=match_reset_method,
+                match_tracking=match_tracking,
                 epsilon=epsilon,
             )
             self.labels_[i + j] = c

@@ -445,7 +445,7 @@ class TopoART(BaseART):
         self,
         x: np.ndarray,
         match_reset_func: Optional[Callable] = None,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
     ) -> int:
         """Fit the model to a single sample.
@@ -456,7 +456,7 @@ class TopoART(BaseART):
             Data sample.
         match_reset_func : Callable, optional
             Function to reset the match based on custom criteria.
-        match_reset_method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"], default="MT+"
+        match_tracking : Literal["MT+", "MT-", "MT0", "MT1", "MT~"], default="MT+"
             Method to reset the match.
         epsilon : float, default=0.0
             Adjustment factor for vigilance.
@@ -468,7 +468,7 @@ class TopoART(BaseART):
 
         """
         base_params = self._deep_copy_params()
-        mt_operator = self._match_tracking_operator(match_reset_method)
+        mt_operator = self._match_tracking_operator(match_tracking)
         self.sample_counter_ += 1
         resonant_c: int = -1
 
@@ -529,7 +529,7 @@ class TopoART(BaseART):
                     T[c_] = np.nan
                     if not no_match_reset:
                         keep_searching = self._match_tracking(
-                            cache, epsilon, self.params, match_reset_method
+                            cache, epsilon, self.params, match_tracking
                         )
                         if not keep_searching:
                             T[:] = np.nan

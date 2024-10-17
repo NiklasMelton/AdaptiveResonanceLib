@@ -171,7 +171,7 @@ class ARTMAP(SimpleARTMAP):
         X: np.ndarray,
         y: np.ndarray,
         max_iter=1,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
     ):
@@ -185,7 +185,7 @@ class ARTMAP(SimpleARTMAP):
             Data set B (dependent channel).
         max_iter : int, optional
             Number of iterations to fit the model on the same data set.
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting the vigilance parameter when match criterion fails.
         epsilon : float, optional
             Small increment to modify the vigilance parameter.
@@ -204,7 +204,7 @@ class ARTMAP(SimpleARTMAP):
         self.module_b.fit(
             y,
             max_iter=max_iter,
-            match_reset_method=match_reset_method,
+            match_tracking=match_tracking,
             epsilon=epsilon,
         )
 
@@ -214,7 +214,7 @@ class ARTMAP(SimpleARTMAP):
             X,
             y_c,
             max_iter=max_iter,
-            match_reset_method=match_reset_method,
+            match_tracking=match_tracking,
             epsilon=epsilon,
             verbose=verbose,
         )
@@ -225,7 +225,7 @@ class ARTMAP(SimpleARTMAP):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
         """Partially fit the ARTMAP model to the data.
@@ -236,7 +236,7 @@ class ARTMAP(SimpleARTMAP):
             Data set A (independent channel).
         y : np.ndarray
             Data set B (dependent channel).
-        match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting the vigilance parameter when match criterion fails.
         epsilon : float, optional
             Small increment to modify the vigilance parameter.
@@ -249,12 +249,12 @@ class ARTMAP(SimpleARTMAP):
         """
         self.validate_data(X, y)
         self.module_b.partial_fit(
-            y, match_reset_method=match_reset_method, epsilon=epsilon
+            y, match_tracking=match_tracking, epsilon=epsilon
         )
         super(ARTMAP, self).partial_fit(
             X,
             self.labels_b,
-            match_reset_method=match_reset_method,
+            match_tracking=match_tracking,
             epsilon=epsilon,
         )
         return self

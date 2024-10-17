@@ -35,6 +35,7 @@ autoapi_type = 'python'
 autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code directory
 autoapi_ignore = ['*/experimental', '*/experimental/*']
 autoapi_python_class_content = 'both'
+autoclass_content = 'both'
 
 bibtex_bibfiles = ['references.bib']
 

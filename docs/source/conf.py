@@ -6,6 +6,14 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+def skip(app, what, name, obj, would_skip, options):
+    if name == "__init__":
+        return False
+    return would_skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
+
 project = 'AdaptiveResonanceLib'
 copyright = '2024, Niklas Melton'
 author = 'Niklas Melton'
@@ -34,7 +42,8 @@ exclude_patterns = ['artlib/experimental/*', '../../artlib/experimental/*']
 autoapi_type = 'python'
 autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code directory
 autoapi_ignore = ['*/experimental', '*/experimental/*']
-autoapi_python_class_content = 'both'
+# autoapi_python_class_content = 'both'
+# autoclass_content = 'both'
 
 bibtex_bibfiles = ['references.bib']
 

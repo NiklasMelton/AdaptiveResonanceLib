@@ -10,7 +10,7 @@
 .. # recognition.
 .. # Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: \
             (citation_key == "carpenter1987art" or \
              citation_key == "carpenter1991art")

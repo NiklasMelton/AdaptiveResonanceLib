@@ -5,7 +5,7 @@
 .. # adaptive resonance system.
 .. # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "carpenter1991fuzzy"
 
 """

@@ -10,7 +10,7 @@
 .. # In Aerospace/Defense Sensing, Simulation, and Controls (pp. 293– 304).
 .. # International Society for Optics and Photonics. doi:10.1117/12.421180.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: \
             (citation_key == "anagnostopoulos2001a" or \
              citation_key == "anagnostopoulos2001b")

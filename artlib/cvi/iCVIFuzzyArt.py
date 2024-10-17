@@ -13,7 +13,7 @@ scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertat
  Pages 314-316 and 319-320 Extended icvi offline mode can be found at
 https://ieeexplore.ieee.org/document/9745260
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "da2022icvi"
 
 """

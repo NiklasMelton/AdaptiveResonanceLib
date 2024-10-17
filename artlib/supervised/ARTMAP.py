@@ -5,7 +5,7 @@
 .. # self-organizing neural network.
 .. # Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "carpenter1991artmap"
 
 """

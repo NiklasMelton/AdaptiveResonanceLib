@@ -6,7 +6,7 @@
 .. # (pp. 940–944). volume 2.
 .. # doi:10.1109/ICNN.1994.374307.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "bartfai1994hierarchical"
 
 """

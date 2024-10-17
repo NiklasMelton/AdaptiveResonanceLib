@@ -7,7 +7,7 @@
 .. # Berlin, Heidelberg: Springer Berlin Heidelberg.
 .. # doi:10.1007/978-3-642-15825-4_21.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "tscherepanow2010topoart"
 
 """

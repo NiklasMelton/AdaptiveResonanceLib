@@ -4,7 +4,7 @@
 .. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 .. # Norwell, MA, USA: Kluwer Academic Publishers.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "gotarredona1998adaptive"
 
 """

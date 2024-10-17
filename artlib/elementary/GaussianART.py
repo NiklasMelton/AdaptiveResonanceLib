@@ -5,7 +5,7 @@
 .. # Multidimensional Maps.
 .. # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "williamson1996gaussian"
 
 """

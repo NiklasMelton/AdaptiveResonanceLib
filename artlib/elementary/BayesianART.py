@@ -5,7 +5,7 @@
 .. # IEEE Transactions on Neural
 .. # Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "vigdor2007bayesian"
 
 """

@@ -7,7 +7,7 @@
 .. # Berlin, Heidelberg: Springer Berlin Heidelberg.
 .. # doi:10.1007/ 978-3-540-72383-7_128.
 
-.. bibliography::
+.. bibliography:: ../../references.bib
    :filter: citation_key == "tan2007intelligence"
 
 

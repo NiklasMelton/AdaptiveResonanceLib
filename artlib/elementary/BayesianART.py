@@ -1,11 +1,11 @@
-"""Vigdor, B., & Lerner, B.
+"""Bayesian ART.
 
-(2007). The Bayesian ARTMAP. IEEE Transactions on Neural Networks, 18, 1628–1644.
-doi:10.1109/TNN.2007.900234.
+Vigdor, B., & Lerner, B. (2007). The Bayesian ARTMAP. IEEE Transactions on Neural
+Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
 """
 import numpy as np
-from typing import Optional, Iterable, List, Callable, Literal, Tuple
+from typing import Optional, Iterable, List, Callable, Literal
 import operator
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
@@ -144,7 +144,8 @@ class BayesianART(BaseART):
 
         """
         # the original paper uses the det(cov_old) for match criterion
-        # however, it makes logical sense to use the new_cov and results are improved when doing so
+        # however, it makes logical sense to use the new_cov and results are
+        # improved when doing so
         new_w = self.update(i, w, params, cache)
         new_cov = new_w[self.dim_ : -1].reshape((self.dim_, self.dim_))
         cache["new_w"] = new_w
@@ -222,7 +223,8 @@ class BayesianART(BaseART):
 
         """
         M = cache["match_criterion"]
-        # we have to reverse some signs becayse bayesianART has an inverted vigilence check
+        # we have to reverse some signs because bayesianART has an inverted
+        # vigilence check
         if method == "MT+":
             self.params["rho"] = M - epsilon
             return True

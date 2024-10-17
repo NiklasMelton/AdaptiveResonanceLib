@@ -1,3 +1,4 @@
+"""CVIART."""
 import numpy as np
 from copy import deepcopy
 import sklearn.metrics as metrics
@@ -11,10 +12,11 @@ class CVIART(BaseART):
 
     Expanded version of Art that uses Cluster Validity Indicies to help with cluster
     selection. PBM is not implemented, can be seen here.
-    https://git.mst.edu/acil-group/CVI-Fuzzy-ART/-/blob/master/PBM_index.m?ref_type=heads
+    git.mst.edu/acil-group/CVI-Fuzzy-ART/-/blob/master/PBM_index.m?ref_type=heads
 
-    Note, the default step_fit function in base ART evaluates the matching function even if
-    the other criteria has failed. This means it could run slower then it would otherwise.
+    Note, the default step_fit function in base ART evaluates the matching function
+    even if the other criteria has failed. This means it could run slower then it would
+    otherwise.
 
     """
 
@@ -90,7 +92,15 @@ class CVIART(BaseART):
         return self.base_module.restore_data(X)
 
     @property
-    def W(self):
+    def W(self) -> List:
+        """Get the base module weights.
+
+        Returns
+        -------
+        list of np.ndarray
+            base module weights
+
+        """
         return self.base_module.W
 
     @W.setter
@@ -98,7 +108,15 @@ class CVIART(BaseART):
         self.base_module.W = new_W
 
     @property
-    def labels_(self):
+    def labels_(self) -> np.ndarray:
+        """Get the base module labels.
+
+        Returns
+        -------
+        np.ndarray
+            base module labels
+
+        """
         return self.base_module.labels_
 
     @labels_.setter
@@ -218,7 +236,8 @@ class CVIART(BaseART):
         y : np.ndarray, optional
             Not used. For compatibility.
         match_reset_func : callable, optional
-            A callable accepting the data sample, a cluster weight, the params dict, and the cache dict.
+            A callable accepting the data sample, a cluster weight, the params dict,
+            and the cache dict.
             Returns True if the cluster is valid for the sample, False otherwise.
         max_iter : int, optional
             Number of iterations to fit the model on the same dataset, by default 1.
@@ -312,7 +331,8 @@ class CVIART(BaseART):
         x : np.ndarray
             Data sample.
         match_reset_func : callable, optional
-            A callable accepting the data sample, a cluster weight, the params dict, and the cache dict.
+            A callable accepting the data sample, a cluster weight, the params dict,
+            and the cache dict.
             Returns True if the cluster is valid for the sample, False otherwise.
         match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion.

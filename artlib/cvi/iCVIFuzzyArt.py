@@ -1,9 +1,9 @@
-"""Add Reference in correct format.
+"""TODO: Add Reference in correct format.
 
 The original matlab code can be found at
 https://github.com/ACIL-Group/iCVI-toolbox/tree/master
  The formulation is available at
-https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
+scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
  Pages 314-316 and 319-320 Extended icvi offline mode can be found at
 https://ieeexplore.ieee.org/document/9745260
 
@@ -36,7 +36,8 @@ class iCVIFuzzyART(FuzzyART):
         alpha : float
             Choice parameter. A value of 1e-7 is recommended.
         beta : float
-            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for
+            fast learning.
         validity : int
             The cluster validity index being used.
         offline : bool, optional
@@ -48,9 +49,7 @@ class iCVIFuzzyART(FuzzyART):
             "validity"
         ] = validity  # Currently not used. Waiting for more algorithms.
         self.offline = offline
-        assert (
-            "validity" in self.params
-        )  # Because Fuzzy art doesn't accept validity, and makes the params the way it does, validations have to be done after init.
+        assert "validity" in self.params
         assert isinstance(self.params["validity"], int)
 
     def iCVI_match(self, x, w, c_, params, cache):
@@ -72,18 +71,21 @@ class iCVIFuzzyART(FuzzyART):
         Returns
         -------
         bool
-            True if the new criterion value is better than the previous one, False otherwise.
+            True if the new criterion value is better than the previous one,
+            False otherwise.
 
         """
         if self.offline:
             new = self.iCVI.switch_label(x, self.labels_[self.index], c_)
         else:
             new = self.iCVI.add_sample(x, c_)
-        # Eventually this should be an icvi function that you pass the params, and it handles if this is true or false.
+        # Eventually this should be an icvi function that you pass the params,
+        # and it handles if this is true or false.
         return new["criterion_value"] > self.iCVI.criterion_value
         # return self.iCVI.evalLabel(x, c_) This except pass params instead.
 
-    # Could add max epochs back in, but only if offline is true, or do something special...
+    # Could add max epochs back in, but only if offline is true,
+    # or do something special...
     def fit(
         self,
         X: np.ndarray,
@@ -102,7 +104,8 @@ class iCVIFuzzyART(FuzzyART):
         y : np.ndarray, optional
             Not used. For compatibility.
         match_reset_func : callable, optional
-            A callable accepting the data sample, a cluster weight, the params dict, and the cache dict.
+            A callable accepting the data sample, a cluster weight, the params dict,
+            and the cache dict.
             Returns True if the cluster is valid for the sample, False otherwise.
         max_iter : int, optional
             Number of iterations to fit the model on the same dataset, by default 1.

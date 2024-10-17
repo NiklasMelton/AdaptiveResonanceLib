@@ -1,3 +1,4 @@
+"""Base class for all ARTMAP objects."""
 import numpy as np
 from typing import Union, Optional, Iterable, Literal
 from collections import defaultdict
@@ -9,6 +10,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     """Generic implementation of Adaptive Resonance Theory MAP (ARTMAP)"""
 
     def __init__(self):
+        """Instantiate the BaseARTMAP object."""
         self.map: dict[int, int] = dict()
 
     def set_params(self, **params):
@@ -27,7 +29,6 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             Estimator instance.
 
         """
-
         if not params:
             # Simple optimization to gain speed (inspect is slow)
             return self

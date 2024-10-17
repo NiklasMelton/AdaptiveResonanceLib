@@ -68,16 +68,18 @@ class iCVI_CH:
     The original matlab code can be found at
     https://github.com/ACIL-Group/iCVI-toolbox/blob/master/classes/CVI_CH.m
      The formulation is available at
-    https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
+    scholarsmine.mst.edu/cgi/viewcontent.cgi?article=3833&context=doctoral_dissertations
     Pages 314-316 and 319-320
 
-    This implementation returns a dictionary of updated parameters when calling functions, which can then be passed with
-    the update function to accept the changes. This allows for testing changes/additions to the categories without doing a
-    deep copy of the object.
+    This implementation returns a dictionary of updated parameters when calling
+    functions, which can then be passed with the update function to accept the changes.
+    This allows for testing changes/additions to the categories without doing a deep
+    copy of the object.
 
-    In addition, the calculations for removing a sample, or switching the label of a sample from the dataset are included.
-    This allows for very efficient calculations on clustering algorithms that would like to prune or adjust the labels of
-    samples in the dataset.
+    In addition, the calculations for removing a sample, or switching the label of a
+    sample from the dataset are included. This allows for very efficient calculations
+    on clustering algorithms that would like to prune or adjust the labels of samples
+    in the dataset.
 
     For the Calinski Harabasz validity Index, larger values represent better clusters.
 
@@ -143,7 +145,8 @@ class iCVI_CH:
             Data = self.CD[label]
             CD["n"] = Data["n"] + 1
 
-            # The paper defines deltaV = Vold - Vnew, so I need to switch this sign. Consider changing functions to do this.
+            # The paper defines deltaV = Vold - Vnew, so I need to switch this sign.
+            # Consider changing functions to do this.
             deltaV = -1 * delta_add_sample_to_average(Data["v"], x, CD["n"])
             CD["v"] = Data["v"] - deltaV  # Vnew = Vold - deltaV
             diff_x_v = x - CD["v"]
@@ -171,9 +174,8 @@ class iCVI_CH:
 
             WGSS = self.WGSS + newP["CP_diff"]
             BGSS = sum(SEP)  # between-group sum of squares
-            if (
-                WGSS == 0
-            ):  # this can be 0 if all samples in different clusters, which is a divide by 0 error.
+            if WGSS == 0:  # this can be 0 if all samples in different clusters,
+                # which is a divide by 0 error.
                 newP["criterion_value"] = 0
             else:
                 newP["criterion_value"] = (
@@ -205,12 +207,14 @@ class iCVI_CH:
     def switch_label(self, x: np.ndarray, label_old: int, label_new: int) -> dict:
         """Calculate the parameters when a sample has its label changed.
 
-        This essentially removes a sample with the old label from the clusters, then adds it back with the new sample.
-        There are a few optimizations, such as keeping mu the same since adding and removing it doesn't affect any calculations
+        This essentially removes a sample with the old label from the clusters, then
+        adds it back with the new sample. There are a few optimizations, such as
+        keeping mu the same since adding and removing it doesn't affect any calculations
         that are needed.
 
-        Otherwise it should work the same as removing a sample and updating, then adding the sample back and updating, without
-        the need to create a deep copy of the object if just testing the operation.
+        Otherwise it should work the same as removing a sample and updating, then
+        adding the sample back and updating, without the need to create a deep copy of
+        the object if just testing the operation.
 
         Parameters
         ----------
@@ -268,9 +272,7 @@ class iCVI_CH:
         else:
             n_clusters = len(self.CD)
 
-        if (
-            n_clusters < 2
-        ):  # I don't think this can ever happen with remove label not deleting categories.
+        if n_clusters < 2:  # I don't think this can ever happen
             newP["criterion_value"] = 0
         else:
             for i in self.CD:
@@ -289,9 +291,8 @@ class iCVI_CH:
             WGSS = self.WGSS + newP["CP_diff"]
             WGSS += newP["CP_diff2"]
             BGSS = sum(SEP)  # between-group sum of squares
-            if (
-                WGSS == 0
-            ):  # this can be 0 if all samples in different clusters, which is a divide by 0 error.
+            if WGSS == 0:  # this can be 0 if all samples in different clusters,
+                # which is a divide by 0 error.
                 newP["criterion_value"] = 0
             else:
                 newP["criterion_value"] = (
@@ -333,7 +334,8 @@ class iCVI_CH:
         newP["CD"] = CD
         CD["n"] = Data["n"] - 1
 
-        # We need the delta v from when the sample was added, but the paper defines deltaV = Vold - Vnew, so I need to keep these signs
+        # We need the delta v from when the sample was added,
+        # but the paper defines deltaV = Vold - Vnew, so I need to keep these signs
         deltaVPrior = delta_remove_sample_from_average(Data["v"], x, Data["n"])
         CD["v"] = Data["v"] + deltaVPrior  # Vnew + deltaV = Vold
         diff_x_vPrior = x - Data["v"]
@@ -365,9 +367,8 @@ class iCVI_CH:
 
             WGSS = self.WGSS + newP["CP_diff"]
             BGSS = sum(SEP)  # between-group sum of squares
-            if (
-                WGSS == 0
-            ):  # this can be 0 if all samples in different clusters, which is a divide by 0 error.
+            if WGSS == 0:  # this can be 0 if all samples in different clusters,
+                # which is a divide by 0 error.
                 newP["criterion_value"] = 0
             else:
                 newP["criterion_value"] = (

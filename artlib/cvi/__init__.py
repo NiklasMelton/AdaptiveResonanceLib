@@ -8,6 +8,7 @@ tasks where true labels are not available for evaluation.
 This module implements CVI-driven ART modules which utilize the CVI to inform
 clustering; often resulting in objectively superior results.
 
-`Cluster validity indices <https://en.wikipedia.org/wiki/Cluster_analysis#Cluster_validity>`_
+`Cluster validity indices
+<https://en.wikipedia.org/wiki/Cluster_analysis#Cluster_validity>`_
 
 """

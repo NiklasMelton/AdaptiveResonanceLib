@@ -1,3 +1,4 @@
+"""General utilities used throughout ARTLib."""
 import numpy as np
 from typing import Tuple, Optional
 

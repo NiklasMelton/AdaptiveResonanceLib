@@ -1,4 +1,5 @@
-"""
+"""ART2.
+
 Carpenter, G. A., & Grossberg, S. (1987b).
 ART 2: self-organization of stable category recognition codes for analog input patterns.
 Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
@@ -6,17 +7,15 @@ Appl. Opt., 26, 4919–4930. doi:10.1364/AO.26.004919.
 Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
 ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition.
 Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
-"""
 
-"""
 ==================================================================
 DISCLAIMER: DO NOT USE ART2!!!
 IT DOES NOT WORK
 It is provided for completeness only.
 Stephan Grossberg himself has said ART2 does not work.
 ==================================================================
-"""
 
+"""
 import numpy as np
 from typing import Optional, List
 from warnings import warn
@@ -26,10 +25,14 @@ from artlib.common.BaseART import BaseART
 class ART2A(BaseART):
     """ART2-A for Clustering.
 
-    This module implements ART2-A as first published in Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
-    ART 2-A: An adaptive resonance algorithm for rapid category learning and recognition.
-    Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7. ART2-A is similar to ART1 but designed for
-    analog data. This method is implemented for historical purposes and is not recommended for use.
+    This module implements ART2-A as first published in
+    Carpenter, G. A., Grossberg, S., & Rosen, D. B. (1991b).
+    ART 2-A: An adaptive resonance algorithm for rapid category learning and
+    recognition.
+    Neural Networks, 4, 493 – 504. doi:10.1016/0893-6080(91) 90045-7.
+
+    ART2-A is similar to ART1 but designed for analog data. This method is implemented
+    for historical purposes and is not recommended for use.
 
     """
 
@@ -43,12 +46,11 @@ class ART2A(BaseART):
         alpha : float
             Choice parameter, recommended value is 1e-7.
         beta : float
-            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for
+            fast learning.
 
         """
-        warn(
-            "Do Not Use ART2. It does not work. This module is provided for completeness only"
-        )
+        warn("Do Not Use ART2. It does not work. Module provided for completeness only")
 
         params = {
             "rho": rho,

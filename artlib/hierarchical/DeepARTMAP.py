@@ -1,7 +1,8 @@
-"""Carpenter, G.
+"""Deep ARTMAP.
 
-A., Grossberg, S., & Reynolds, J. H. (1991a).
-ARTMAP: Supervised real-time learning and classification of nonstationary data by a self-organizing neural network.
+Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+self-organizing neural network.
 Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
 """
@@ -16,7 +17,6 @@ from artlib.supervised.ARTMAP import ARTMAP
 
 
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
-
     """DeepARTMAP for Hierachical Supervised and Unsupervised Learning.
 
     This module implements DeepARTMAP, a generalization of the ARTMAP class that allows
@@ -53,7 +53,8 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         Parameters
         ----------
         deep : bool, optional, default=True
-            If True, will return the parameters for this class and contained subobjects that are estimators.
+            If True, will return the parameters for this class and contained subobjects
+            that are estimators.
 
         Returns
         -------
@@ -83,7 +84,6 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             The estimator instance.
 
         """
-
         if not params:
             # Simple optimization to gain speed (inspect is slow)
             return self
@@ -205,9 +205,10 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             If the input data is inconsistent or does not match the expected format.
 
         """
-        assert (
-            len(X) == self.n_modules
-        ), f"Must provide {self.n_modules} input matrices for {self.n_modules} ART modules"
+        assert len(X) == self.n_modules, (
+            f"Must provide {self.n_modules} input matrices for "
+            f"{self.n_modules} ART modules"
+        )
         if y is not None:
             n = len(y)
         else:
@@ -360,9 +361,10 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 self.layers = [
                     SimpleARTMAP(self.modules[i]) for i in range(self.n_modules)
                 ]
-            assert (
-                self.is_supervised
-            ), "Labels were previously provided. Must continue to provide labels for partial fit."
+            assert self.is_supervised, (
+                "Labels were previously provided. "
+                "Must continue to provide labels for partial fit."
+            )
             self.layers[0] = self.layers[0].partial_fit(
                 X[0], y, match_reset_method=match_reset_method, epsilon=epsilon
             )
@@ -379,9 +381,10 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                     list[BaseARTMAP],
                     [SimpleARTMAP(self.modules[i]) for i in range(2, self.n_modules)],
                 )
-            assert (
-                not self.is_supervised
-            ), "Labels were not previously provided. Do not provide labels to continue partial fit."
+            assert not self.is_supervised, (
+                "Labels were not previously provided. "
+                "Do not provide labels to continue partial fit."
+            )
 
             self.layers[0] = self.layers[0].partial_fit(
                 X[1],

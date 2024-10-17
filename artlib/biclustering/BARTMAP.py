@@ -1,4 +1,5 @@
-"""
+"""BARTMAP.
+
 Xu, R., & Wunsch II, D. C. (2011).
 BARTMAP: A viable structure for biclustering.
 Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
@@ -8,6 +9,7 @@ Methods and systems for biclustering algorithm.
 U.S. Patent 9,043,326 Filed January 28, 2012,
 claiming priority to Provisional U.S. Patent Application,
 January 28, 2011, issued May 26, 2015.
+
 """
 
 import numpy as np
@@ -117,7 +119,6 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             The estimator instance.
 
         """
-
         if not params:
             # Simple optimization to gain speed (inspect is slow)
             return self
@@ -160,19 +161,51 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         assert isinstance(params["eta"], float)
 
     @property
-    def column_labels_(self):
+    def column_labels_(self) -> np.ndarray:
+        """Cluster labels for the columns.
+
+        Returns
+        -------
+        column_labels_ : ndarray of shape (n_columns,)
+            Array of cluster labels assigned to each column.
+
+        """
         return self.module_b.labels_
 
     @property
-    def row_labels_(self):
+    def row_labels_(self) -> np.ndarray:
+        """Cluster labels for the rows.
+
+        Returns
+        -------
+        row_labels_ : ndarray of shape (n_rows,)
+            Array of cluster labels assigned to each row.
+
+        """
         return self.module_a.labels_
 
     @property
-    def n_row_clusters(self):
+    def n_row_clusters(self) -> int:
+        """Number of row clusters.
+
+        Returns
+        -------
+        n_row_clusters : int
+            The number of clusters for the rows.
+
+        """
         return self.module_a.n_clusters
 
     @property
-    def n_column_clusters(self):
+    def n_column_clusters(self) -> int:
+        """Number of column clusters.
+
+        Returns
+        -------
+        n_column_clusters : int
+            The number of clusters for the columns.
+
+        """
         return self.module_b.n_clusters
 
     def _get_x_cb(self, x: np.ndarray, c_b: int):
@@ -404,8 +437,6 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         import matplotlib.pyplot as plt
 
         if cmap is None:
-            from matplotlib.pyplot import cm
-
             cmap = plt.cm.Blues
 
         plt.matshow(

@@ -1,7 +1,8 @@
-"""Carpenter, G.
+"""ARTMAP.
 
-A., Grossberg, S., & Reynolds, J. H. (1991a).
-ARTMAP: Supervised real-time learning and classification of nonstationary data by a self-organizing neural network.
+Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
+ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+self-organizing neural network.
 Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
 """
@@ -17,14 +18,17 @@ class ARTMAP(SimpleARTMAP):
 
     This module implements ARTMAP as first published in
     Carpenter, G. A., Grossberg, S., & Reynolds, J. H. (1991a).
-    ARTMAP: Supervised real-time learning and classification of nonstationary data by a self-organizing neural network.
+    ARTMAP: Supervised real-time learning and classification of nonstationary data by a
+    self-organizing neural network.
     Neural Networks, 4, 565 – 588. doi:10.1016/0893-6080(91)90012-T.
 
-    ARTMAP joins accepts two ART modules A and B which cluster the dependent channel (samples) and the independent
-    channel (labels) respectively while linking them with a many-to-one mapping.
-    If your labels are integers, use SimpleARTMAP for a faster and more direct implementation.
-    ARTMAP also provides the ability to fit a regression model to data and specific functions have been implemented to
-    allow this. However, FusionART provides substantially better fit for regression problems which are not monotonic.
+    ARTMAP joins accepts two ART modules A and B which cluster the dependent channel
+    (samples) and the independent channel (labels) respectively while linking them with
+    a many-to-one mapping. If your labels are integers, use SimpleARTMAP for a faster
+    and more direct implementation. ARTMAP also provides the ability to fit a regression
+    model to data and specific functions have been implemented to allow this. However,
+    FusionART provides substantially better fit for regression problems which are not
+    monotonic.
 
     """
 
@@ -48,7 +52,8 @@ class ARTMAP(SimpleARTMAP):
         Parameters
         ----------
         deep : bool, optional
-            If True, will return the parameters for this class and contained subobjects that are estimators.
+            If True, will return the parameters for this class and contained subobjects
+            that are estimators.
 
         Returns
         -------
@@ -285,7 +290,8 @@ class ARTMAP(SimpleARTMAP):
     def predict_regression(self, X: np.ndarray) -> np.ndarray:
         """
         Predict values for the given data using cluster centers.
-        Note: ARTMAP is not recommended for regression. Use FusionART for regression tasks.
+        Note: ARTMAP is not recommended for regression.
+        Use FusionART for regression tasks.
 
         Parameters
         ----------

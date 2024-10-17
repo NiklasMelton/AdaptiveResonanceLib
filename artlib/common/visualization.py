@@ -1,3 +1,4 @@
+"""Collection of visualization utilities."""
 import numpy as np
 from matplotlib.axes import Axes
 
@@ -23,7 +24,8 @@ def plot_gaussian_contours_fading(
     std_dev : np.ndarray
         A numpy array representing the standard deviation (σ) of the distribution.
     color : np.ndarray
-        A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
+        A 4D numpy array including RGB and alpha channels to specify the color and
+        initial opacity.
     max_std : int, optional
         Maximum number of standard deviations to draw contours to, by default 2.
     sigma_steps : float, optional
@@ -86,7 +88,8 @@ def plot_gaussian_contours_covariance(
     covariance : np.ndarray
         A 2x2 numpy array representing the covariance matrix of the distribution.
     color : np.ndarray
-        A 4D numpy array including RGB and alpha channels to specify the color and initial opacity.
+        A 4D numpy array including RGB and alpha channels to specify the color and
+        initial opacity.
     max_std : int, optional
         Maximum number of standard deviations to draw contours to, by default 2.
     sigma_steps : float, optional

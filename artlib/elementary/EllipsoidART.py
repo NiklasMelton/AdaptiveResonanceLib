@@ -1,4 +1,6 @@
-"""Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a). Ellipsoid ART and ARTMAP for
+"""Ellipsoid ART.
+
+Anagnostopoulos, G. C., & Georgiopoulos, M. (2001a). Ellipsoid ART and ARTMAP for
 incremental clustering and classification. In Proc. IEEE International Joint Conference
 on Neural Networks (IJCNN) (pp. 1221–1226). volume 2. doi:10.1109/IJCNN.2001.939535.
 
@@ -37,7 +39,8 @@ class EllipsoidART(BaseART):
         alpha : float
             Choice parameter, recommended value is 1e-7.
         beta : float
-            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for
+            fast learning.
         mu : float
             Ratio between major and minor axes.
         r_hat : float

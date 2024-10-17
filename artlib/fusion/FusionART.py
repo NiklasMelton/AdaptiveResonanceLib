@@ -1,6 +1,6 @@
-"""Tan, A.-H., Carpenter, G.
+"""Fusion ART.
 
-A., & Grossberg, S. (2007).
+Tan, A.-H., Carpenter, G. A., & Grossberg, S. (2007).
 Intelligence Through Interaction: Towards a Unified Theory for Learning.
 In D. Liu, S. Fei, Z.-G. Hou, H. Zhang, & C. Sun (Eds.),
 Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
@@ -29,7 +29,8 @@ def get_channel_position_tuples(
     Returns
     -------
     list of tuple of int
-        A list of tuples where each tuple represents the start and end index for a channel.
+        A list of tuples where each tuple represents the start and end index for a
+        channel.
 
     """
     positions = []
@@ -51,11 +52,13 @@ class FusionART(BaseART):
     Advances in Neural Networks – ISNN 2007 (pp. 1094–1103).
     Berlin, Heidelberg: Springer Berlin Heidelberg.
     doi:10.1007/ 978-3-540-72383-7_128.
-    Fusion ART accepts an arbitrary number of ART modules, each assigned a different data channel. The activation
-    and match functions for all ART modules are then fused such that all modules must be simultaneously active and
-    resonant in order for a match to occur. This provides fine-grain control when clustering multi-channel or
-    molti-modal data and allows for different geometries of clusters to be used for each channel.
-    Fusion ART also allows for fitting regression models and specific functions have been implemented to allow this.
+    Fusion ART accepts an arbitrary number of ART modules, each assigned a different
+    data channel. The activation and match functions for all ART modules are then fused
+    such that all modules must be simultaneously active and resonant in order for a
+    match to occur. This provides fine-grain control when clustering multi-channel or
+    multi-modal data and allows for different geometries of clusters to be used for
+    each channel. Fusion ART also allows for fitting regression models and specific
+    functions have been implemented to allow this.
 
     """
 
@@ -92,7 +95,8 @@ class FusionART(BaseART):
         Parameters
         ----------
         deep : bool, optional
-            If True, will return parameters for this class and the contained sub-objects that are estimators (default is True).
+            If True, will return parameters for this class and the contained sub-objects
+            that are estimators (default is True).
 
         Returns
         -------
@@ -430,7 +434,8 @@ class FusionART(BaseART):
         Returns
         -------
         dict
-            A dictionary with module indices as keys and their deep-copied parameters as values.
+            A dictionary with module indices as keys and their deep-copied parameters
+            as values.
 
         """
         return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
@@ -456,7 +461,6 @@ class FusionART(BaseART):
             Value to adjust the vigilance parameter (default is 0.0).
 
         """
-
         self.validate_data(X)
         self.check_dimensions(X)
         self.is_fitted_ = True
@@ -523,7 +527,6 @@ class FusionART(BaseART):
             Predicted labels for the input data.
 
         """
-
         check_is_fitted(self)
         self.validate_data(X)
         self.check_dimensions(X)
@@ -661,14 +664,16 @@ class FusionART(BaseART):
         X : np.ndarray
             Input dataset.
         target_channels : list of int, optional
-            List of target channels to use for regression. If negative values are used, they are considered as
-            channels counting backward from the last channel. By default, it uses the last channel (-1).
+            List of target channels to use for regression. If negative values are used,
+            they are considered as channels counting backward from the last channel.
+            By default, it uses the last channel (-1).
 
         Returns
         -------
         Union[np.ndarray, list of np.ndarray]
-            Predicted regression values. If only one target channel is used, returns a single np.ndarray.
-            If multiple target channels are used, returns a list of np.ndarray, one for each channel.
+            Predicted regression values. If only one target channel is used, returns a
+            single np.ndarray. If multiple target channels are used, returns a list of
+            np.ndarray, one for each channel.
 
         """
         target_channels = [self.n + k if k < 0 else k for k in target_channels]
@@ -754,7 +759,8 @@ class FusionART(BaseART):
                 )
                 current_col += channel_width
             else:
-                # If this channel was skipped, we know it was filled with 0.5, so we skip those columns
+                # If this channel was skipped, we know it was filled with 0.5,
+                # so we skip those columns
                 current_col += channel_width
 
         return channel_data

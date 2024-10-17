@@ -1,4 +1,6 @@
-"""Tan, A.-H. (2004). FALCON: a fusion architecture for learning, cognition, and
+"""FALCON.
+
+Tan, A.-H. (2004). FALCON: a fusion architecture for learning, cognition, and
 navigation. In Proc. IEEE International Joint Conference on Neural Networks (IJCNN) (pp.
 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
 
@@ -19,11 +21,14 @@ class FALCON:
     """FALCON for Reinforcement Learning.
 
     This module implements the reactive FALCON as first described in
-    Tan, A.-H. (2004). FALCON: a fusion architecture for learning, cognition, and navigation. In Proc. IEEE
-    International Joint Conference on Neural Networks (IJCNN) (pp. 3297–3302). volume 4. doi:10.1109/
-    IJCNN.2004.1381208.
-    FALCON is based on a Fusion-ART backbone but only accepts 3 channels: State, Action, and Reward. Specific
-    functions are implemented for getting optimal reward and action predictions.
+    Tan, A.-H. (2004).
+    FALCON: a fusion architecture for learning, cognition, and navigation.
+    In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
+    (pp. 3297–3302). volume 4. doi:10.1109/IJCNN.2004.1381208.
+
+    FALCON is based on a Fusion-ART backbone but only accepts 3 channels: State, Action,
+    and Reward. Specific functions are implemented for getting optimal reward and action
+    predictions.
 
     """
 
@@ -203,7 +208,8 @@ class FALCON:
         action_space : np.ndarray, optional
             The available action space, by default None.
         optimality : {"min", "max"}, optional
-            Whether to choose the action with the minimum or maximum reward, by default "max".
+            Whether to choose the action with the minimum or maximum reward,
+            by default "max".
 
         Returns
         -------

@@ -1,7 +1,7 @@
-"""Bartfai, G.
+"""SMART.
 
-(1994). Hierarchical clustering with ART neural networks. In Proc. IEEE International
-Conference on Neural Networks (ICNN) (pp. 940–944). volume 2.
+Bartfai, G. (1994). Hierarchical clustering with ART neural networks. In Proc. IEEE
+International Conference on Neural Networks (ICNN) (pp. 940–944). volume 2.
 doi:10.1109/ICNN.1994.374307.
 
 """
@@ -40,7 +40,8 @@ class SMART(DeepARTMAP):
         base_ART_class : Type
             Some ART class to instantiate the layers.
         rho_values : list of float or np.ndarray
-            The vigilance parameter values for each layer, must be monotonically increasing for most ART modules.
+            The vigilance parameter values for each layer, must be monotonically
+            increasing for most ART modules.
         base_params : dict
             Parameters for the base ART module, used to instantiate each layer.
         **kwargs :

@@ -1,7 +1,7 @@
-"""Brito da Silva, L.
+"""Dual Vigilance ART.
 
-E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy adaptive resonance
-theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
+Brito da Silva, L. E., Elnabarawy, I., & Wunsch II, D. C. (2019). Dual vigilance fuzzy
+adaptive resonance theory. Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 
 """
 import numpy as np
@@ -42,12 +42,15 @@ class DualVigilanceART(BaseART):
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
             warn(
-                f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
-                f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
+                f"{base_module.__class__.__name__} "
+                f"is an abstraction of the BaseART class. "
+                f"This module will only make use of the base_module: "
+                f"{base_module.base_module.__class__.__name__}"
             )
-        assert (
-            "rho" in base_module.params
-        ), "Dual Vigilance ART is only compatible with ART modules relying on 'rho' for vigilance."
+        assert "rho" in base_module.params, (
+            "Dual Vigilance ART is only compatible with ART modules "
+            "relying on 'rho' for vigilance."
+        )
 
         params = {"rho_lower_bound": rho_lower_bound}
         assert base_module.params["rho"] > params["rho_lower_bound"] >= 0
@@ -94,7 +97,8 @@ class DualVigilanceART(BaseART):
         Parameters
         ----------
         deep : bool, optional
-            If True, return the parameters for this class and contained subobjects that are estimators, by default True.
+            If True, return the parameters for this class and contained subobjects that
+            are estimators, by default True.
 
         Returns
         -------
@@ -157,11 +161,7 @@ class DualVigilanceART(BaseART):
         self.base_module.labels_ = new_labels
 
     @property
-    def W(self):
-        return self.base_module.W
-
-    @W.setter
-    def W(self, new_W: list[np.ndarray]):
+    def W(self) -> List:
         """Get the weights from the base module.
 
         Returns
@@ -170,6 +170,10 @@ class DualVigilanceART(BaseART):
             Weights of the clusters.
 
         """
+        return self.base_module.W
+
+    @W.setter
+    def W(self, new_W: list[np.ndarray]):
         self.base_module.W = new_W
 
     def check_dimensions(self, X: np.ndarray):
@@ -204,7 +208,6 @@ class DualVigilanceART(BaseART):
             Dictionary containing parameters for the algorithm.
 
         """
-
         assert (
             "rho_lower_bound" in params
         ), "Dual Vigilance ART requires a lower bound 'rho' value"
@@ -275,7 +278,8 @@ class DualVigilanceART(BaseART):
         x : np.ndarray
             Data sample.
         match_reset_func : callable, optional
-            A callable accepting the data sample, a cluster weight, the params dict, and the cache dict.
+            A callable accepting the data sample, a cluster weight, the params dict,
+            and the cache dict.
             Returns True if the cluster is valid for the sample, False otherwise.
         match_reset_method : {"MT+", "MT-", "MT0", "MT1", "MT~"}, optional
             Method for resetting match criterion, by default "MT+".
@@ -423,5 +427,6 @@ class DualVigilanceART(BaseART):
             )
         except NotImplementedError:
             warn(
-                f"{self.base_module.__class__.__name__} does not support plotting cluster bounds."
+                f"{self.base_module.__class__.__name__} "
+                f"does not support plotting cluster bounds."
             )

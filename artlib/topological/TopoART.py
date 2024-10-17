@@ -1,6 +1,6 @@
-"""Tscherepanow, M.
+"""Topo ART.
 
-(2010).
+Tscherepanow, M. (2010).
 TopoART: A Topology Learning Hierarchical ART Network.
 In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
 Artificial Neural Networks – ICANN 2010 (pp. 157–167).
@@ -22,15 +22,18 @@ class TopoART(BaseART):
     """Topo ART for Topological Clustering.
 
     This module implements Topo ART as first published in
+
     Tscherepanow, M. (2010).
     TopoART: A Topology Learning Hierarchical ART Network.
     In K. Diamantaras, W. Duch, & L. S. Iliadis (Eds.),
     Artificial Neural Networks – ICANN 2010 (pp. 157–167).
     Berlin, Heidelberg: Springer Berlin Heidelberg.
     doi:10.1007/978-3-642-15825-4_21.
-    Topo ART clusters accepts an instatiated base ART module and generates a topological clustering by recording
-    the first and second resonant cluster relationships in an adjacency matrix. Further, it updates the second
-    resonant cluster with a lower learning rate than the first, providing for a distributed learning model.
+
+    Topo ART clusters accepts an instatiated base ART module and generates a topological
+    clustering by recording the first and second resonant cluster relationships in an
+    adjacency matrix. Further, it updates the second resonant cluster with a lower
+    learning rate than the first, providing for a distributed learning model.
 
     """
 
@@ -52,8 +55,10 @@ class TopoART(BaseART):
         assert isinstance(base_module, BaseART)
         if hasattr(base_module, "base_module"):
             warn(
-                f"{base_module.__class__.__name__} is an abstraction of the BaseART class. "
-                f"This module will only make use of the base_module {base_module.base_module.__class__.__name__}"
+                f"{base_module.__class__.__name__} "
+                f"is an abstraction of the BaseART class. "
+                f"This module will only make use of the base_module: "
+                f"{base_module.base_module.__class__.__name__}"
             )
         params = dict(
             base_module.params,
@@ -286,7 +291,6 @@ class TopoART(BaseART):
             Newly generated cluster weight.
 
         """
-
         return self.base_module.new_weight(i, params)
 
     def add_weight(self, new_w: np.ndarray):
@@ -565,5 +569,6 @@ class TopoART(BaseART):
             )
         except NotImplementedError:
             warn(
-                f"{self.base_module.__class__.__name__} does not support plotting cluster bounds."
+                f"{self.base_module.__class__.__name__} "
+                f"does not support plotting cluster bounds."
             )

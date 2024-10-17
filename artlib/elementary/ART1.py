@@ -1,8 +1,8 @@
-"""Carpenter, G.
+"""ART1.
 
-A., & Grossberg, S. (1987a). A massively parallel architecture for a self-organizing
-neural pattern recognition machine. Computer Vision, Graphics, and Image Processing, 37,
-54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
+Carpenter, G. A., & Grossberg, S. (1987a). A massively parallel architecture for a self-
+organizing neural pattern recognition machine. Computer Vision, Graphics, and Image
+Processing, 37, 54 – 115. doi:10. 1016/S0734-189X(87)80014-2.
 
 """
 
@@ -31,7 +31,8 @@ class ART1(BaseART):
         rho : float
             Vigilance parameter in the range [0, 1].
         beta : float
-            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast learning.
+            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast
+            learning.
         L : float
             Uncommitted node bias, a value greater than or equal to 1.
 

@@ -1,6 +1,6 @@
-"""Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A.
+"""Simple ARTMAP.
 
-G. (1998).
+Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
 Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 Norwell, MA, USA: Kluwer Academic Publishers.
 
@@ -22,10 +22,11 @@ class SimpleARTMAP(BaseARTMAP):
     Adaptive Resonance Theory Microchips: Circuit Design Techniques.
     Norwell, MA, USA: Kluwer Academic Publishers.
 
-    SimpleARTMAP allows the clustering of data samples while enforcing a many-to-one mapping from sample clusters to
-    labels. It accepts an instantiated ART module and dynamically adapts the vigilance function to prevent resonance
-    when the many-to-one mapping is violated. This enables SimpleARTMAP to identify discrete clusters belonging to
-    each category label.
+    SimpleARTMAP allows the clustering of data samples while enforcing a many-to-one
+    mapping from sample clusters to labels. It accepts an instantiated ART module and
+    dynamically adapts the vigilance function to prevent resonance when the many-to-one
+    mapping is violated. This enables SimpleARTMAP to identify discrete clusters
+    belonging to each category label.
 
     """
 
@@ -84,7 +85,8 @@ class SimpleARTMAP(BaseARTMAP):
         Parameters
         ----------
         deep : bool, default=True
-            If True, will return the parameters for this class and contained subobjects that are estimators.
+            If True, will return the parameters for this class and contained subobjects
+            that are estimators.
 
         Returns
         -------
@@ -337,7 +339,8 @@ class SimpleARTMAP(BaseARTMAP):
         Returns
         -------
         dict
-            A dictionary with keys "A" and "B" containing labels from sides A and B, respectively.
+            A dictionary with keys "A" and "B" containing labels from sides A and B,
+            respectively.
 
         """
         return {"A": self.labels_a, "B": self.labels_}

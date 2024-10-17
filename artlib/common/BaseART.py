@@ -1,5 +1,6 @@
+"""Base class for all ART objects."""
 import numpy as np
-from typing import Optional, Callable, Iterable, Literal, List, Tuple
+from typing import Optional, Callable, Iterable, Literal, List
 from copy import deepcopy
 from collections import defaultdict
 from matplotlib.axes import Axes
@@ -603,7 +604,6 @@ class BaseART(BaseEstimator, ClusterMixin):
             Epsilon value used for adjusting match criterion.
 
         """
-
         self.validate_data(X)
         self.check_dimensions(X)
         self.is_fitted_ = True
@@ -639,7 +639,6 @@ class BaseART(BaseEstimator, ClusterMixin):
             Labels for the data.
 
         """
-
         check_is_fitted(self)
         self.validate_data(X)
         self.check_dimensions(X)
@@ -651,6 +650,20 @@ class BaseART(BaseEstimator, ClusterMixin):
         return y
 
     def shrink_clusters(self, shrink_ratio: float = 0.1):
+        """Shrink the clusters by a specified ratio.
+
+        Parameters
+        ----------
+        shrink_ratio : float, optional
+            The ratio by which to shrink the clusters. Must be between 0 and 1.
+            Default is 0.1.
+
+        Returns
+        -------
+        self : object
+            Returns the instance with shrunken clusters.
+
+        """
         return self
 
     def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):

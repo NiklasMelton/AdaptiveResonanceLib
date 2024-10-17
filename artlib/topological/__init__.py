@@ -5,9 +5,10 @@ structure or when traditional clustering algorithms fail to capture the intrinsi
 geometry of the data. Topological clustering techniques, such as hierarchical clustering
 and Mapper, are often used in fields like data analysis and computational topology.
 
-The two modules herein provide contrasting advantages. :class:`TopoART` allows for the
-creation of an adjacency matrix which can be useful when clusters overlap or are in
-close proximity. :class:`DualVigilanceART` allows for the abstract merging of many
+The two modules herein provide contrasting advantages.
+:class:`artlib.topological.TopoART` allows for the creation of an adjacency matrix
+which can be useful when clusters overlap or are in close proximity.
+:class:`artlib.topological.DualVigilanceART` allows for the abstract merging of many
 smaller clusters and is well suited to problems where the clusters take-on complex
 geometries where other clustering approaches would fail.
 

@@ -22,12 +22,13 @@ class SimpleARTMAP(BaseARTMAP):
     .. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
     .. # Norwell, MA, USA: Kluwer Academic Publishers.
 
-    SimpleARTMAP is a special case of :class:`ARTMAP` specifically for
-    classification. It allows the clustering of data samples while enforcing a
-    many-to-one mapping from sample clusters to labels. It accepts an instantiated
-    :class:`BaseART` module and dynamically adapts the vigilance function to prevent
-    resonance when the many-to-one mapping is violated. This enables SimpleARTMAP to
-    identify discrete clusters belonging to each category label.
+    SimpleARTMAP is a special case of :class:`artlib.supervised.ARTMAP.ARTMAP`
+    specifically for classification. It allows the clustering of data samples while
+    enforcing a many-to-one mapping from sample clusters to labels. It accepts an
+    instantiated :class:`artlib.common.BaseART.BaseART` module and dynamically adapts
+    the vigilance function to preventresonance when the many-to-one mapping is
+    violated. This enables SimpleARTMAP to identify discrete clusters belonging to
+    each category label.
 
     """
 

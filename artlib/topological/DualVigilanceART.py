@@ -20,12 +20,14 @@ class DualVigilanceART(BaseART):
     .. # Dual vigilance fuzzy adaptive resonance theory.
     .. # Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 
-    Dual Vigilance ART allows a :class:`BaseART` module to cluster with both an upper
-    and lower vigilance value. The upper-vigilance value allows the base ART module
-    to cluster normally, however, data is simultaneously clustered using the lower
-    vigilance level to combine multiple base ART categories into a single abstracted
-    category. This permits clusters to be combined to form arbitrary shapes. For
-    example if the base ART module is :class:`FuzzyART`, a Dual Vigilance Fuzzy ART
+    Dual Vigilance ART allows a :class:`artlib.common.BaseART.BaseART` module to
+    cluster with both an upper and lower vigilance value. The upper-vigilance value
+    allows the :class:`artlib.common.BaseART.BaseART` module to cluster normally,
+    however, data is simultaneously clustered using the lower vigilance level to
+    combine multiple base ART categories into a single abstracted category. This
+    permits clusters to be combined to form arbitrary shapes. For example if the
+    :class:`artlib.common.BaseART.BaseART` module is
+    :class:`artlib.elementary.FuzzyART.FuzzyART`, a Dual Vigilance Fuzzy ART
     clustering result would look  like a series of hyper-boxes forming an arbitrary
     geometry.
 

@@ -23,10 +23,11 @@ class ARTMAP(SimpleARTMAP):
     ARTMAP accepts two :class:`BaseART` modules A and B which cluster the dependent
     channel (samples) and the independent channel (labels) respectively while linking
     them with a many-to-one mapping. If your labels are integers,
-    use :class:`SimpleARTMAP` for a faster and more direct implementation. ARTMAP
-    also provides the ability to fit a regression model to data and specific
-    functions have been implemented to allow this. However, :class:`FusionART` provides
-    substantially better fit for regression problems which are not monotonic.
+    use :class:`artlib.supervised.SimpleARTMAP.SimpleARTMAP` for a faster and more
+    direct implementation. ARTMAP also provides the ability to fit a regression model to
+    data and specific functions have been implemented to allow this. However,
+    :class:`artlib.fusion.FusionART.FusionART` provides substantially better fit for
+    regression problems which are not monotonic.
 
     """
 

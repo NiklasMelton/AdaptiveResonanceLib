@@ -27,9 +27,9 @@ class FALCON:
     .. # In Proc. IEEE International Joint Conference on Neural Networks (IJCNN)
     .. # (pp. 3297–3302). volume 4. doi:10.1109/ IJCNN.2004.1381208.
 
-    FALCON is based on a :class:`FusionART` backbone but only accepts 3 channels:
-    State, Action, and Reward. Specific functions are implemented for getting optimal
-    reward and action predictions.
+    FALCON is based on a :class:`artlib.fusion.FusionART.FusionART` backbone but only
+    accepts 3 channels: State, Action, and Reward. Specific functions are implemented
+    for getting optimal reward and action predictions.
 
     """
 

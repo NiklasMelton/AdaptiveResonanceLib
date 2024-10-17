@@ -27,3 +27,5 @@ artlib.supervised.SimpleARTMAP module
    :members:
    :undoc-members:
    :show-inheritance:
+
+

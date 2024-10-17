@@ -75,3 +75,5 @@ artlib.elementary.QuadraticNeuronART module
    :members:
    :undoc-members:
    :show-inheritance:
+
+

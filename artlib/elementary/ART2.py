@@ -1,6 +1,7 @@
 """ART2 :cite:`carpenter1987art`, :cite:`carpenter1991art`.
 
 ::
+
     ==================================================================
     DISCLAIMER: DO NOT USE ART2!!!
     IT DOES NOT WORK

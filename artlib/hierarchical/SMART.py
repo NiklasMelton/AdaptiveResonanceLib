@@ -187,7 +187,7 @@ class SMART(DeepARTMAP):
         ----------
         ax : Axes
             The matplotlib axes on which to plot the cluster boundaries.
-        colors : Iterable
+        colors : IndexableOrKeyable
             The colors to use for each cluster.
         linewidth : int, optional
             The width of the boundary lines.
@@ -229,7 +229,7 @@ class SMART(DeepARTMAP):
             The size of the data points in the plot.
         linewidth : int, optional
             The width of the cluster boundary lines.
-        colors : Iterable, optional
+        colors : IndexableOrKeyable, optional
             The colors to use for each cluster.
 
         Returns

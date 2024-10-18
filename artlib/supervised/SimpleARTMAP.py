@@ -458,7 +458,7 @@ class SimpleARTMAP(BaseARTMAP):
         ----------
         ax : Axes
             Figure axes.
-        colors : Iterable
+        colors : IndexableOrKeyable
             Colors to use for each cluster.
         linewidth : int, default=1
             Width of boundary lines.

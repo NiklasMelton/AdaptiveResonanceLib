@@ -696,7 +696,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         ----------
         ax : matplotlib.axes.Axes
             Figure axes.
-        colors : iterable
+        colors : IndexableOrKeyable
             Colors to use for each cluster.
         linewidth : int, default=1
             Width of boundary line.
@@ -738,7 +738,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             Size used for data points.
         linewidth : int, default=1
             Width of boundary line.
-        colors : iterable, optional
+        colors : IndexableOrKeyable, optional
             Colors to use for each cluster.
 
         """

@@ -88,7 +88,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         for key, value in params.items():
             key, delim, sub_key = key.partition("__")
             if key not in valid_params:
-                local_valid_params = List(valid_params.keys())
+                local_valid_params = list(valid_params.keys())
                 raise ValueError(
                     f"Invalid parameter {key!r} for estimator {self}. "
                     f"Valid parameters are: {local_valid_params!r}."
@@ -219,7 +219,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         w: np.ndarray,
         params: Dict,
         cache: Optional[Dict] = None,
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

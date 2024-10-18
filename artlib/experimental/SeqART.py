@@ -234,7 +234,7 @@ class SeqART(BaseART):
 
     def match_criterion(
         self, i: str, w: str, params: dict, cache: Optional[dict] = None
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """
         Get the match criterion of the cluster.
 

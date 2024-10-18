@@ -10,7 +10,7 @@
 # International Society for Optics and Photonics. doi:10.1117/12.421180.
 
 import numpy as np
-from typing import Optional, List, Tuple, Union, Dict
+from typing import Optional, List, Tuple, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2, IndexableOrKeyable
@@ -166,7 +166,7 @@ class EllipsoidART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

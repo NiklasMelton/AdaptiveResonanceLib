@@ -271,7 +271,7 @@ class ConvexHullART(BaseART):
         w: HullTypes,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """
         Get the match criterion of the cluster.
 

@@ -9,6 +9,7 @@ tags:
   - machine learning
 authors:
   - name: Niklas M. Melton
+    corresponding: true
     orcid: 0000-0001-9625-7086
     affiliation: "1, 2"
   - name: Dustin Tanksley

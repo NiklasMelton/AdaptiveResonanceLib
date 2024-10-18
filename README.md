@@ -142,8 +142,17 @@ module_x = FuzzyART(rho=0.0, alpha = 0.0, beta=1.0)
 r_hat = 0.5*np.sqrt(train_X.shape[1]) # no restriction on hyperpshere size
 module_y = HypersphereART(rho=0.0, alpha = 0.0, beta=1.0, r_hat=r_hat)
 
-# Initialize the SimpleARTMAP model
-model = FusionART(modules=[module_x, module_y])
+# Initialize the FusionARTMAP model
+gamma_values = [0.5, 0.5] # eqaul weight to both channels
+channel_dims = [
+  2*train_X.shape[1], # fuzzy ART complement codes data so channel dim is 2*n_features
+  train_y.shape[1]
+]
+model = FusionART(
+  modules=[module_x, module_y],
+  gamma_values=gamma_values,
+  channel_dims=channel_dims
+)
 
 # Prepare Data
 train_Xy = model.join_channel_data(channel_data=[train_X, train_y])
@@ -154,8 +163,8 @@ test_Xy_prep = model.prepare_data(test_Xy)
 # Fit the model
 model.fit(train_X_prep, train_y)
 
-# Predict data labels
-predictions = model.predict(test_X_prep)
+# Predict y-channel values
+pred_y = model.predict_regression(test_Xy_prep, target_channels=[1])
 ```
 
 <!-- END quick-start -->

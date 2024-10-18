@@ -437,7 +437,7 @@ class ConvexHullART(BaseART):
         ----------
         ax : matplotlib.axes.Axes
             Figure axes.
-        colors : iterable
+        colors : IndexableOrKeyable
             Colors to use for each cluster.
         linewidth : int, optional
             Width of boundary line, by default 1.

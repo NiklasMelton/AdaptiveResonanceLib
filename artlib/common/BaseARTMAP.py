@@ -179,7 +179,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         ----------
         ax : matplotlib.axes.Axes
             Figure axes.
-        colors : iterable
+        colors : IndexableOrKeyable
             Colors to use for each cluster.
         linewidth : int, optional
             Width of boundary line, by default 1.
@@ -210,7 +210,7 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             Size used for data points, by default 10.
         linewidth : int, optional
             Width of boundary line, by default 1.
-        colors : iterable, optional
+        colors : IndexableOrKeyable, optional
             Colors to use for each cluster, by default None.
 
         """

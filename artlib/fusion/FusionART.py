@@ -198,7 +198,9 @@ class FusionART(BaseART):
         """
         assert X.shape[1] == self.dim_, "Invalid data shape"
 
-    def prepare_data(self, channel_data: List[np.ndarray]) -> np.ndarray:
+    def prepare_data(
+        self, channel_data: List[np.ndarray], skip_channels: List[int] = []
+    ) -> np.ndarray:
         """Prepare the input data by processing each channel's data through its
         respective ART module.
 
@@ -206,6 +208,8 @@ class FusionART(BaseART):
         ----------
         channel_data : list of np.ndarray
             List of arrays, one for each channel.
+        skip_channels : list of int, optional
+            Channels to be skipped (default is []).
 
         Returns
         -------
@@ -213,28 +217,40 @@ class FusionART(BaseART):
             Processed and concatenated data.
 
         """
+        skip_channels = [self.n + k if k < 0 else k for k in skip_channels]
         prepared_channel_data = [
-            self.modules[i].prepare_data(channel_data[i]) for i in range(self.n)
+            self.modules[i].prepare_data(channel_data[i])
+            for i in range(self.n)
+            if i not in skip_channels
         ]
-        return self.join_channel_data(prepared_channel_data)
 
-    def restore_data(self, X: np.ndarray) -> List[np.ndarray]:
+        return self.join_channel_data(
+            prepared_channel_data, skip_channels=skip_channels
+        )
+
+    def restore_data(
+        self, X: np.ndarray, skip_channels: List[int] = []
+    ) -> List[np.ndarray]:
         """Restore data to its original state before preparation.
 
         Parameters
         ----------
         X : np.ndarray
             The prepared data.
-
+        skip_channels : list of int, optional
+            Channels to be skipped (default is []).
         Returns
         -------
         np.ndarray
             Restored data for each channel.
 
         """
-        channel_data = self.split_channel_data(X)
+        skip_channels = [self.n + k if k < 0 else k for k in skip_channels]
+        channel_data = self.split_channel_data(X, skip_channels=skip_channels)
         restored_channel_data = [
-            self.modules[i].restore_data(channel_data[i]) for i in range(self.n)
+            self.modules[i].restore_data(channel_data[i])
+            for i in range(self.n)
+            if i not in skip_channels
         ]
         return restored_channel_data
 

@@ -11,22 +11,17 @@ authors:
   - name: Niklas M. Melton
     corresponding: true
     orcid: 0000-0001-9625-7086
-    affiliation: "1, 2"
+    affiliation: 1
   - name: Dustin Tanksley
     orcid: 0000-0002-1677-0304
-    affiliation: "1, 2"
+    affiliation: 1
   - name: Donald C. Wunsch II
     orcid: 0000-0002-9726-9051
-    affiliation: "1, 2, 3"
+    affiliation: 1
 affiliations:
  - name: Missouri University of Science and Technology, USA
    index: 1
    ror: 00scwqd12
-- name: National Science Foundation (NSF), USA
-   index: 2
- - name: Kummer Institute Center for Artificial Intelligence and Autonomous Systems
-   (KICAIAS), USA
-   index: 3
 date: 18 October 2024
 bibliography: references.bib
 ---

@@ -1,6 +1,5 @@
 ---
 title: 'Adaptive Resonance Lib: A Python package for Adaptive Resonance Theory (ART) models'
-
 tags:
   - Python
   - clustering
@@ -8,7 +7,6 @@ tags:
   - regression
   - reinforcement learning
   - machine learning
-
 authors:
   - name: Niklas M. Melton
     orcid: 0000-0001-9625-7086
@@ -19,7 +17,6 @@ authors:
   - name: Donald C. Wunsch II
     orcid: 0000-0002-9726-9051
     affiliation: "1, 2, 3"
-
 affiliations:
  - name: Missouri University of Science and Technology, USA
    index: 1
@@ -28,7 +25,6 @@ affiliations:
  - name: Kummer Institute Center for Artificial Intelligence and Autonomous Systems
    (KICAIAS), USA
    index: 3
-
 date: 18 October 2024
 bibliography: references.bib
 ---

@@ -5,7 +5,7 @@
 # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 
 import numpy as np
-from typing import Optional, Iterable, List, Tuple, Union, Dict
+from typing import Optional, Iterable, List, Tuple, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.visualization import plot_gaussian_contours_fading
@@ -109,7 +109,7 @@ class GaussianART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

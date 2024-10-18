@@ -289,7 +289,7 @@ class FusionART(BaseART):
         params: Dict,
         cache: Optional[Dict] = None,
         skip_channels: List[int] = [],
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the match criterion for the cluster.
 
         Parameters
@@ -308,7 +308,7 @@ class FusionART(BaseART):
         Returns
         -------
         tuple
-            List of match criteria for each channel and the updated cache.
+            max match_criterion across channels and the updated cache.
 
         """
         if cache is None:
@@ -322,12 +322,12 @@ class FusionART(BaseART):
                     cache[k],
                 )
                 if k not in skip_channels
-                else (np.inf, {"match_criterion": np.inf})
+                else (np.nan, {"match_criterion": np.inf})
                 for k in range(self.n)
             ]
         )
         cache = {k: cache_k for k, cache_k in enumerate(caches)}
-        return M, cache
+        return np.nanmax(M), cache
 
     def match_criterion_bin(
         self,

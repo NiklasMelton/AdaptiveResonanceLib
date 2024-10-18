@@ -192,7 +192,7 @@ class TopoART(BaseART):
         w: np.ndarray,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

@@ -219,7 +219,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         w: np.ndarray,
         params: Dict,
         cache: Optional[Dict] = None,
-    ) -> Tuple[Union[float, List[float]], Optional[Dict]]:
+    ) -> Tuple[float, Optional[Dict]]:
         """Get the match criterion of the cluster.
 
         Parameters

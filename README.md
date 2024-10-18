@@ -69,24 +69,102 @@ Ensure you have Python 3.9 or newer installed.
 <!-- START quick-start -->
 ## Quick Start
 
-Here's a quick example of how to use AdaptiveResonanceLib with the Fuzzy ART model:
+Here are some quick examples to get you started with AdaptiveResonanceLib:
+
+### Clustering Data with the Fuzzy ART model
 
 ```python
 from artlib import FuzzyART
 import numpy as np
 
 # Your dataset
-train_X = np.array([...])
+train_X = np.array([...]) # shape (n_samples, n_features)
 test_X = np.array([...])
 
 # Initialize the Fuzzy ART model
 model = FuzzyART(rho=0.7, alpha = 0.0, beta=1.0)
 
-# Fit the model
-model.fit(train_X)
+# Prepare Data
+train_X_prep = model.prepare_data(train_X)
+test_X_prep = model.prepare_data(test_X)
 
-# Predict new data points
-predictions = model.predict(test_X)
+# Fit the model
+model.fit(train_X_prep)
+
+# Predict data labels
+predictions = model.predict(test_X_prep)
+```
+
+### Fitting a Classification Model with SimpleARTMAP
+
+```python
+from artlib import GaussianART, SimpleARTMAP
+import numpy as np
+
+# Your dataset
+train_X = np.array([...]) # shape (n_samples, n_features)
+train_y = np.array([...]) # shape (n_samples, ), must be integers
+test_X = np.array([...])
+
+# Initialize the Gaussian ART model
+sigma_init = np.array([0.5]*train_X.shape[1]) # variance estimate for each feature
+module_a = GaussianART(rho=0.0, sigma_init=sigma_init)
+
+# Initialize the SimpleARTMAP model
+model = SimpleARTMAP(module_a=module_a)
+
+# Prepare Data
+train_X_prep = model.prepare_data(train_X)
+test_X_prep = model.prepare_data(test_X)
+
+# Fit the model
+model.fit(train_X_prep, train_y)
+
+# Predict data labels
+predictions = model.predict(test_X_prep)
+```
+
+### Fitting a Regression Model with FusionART
+
+```python
+from artlib import FuzzyART, HypersphereART, FusionART
+import numpy as np
+
+# Your dataset
+train_X = np.array([...]) # shape (n_samples, n_features_X)
+train_y = np.array([...]) # shape (n_samples, n_features_y)
+test_X = np.array([...])
+
+# Initialize the Fuzzy ART model
+module_x = FuzzyART(rho=0.0, alpha = 0.0, beta=1.0)
+
+# Initialize the Hypersphere ART model
+r_hat = 0.5*np.sqrt(train_X.shape[1]) # no restriction on hyperpshere size
+module_y = HypersphereART(rho=0.0, alpha = 0.0, beta=1.0, r_hat=r_hat)
+
+# Initialize the FusionARTMAP model
+gamma_values = [0.5, 0.5] # eqaul weight to both channels
+channel_dims = [
+  2*train_X.shape[1], # fuzzy ART complement codes data so channel dim is 2*n_features
+  train_y.shape[1]
+]
+model = FusionART(
+  modules=[module_x, module_y],
+  gamma_values=gamma_values,
+  channel_dims=channel_dims
+)
+
+# Prepare Data
+train_Xy = model.join_channel_data(channel_data=[train_X, train_y])
+train_Xy_prep = model.prepare_data(train_Xy)
+test_Xy = model.join_channel_data(channel_data=[train_X], skip_channels=[1])
+test_Xy_prep = model.prepare_data(test_Xy)
+
+# Fit the model
+model.fit(train_X_prep, train_y)
+
+# Predict y-channel values
+pred_y = model.predict_regression(test_Xy_prep, target_channels=[1])
 ```
 
 <!-- END quick-start -->

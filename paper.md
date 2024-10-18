@@ -39,7 +39,7 @@ The Adaptive Resonance Library (**artlib**) is a Python library that implements 
 range of Adaptive Resonance Theory (ART) algorithms. ART is a class of neural networks
 that is known for addressing the stability-plasticity dilemma, making it particularly
 effective for classification, clustering, and incremental learning tasks
-[@grossberg1976a, @grossberg1976a, @Grossberg1980HowDA, @grossberg2013adaptive,
+[@grossberg1976a; @grossberg1976a; @Grossberg1980HowDA; @grossberg2013adaptive;
 @da2019survey]. ART models are designed to dynamically learn and adapt to new patterns
 without catastrophic forgetting, making them suitable for real-time systems that require
 continuous learning.
@@ -78,8 +78,8 @@ computation via Python’s scientific stack (NumPy[@harris2020array], SciPy
 
 In particular, the modular nature of this library allows for the creation of
 never-before published compound ART models such as Dual Vigilance
-Fusion ART [@da2019dual, @tan2007intelligence] or Quadratic Neuron SMART
-[@su2001application, @su2005new, @bartfai1994hierarchical]. Such flexibility offers
+Fusion ART [@da2019dual; @tan2007intelligence] or Quadratic Neuron SMART
+[@su2001application; @su2005new; @bartfai1994hierarchical]. Such flexibility offers
 powerful experimental and time-saving advantages to researchers and practitioners when
 evaluating models on their data.
 

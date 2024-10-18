@@ -21,6 +21,7 @@ authors:
 affiliations:
  - name: Missouri University of Science and Technology, USA
    index: 1
+   ror: 00scwqd12
 - name: National Science Foundation (NSF), USA
    index: 2
  - name: Kummer Institute Center for Artificial Intelligence and Autonomous Systems

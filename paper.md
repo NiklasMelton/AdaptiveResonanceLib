@@ -1,6 +1,6 @@
 ---
-title: 'Adaptive Resonance Lib: A Python package for Adaptive Resonance Theory (ART)
-models'
+title: 'Adaptive Resonance Lib: A Python package for Adaptive Resonance Theory (ART) models'
+
 tags:
   - Python
   - clustering
@@ -8,101 +8,100 @@ tags:
   - regression
   - reinforcement learning
   - machine learning
+
 authors:
   - name: Niklas M. Melton
     orcid: 0000-0001-9625-7086
-    affiliation: "1" # (Multiple affiliations must be quoted)
+    affiliation: "1, 2"
+  - name: Dustin Tanksley
+    orcid: 0000-0002-1677-0304
+    affiliation: "1, 2"
   - name: Donald C. Wunsch II
     orcid: 0000-0002-9726-9051
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    affiliation: "1, 2, 3"
+
 affiliations:
  - name: Missouri University of Science and Technology, USA
    index: 1
- - name: Kummer Institute Center for Artificial Intelligence and Autonomous Systems (KICAIAS), USA
+- name: National Science Foundation (NSF), USA
    index: 2
+ - name: Kummer Institute Center for Artificial Intelligence and Autonomous Systems
+   (KICAIAS), USA
+   index: 3
+
 date: 18 October 2024
 bibliography: references.bib
 ---
 
 # Summary
 
-Adaptive Resonance Theory (ART)
+The Adaptive Resonance Library (**artlib**) is a Python library that implements a wide
+range of Adaptive Resonance Theory (ART) algorithms. ART is a class of neural networks
+that is known for addressing the stability-plasticity dilemma, making it particularly
+effective for classification, clustering, and incremental learning tasks
+[@grossberg1976a, @grossberg1976a, @Grossberg1980HowDA, @grossberg2013adaptive,
+@da2019survey]. ART models are designed to dynamically learn and adapt to new patterns
+without catastrophic forgetting, making them suitable for real-time systems that require
+continuous learning.
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+**artlib** supports a variety of ART-based models including but not limited to
+Fuzzy ART [@carpenter1991fuzzy], Hyperpshere ART [@anagnostopoulos2000hypersphere],
+Gaussian ART [@williamson1996gaussian], ARTMAP [@carpenter1991artmap],
+Fusion ART [@tan2007intelligence], and FALCON [@tan2004falcon]. These models
+can be applied to tasks like unsupervised clustering, supervised classification or
+regression, and reinforcement learning [@da2019survey]. This library provides an
+extensible and modular framework where users can integrate custom models or extend
+current implementations, which opens up opportunities for experimenting with existing
+and novel machine learning techniques.
+
+In addition to the zoo of ART models, we provide
+implementations of visualization methods for the various cluster geometries as well as
+pre-processing techniques such as Visual Assessment of Tendency (VAT)[@bezdek2002vat],
+data normalization, and complement coding.
 
 # Statement of need
 
-`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
+The Adaptive Resonance Library (**artlib**) is essential for researchers, developers,
+and educators interested in adaptive neural networks, specifically ART algorithms. While
+the field of machine learning has been dominated by architectures like deep learning,
+ART models offer unique advantages in incremental and real-time learning environments
+due to their ability to learn new data without forgetting previously learned
+information.
 
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+Currently, no comprehensive Python library exists that implements a variety of ART
+models in an open-source, modular, and extensible manner. **artlib* fills this gap by
+providing a range of ART implementations that are easy to integrate into various machine
+learning workflows such as scikit-learn Pipelines and GridSearchCV [@scikit-learn].
+The library is designed for ease of use and performance, offering users fast numerical
+computation via Python’s scientific stack (NumPy[@harris2020array], SciPy
+[@2020SciPy-NMeth], and scikit-learn [@scikit-learn]).
 
-# Mathematics
+In particular, the modular nature of this library allows for the creation of
+never-before published compound ART models such as Dual Vigilance
+Fusion ART [@da2019dual, @tan2007intelligence] or Quadratic Neuron SMART
+[@su2001application, @su2005new, @bartfai1994hierarchical]. Such flexibility offers
+powerful experimental and time-saving advantages to researchers and practitioners when
+evaluating models on their data.
 
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
+Additionally, the library is a valuable educational tool for students learning about
+neural networks and adaptive systems. With well-documented code and clear APIs, it
+supports hands-on experimentation with ART models, making it an excellent resource for
+academic courses or personal projects in artificial intelligence and machine learning.
 
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
+Furthermore, **artlib** is actively maintained and designed to support further
+extensions, allowing users to add new ART models, adjust parameters for specific use
+cases, and leverage ART for novel research problems. Its integration with popular Python
+libraries ensures that **artlib** remains adaptable and applicable to current machine
+learning challenges.
 
 # Acknowledgements
+This research was supported by the National Science Foundation (NSF) under Award
+Number 2420248. The project titled EAGER: Solving Representation Learning and
+Catastrophic Forgetting with Adaptive Resonance Theory provided essential funding for
+the completion of this work.
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+We would also like to thank Gail Carpenter and Stephen Grossberg for their
+feedback regarding this project and their immense contribution to machine learning by
+pioneering Adaptive Resonance Theory.
 
 # References

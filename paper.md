@@ -87,6 +87,12 @@ cases, and leverage ART for novel research problems. Its integration with popula
 libraries ensures that **artlib** remains adaptable and applicable to current machine
 learning challenges.
 
+# Target Audience
+
+# Comparison to Existing Implementations
+
+# Adaptive Resonance Theory (ART)
+
 # Acknowledgements
 This research was supported by the National Science Foundation (NSF) under Award
 Number 2420248. The project titled EAGER: Solving Representation Learning and

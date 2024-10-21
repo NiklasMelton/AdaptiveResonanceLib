@@ -29,9 +29,9 @@ bibliography: references.bib
 # Summary
 
 The Adaptive Resonance Library (**artlib**) is a Python library that implements a wide
-range of Adaptive Resonance Theory (ART) algorithms. **artlib** supports eight elementary
-ART modules and 11 compound ART modules, including Fuzzy ART [@carpenter1991fuzzy],
-Hypersphere ART [@anagnostopoulos2000hypersphere], Ellipsoid ART
+range of Adaptive Resonance Theory (ART) algorithms. **artlib** currently supports eight
+elementary ART models and 11 compound ART models, including Fuzzy ART
+[@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere], Ellipsoid ART
 [@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
 [@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron
 ART [@su2001application; @su2005new], ARTMAP [@carpenter1991artmap], Simplified
@@ -39,13 +39,13 @@ ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART
 [@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],
 BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],
 FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. These models can be
-applied to tasks like unsupervised clustering, supervised classification, regression,
+applied to tasks such as unsupervised clustering, supervised classification, regression,
 and reinforcement learning [@da2019survey]. This library provides an extensible and
 modular framework where users can integrate custom models or extend current
 implementations, allowing for experimentation with existing and novel machine learning
 techniques.
 
-In addition to the diverse ART models, **artlib** offers implementations of
+In addition to the diverse set of ART models, **artlib** offers implementations of
 visualization methods for various cluster geometries, along with pre-processing
 techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
 normalization, and complement coding.
@@ -73,7 +73,7 @@ This flexibility offers powerful experimental and time-saving benefits, allowing
 researchers and practitioners to evaluate models on diverse datasets efficiently.
 
 Additionally, the library serves as a valuable educational tool, providing
-well-documented code and clear APIs to support hands-on experimentation with ART
+well-documented code and familiar APIs to support hands-on experimentation with ART
 models. It is ideal for academic courses or personal projects in artificial
 intelligence and machine learning, making **artlib** a versatile resource.
 
@@ -103,14 +103,13 @@ Python libraries such as scikit-learn, NumPy, and SciPy. As a result, researcher
 developers working in Python-based environments face challenges when trying to
 incorporate ART models into their machine learning pipelines.
 
-**artlib** fills this gap by offering a comprehensive and modular collection of ART
-models, including both elementary and compound ART architectures. It is designed for
-interoperability with popular Python tools, enabling users to easily integrate ART
-models into machine learning workflows, optimize models using scikit-learn's
-`GridSearchCV`, and preprocess data using standard libraries. This flexibility and
-integration make **artlib** a powerful resource for both research and practical
-applications.
-
+**artlib** addresses these challenges by offering a comprehensive and modular
+collection of ART models, including both elementary and compound ART architectures.
+It is designed for interoperability with popular Python tools, enabling users to easily
+integrate ART models into machine learning workflows, optimize models using
+scikit-learn's `GridSearchCV`, and preprocess data using standard libraries. This
+flexibility and integration make **artlib** a powerful resource for both research and
+practical applications.
 
 # Adaptive Resonance Theory (ART)
 
@@ -137,8 +136,8 @@ and adaptive control systems. **artlib** aims to extend the application of these
 in modern machine learning pipelines, offering a unique and approachable toolkit for
 leveraging ART's strengths.
 
-
 # Acknowledgements
+
 This research was supported by the National Science Foundation (NSF) under Award
 Number 2420248. The project titled EAGER: Solving Representation Learning and
 Catastrophic Forgetting with Adaptive Resonance Theory provided essential funding for

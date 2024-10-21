@@ -1,16 +1,13 @@
-"""BARTMAP.
-
-Xu, R., & Wunsch II, D. C. (2011).
-BARTMAP: A viable structure for biclustering.
-Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
-
-Xu, R., Wunsch II, D. C., & Kim, S. (2012).
-Methods and systems for biclustering algorithm.
-U.S. Patent 9,043,326 Filed January 28, 2012,
-claiming priority to Provisional U.S. Patent Application,
-January 28, 2011, issued May 26, 2015.
-
-"""
+"""BARTMAP :cite:`xu2011bartmap`, :cite:`xu2012biclustering`."""
+# Xu, R., & Wunsch II, D. C. (2011).
+# BARTMAP: A viable structure for biclustering.
+# Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
+#
+# Xu, R., Wunsch II, D. C., & Kim, S. (2012).
+# Methods and systems for biclustering algorithm.
+# U.S. Patent 9,043,326 Filed January 28, 2012,
+# claiming priority to Provisional U.S. Patent Application,
+# January 28, 2011, issued May 26, 2015.
 
 import numpy as np
 from typing import Optional
@@ -25,16 +22,18 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
     """BARTMAP for Biclustering.
 
     This class implements BARTMAP as first published in:
-    Xu, R., & Wunsch II, D. C. (2011).
-    BARTMAP: A viable structure for biclustering.
-    Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
+    :cite:`xu2011bartmap`.
 
-    BARTMAP accepts two instantiated ART modules `module_a` and `module_b` which
-    cluster the rows (samples) and columns (features) respectively. The features
-    are clustered independently, but the samples are clustered by considering
-    samples already within a row cluster as well as the candidate sample and
-    enforcing a minimum correlation within the subset of features belonging to
-    at least one of the feature clusters.
+    .. # Xu, R., & Wunsch II, D. C. (2011).
+    .. # BARTMAP: A viable structure for biclustering.
+    .. # Neural Networks, 24, 709–716. doi:10.1016/j.neunet.2011.03.020.
+
+    BARTMAP accepts two instantiated :class:`~artlib.common.BaseART.BaseART` modules
+    `module_a` and `module_b` which cluster the rows (samples) and columns (features)
+    respectively. The features are clustered independently, but the samples are
+    clustered by considering samples already within a row cluster as well as the
+    candidate sample and enforcing a minimum correlation within the subset of
+    features belonging to at least one of the feature clusters.
 
     """
 

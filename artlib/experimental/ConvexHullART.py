@@ -143,6 +143,8 @@ class ConvexHullART(BaseART):
         ----------
         rho : float
             Vigilance parameter.
+        alpha : float
+            Choice parameter.
 
         """
         params = {"rho": rho, "alpha": alpha}
@@ -243,7 +245,7 @@ class ConvexHullART(BaseART):
         """
         assert cache is not None
         M = float(cache["new_area"]) / float(2*len(i))
-        # cache["match_criterion"] = M
+        cache["match_criterion"] = M
 
         return M, cache
 
@@ -295,73 +297,6 @@ class ConvexHullART(BaseART):
         """
         new_w = PseudoConvexHull(i.reshape((1, -1)))
         return new_w
-    #
-    # def merge_clusters(self):
-    #     """
-    #     Merge clusters based on certain conditions.
-    #
-    #     """
-    #
-    #     def can_merge(w1, w2):
-    #         combined_points = np.vstack(
-    #             [w1.points[w1.vertices, :], w2.points[w2.vertices, :]]
-    #         )
-    #
-    #         if isinstance(w1, PseudoConvexHull) and isinstance(
-    #             w2, PseudoConvexHull
-    #         ):
-    #             d = minimum_distance(w1.points, w2.points)
-    #             activation = 1.0 - d ** w1.points.shape[1]
-    #         else:
-    #             new_w = ConvexHull(combined_points)
-    #             if isinstance(w1, ConvexHull):
-    #                 a1 = w1.area / new_w.area
-    #             else:
-    #                 a1 = np.nan
-    #             if isinstance(w2, ConvexHull):
-    #                 a2 = w2.area / new_w.area
-    #             else:
-    #                 a2 = np.nan
-    #             activation = np.max([a1, a2])
-    #
-    #         if activation > self.params["merge_rho"]:
-    #             return True
-    #         else:
-    #             return False
-    #
-    #     merges = merge_objects(self.W, can_merge)
-    #
-    #     new_W = []
-    #     new_sample_counter = []
-    #     new_labels = np.copy(self.labels_)
-    #     for i in range(len(merges)):
-    #         new_labels[np.isin(self.labels_, merges[i])] = i
-    #         new_sample_counter.append(
-    #             sum(self.weight_sample_counter_[j] for j in merges[i])
-    #         )
-    #         if len(merges[i]) > 1:
-    #             new_points = np.vstack([self.W[j].points for j in merges[i]])
-    #             if new_points.shape[0] > 2:
-    #                 new_W.append(ConvexHull(new_points, incremental=True))
-    #             else:
-    #                 new_W.append(PseudoConvexHull(new_points))
-    #         else:
-    #             new_W.append(self.W[merges[i][0]])
-    #     self.W = new_W
-    #     self.weight_sample_counter_ = new_sample_counter
-    #     self.labels_ = new_labels
-    #
-    # def post_fit(self, X: np.ndarray):
-    #     """
-    #     Function called after fit. Useful for cluster pruning.
-    #
-    #     Parameters
-    #     ----------
-    #     X : np.ndarray
-    #         Data set.
-    #
-    #     """
-    #     self.merge_clusters()
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """

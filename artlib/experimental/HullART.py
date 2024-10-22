@@ -3,12 +3,14 @@ from matplotlib.axes import Axes
 from copy import deepcopy
 from typing import Optional, Iterable, List, Tuple, Union, Dict
 from scipy.spatial import ConvexHull
+from shapely import Polygon
+from alphashape import alphashape
 
 from artlib.common.BaseART import BaseART
 from artlib.experimental.merging import merge_objects
 
 
-def plot_convex_polygon(
+def plot_polygon(
     vertices: np.ndarray,
     ax: Axes,
     line_color: str = "b",
@@ -91,17 +93,13 @@ class PseudoConvexHull:
         else:
             return 2*np.linalg.norm(self.points[0,:]-self.points[1,:],ord=2)
 
-
-HullTypes = Union[ConvexHull, PseudoConvexHull]
-
-
-def centroid_of_convex_hull(hull: HullTypes):
+def centroid_of_convex_hull(hull: Union[PseudoConvexHull, ConvexHull]):
     """
     Finds the centroid of the volume of a convex hull in n-dimensional space.
 
     Parameters
     ----------
-    hull : HullTypes
+    hull : Union[PseudoConvexHull, ConvexHull]
         A ConvexHull or PseudoConvexHull object.
 
     Returns
@@ -129,15 +127,98 @@ def centroid_of_convex_hull(hull: HullTypes):
     centroid /= total_volume
     return centroid
 
+class GeneralHull:
+    def __init__(self, points: np.ndarray, alpha: float = 0.0):
+        self.dim = points.shape[1]
+        self.alpha = alpha
+        if points.shape[0] <= 2:
+            self.hull = PseudoConvexHull(points)
+        elif points.shape[0] == 3 or alpha == 0.0:
+            self.hull = ConvexHull(points, incremental=True)
+        else:
+            self.hull = alphashape(points, alpha=self.alpha)
 
-class ConvexHullART(BaseART):
+    def add_points(self, points: np.ndarray):
+        if isinstance(self.hull, PseudoConvexHull):
+            if self.hull.points.shape[0] == 1:
+                self.hull.add_points(points.reshape((-1, self.dim)))
+            else:
+                new_points = np.vstack(
+                    [
+                        self.hull.points[self.hull.vertices, :],
+                        points.reshape((-1, self.dim))
+                    ]
+                )
+                self.hull = ConvexHull(new_points, incremental=True)
+        elif isinstance(self.hull, ConvexHull) and self.alpha == 0.0:
+            self.hull.add_points(i.reshape((-1, self.dim)))
+        else:
+            if isinstance(self.hull, ConvexHull):
+                new_points = np.vstack(
+                    [
+                        self.hull.points[self.hull.vertices, :],
+                        points.reshape((-1, self.dim))
+                    ]
+                )
+                self.hull = alphashape(new_points, alpha=self.alpha)
+            else:
+                new_points = np.vstack(
+                    [
+                        np.asarray(self.hull.exterior.coords),
+                        points.reshape((-1, self.dim))
+                    ]
+                )
+                self.hull = alphashape(new_points, alpha=self.alpha)
+
+    @property
+    def area(self):
+        if isinstance(self.hull, (PseudoConvexHull, ConvexHull)) or self.dim > 2:
+            return self.hull.area
+        else:
+            return self.hull.length
+
+    @property
+    def centroid(self):
+        if isinstance(self.hull, (PseudoConvexHull, ConvexHull)):
+            return centroid_of_convex_hull(self.hull)
+        else:
+            return self.hull.centroid
+
+    @property
+    def is_empty(self):
+        if isinstance(self.hull, (PseudoConvexHull, ConvexHull)):
+            return False
+        else:
+            return self.hull.is_empty
+
+    @property
+    def vertices(self):
+        if isinstance(self.hull, ConvexHull):
+            return self.hull.points[self.hull.vertices, :]
+        elif isinstance(self.hull, Polygon):
+            return np.asarray(self.hull.exterior.coords)
+        else:
+            return self.hull.points
+
+    def deepcopy(self):
+        if isinstance(self.hull, Polygon):
+            points = np.asarray(self.hull.exterior.coords)
+            return GeneralHull(points, alpha=float(self.alpha))
+        elif isinstance(self.hull, ConvexHull):
+            points = self.hull.points[self.hull.vertices, :]
+            return GeneralHull(points, alpha=float(self.alpha))
+        else:
+            return deepcopy(self)
+
+
+class HullART(BaseART):
     """
-    ConvexHull ART for Clustering
+    Hull ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float):
+    def __init__(self, rho: float, alpha: float, alpha_hat: float):
         """
-        Initializes the ConvexHullART object.
+        Initializes the HullART object.
 
         Parameters
         ----------
@@ -145,9 +226,11 @@ class ConvexHullART(BaseART):
             Vigilance parameter.
         alpha : float
             Choice parameter.
+        alpha_hat : float
+            alpha shape parameter.
 
         """
-        params = {"rho": rho, "alpha": alpha}
+        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat}
         super().__init__(params)
 
     @staticmethod
@@ -167,9 +250,12 @@ class ConvexHullART(BaseART):
         assert "alpha" in params
         assert params["alpha"] >= 0.0
         assert isinstance(params["alpha"], float)
+        assert "alpha_hat" in params
+        assert params["alpha_hat"] >= 0.0
+        assert isinstance(params["alpha_hat"], float)
 
     def category_choice(
-        self, i: np.ndarray, w: HullTypes, params: dict
+        self, i: np.ndarray, w: GeneralHull, params: dict
     ) -> tuple[float, Optional[dict]]:
         """
         Get the activation of the cluster.
@@ -178,7 +264,7 @@ class ConvexHullART(BaseART):
         ----------
         i : np.ndarray
             Data sample.
-        w : HullTypes
+        w : GeneralHull
             Cluster weight or information.
         params : dict
             Dictionary containing parameters for the algorithm.
@@ -192,32 +278,25 @@ class ConvexHullART(BaseART):
 
         """
 
-        if isinstance(w, PseudoConvexHull):
-
-            if w.points.shape[0] == 1:
-                new_w = deepcopy(w)
-                new_w.add_points(i.reshape((1, -1)))
-            else:
-                new_points = np.vstack(
-                    [w.points[w.vertices, :], i.reshape((1, -1))]
-                )
-                new_w = ConvexHull(new_points, incremental=True)
-        else:
-            new_w = ConvexHull(w.points[w.vertices, :], incremental=True)
-            new_w.add_points(i.reshape((1, -1)))
+        new_w = w.deepcopy()
+        new_w.add_points(i.reshape((1,-1)))
+        if new_w.is_empty:
+            raise RuntimeError(
+                f"alpha_hat={params['alpha_hat']} results in invalid geometry"
+            )
 
         a_max = float(2*len(i))
         new_area = a_max - new_w.area
         activation = new_area / (a_max-w.area + params["alpha"])
 
-        cache = {"new_w": new_w, "new_area": new_area}
+        cache = {"new_w": new_w, "new_area": new_area, "activation": activation}
 
         return activation, cache
 
     def match_criterion(
         self,
         i: np.ndarray,
-        w: HullTypes,
+        w: GeneralHull,
         params: dict,
         cache: Optional[dict] = None,
     ) -> Tuple[float, Optional[Dict]]:
@@ -228,7 +307,7 @@ class ConvexHullART(BaseART):
         ----------
         i : np.ndarray
             Data sample.
-        w : HullTypes
+        w : GeneralHull
             Cluster weight or information.
         params : dict
             Dictionary containing parameters for the algorithm.
@@ -252,10 +331,10 @@ class ConvexHullART(BaseART):
     def update(
         self,
         i: np.ndarray,
-        w: HullTypes,
+        w: GeneralHull,
         params: dict,
         cache: Optional[dict] = None,
-    ) -> HullTypes:
+    ) -> GeneralHull:
         """
         Get the updated cluster weight.
 
@@ -263,7 +342,7 @@ class ConvexHullART(BaseART):
         ----------
         i : np.ndarray
             Data sample.
-        w : HullTypes
+        w : GeneralHull
             Cluster weight or information.
         params : dict
             Dictionary containing parameters for the algorithm.
@@ -272,13 +351,13 @@ class ConvexHullART(BaseART):
 
         Returns
         -------
-        HullTypes
+        GeneralHull
             Updated cluster weight.
 
         """
         return cache["new_w"]
 
-    def new_weight(self, i: np.ndarray, params: dict) -> HullTypes:
+    def new_weight(self, i: np.ndarray, params: dict) -> GeneralHull:
         """
         Generate a new cluster weight.
 
@@ -291,11 +370,11 @@ class ConvexHullART(BaseART):
 
         Returns
         -------
-        HullTypes
+        GeneralHull
             New cluster weight.
 
         """
-        new_w = PseudoConvexHull(i.reshape((1, -1)))
+        new_w = GeneralHull(i.reshape((1, -1)), alpha=params["alpha_hat"])
         return new_w
 
     def get_cluster_centers(self) -> List[np.ndarray]:
@@ -310,7 +389,7 @@ class ConvexHullART(BaseART):
         """
         centers = []
         for w in self.W:
-            centers.append(centroid_of_convex_hull(w))
+            centers.append(w.centroid)
         return centers
 
     def plot_cluster_bounds(
@@ -330,10 +409,8 @@ class ConvexHullART(BaseART):
 
         """
         for c, w in zip(colors, self.W):
-            if isinstance(w, ConvexHull):
-                vertices = w.points[w.vertices, :2]
-            else:
-                vertices = w.points[:, :2]
-            plot_convex_polygon(
+            vertices = w.vertices[:,:2]
+
+            plot_polygon(
                 vertices, ax, line_width=linewidth, line_color=c
             )

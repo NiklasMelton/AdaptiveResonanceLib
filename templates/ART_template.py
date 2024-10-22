@@ -18,7 +18,7 @@ class MyART(BaseART):
     """Generic Template for custom ART modules."""
 
     def __init__(self, rho: float):
-        """Initializes the ConvexHullART object.
+        """Initializes the ART object.
 
         Parameters
         ----------

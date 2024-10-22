@@ -12,10 +12,10 @@ Module contents
 Submodules
 ----------
 
-artlib.experimental.ConvexHullART module
+artlib.experimental.HullART module
 ----------------------------------------
 
-.. automodule:: artlib.experimental.ConvexHullART
+.. automodule:: artlib.experimental.HullART
    :members:
    :undoc-members:
    :show-inheritance:

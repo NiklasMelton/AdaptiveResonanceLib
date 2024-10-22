@@ -2,8 +2,8 @@ from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 import numpy as np
 
-from artlib.experimental.ConvexHullART import ConvexHullART, plot_convex_polygon
-from scipy.spatial import ConvexHull
+from artlib.experimental.HullART import HullART, plot_polygon
+from alphashape import alphashape
 
 
 def cluster_blobs():
@@ -16,8 +16,8 @@ def cluster_blobs():
     )
     print("Data has shape:", data.shape)
 
-    params = {"rho": 0.6, "alpha": 1e-3}
-    cls = ConvexHullART(**params)
+    params = {"rho": 0.6, "alpha": 1e-3, "alpha_hat": 1.0}
+    cls = HullART(**params)
 
     X = cls.prepare_data(data)
     print("Prepared data has shape:", X.shape)
@@ -29,6 +29,13 @@ def cluster_blobs():
     cls.visualize(X, y)
     plt.show()
 
+def test():
+    points = np.array(
+        [(0.0, 0.0), (0.0, 1.0), (1.0,1.0), (1.0, 0.0)]
+    )
+    x = alphashape(points, alpha=1.0)
+    print(x.length)
 
 if __name__ == "__main__":
     cluster_blobs()
+    # test()

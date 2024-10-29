@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Optional, Iterable, List, Tuple, Union, Dict
 
 from artlib.experimental.alphashape import AlphaShape
+from artlib.experimental.merging import merge_objects
 from artlib.common.BaseART import BaseART
 
 
@@ -47,7 +48,7 @@ class HullART(BaseART):
     Hull ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float, alpha_hat: float):
+    def __init__(self, rho: float, alpha: float, alpha_hat: float, min_lambda: float):
         """
         Initializes the HullART object.
 
@@ -59,9 +60,10 @@ class HullART(BaseART):
             Choice parameter.
         alpha_hat : float
             alpha shape parameter.
-
+        lambda : float
+            minimum volume.
         """
-        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat}
+        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat, "lambda": min_lambda}
         super().__init__(params)
 
     @staticmethod
@@ -84,6 +86,9 @@ class HullART(BaseART):
         assert "alpha_hat" in params
         assert params["alpha_hat"] >= 0.0
         assert isinstance(params["alpha_hat"], float)
+        assert "lambda" in params
+        assert params["lambda"] >= 0.0
+        assert isinstance(params["lambda"], float)
 
     def category_choice(
         self, i: np.ndarray, w: AlphaShape, params: dict
@@ -110,16 +115,16 @@ class HullART(BaseART):
         """
 
         new_w = deepcopy(w)
-        new_w.add_points(i.reshape((1,-1)))
-        if new_w.is_empty:
+        new_w.add_points(i.reshape((1, -1)))
+        if new_w.is_empty or not new_w.contains_point(i.reshape((1, -1))):
             activation = np.nan
             new_area = 0
         else:
             # a_max = float(2*len(i))
             # new_area = a_max - new_w.surface_area
             # activation = new_area / (a_max-w.surface_area + params["alpha"])
-            new_area = 1. - new_w.volume
-            activation = new_area / (1. - w.volume + params["alpha"])
+            new_area = 1. - max(new_w.volume, params["lambda"]**len(i))
+            activation = new_area / (1. - max(w.volume, params["lambda"]**len(i)) + params["alpha"])
 
         cache = {"new_w": new_w, "new_area": new_area, "activation": activation}
 
@@ -247,3 +252,19 @@ class HullART(BaseART):
             plot_polygon(
                 vertices, ax, line_width=linewidth, line_color=c
             )
+
+    # def post_fit(self, X: np.ndarray):
+    #     can_merge = lambda A, B: A.overlaps_with(B)
+    #     merges = merge_objects(self.W, can_merge)
+    #     new_W = []
+    #     new_labels = np.zeros_like(self.labels_)
+    #     for i, items in enumerate(merges):
+    #         points = np.vstack([self.W[item].perimeter_points for item in items])
+    #         new_W.append(AlphaShape(points, self.W[items[0]].alpha))
+    #         for item in items:
+    #             new_labels[self.labels_ == item] = i
+    #
+    #     self.W = new_W
+    #     self.labels_ = new_labels
+
+

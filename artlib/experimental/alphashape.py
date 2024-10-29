@@ -148,6 +148,7 @@ def build_linked_list(pairs):
 
     # Build the linked list by following the chain
     while pairs_set:
+        old = int(result[-1])
         for a, b in pairs_set:
             if result[-1] == a:
                 pairs_set.remove((a,b))
@@ -160,6 +161,14 @@ def build_linked_list(pairs):
                     result.append(a)
                 break
 
+        if result[-1] == old and pairs_set:
+            from collections import Counter
+            print("input", pairs)
+            print("result",result)
+            print("pairs", pairs_set)
+            print("counts", Counter([i for p in pairs for i in p]))
+            result.insert(result[-1],0)
+            raise RuntimeError("cannot build linked list")
     return result
 
 class AlphaShape:
@@ -213,9 +222,12 @@ class AlphaShape:
                 radius_filter = 1.0 / alpha
             else:
                 radius_filter = np.inf
-            for point_indices, circumradius, simplex_coords in alphasimplices(points):
+            alpha_simplices = list(alphasimplices(points))
+            alpha_simplices.sort(key=lambda x: x[1])
+            visited_points = set()
+            for point_indices, circumradius, simplex_coords in alpha_simplices:
                 # Radius filter
-                if circumradius < radius_filter:
+                if circumradius < radius_filter or not all(p in visited_points for p in point_indices):
                     for edge in itertools.combinations(
                             point_indices, r=points.shape[-1]):
                         edge = tuple(sorted(edge))
@@ -230,6 +242,7 @@ class AlphaShape:
                                 tuple(sorted(e))
                                 for e in itertools.combinations(edge, r=len(edge))
                             )
+                    visited_points.update(tuple(point_indices))
                     simplices.add(tuple(point_indices))
                     simplex_centroid = np.mean(simplex_coords, axis=0)
                     simplex_volume = volume_of_simplex(simplex_coords)
@@ -274,3 +287,68 @@ class AlphaShape:
     @property
     def vertices(self):
         return self.perimeter_points
+
+    def contains_point(self, point: np.ndarray):
+        if len(self.perimeter_points) < 3:
+            return True
+        delaunay = Delaunay(self.perimeter_points)
+        return delaunay.find_simplex(point) >= 0
+
+    @property
+    def simplices(self) -> List[np.ndarray]:
+        """
+        Generate the Delaunay simplices for the perimeter points of this AlphaShape.
+
+        Returns:
+            List[np.ndarray]: List of simplices, where each simplex is an array of points.
+        """
+        delaunay = Delaunay(self.perimeter_points)
+        return [self.perimeter_points[simplex] for simplex in delaunay.simplices]
+
+    @staticmethod
+    def simplex_intersects(simplex_a: np.ndarray, simplex_b: np.ndarray) -> bool:
+        """
+        Check if two simplices intersect by testing if any vertex of one simplex
+        is within the other.
+
+        Args:
+            simplex_a (np.ndarray): A simplex represented by an array of points.
+            simplex_b (np.ndarray): Another simplex represented by an array of points.
+
+        Returns:
+            bool: True if the simplices intersect, False otherwise.
+        """
+        delaunay_a = Delaunay(simplex_a)
+        delaunay_b = Delaunay(simplex_b)
+
+        # Check if any vertex of simplex_a is inside simplex_b
+        if any(delaunay_b.find_simplex(vertex) >= 0 for vertex in simplex_a):
+            return True
+
+        # Check if any vertex of simplex_b is inside simplex_a
+        if any(delaunay_a.find_simplex(vertex) >= 0 for vertex in simplex_b):
+            return True
+
+        return False
+
+
+    def overlaps_with(self, other: 'AlphaShape') -> bool:
+        """
+        Check if this AlphaShape overlaps with another AlphaShape by examining simplex intersections.
+
+        Args:
+            other (AlphaShape): Another AlphaShape object.
+
+        Returns:
+            bool: True if the shapes overlap, False otherwise.
+        """
+        # Get simplices for both AlphaShapes
+        simplices_self = self.simplices
+        simplices_other = other.simplices
+
+        # Check if any simplex in self intersects with any simplex in other
+        for simplex_a in simplices_self:
+            for simplex_b in simplices_other:
+                if self.simplex_intersects(simplex_a, simplex_b):
+                    return True
+        return False

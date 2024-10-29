@@ -684,6 +684,10 @@ class BaseART(BaseEstimator, ClusterMixin):
             Figure axes.
         colors : IndexableOrKeyable, optional
             Colors to use for each cluster.
+        n_cluster_estimate : int, default=20
+            estimate of number of clusters. Used for coloring plot.
+        fps : int, default=5
+            gif frames per second
         **kwargs : dict
             see :func: `artlib.common.BaseART.visualize`
 

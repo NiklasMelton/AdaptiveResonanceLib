@@ -8,8 +8,8 @@ from artlib.experimental.merging import merge_objects
 from artlib.common.BaseART import BaseART
 
 
-def plot_polygon(
-    vertices: np.ndarray,
+def plot_polygon_edges(
+    edges: np.ndarray,
     ax: Axes,
     line_color: str = "b",
     line_width: float = 1.0,
@@ -20,7 +20,7 @@ def plot_polygon(
     Parameters
     ----------
     vertices : np.ndarray
-        A list of vertices representing a convex polygon.
+        A list of edges representing a polygon.
     ax : matplotlib.axes.Axes
         A matplotlib Axes object to plot on.
     line_color : str, optional
@@ -29,17 +29,16 @@ def plot_polygon(
         The width of the polygon lines, by default 1.0.
 
     """
-    vertices = np.array(vertices)
-    # Close the polygon by appending the first vertex at the end
-    vertices = np.vstack([vertices, vertices[0]])
-
-    ax.plot(
-        vertices[:, 0],
-        vertices[:, 1],
-        linestyle="-",
-        color=line_color,
-        linewidth=line_width,
-    )
+    for p1, p2 in edges:
+        x = [p1[0], p2[0]]
+        y = [p1[1], p2[1]]
+        ax.plot(
+            x,
+            y,
+            linestyle="-",
+            color=line_color,
+            linewidth=line_width,
+        )
 
 
 
@@ -247,10 +246,10 @@ class HullART(BaseART):
 
         """
         for c, w in zip(colors, self.W):
-            vertices = w.vertices[:,:2]
+            edges = [(e1[:2], e2[:2]) for e1, e2 in w.perimeter_edges]
 
-            plot_polygon(
-                vertices, ax, line_width=linewidth, line_color=c
+            plot_polygon_edges(
+                edges, ax, line_width=linewidth, line_color=c
             )
 
     # def post_fit(self, X: np.ndarray):

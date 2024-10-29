@@ -3,6 +3,8 @@ import logging
 from scipy.spatial import Delaunay
 import numpy as np
 from typing import Union, Tuple, List
+from collections import defaultdict
+
 def circumcenter(points: np.ndarray) -> np.ndarray:
     """
     Calculate the circumcenter of a set of points in barycentric coordinates.
@@ -140,36 +142,51 @@ def compute_surface_area(points, perimeter_edges, simplices):
 
     return total_area
 
-def build_linked_list(pairs):
-    pairs_set = set(tuple(sorted(edge)) for edge in pairs)
+def build_linked_list(edges):
+    # Step 1: Create adjacency list
+    edges = [tuple(sorted(edge)) for edge in edges]
+    graph = defaultdict(list)
+    for u, v in edges:
+        graph[u].append(v)
+        graph[v].append(u)
 
-    # Find the starting point: an element that does not have a predecessor
-    result = list(pairs_set.pop())
+    # Step 2: Initialize path and visited set for edges
+    visited_edges = set()
+    path = []
 
-    # Build the linked list by following the chain
-    while pairs_set:
-        old = int(result[-1])
-        for a, b in pairs_set:
-            if result[-1] == a:
-                pairs_set.remove((a,b))
-                if b != result[0]:
-                    result.append(b)
-                break
-            elif result[-1] == b:
-                pairs_set.remove((a, b))
-                if a != result[0]:
-                    result.append(a)
-                break
+    def dfs(node, start, path):
+        # Add the node to the current path
+        path.append(node)
 
-        if result[-1] == old and pairs_set:
-            from collections import Counter
-            print("input", pairs)
-            print("result",result)
-            print("pairs", pairs_set)
-            print("counts", Counter([i for p in pairs for i in p]))
-            result.insert(result[-1],0)
-            raise RuntimeError("cannot build linked list")
-    return result
+        # If we form a cycle that returns to the start and covers all edges
+        if len(path) > 1 and node == start and len(visited_edges) == len(edges):
+            return path
+
+        # Explore neighbors
+        for neighbor in graph[node]:
+            edge = tuple(sorted((node, neighbor)))
+            # Only continue if the edge hasn't been visited
+            if edge not in visited_edges:
+                visited_edges.add(edge)
+                result = dfs(neighbor, start, path)
+                if result:
+                    return result  # Stop if a valid cycle is found
+                # Backtrack
+                visited_edges.remove(edge)
+
+        # If no valid path found, backtrack by removing the node from the path
+        path.pop()
+        return None
+
+    # Start DFS from any node in the graph
+    start_node = edges[0][0]
+    cycle = dfs(start_node, start_node, path)
+
+    if cycle:
+        return cycle[:-1]
+    else:
+        raise RuntimeError("Cannot build a minimal cycle with the given edges")
+
 
 class AlphaShape:
 
@@ -207,8 +224,10 @@ class AlphaShape:
             self.volume = 0
             if len(points) < 2:
                 self.surface_area = 0
+                self.perimeter_edges = []
             else:
                 self.surface_area = 2*np.linalg.norm(points[0,:]-points[1,:], ord=2)
+                self.perimeter_edges = [(points[0,:], points[1,:])]
 
         else:
             # Whenever a simplex is found that passes the radius filter, its edges
@@ -249,21 +268,18 @@ class AlphaShape:
                     self.volume += simplex_volume
                     self.centroid += simplex_centroid * simplex_volume
 
+            self.perimeter_edges = [
+                (points[p1,:], points[p2,:]) for p1, p2 in perimeter_edges
+            ]
             if len(edges) > 0:
                 self.centroid /= self.volume
 
-                if points.shape[-1] == 2:
-                    # ensure we can plot this in 2D
-                    perimeter_indices = build_linked_list(perimeter_edges)
-                    self.perimeter_points = np.vstack(
-                        [points[p, :] for p in perimeter_indices]
-                    )
-                else:
-                    perimeter_indices = set(p for e in perimeter_edges for p in e)
-                    self.perimeter_points = np.vstack(
-                        [points[p, :] for p in perimeter_indices]
-                    )
+                perimeter_indices = set(p for e in perimeter_edges for p in e)
+                self.perimeter_points = np.vstack(
+                    [points[p, :] for p in perimeter_indices]
+                )
                 self.surface_area = compute_surface_area(points, perimeter_edges, simplices)
+
 
     def add_points(self, points: np.ndarray):
         """

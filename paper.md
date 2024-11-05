@@ -34,7 +34,8 @@ elementary ART models and 11 compound ART models, including Fuzzy ART
 [@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere], Ellipsoid ART
 [@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
 [@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron
-ART [@su2001application; @su2005new], ARTMAP [@carpenter1991artmap], Simplified
+ART [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
+[@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified
 ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART
 [@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],
 BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],
@@ -95,7 +96,8 @@ Fuzzy ART, TopoART, ART1, and ARTMAP models, but they lack the flexibility and
 modularity required for broader experimentation. The most significant existing ART
 implementation exists in julia and provides just five models
 [@Petrenko_AdaptiveResonance_jl_A_Julia_2022] but, like the previously listed
-MATLAB-based toolboxes, it is not easily accessible to Python-based work flows.
+MATLAB-based toolboxes, it is not easily accessible to Python-based work flows and
+lacks a modular design.
 
 These existing implementations of ART models may provide standalone versions of
 individual models, but they are often not designed to integrate seamlessly with modern
@@ -103,13 +105,17 @@ Python libraries such as scikit-learn, NumPy, and SciPy. As a result, researcher
 developers working in Python-based environments face challenges when trying to
 incorporate ART models into their machine learning pipelines.
 
-**artlib** addresses these challenges by offering a comprehensive and modular
-collection of ART models, including both elementary and compound ART architectures.
-It is designed for interoperability with popular Python tools, enabling users to easily
-integrate ART models into machine learning workflows, optimize models using
-scikit-learn's `GridSearchCV`, and preprocess data using standard libraries. This
-flexibility and integration make **artlib** a powerful resource for both research and
-practical applications.
+In contrast, **artlib** offers a comprehensive and modular collection of ART models,
+including both elementary and compound ART architectures. It is designed for
+interoperability with popular Python tools, enabling users to easily integrate ART
+models into machine learning workflows, optimize models using scikit-learn's
+`GridSearchCV`, and preprocess data using standard libraries. Further, **artlib**
+provides users the flexibility to construct their own compound ART modules (those
+art modules deriving properties from other, elementary modules) which
+may or may not exist in published literature. **artlib** also provides a template
+in the source code to encourage users to develop and experiment with their own custom
+ART algorithms. This flexibility and integration make **artlib** a powerful resource
+for both research and practical applications.
 
 # Adaptive Resonance Theory (ART)
 
@@ -122,13 +128,13 @@ real-time systems requiring continuous learning.
 
 Over the years, dozens of ART variations have been published [@da2019survey],
 extending the applicability of ART to nearly all learning regimes, including
-reinforcement learning [@tan2004falcon; @tan2008integrating], hierarchical and
-topological clustering [@tscherepanow2010topoart; @bartfai1994hierarchical], and
-biclustering [@xu2011bartmap; @xu2012biclustering]. These numerous models provide an
-ART-based solution for most machine learning use cases. However, the rapid development
-of bespoke models and the difficulty in understanding the core principles of ART
-have resulted in a lack of open-source and approachable implementations of most
-ART variants.
+reinforcement learning [@tan2004falcon; @tan2008integrating], hierarchical
+clustering [@bartfai1994hierarchical], topological clustering
+[@tscherepanow2010topoart], and biclustering [@xu2011bartmap; @xu2012biclustering].
+These numerous models provide an ART-based solution for most machine learning use cases.
+However, the rapid pace of bespoke model development, coupled with the challenges
+students face in learning ART's foundational principles, has contributed to a
+scarcity of open-source, user-friendly implementations for most ART variants.
 
 The ability of ART to preserve previously learned patterns while learning new data in
 real-time has made it a powerful tool in domains such as robotics, medical diagnosis,

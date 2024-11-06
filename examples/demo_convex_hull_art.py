@@ -93,7 +93,7 @@ def cluster_moons():
     X = cls.prepare_data(data)
     print("Prepared data has shape:", X.shape)
 
-    cls = cls.fit(X, verbose=True)
+    cls = cls.fit_gif(X, filename="fit_gif_HullART.gif", n_cluster_estimate=10, verbose=True)
     y = cls.labels_
     print(np.unique(y))
 

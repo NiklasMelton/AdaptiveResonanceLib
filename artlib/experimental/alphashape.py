@@ -281,6 +281,17 @@ class AlphaShape:
                 self.surface_area = compute_surface_area(points, perimeter_edges, simplices)
 
 
+    @property
+    def max_edge_length(self):
+        if self.perimeter_edges:
+            edge_lengths = [np.linalg.norm(a-b,ord=2) for a,b in self.perimeter_edges]
+            return max(edge_lengths)
+        else:
+            return 0
+
+
+
+
     def add_points(self, points: np.ndarray):
         """
         Adds a new point to the alpha shape and updates the perimeter points, volume,

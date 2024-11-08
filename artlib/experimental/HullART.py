@@ -47,7 +47,7 @@ class HullART(BaseART):
     Hull ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float, alpha_hat: float, min_lambda: float):
+    def __init__(self, rho: float, alpha: float, alpha_hat: float, min_lambda: float, rho_lambda: float):
         """
         Initializes the HullART object.
 
@@ -62,7 +62,7 @@ class HullART(BaseART):
         lambda : float
             minimum volume.
         """
-        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat, "lambda": min_lambda}
+        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat, "lambda": min_lambda, "rho_lambda": rho_lambda}
         super().__init__(params)
 
     @staticmethod
@@ -79,6 +79,9 @@ class HullART(BaseART):
         assert "rho" in params
         assert params["rho"] >= 0.0
         assert isinstance(params["rho"], float)
+        assert "rho_lambda" in params
+        assert params["rho_lambda"] >= 0.0
+        assert isinstance(params["rho_lambda"], float)
         assert "alpha" in params
         assert params["alpha"] >= 0.0
         assert isinstance(params["alpha"], float)
@@ -159,7 +162,7 @@ class HullART(BaseART):
 
         """
         assert cache is not None
-        M = float(cache["new_area"])
+        M = float(cache["new_area"]) * float(cache["new_w"].max_edge_length <= params["rho_lambda"])
         # M = float(cache["new_area"]) / float(2*len(i))
         cache["match_criterion"] = M
 

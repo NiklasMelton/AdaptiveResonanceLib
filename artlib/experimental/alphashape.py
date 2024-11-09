@@ -2,7 +2,8 @@ import itertools
 import logging
 from scipy.spatial import Delaunay
 import numpy as np
-from typing import Union, Tuple, List
+import math
+from typing import Union, Tuple, List, Set
 from collections import defaultdict
 
 def circumcenter(points: np.ndarray) -> np.ndarray:
@@ -87,7 +88,7 @@ def volume_of_simplex(vertices: np.ndarray) -> float:
     return np.abs(np.linalg.det(matrix)) / np.math.factorial(len(vertices) - 1)
 
 
-def get_perimeter_simplices(perimeter_edges, simplices, n):
+def get_perimeter_simplices(perimeter_edges: Set[Tuple], simplices: Set[Tuple], n: int):
 
     perimeter_edges_set = set(tuple(sorted(edge)) for edge in perimeter_edges)
 
@@ -109,7 +110,7 @@ def get_perimeter_simplices(perimeter_edges, simplices, n):
     return perimeter_simplices
 
 
-def compute_surface_area(points, perimeter_edges, simplices):
+def compute_surface_area(points: np.ndarray, perimeter_edges: Set[Tuple], simplices: Set[Tuple]):
     """
     Compute the surface area (or perimeter in 2D) of the polytope formed by the perimeter edges.
 
@@ -142,50 +143,14 @@ def compute_surface_area(points, perimeter_edges, simplices):
 
     return total_area
 
-def build_linked_list(edges):
-    # Step 1: Create adjacency list
-    edges = [tuple(sorted(edge)) for edge in edges]
-    graph = defaultdict(list)
-    for u, v in edges:
-        graph[u].append(v)
-        graph[v].append(u)
 
-    # Step 2: Initialize path and visited set for edges
-    visited_edges = set()
-    path = []
+def equalateral_simplex_volume(n: int, s: float):
+    numerator = s ** n
+    denominator = math.factorial(n)
+    sqrt_term = math.sqrt((n + 1) / (2 ** n))
+    volume = (numerator / denominator) * sqrt_term
+    return volume
 
-    def dfs(node, start, path):
-        # Add the node to the current path
-        path.append(node)
-
-        # If we form a cycle that returns to the start and covers all edges
-        if len(path) > 1 and node == start and len(visited_edges) == len(edges):
-            return path
-
-        # Explore neighbors
-        for neighbor in graph[node]:
-            edge = tuple(sorted((node, neighbor)))
-            # Only continue if the edge hasn't been visited
-            if edge not in visited_edges:
-                visited_edges.add(edge)
-                result = dfs(neighbor, start, path)
-                if result:
-                    return result  # Stop if a valid cycle is found
-                # Backtrack
-                visited_edges.remove(edge)
-
-        # If no valid path found, backtrack by removing the node from the path
-        path.pop()
-        return None
-
-    # Start DFS from any node in the graph
-    start_node = edges[0][0]
-    cycle = dfs(start_node, start_node, path)
-
-    if cycle:
-        return cycle[:-1]
-    else:
-        raise RuntimeError("Cannot build a minimal cycle with the given edges")
 
 
 class AlphaShape:
@@ -318,67 +283,67 @@ class AlphaShape:
     def vertices(self):
         return self.perimeter_points
 
-    def contains_point(self, point: np.ndarray):
-        if len(self.perimeter_points) < 3:
-            return True
-        delaunay = Delaunay(self.perimeter_points)
-        return delaunay.find_simplex(point) >= 0
+    # def contains_point(self, point: np.ndarray):
+    #     if len(self.perimeter_points) < 3:
+    #         return True
+    #     delaunay = Delaunay(self.perimeter_points)
+    #     return delaunay.find_simplex(point) >= 0
 
-    @property
-    def simplices(self) -> List[np.ndarray]:
-        """
-        Generate the Delaunay simplices for the perimeter points of this AlphaShape.
+    # @property
+    # def simplices(self) -> List[np.ndarray]:
+    #     """
+    #     Generate the Delaunay simplices for the perimeter points of this AlphaShape.
+    #
+    #     Returns:
+    #         List[np.ndarray]: List of simplices, where each simplex is an array of points.
+    #     """
+    #     delaunay = Delaunay(self.perimeter_points)
+    #     return [self.perimeter_points[simplex] for simplex in delaunay.simplices]
 
-        Returns:
-            List[np.ndarray]: List of simplices, where each simplex is an array of points.
-        """
-        delaunay = Delaunay(self.perimeter_points)
-        return [self.perimeter_points[simplex] for simplex in delaunay.simplices]
+    # @staticmethod
+    # def simplex_intersects(simplex_a: np.ndarray, simplex_b: np.ndarray) -> bool:
+    #     """
+    #     Check if two simplices intersect by testing if any vertex of one simplex
+    #     is within the other.
+    #
+    #     Args:
+    #         simplex_a (np.ndarray): A simplex represented by an array of points.
+    #         simplex_b (np.ndarray): Another simplex represented by an array of points.
+    #
+    #     Returns:
+    #         bool: True if the simplices intersect, False otherwise.
+    #     """
+    #     delaunay_a = Delaunay(simplex_a)
+    #     delaunay_b = Delaunay(simplex_b)
+    #
+    #     # Check if any vertex of simplex_a is inside simplex_b
+    #     if any(delaunay_b.find_simplex(vertex) >= 0 for vertex in simplex_a):
+    #         return True
+    #
+    #     # Check if any vertex of simplex_b is inside simplex_a
+    #     if any(delaunay_a.find_simplex(vertex) >= 0 for vertex in simplex_b):
+    #         return True
+    #
+    #     return False
 
-    @staticmethod
-    def simplex_intersects(simplex_a: np.ndarray, simplex_b: np.ndarray) -> bool:
-        """
-        Check if two simplices intersect by testing if any vertex of one simplex
-        is within the other.
-
-        Args:
-            simplex_a (np.ndarray): A simplex represented by an array of points.
-            simplex_b (np.ndarray): Another simplex represented by an array of points.
-
-        Returns:
-            bool: True if the simplices intersect, False otherwise.
-        """
-        delaunay_a = Delaunay(simplex_a)
-        delaunay_b = Delaunay(simplex_b)
-
-        # Check if any vertex of simplex_a is inside simplex_b
-        if any(delaunay_b.find_simplex(vertex) >= 0 for vertex in simplex_a):
-            return True
-
-        # Check if any vertex of simplex_b is inside simplex_a
-        if any(delaunay_a.find_simplex(vertex) >= 0 for vertex in simplex_b):
-            return True
-
-        return False
-
-
-    def overlaps_with(self, other: 'AlphaShape') -> bool:
-        """
-        Check if this AlphaShape overlaps with another AlphaShape by examining simplex intersections.
-
-        Args:
-            other (AlphaShape): Another AlphaShape object.
-
-        Returns:
-            bool: True if the shapes overlap, False otherwise.
-        """
-        # Get simplices for both AlphaShapes
-        simplices_self = self.simplices
-        simplices_other = other.simplices
-
-        # Check if any simplex in self intersects with any simplex in other
-        for simplex_a in simplices_self:
-            for simplex_b in simplices_other:
-                if self.simplex_intersects(simplex_a, simplex_b):
-                    return True
-        return False
+    #
+    # def overlaps_with(self, other: 'AlphaShape') -> bool:
+    #     """
+    #     Check if this AlphaShape overlaps with another AlphaShape by examining simplex intersections.
+    #
+    #     Args:
+    #         other (AlphaShape): Another AlphaShape object.
+    #
+    #     Returns:
+    #         bool: True if the shapes overlap, False otherwise.
+    #     """
+    #     # Get simplices for both AlphaShapes
+    #     simplices_self = self.simplices
+    #     simplices_other = other.simplices
+    #
+    #     # Check if any simplex in self intersects with any simplex in other
+    #     for simplex_a in simplices_self:
+    #         for simplex_b in simplices_other:
+    #             if self.simplex_intersects(simplex_a, simplex_b):
+    #                 return True
+    #     return False

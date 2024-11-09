@@ -1,10 +1,9 @@
 import numpy as np
 from matplotlib.axes import Axes
 from copy import deepcopy
-from typing import Optional, Iterable, List, Tuple, Union, Dict
+from typing import Optional, Iterable, List, Tuple, Dict
 
-from artlib.experimental.alphashape import AlphaShape
-from artlib.experimental.merging import merge_objects
+from artlib.experimental.alphashape import AlphaShape, equalateral_simplex_volume
 from artlib.common.BaseART import BaseART
 
 
@@ -47,7 +46,7 @@ class HullART(BaseART):
     Hull ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float, alpha_hat: float, min_lambda: float, max_lambda: float):
+    def __init__(self, rho: float, alpha: float, alpha_hull: float, min_lambda: float, max_lambda: float):
         """
         Initializes the HullART object.
 
@@ -57,12 +56,12 @@ class HullART(BaseART):
             Vigilance parameter.
         alpha : float
             Choice parameter.
-        alpha_hat : float
+        alpha_hull : float
             alpha shape parameter.
         lambda : float
             minimum volume.
         """
-        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat, "lambda": min_lambda, "max_lambda": max_lambda}
+        params = {"rho": rho, "alpha": alpha, "alpha_hull": alpha_hull, "min_lambda": min_lambda, "max_lambda": max_lambda}
         super().__init__(params)
 
     @staticmethod
@@ -79,18 +78,22 @@ class HullART(BaseART):
         assert "rho" in params
         assert params["rho"] >= 0.0
         assert isinstance(params["rho"], float)
-        assert "max_lambda" in params
-        assert params["max_lambda"] >= 0.0
-        assert isinstance(params["max_lambda"], float)
+
         assert "alpha" in params
         assert params["alpha"] >= 0.0
         assert isinstance(params["alpha"], float)
-        assert "alpha_hat" in params
-        assert params["alpha_hat"] >= 0.0
-        assert isinstance(params["alpha_hat"], float)
-        assert "lambda" in params
-        assert params["lambda"] >= 0.0
-        assert isinstance(params["lambda"], float)
+
+        assert "alpha_hull" in params
+        assert params["alpha_hull"] >= 0.0
+        assert isinstance(params["alpha_hull"], float)
+
+        assert "min_lambda" in params
+        assert params["min_lambda"] >= 0.0
+        assert isinstance(params["min_lambda"], float)
+
+        assert "max_lambda" in params
+        assert params["max_lambda"] >= 0.0
+        assert isinstance(params["max_lambda"], float)
 
     def category_choice(
         self, i: np.ndarray, w: AlphaShape, params: dict
@@ -122,8 +125,9 @@ class HullART(BaseART):
             activation = np.nan
             new_vol = 0
         else:
-            new_vol = 1. - max(new_w.volume, params["lambda"]**len(i))
-            activation = new_vol / (1. - max(w.volume, params["lambda"]**len(i)) + params["alpha"])
+            min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
+            new_vol = 1. - max(new_w.volume, min_vol)
+            activation = new_vol / (1. - max(w.volume, min_vol) + params["alpha"])
 
         cache = {"new_w": new_w, "new_vol": new_vol, "activation": activation}
 
@@ -210,7 +214,7 @@ class HullART(BaseART):
             New cluster weight.
 
         """
-        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha_hat"], max_perimeter_length=params["max_lambda"])
+        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha_hull"], max_perimeter_length=params["max_lambda"])
         return new_w
 
     def get_cluster_centers(self) -> List[np.ndarray]:

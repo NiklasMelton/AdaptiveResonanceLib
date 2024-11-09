@@ -190,7 +190,7 @@ def build_linked_list(edges):
 
 class AlphaShape:
 
-    def __init__(self, points: np.ndarray, alpha: float = 0.):
+    def __init__(self, points: np.ndarray, alpha: float = 0., max_perimeter_length: float = np.inf):
         """
         Compute the alpha shape (concave hull) of a set of points.  If the number
         of points in the input is three or less, the convex hull is returned to the
@@ -213,9 +213,11 @@ class AlphaShape:
         simplices = set()
         self.perimeter_points = []
         self.alpha = alpha
+        self.max_perimeter_length = max_perimeter_length
         self.centroid = 0
         self.volume = 0
         self.surface_area = 0
+        visited_points = set()
 
         if len(points) < 3:
             # handle lines and points separately
@@ -225,9 +227,11 @@ class AlphaShape:
             if len(points) < 2:
                 self.surface_area = 0
                 self.perimeter_edges = []
+                visited_points = {0}
             else:
                 self.surface_area = 2*np.linalg.norm(points[0,:]-points[1,:], ord=2)
                 self.perimeter_edges = [(points[0,:], points[1,:])]
+                visited_points = {0, 1}
 
         else:
             # Whenever a simplex is found that passes the radius filter, its edges
@@ -243,7 +247,7 @@ class AlphaShape:
                 radius_filter = np.inf
             alpha_simplices = list(alphasimplices(points))
             alpha_simplices.sort(key=lambda x: x[1])
-            visited_points = set()
+
             for point_indices, circumradius, simplex_coords in alpha_simplices:
                 # Radius filter
                 if circumradius < radius_filter or not all(p in visited_points for p in point_indices):
@@ -280,6 +284,10 @@ class AlphaShape:
                 )
                 self.surface_area = compute_surface_area(points, perimeter_edges, simplices)
 
+        self.is_empty = False
+        if self.max_edge_length > max_perimeter_length or len(self.perimeter_points) == 0 or points.shape[0] != len(visited_points):
+            self.is_empty = True
+
 
     @property
     def max_edge_length(self):
@@ -288,7 +296,6 @@ class AlphaShape:
             return max(edge_lengths)
         else:
             return 0
-
 
 
 
@@ -304,12 +311,8 @@ class AlphaShape:
         new_points = np.vstack([self.perimeter_points, points])
 
         # Recompute the alpha shape with the updated points
-        self.__init__(new_points, alpha = float(self.alpha))
+        self.__init__(new_points, alpha=float(self.alpha), max_perimeter_length=float(self.max_perimeter_length))
 
-
-    @property
-    def is_empty(self):
-        return len(self.perimeter_points) == 0
 
     @property
     def vertices(self):

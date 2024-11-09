@@ -47,7 +47,7 @@ class HullART(BaseART):
     Hull ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float, alpha_hat: float, min_lambda: float, rho_lambda: float):
+    def __init__(self, rho: float, alpha: float, alpha_hat: float, min_lambda: float, max_lambda: float):
         """
         Initializes the HullART object.
 
@@ -62,7 +62,7 @@ class HullART(BaseART):
         lambda : float
             minimum volume.
         """
-        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat, "lambda": min_lambda, "rho_lambda": rho_lambda}
+        params = {"rho": rho, "alpha": alpha, "alpha_hat": alpha_hat, "lambda": min_lambda, "max_lambda": max_lambda}
         super().__init__(params)
 
     @staticmethod
@@ -79,9 +79,9 @@ class HullART(BaseART):
         assert "rho" in params
         assert params["rho"] >= 0.0
         assert isinstance(params["rho"], float)
-        assert "rho_lambda" in params
-        assert params["rho_lambda"] >= 0.0
-        assert isinstance(params["rho_lambda"], float)
+        assert "max_lambda" in params
+        assert params["max_lambda"] >= 0.0
+        assert isinstance(params["max_lambda"], float)
         assert "alpha" in params
         assert params["alpha"] >= 0.0
         assert isinstance(params["alpha"], float)
@@ -118,17 +118,14 @@ class HullART(BaseART):
 
         new_w = deepcopy(w)
         new_w.add_points(i.reshape((1, -1)))
-        if new_w.is_empty or not new_w.contains_point(i.reshape((1, -1))):
+        if new_w.is_empty:
             activation = np.nan
-            new_area = 0
+            new_vol = 0
         else:
-            # a_max = float(2*len(i))
-            # new_area = a_max - new_w.surface_area
-            # activation = new_area / (a_max-w.surface_area + params["alpha"])
-            new_area = 1. - max(new_w.volume, params["lambda"]**len(i))
-            activation = new_area / (1. - max(w.volume, params["lambda"]**len(i)) + params["alpha"])
+            new_vol = 1. - max(new_w.volume, params["lambda"]**len(i))
+            activation = new_vol / (1. - max(w.volume, params["lambda"]**len(i)) + params["alpha"])
 
-        cache = {"new_w": new_w, "new_area": new_area, "activation": activation}
+        cache = {"new_w": new_w, "new_vol": new_vol, "activation": activation}
 
         return activation, cache
 
@@ -162,8 +159,7 @@ class HullART(BaseART):
 
         """
         assert cache is not None
-        M = float(cache["new_area"]) * float(cache["new_w"].max_edge_length <= params["rho_lambda"])
-        # M = float(cache["new_area"]) / float(2*len(i))
+        M = float(cache["new_vol"])
         cache["match_criterion"] = M
 
         return M, cache
@@ -214,7 +210,7 @@ class HullART(BaseART):
             New cluster weight.
 
         """
-        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha_hat"])
+        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha_hat"], max_perimeter_length=params["max_lambda"])
         return new_w
 
     def get_cluster_centers(self) -> List[np.ndarray]:

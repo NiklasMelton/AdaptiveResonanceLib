@@ -3,8 +3,7 @@ import logging
 from scipy.spatial import Delaunay
 import numpy as np
 import math
-from typing import Union, Tuple, List, Set
-from collections import defaultdict
+from typing import Tuple, Set
 
 def circumcenter(points: np.ndarray) -> np.ndarray:
     """

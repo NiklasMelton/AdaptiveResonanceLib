@@ -43,7 +43,7 @@ def cluster_moons():
     # target = target[idx]
     print("Data has shape:", data.shape)
 
-    params = {"rho": 0.2, "alpha": 1e-20, "alpha_hull": 7., "min_lambda": 1e-5, "max_lambda": 0.2}
+    params = {"rho": 0.2, "alpha": 1e-20, "alpha_hull": 5., "min_lambda": 1e-5, "max_lambda": 0.2}
     cls = HullART(**params)
 
     X = cls.prepare_data(data)

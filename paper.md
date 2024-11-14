@@ -1,7 +1,7 @@
 ---
 title: 'Adaptive Resonance Lib: A Python package for Adaptive Resonance Theory (ART) models'
 tags:
-  - Python
+  - python
   - clustering
   - classification
   - regression
@@ -30,7 +30,17 @@ bibliography: references.bib
 
 The Adaptive Resonance Library (**artlib**) is a Python library that implements a wide
 range of Adaptive Resonance Theory (ART) algorithms. **artlib** currently supports eight
-elementary ART models and 11 compound ART models
+elementary ART models and 11 compound ART models. These models can be applied to
+tasks such as unsupervised clustering, supervised classification, regression, and
+reinforcement learning [@da2019survey]. This library provides an extensible and
+modular framework where users can integrate custom models or extend current
+implementations, allowing for experimentation with existing and novel machine
+learning techniques.
+
+In addition to the diverse set of ART models, **artlib** offers implementations of
+visualization methods for various cluster geometries, along with pre-processing
+techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
+normalization, and complement coding.
 
 [comment]: <> (, including Fuzzy ART)
 
@@ -51,19 +61,37 @@ elementary ART models and 11 compound ART models
 [comment]: <> (BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],)
 
 [comment]: <> (FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. )
-These models can be
-applied to tasks such as unsupervised clustering, supervised classification, regression,
-and reinforcement learning [@da2019survey]. This library provides an extensible and
-modular framework where users can integrate custom models or extend current
-implementations, allowing for experimentation with existing and novel machine learning
-techniques.
 
-In addition to the diverse set of ART models, **artlib** offers implementations of
-visualization methods for various cluster geometries, along with pre-processing
-techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
-normalization, and complement coding.
+# Adaptive Resonance Theory (ART)
 
-## Elementary Models Provided
+ART is a class of neural networks known for solving the stability-plasticity dilemma,
+making it particularly effective for classification, clustering, and incremental
+learning tasks [@grossberg1976a; @grossberg1976a; @Grossberg1980HowDA;
+@grossberg2013adaptive; @da2019survey]. ART models are designed to dynamically learn
+and adapt to new patterns without catastrophic forgetting, making them ideal for
+real-time systems requiring continuous learning.
+
+Over the years, dozens of ART variations have been published [@da2019survey],
+extending the applicability of ART to nearly all learning regimes, including
+reinforcement learning [@tan2004falcon; @tan2008integrating], hierarchical
+clustering [@bartfai1994hierarchical], topological clustering
+[@tscherepanow2010topoart], and biclustering [@xu2011bartmap; @xu2012biclustering].
+These numerous models provide an ART-based solution for most machine learning use cases.
+However, the rapid pace of bespoke model development, coupled with the challenges
+students face in learning ART's foundational principles, has contributed to a
+scarcity of open-source, user-friendly implementations for most ART variants.
+
+The ability of ART to preserve previously learned patterns while learning new data in
+real-time has made it a powerful tool in domains such as robotics, medical diagnosis,
+and adaptive control systems. **artlib** aims to extend the application of these models
+in modern machine learning pipelines, offering a unique and approachable toolkit for
+leveraging ART's strengths.
+
+
+## Elementary Models
+An elementary ART model is a model capable of unsupervised learning and which relies
+on no subordinate ART model for its behavior. The following elementary ART
+models are currently implemented:
 
 1. ART1 [@carpenter1987massively]: ART1 was the first ART clustering algorithm to be
    developed. It clusters binary vectors using a similarity metric based on the Hamming
@@ -109,20 +137,22 @@ normalization, and complement coding.
    is superficially similar to ART2-A but is more sophisticated in that neurons also
    learn a bias and quadratic activation term.
 
-## Compound Models Provided
+## Compound Models
+A compound ART model is one which extends the functionality of one or more
+underlying ART models. Functional extension may include topology learning,
+supervised learning, reinforcement learning, and more. The following compound ART
+models are currently implemented:
 
 1. ARTMAP [@carpenter1991artmap]: ARTMAP uses two ART modules to separately cluster
    two parallel data streams (A and B). An inter-ART module regulates the clustering
    such that clusters in the `module_A` maintain a many-to-one mapping with the
    clusters in the `module_B` by using a match-tracking function. When the data stream
-   are independent and dependent variable for the A and B side respectively, ARTMAP
-   learns a functional mapping the describes their relationship. ARTMAP can
-   therefore be used for both classification and regression tasks. However, ARTMAP
-   does not perform as well as Fusion ART for regression tasks where data is not
-   monotonic.
+   are independent and dependent variables for the A and B side respectively, ARTMAP
+   learns a functional mapping that describes their relationship. ARTMAP can
+   therefore be used for both classification and regression tasks.
 
 2. Simple ARTMAP [@gotarredona1998adaptive]: Simple ARTMAP (or Simplified ARTMAP)
-   was developed to streamline the ARTMAP algorith for classification task. As most
+   was developed to streamline the ARTMAP algorithm for classification task. As most
    classification problems provide discrete labels, it is possible to replace the
    B-side of the ARTMAP algorithm with the class labels directly. Simple ARTMAP does
    this and creates a mapping from B-side class labels to A-side cluster labels. The
@@ -131,47 +161,48 @@ normalization, and complement coding.
    recommended model for classification tasks.
 
 3. Fusion ART [@tan2007intelligence]: Fusion ART allows for the fusion of
-   multi-channel data by leveraging a discrete ART module for each channel.
+   multi-channel data by leveraging a discrete elementary ART module for each channel.
    Activation for each category is calculated as a weighted sum of all channel
    activations and resonance only occurs if all channels are simultaneously resonant.
    This allows Fusion ART to learn mappings across all channels. Fusion ART works
    exceptionally well for regression problems and is the recommended model for this
    task.
 
-4. FALCON [@tan2004falcon]: The Reactive FALCON model is a special case of Fusion
-   ART designed for reinforcement learning. A Fusion ART model is used for learning
-   the mapping between state, action, and reward channels. Special functions are
-   implemented for selecting the best action and for predicting reward values.
+4. FALCON [@tan2004falcon]: The Reactive Fusion Architecture for Learning, Cognition,
+   and Navigation (FALCON) model is a special case of Fusion ART designed for
+   reinforcement learning. A Fusion ART model is used for learning the mapping
+   between state, action, and reward channels. Special functions are implemented for
+   selecting the optimal action and for predicting reward values.
 
-5. TD-FALCON [@tan2008integrating]: Temporal Difference FALCON is an extension of
+5. TD-FALCON [@tan2008integrating]: Temporal Difference (TD) FALCON is an extension of
    Reactive FALCON which utilizes the SARSA method for temporal difference
    reinforcement learning. TD-FALCON is the recommended model for reinforcement
    learning tasks.
 
-6. Dual Vigilance ART [@da2019dual]: Dual Vigilance ART utilizes an elementary ART
+6. Dual Vigilance ART [@da2019dual]: Dual Vigilance ART extends an elementary ART
    module with a second, less restrictive vigilance parameter. Clusters are formed
    using the typical process for the underlying art module unless no resonant
    category is found. When this occurs, the less-restrictive vigilance parameter is
    used to determine if a near-resonant category can be found. If one can be found,
    a new cluster is formed, and the near-resonant category label is copied to the new
-   cluster. If neither resonant nor near resonant categories can be found, a new
+   cluster. If neither a resonant nor near-resonant category can be found, a new
    cluster and new category label are both created. In this way, Dual Vigilance ART
-   is capable of finding arbitrarily shaped structures as composites of the
+   is capable of finding arbitrarily shaped structures as topological composites of the
    underlying ART geometry (i.e Hyper-ellipsoids or Hyper-boxes).
 
 7. SMART [@bartfai1994hierarchical]: Self-consistent Modular ART is a special case
    of Deep ARTMAP and an extension of ARTMAP. SMART permits n-many modules (in
-   contrast to ARTMAPS 2-modules) which passes the same sample vector to each
-   module. Each module has a vigilance parameter monotonically increasing with depth.
-   This permits SMART to create self-consistent hierarchies of clusters through a
-   divisive clustering approach. The number of modules and granularity at each module
-   are both parameterizable.
+   contrast to ARTMAP's 2-modules) which have vigilance parameters monotonically
+   increasing with depth.
+   By passing the same sample vector to all modules, SMART creates a self-consistent
+   hierarchy of clusters through a divisive clustering approach. The number of
+   modules and granularity at each module are both parameterizable.
 
 8. Deep ARTMAP: Deep ARTMAP is a novel contribution of this library. It generalizes
-   SMART by permitting each module to accept some function $f^i(x)$. This
+   SMART by permitting each module `module_i` to accept some function $f^i(x)$. This
    generalization allows the user to find hierarchical relationships between an
    abritrary number of functional transformations of some input data. When only two
-   modules are used and $f^1(x) = target$ and $f^2(x) = x$ Deep ARTMAP reduces to
+   modules are used and $f^1(x) = target(x)$ and $f^2(x) = x$ Deep ARTMAP reduces to
    standard ARTMAP.
 
 9. Topo ART [@tscherepanow2010topoart]: Topo ART is a topological clustering
@@ -259,30 +290,109 @@ in the source code to encourage users to develop and experiment with their own c
 ART algorithms. This flexibility and integration make **artlib** a powerful resource
 for both research and practical applications.
 
-# Adaptive Resonance Theory (ART)
+## General Usage
+To install AdaptiveResonanceLib, simply use pip:
 
-ART is a class of neural networks known for solving the stability-plasticity dilemma,
-making it particularly effective for classification, clustering, and incremental
-learning tasks [@grossberg1976a; @grossberg1976a; @Grossberg1980HowDA;
-@grossberg2013adaptive; @da2019survey]. ART models are designed to dynamically learn
-and adapt to new patterns without catastrophic forgetting, making them ideal for
-real-time systems requiring continuous learning.
+```bash
+pip install artlib
+```
 
-Over the years, dozens of ART variations have been published [@da2019survey],
-extending the applicability of ART to nearly all learning regimes, including
-reinforcement learning [@tan2004falcon; @tan2008integrating], hierarchical
-clustering [@bartfai1994hierarchical], topological clustering
-[@tscherepanow2010topoart], and biclustering [@xu2011bartmap; @xu2012biclustering].
-These numerous models provide an ART-based solution for most machine learning use cases.
-However, the rapid pace of bespoke model development, coupled with the challenges
-students face in learning ART's foundational principles, has contributed to a
-scarcity of open-source, user-friendly implementations for most ART variants.
+### Clustering Data with the Fuzzy ART model
 
-The ability of ART to preserve previously learned patterns while learning new data in
-real-time has made it a powerful tool in domains such as robotics, medical diagnosis,
-and adaptive control systems. **artlib** aims to extend the application of these models
-in modern machine learning pipelines, offering a unique and approachable toolkit for
-leveraging ART's strengths.
+```python
+from artlib import FuzzyART
+import numpy as np
+
+# Your dataset
+train_X = np.array([...]) # shape (n_samples, n_features)
+test_X = np.array([...])
+
+# Initialize the Fuzzy ART model
+model = FuzzyART(rho=0.7, alpha = 0.0, beta=1.0)
+
+# Prepare Data
+train_X_prep = model.prepare_data(train_X)
+test_X_prep = model.prepare_data(test_X)
+
+# Fit the model
+model.fit(train_X_prep)
+
+# Predict data labels
+predictions = model.predict(test_X_prep)
+```
+
+### Fitting a Classification Model with SimpleARTMAP
+
+```python
+from artlib import GaussianART, SimpleARTMAP
+import numpy as np
+
+# Your dataset
+train_X = np.array([...]) # shape (n_samples, n_features)
+train_y = np.array([...]) # shape (n_samples, ), must be integers
+test_X = np.array([...])
+
+# Initialize the Gaussian ART model
+sigma_init = np.array([0.5]*train_X.shape[1]) # variance estimate for each feature
+module_a = GaussianART(rho=0.0, sigma_init=sigma_init)
+
+# Initialize the SimpleARTMAP model
+model = SimpleARTMAP(module_a=module_a)
+
+# Prepare Data
+train_X_prep = model.prepare_data(train_X)
+test_X_prep = model.prepare_data(test_X)
+
+# Fit the model
+model.fit(train_X_prep, train_y)
+
+# Predict data labels
+predictions = model.predict(test_X_prep)
+```
+
+### Fitting a Regression Model with FusionART
+
+```python
+from artlib import FuzzyART, HypersphereART, FusionART
+import numpy as np
+
+# Your dataset
+train_X = np.array([...]) # shape (n_samples, n_features_X)
+train_y = np.array([...]) # shape (n_samples, n_features_y)
+test_X = np.array([...])
+
+# Initialize the Fuzzy ART model
+module_x = FuzzyART(rho=0.0, alpha = 0.0, beta=1.0)
+
+# Initialize the Hypersphere ART model
+r_hat = 0.5*np.sqrt(train_X.shape[1]) # no restriction on hyperpshere size
+module_y = HypersphereART(rho=0.0, alpha = 0.0, beta=1.0, r_hat=r_hat)
+
+# Initialize the FusionARTMAP model
+gamma_values = [0.5, 0.5] # eqaul weight to both channels
+channel_dims = [
+  2*train_X.shape[1], # fuzzy ART complement codes data so channel dim is 2*n_features
+  train_y.shape[1]
+]
+model = FusionART(
+  modules=[module_x, module_y],
+  gamma_values=gamma_values,
+  channel_dims=channel_dims
+)
+
+# Prepare Data
+train_Xy = model.join_channel_data(channel_data=[train_X, train_y])
+train_Xy_prep = model.prepare_data(train_Xy)
+test_Xy = model.join_channel_data(channel_data=[train_X], skip_channels=[1])
+test_Xy_prep = model.prepare_data(test_Xy)
+
+# Fit the model
+model.fit(train_X_prep, train_y)
+
+# Predict y-channel values
+pred_y = model.predict_regression(test_Xy_prep, target_channels=[1])
+```
+
 
 # Acknowledgements
 

@@ -7,26 +7,23 @@ from artlib.elementary.ART1 import ART1
 @pytest.fixture
 def art_model():
     rho = 0.7
-    beta = 0.5
     L = 2.0
-    return ART1(rho=rho, beta=beta, L=L)
+    return ART1(rho=rho, L=L)
 
 
 def test_initialization(art_model):
     # Test that the model initializes correctly
     assert art_model.params["rho"] == 0.7
-    assert art_model.params["beta"] == 0.5
     assert art_model.params["L"] == 2.0
 
 
 def test_validate_params():
     # Test the validate_params method
-    valid_params = {"rho": 0.7, "beta": 0.5, "L": 2.0}
+    valid_params = {"rho": 0.7, "L": 2.0}
     ART1.validate_params(valid_params)
 
     invalid_params = {
         "rho": -0.7,  # Invalid vigilance parameter
-        "beta": -0.5,  # Invalid beta
         "L": 0.5,  # Invalid L (must be >= 1)
     }
     with pytest.raises(AssertionError):
@@ -81,7 +78,7 @@ def test_update(art_model):
     w = np.array(
         [0.5, 0.5, 1, 1]
     )  # Mock weight with both bottom-up and top-down weights
-    params = {"L": 2.0, "beta": 0.5}
+    params = {"L": 2.0}
 
     updated_weight = art_model.update(i, w, params)
     assert len(updated_weight) == 4  # Bottom-up and top-down weights

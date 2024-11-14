@@ -175,38 +175,42 @@ models are currently implemented:
    selecting the optimal action and for predicting reward values.
 
 5. TD-FALCON [@tan2008integrating]: Temporal Difference (TD) FALCON is an extension of
-   Reactive FALCON which utilizes the SARSA method for temporal difference
-   reinforcement learning. TD-FALCON is the recommended model for reinforcement
-   learning tasks.
+   Reactive FALCON which utilizes the SARSA (State-Action-Reward-State-Action) method
+   for temporal difference reinforcement learning. TD-FALCON is the recommended
+   model for reinforcement learning tasks.
 
 6. Dual Vigilance ART [@da2019dual]: Dual Vigilance ART extends an elementary ART
-   module with a second, less restrictive vigilance parameter. Clusters are formed
+   module with a second, less restrictive vigilance parameter. Further, Dual
+   Vigilance ART distinguishes between clusters and category lables by mapping
+   clusters to category labels in a many-to-one fashion. Clusters are formed
    using the typical process for the underlying art module unless no resonant
-   category is found. When this occurs, the less-restrictive vigilance parameter is
-   used to determine if a near-resonant category can be found. If one can be found,
-   a new cluster is formed, and the near-resonant category label is copied to the new
-   cluster. If neither a resonant nor near-resonant category can be found, a new
-   cluster and new category label are both created. In this way, Dual Vigilance ART
-   is capable of finding arbitrarily shaped structures as topological composites of the
-   underlying ART geometry (i.e Hyper-ellipsoids or Hyper-boxes).
+   cluster is found. When this occurs, the less-restrictive vigilance parameter is
+   used to determine if a near-resonant cluster can be found. If one can be found,
+   a new cluster is formed, and the near-resonant cluster's category label is mapped to
+   the new cluster. If neither a resonant nor near-resonant category can be found, a new
+   cluster and new category label are both created and mapped to eachother. In this
+   way, Dual Vigilance ART is capable of finding arbitrarily shaped structures as
+   topological composites of the underlying ART geometry (i.e Hyper-ellipsoids or
+   Hyper-boxes).
 
-7. SMART [@bartfai1994hierarchical]: Self-consistent Modular ART is a special case
-   of Deep ARTMAP and an extension of ARTMAP. SMART permits n-many modules (in
+7. SMART [@bartfai1994hierarchical]: Self-consistent Modular ART (SMART) is a special
+   case of Deep ARTMAP and an extension of ARTMAP. SMART permits n-many modules (in
    contrast to ARTMAP's 2-modules) which have vigilance parameters monotonically
-   increasing with depth.
-   By passing the same sample vector to all modules, SMART creates a self-consistent
-   hierarchy of clusters through a divisive clustering approach. The number of
-   modules and granularity at each module are both parameterizable.
+   increasing with depth. By passing the same sample vector to all modules, SMART
+   creates a self-consistent hierarchy of clusters through a divisive clustering
+   approach. The number of modules and granularity at each module are both
+   parameterizable.
 
 8. Deep ARTMAP: Deep ARTMAP is a novel contribution of this library. It generalizes
    SMART by permitting each module `module_i` to accept some function $f^i(x)$. This
    generalization allows the user to find hierarchical relationships between an
    abritrary number of functional transformations of some input data. When only two
    modules are used and $f^1(x) = target(x)$ and $f^2(x) = x$ Deep ARTMAP reduces to
-   standard ARTMAP.
+   standard ARTMAP. Similarly, when the functional transformation at each layer is
+   the identity function, Deep ARTMAP reduces to SMART.
 
 9. Topo ART [@tscherepanow2010topoart]: Topo ART is a topological clustering
-   approach which uses an elementary ART module to learn a distributed cluster graph
+   approach which uses an elementary ART module to learn a distributed clustering graph
    where samples can belong to multiple distinct clusters. The co-resonant clusters are
    tracked using an adjacency matrix which describes the cluster relationships of
    the entire model.

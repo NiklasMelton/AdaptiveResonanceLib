@@ -30,16 +30,28 @@ bibliography: references.bib
 
 The Adaptive Resonance Library (**artlib**) is a Python library that implements a wide
 range of Adaptive Resonance Theory (ART) algorithms. **artlib** currently supports eight
-elementary ART models and 11 compound ART models, including Fuzzy ART
-[@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere], Ellipsoid ART
-[@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
-[@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron
-ART [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
-[@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified
-ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART
-[@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],
-BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],
-FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. These models can be
+elementary ART models and 11 compound ART models
+
+[comment]: <> (, including Fuzzy ART)
+
+[comment]: <> ([@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere], Ellipsoid ART)
+
+[comment]: <> ([@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART)
+
+[comment]: <> ([@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron)
+
+[comment]: <> (ART [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2)
+
+[comment]: <> ([@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified)
+
+[comment]: <> (ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART)
+
+[comment]: <> ([@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],)
+
+[comment]: <> (BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],)
+
+[comment]: <> (FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. )
+These models can be
 applied to tasks such as unsupervised clustering, supervised classification, regression,
 and reinforcement learning [@da2019survey]. This library provides an extensible and
 modular framework where users can integrate custom models or extend current
@@ -50,6 +62,136 @@ In addition to the diverse set of ART models, **artlib** offers implementations 
 visualization methods for various cluster geometries, along with pre-processing
 techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
 normalization, and complement coding.
+
+## Elementary Models Provided
+
+1. ART1 [@carpenter1987massively]: ART1 was the first ART clustering algorithm to be
+   developed. It clusters binary vectors using a similarity metric based on the Hamming
+   distance.
+
+2. ART2 [@carpenter1987art; @carpenter1991art]: ART2 was the first attempt to extend
+   ART1 to the domain of continuous-valued data. ART2-A was developed shortly after and
+   improved the algorithmic complexity while retaining the properties of the original
+   ART2 implementation. ART2 more closely resembles a multi-layer perceptron network as
+   it uses an adaptive weight vector in the activation layer and a Heaviside function
+   for the resonance layer. ART2 is widely considered to not work and is not
+   recommended for use. It is included here for historical purposes.
+
+3. Fuzzy ART [@carpenter1991fuzzy]: is the most cited and arguably most widely used
+   ART variant at this time. Fuzzy ART is a hyper-box based clustering method,
+   capable of clustering continuous-valued data. Data is pre-processed into zero-volume
+   hyper-boxes through the process of complement coding before being used to
+   initialize or expand the volume of a cluster hyper-box. In the fast-learning regime,
+   Fuzzy ART suffers no catastrophic forgetting. It is exceptionally fast and
+   explainable.
+
+4. Hyperpshere ART [@anagnostopoulos2000hypersphere]: Hypersphere ART was designed
+   to succeed Fuzzy ART with a more efficient internal knowledge representation.
+   Categories are hyperpspheres and require less internal memory however computational
+   complexity is increased relative to Fuzzy ART.
+
+5. Ellipsoid ART[@anagnostopoulos2001a; @anagnostopoulos2001b]: Ellipsoid ART is a
+   generalization of Hyperpshere ART which permits ellipsoids with arbitrary
+   rotation. Ellipsoid ART is highly order dependent as the second sample added
+   to any cluster sets the axes orientations.
+
+6. Guassian ART [@williamson1996gaussian]: clusters data in Gaussian Distributions
+   (Hyper-ellipsoids) and is similar to Bayesian ART but differs in that the
+   hyper-ellipsoid always have their principal axes square to the coordinate frame.
+   It is also faster than Bayesian ART.
+
+7. Bayesian ART [@vigdor2007bayesian]: clusters data in Bayesian Distributions
+   (Hyper-ellipsoids) and is similar to Gaussian ART but differs in that it allows
+   arbitrary rotation of the hyper-ellipsoid.
+
+8. Quadratic Neuron ART [@su2001application; @su2005new]: QN-ART utilizes a weight
+   vector and a quadratic term to create clusters in a hyper-ellipsoid structure. It
+   is superficially similar to ART2-A but is more sophisticated in that neurons also
+   learn a bias and quadratic activation term.
+
+## Compound Models Provided
+
+1. ARTMAP [@carpenter1991artmap]: ARTMAP uses two ART modules to separately cluster
+   two parallel data streams (A and B). An inter-ART module regulates the clustering
+   such that clusters in the `module_A` maintain a many-to-one mapping with the
+   clusters in the `module_B` by using a match-tracking function. When the data stream
+   are independent and dependent variable for the A and B side respectively, ARTMAP
+   learns a functional mapping the describes their relationship. ARTMAP can
+   therefore be used for both classification and regression tasks. However, ARTMAP
+   does not perform as well as Fusion ART for regression tasks where data is not
+   monotonic.
+
+2. Simple ARTMAP [@gotarredona1998adaptive]: Simple ARTMAP (or Simplified ARTMAP)
+   was developed to streamline the ARTMAP algorith for classification task. As most
+   classification problems provide discrete labels, it is possible to replace the
+   B-side of the ARTMAP algorithm with the class labels directly. Simple ARTMAP does
+   this and creates a mapping from B-side class labels to A-side cluster labels. The
+   many-to-one mapping property is preserved, but the learning process is
+   significantly faster and less computationally intensive. Simple ARTMAP is the
+   recommended model for classification tasks.
+
+3. Fusion ART [@tan2007intelligence]: Fusion ART allows for the fusion of
+   multi-channel data by leveraging a discrete ART module for each channel.
+   Activation for each category is calculated as a weighted sum of all channel
+   activations and resonance only occurs if all channels are simultaneously resonant.
+   This allows Fusion ART to learn mappings across all channels. Fusion ART works
+   exceptionally well for regression problems and is the recommended model for this
+   task.
+
+4. FALCON [@tan2004falcon]: The Reactive FALCON model is a special case of Fusion
+   ART designed for reinforcement learning. A Fusion ART model is used for learning
+   the mapping between state, action, and reward channels. Special functions are
+   implemented for selecting the best action and for predicting reward values.
+
+5. TD-FALCON [@tan2008integrating]: Temporal Difference FALCON is an extension of
+   Reactive FALCON which utilizes the SARSA method for temporal difference
+   reinforcement learning. TD-FALCON is the recommended model for reinforcement
+   learning tasks.
+
+6. Dual Vigilance ART [@da2019dual]: Dual Vigilance ART utilizes an elementary ART
+   module with a second, less restrictive vigilance parameter. Clusters are formed
+   using the typical process for the underlying art module unless no resonant
+   category is found. When this occurs, the less-restrictive vigilance parameter is
+   used to determine if a near-resonant category can be found. If one can be found,
+   a new cluster is formed, and the near-resonant category label is copied to the new
+   cluster. If neither resonant nor near resonant categories can be found, a new
+   cluster and new category label are both created. In this way, Dual Vigilance ART
+   is capable of finding arbitrarily shaped structures as composites of the
+   underlying ART geometry (i.e Hyper-ellipsoids or Hyper-boxes).
+
+7. SMART [@bartfai1994hierarchical]: Self-consistent Modular ART is a special case
+   of Deep ARTMAP and an extension of ARTMAP. SMART permits n-many modules (in
+   contrast to ARTMAPS 2-modules) which passes the same sample vector to each
+   module. Each module has a vigilance parameter monotonically increasing with depth.
+   This permits SMART to create self-consistent hierarchies of clusters through a
+   divisive clustering approach. The number of modules and granularity at each module
+   are both parameterizable.
+
+8. Deep ARTMAP: Deep ARTMAP is a novel contribution of this library. It generalizes
+   SMART by permitting each module to accept some function $f^i(x)$. This
+   generalization allows the user to find hierarchical relationships between an
+   abritrary number of functional transformations of some input data. When only two
+   modules are used and $f^1(x) = target$ and $f^2(x) = x$ Deep ARTMAP reduces to
+   standard ARTMAP.
+
+9. Topo ART [@tscherepanow2010topoart]: Topo ART is a topological clustering
+   approach which uses an elementary ART module to learn a distributed cluster graph
+   where samples can belong to multiple distinct clusters. The co-resonant clusters are
+   tracked using an adjacency matrix which describes the cluster relationships of
+   the entire model.
+
+10. CVI ART [@da2022icvi]: CVI ART maps the clusters of an elementary ART module to
+    category label identified by the optimal Cluster Validity Index (CV). This
+    mapping occurs similarly to simplified ARTMAP. An iterative implementation (iCVI
+    ART) is also provided, however it is currently only compatible with Fuzzy ART.
+
+11. BARTMAP [@xu2011bartmap; @xu2012biclustering]: BARTMAP is a Biclustering
+    algorithm based loosely on ARTMAP. The algorithm accepts two instantiated
+    elementary ART modules `module_A` and `module_B` which cluster the rows (samples)
+    and columns (features) respectively. The features are clustered independently,
+    but the samples are clustered by considering samples already within a row
+    cluster as well as the candidate sample and enforcing a minimum Pearson correlation
+    within the subset of features belonging to at least one of the feature clusters.
 
 # Statement of Need
 

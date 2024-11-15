@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "AdaptiveResonanceLib"
+version: "0.1.2"
+doi: "10.5281/zenodo.9999999"
+authors:
+  - family-names: "Melton"
+    given-names: "Niklas"
+    orcid: "https://orcid.org/0000-0001-9625-7086"
+date-released: 2024-10-03
+url: "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+repository-code: "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+license: "MIT"
+keywords:
+  - "adaptive resonance theory"
+  - "ART"
+  - "machine learning"
+  - "clustering"
+  - "neural networks"

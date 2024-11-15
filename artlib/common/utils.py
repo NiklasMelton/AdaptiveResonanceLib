@@ -1,21 +1,35 @@
+"""General utilities used throughout ARTLib."""
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Mapping, Sequence, Union, Any
+
+IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
 
-def normalize(data: np.ndarray, d_max: Optional[np.ndarray] = None, d_min: Optional[np.ndarray] = None) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Normalize data column-wise between 0 and 1.
+def normalize(
+    data: np.ndarray,
+    d_max: Optional[np.ndarray] = None,
+    d_min: Optional[np.ndarray] = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Normalize data column-wise between 0 and 1.
 
-    Parameters:
-    - data: 2D array of data set (rows = samples, columns = features)
-    - d_max: Optional, maximum values for each column
-    - d_min: Optional, minimum values for each column
+    Parameters
+    ----------
+    data : np.ndarray
+        2D array of dataset (rows = samples, columns = features).
+    d_max : np.ndarray, optional
+        Maximum values for each column.
+    d_min : np.ndarray, optional
+        Minimum values for each column.
 
-    Returns:
-    - normalized: normalized data
-    - d_max: maximum values for each column
-    - d_min: minimum values for each column
+    Returns
+    -------
+    np.ndarray
+        Normalized data.
+    np.ndarray
+        Maximum values for each column.
+    np.ndarray
+        Minimum values for each column.
+
     """
     if d_min is None:
         d_min = np.min(data, axis=0)
@@ -27,41 +41,57 @@ def normalize(data: np.ndarray, d_max: Optional[np.ndarray] = None, d_min: Optio
 
 
 def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.ndarray:
-    """
-    Restore column-wise normalized data to original scale.
+    """Restore column-wise normalized data to original scale.
 
-    Parameters:
-    - data: normalized data
-    - d_max: maximum values for each column
-    - d_min: minimum values for each column
+    Parameters
+    ----------
+    data : np.ndarray
+        Normalized data.
+    d_max : np.ndarray
+        Maximum values for each column.
+    d_min : np.ndarray
+        Minimum values for each column.
 
-    Returns:
-    - De-normalized data
+    Returns
+    -------
+    np.ndarray
+        De-normalized data.
+
     """
     return data * (d_max - d_min) + d_min
 
+
 def compliment_code(data: np.ndarray) -> np.ndarray:
-    """
-    compliment code data
+    """Compliment code the data.
 
-    Parameters:
-    - data: data set
+    Parameters
+    ----------
+    data : np.ndarray
+        Dataset.
 
-    Returns:
-        compliment coded data
+    Returns
+    -------
+    np.ndarray
+        Compliment coded data.
+
     """
-    cc_data = np.hstack([data, 1.0-data])
+    cc_data = np.hstack([data, 1.0 - data])
     return cc_data
 
+
 def de_compliment_code(data: np.ndarray) -> np.ndarray:
-    """
-    finds centroid of compliment coded data
+    """Find the centroid of compliment coded data.
 
-    Parameters:
-    - data: data set
+    Parameters
+    ----------
+    data : np.ndarray
+        Dataset.
 
-    Returns:
-        compliment coded data
+    Returns
+    -------
+    np.ndarray
+        De-compliment coded data.
+
     """
     # Get the shape of the array
     n, total_columns = data.shape
@@ -74,47 +104,62 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
 
     # Split the array into two arrays of shape n x m
     arr1 = data[:, :m]
-    arr2 = 1-data[:, m:]
+    arr2 = 1 - data[:, m:]
 
     # Find the element-wise mean
     mean_array = (arr1 + arr2) / 2
 
     return mean_array
 
+
 def l1norm(x: np.ndarray) -> float:
-    """
-    get l1 norm of a vector
+    """Get the L1 norm of a vector.
 
-    Parameters:
-    - x: some vector
+    Parameters
+    ----------
+    x : np.ndarray
+        Input vector.
 
-    Returns:
-        l1 norm
+    Returns
+    -------
+    float
+        L1 norm.
+
     """
     return float(np.sum(np.absolute(x)))
 
+
 def l2norm2(data: np.ndarray) -> float:
-    """
-    get (l2 norm)^2 of a vector
+    """Get the squared L2 norm of a vector.
 
-    Parameters:
-    - x: some vector
+    Parameters
+    ----------
+    data : np.ndarray
+        Input vector.
 
-    Returns:
-        (l2 norm)^2
+    Returns
+    -------
+    float
+        Squared L2 norm.
+
     """
     return float(np.matmul(data, data))
 
+
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """
-    get the fuzzy AND operation between two vectors
+    """Get the fuzzy AND operation between two vectors.
 
-    Parameters:
-    - a: some vector
-    - b: some vector
+    Parameters
+    ----------
+    x : np.ndarray
+        First input vector.
+    y : np.ndarray
+        Second input vector.
 
-    Returns:
-        Fuzzy AND result
+    Returns
+    -------
+    np.ndarray
+        Fuzzy AND result.
 
     """
     return np.minimum(x, y)

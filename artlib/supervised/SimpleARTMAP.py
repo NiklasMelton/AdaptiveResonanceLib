@@ -1,41 +1,79 @@
-"""
-Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
-Adaptive Resonance Theory Microchips: Circuit Design Techniques.
-Norwell, MA, USA: Kluwer Academic Publishers.
-"""
+"""Simple ARTMAP :cite:`gotarredona1998adaptive`."""
+# Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+# Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+# Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
-from typing import Optional, Iterable, Literal
+from typing import Optional, Literal, Dict, Union, Tuple
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
+from artlib.common.utils import IndexableOrKeyable
 from sklearn.utils.validation import check_is_fitted, check_X_y
 from sklearn.utils.multiclass import unique_labels
 
 
 class SimpleARTMAP(BaseARTMAP):
+    """SimpleARTMAP for Classification.
+
+    This module implements SimpleARTMAP as first published in:
+    :cite:`gotarredona1998adaptive`.
+
+    .. # Serrano-Gotarredona, T., Linares-Barranco, B., & Andreou, A. G. (1998).
+    .. # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
+    .. # Norwell, MA, USA: Kluwer Academic Publishers.
+
+    SimpleARTMAP is a special case of :class:`~artlib.supervised.ARTMAP.ARTMAP`
+    specifically for classification. It allows the clustering of data samples while
+    enforcing a many-to-one mapping from sample clusters to labels. It accepts an
+    instantiated :class:`~artlib.common.BaseART.BaseART` module and dynamically adapts
+    the vigilance function to prevent resonance when the many-to-one mapping is
+    violated. This enables SimpleARTMAP to identify discrete clusters belonging to
+    each category label.
+
+    """
+
+    def __init__(self, module_a: BaseART):
+        """Initialize SimpleARTMAP.
+
+        Parameters
+        ----------
+        module_a : BaseART
+            The instantiated ART module used for clustering the independent channel.
+
+        """
+        self.module_a = module_a
+        super().__init__()
 
     def match_reset_func(
-            self,
-            i: np.ndarray,
-            w: np.ndarray,
-            cluster_a,
-            params: dict,
-            extra: dict,
-            cache: Optional[dict] = None
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        cluster_a,
+        params: dict,
+        extra: dict,
+        cache: Optional[dict] = None,
     ) -> bool:
-        """
-        Permits external factors to influence cluster creation.
+        """Permits external factors to influence cluster creation.
 
-        Parameters:
-        - i: data sample
-        - w: cluster weight / info
-        - cluster_a: a-side cluster label
-        - params: dict containing parameters for the algorithm
-        - extra: additional parameters for the algorithm
-        - cache: dict containing values cached from previous calculations
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight / info.
+        cluster_a : int
+            A-side cluster label.
+        params : dict
+            Parameters for the algorithm.
+        extra : dict
+            Additional parameters, including "cluster_b".
+        cache : dict, optional
+            Values cached from previous calculations.
 
-        Returns:
-            true if match is permitted
+        Returns
+        -------
+        bool
+            True if the match is permitted, False otherwise.
 
         """
         cluster_b = extra["cluster_b"]
@@ -43,17 +81,18 @@ class SimpleARTMAP(BaseARTMAP):
             return False
         return True
 
-    def __init__(self, module_a: BaseART):
-        self.module_a = module_a
-        super().__init__()
-
     def get_params(self, deep: bool = True) -> dict:
-        """
+        """Get parameters of the model.
 
-        Parameters:
-        - deep: If True, will return the parameters for this class and contained subobjects that are estimators.
+        Parameters
+        ----------
+        deep : bool, default=True
+            If True, will return the parameters for this class and contained subobjects
+            that are estimators.
 
-        Returns:
+        Returns
+        -------
+        dict
             Parameter names mapped to their values.
 
         """
@@ -63,86 +102,142 @@ class SimpleARTMAP(BaseARTMAP):
             out.update(("module_a" + "__" + k, val) for k, val in deep_items)
         return out
 
+    def validate_data(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Validate data prior to clustering.
 
-    def validate_data(self, X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """
-        validates the data prior to clustering
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
 
-        Parameters:
-        - X: data set A
-        - y: data set B
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            The validated datasets X and y.
 
         """
         X, y = check_X_y(X, y, dtype=None)
         self.module_a.validate_data(X)
         return X, y
 
-    def prepare_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        prepare data for clustering
+    def prepare_data(
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """Prepare data for clustering.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set.
+        y : Optional[np.ndarray]
+            Data set B. Not used in SimpleARTMAP
 
-        Returns:
-            prepared data
+        Returns
+        -------
+        np.ndarray
+            Prepared data.
+
         """
         return self.module_a.prepare_data(X)
 
-    def restore_data(self, X: np.ndarray) -> np.ndarray:
-        """
-        restore data to state prior to preparation
+    def restore_data(
+        self, X: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """Restore data to state prior to preparation.
 
-        Parameters:
-        - X: data set
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set.
 
-        Returns:
-            restored data
+        Returns
+        -------
+        np.ndarray
+            Restored data.
+
         """
         return self.module_a.restore_data(X)
 
-    def step_fit(self, x: np.ndarray, c_b: int, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10) -> int:
-        """
-        Fit the model to a single sample
+    def step_fit(
+        self,
+        x: np.ndarray,
+        c_b: int,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ) -> int:
+        """Fit the model to a single sample.
 
-        Parameters:
-        - x: data sample for side A
-        - c_b: side b label
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample for side A.
+        c_b : int
+            Side B label.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
 
-        Returns:
-            side A cluster label
+        Returns
+        -------
+        int
+            Side A cluster label.
 
         """
         match_reset_func = lambda i, w, cluster, params, cache: self.match_reset_func(
-            i, w, cluster, params=params, extra={"cluster_b": c_b}, cache=cache
+            i,
+            w,
+            cluster,
+            params=params,
+            extra={"cluster_b": c_b},
+            cache=cache,
         )
-        c_a = self.module_a.step_fit(x, match_reset_func=match_reset_func, match_reset_method=match_reset_method, epsilon=epsilon)
+        c_a = self.module_a.step_fit(
+            x,
+            match_reset_func=match_reset_func,
+            match_tracking=match_tracking,
+            epsilon=epsilon,
+        )
         if c_a not in self.map:
             self.map[c_a] = c_b
         else:
             assert self.map[c_a] == c_b
         return c_a
 
-    def fit(self, X: np.ndarray, y: np.ndarray, max_iter=1, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10, verbose: bool = False):
-        """
-        Fit the model to the data
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        max_iter=1,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+        verbose: bool = False,
+    ):
+        """Fit the model to the data.
 
-        Parameters:
-        - X: data set A
-        - y: data set B
-        - max_iter: number of iterations to fit the model on the same data set
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        max_iter : int, default=1
+            Number of iterations to fit the model on the same data set.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+        verbose : bool, default=False
+            If True, displays a progress bar during training.
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The fitted model.
 
         """
         # Check that X and y have correct shape
@@ -157,82 +252,153 @@ class SimpleARTMAP(BaseARTMAP):
         for _ in range(max_iter):
             if verbose:
                 from tqdm import tqdm
+
                 x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
             else:
                 x_y_iter = enumerate(zip(X, y))
             for i, (x, c_b) in x_y_iter:
                 self.module_a.pre_step_fit(X)
-                c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
+                c_a = self.step_fit(
+                    x,
+                    c_b,
+                    match_tracking=match_tracking,
+                    epsilon=epsilon,
+                )
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
         return self
 
-    def partial_fit(self, X: np.ndarray, y: np.ndarray, match_reset_method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+", epsilon: float = 1e-10):
-        """
-        Partial fit the model to the data
+    def partial_fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+    ):
+        """Partial fit the model to the data.
 
-        Parameters:
-        - X: data set A
-        - y: data set B
-        - match_reset_method:
-            "MT+": Original method, rho=M+epsilon
-             "MT-": rho=M-epsilon
-             "MT0": rho=M, using > operator
-             "MT1": rho=1.0,  Immediately create a new cluster on mismatch
-             "MT~": do not change rho
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The partially fitted model.
 
         """
         SimpleARTMAP.validate_data(self, X, y)
-        if not hasattr(self, 'labels_'):
+        if not hasattr(self, "labels_"):
             self.labels_ = y
             self.module_a.W = []
             self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
             j = 0
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode='constant')
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode="constant")
             self.labels_[j:] = y
-            self.module_a.labels_ = np.pad(self.module_a.labels_, [(0, X.shape[0])], mode='constant')
+            self.module_a.labels_ = np.pad(
+                self.module_a.labels_, [(0, X.shape[0])], mode="constant"
+            )
         for i, (x, c_b) in enumerate(zip(X, y)):
             self.module_a.pre_step_fit(X)
-            c_a = self.step_fit(x, c_b, match_reset_method=match_reset_method, epsilon=epsilon)
-            self.module_a.labels_[i+j] = c_a
+            c_a = self.step_fit(x, c_b, match_tracking=match_tracking, epsilon=epsilon)
+            self.module_a.labels_[i + j] = c_a
             self.module_a.post_step_fit(X)
         return self
 
     @property
-    def labels_a(self):
+    def labels_a(self) -> np.ndarray:
+        """Get labels from side A (module A).
+
+        Returns
+        -------
+        np.ndarray
+            Labels from module A.
+
+        """
         return self.module_a.labels_
 
     @property
-    def labels_b(self):
+    def labels_b(self) -> np.ndarray:
+        """Get labels from side B.
+
+        Returns
+        -------
+        np.ndarray
+            Labels from side B.
+
+        """
         return self.labels_
 
     @property
-    def labels_ab(self):
+    def labels_ab(self) -> Dict[str, np.ndarray]:
+        """Get labels from both A-side and B-side.
+
+        Returns
+        -------
+        dict
+            A dictionary with keys "A" and "B" containing labels from sides A and B,
+            respectively.
+
+        """
         return {"A": self.labels_a, "B": self.labels_}
 
     @property
-    def n_clusters(self):
+    def n_clusters(self) -> int:
+        """Get the number of clusters in side A.
+
+        Returns
+        -------
+        int
+            Number of clusters.
+
+        """
         return self.module_a.n_clusters
 
     @property
-    def n_clusters_a(self):
+    def n_clusters_a(self) -> int:
+        """Get the number of clusters in side A.
+
+        Returns
+        -------
+        int
+            Number of clusters in side A.
+
+        """
         return self.n_clusters
 
     @property
-    def n_clusters_b(self):
+    def n_clusters_b(self) -> int:
+        """Get the number of clusters in side B.
+
+        Returns
+        -------
+        int
+            Number of clusters in side B.
+
+        """
         return len(set(c for c in self.map.values()))
 
     def step_pred(self, x: np.ndarray) -> tuple[int, int]:
-        """
-        Predict the label for a single sample
+        """Predict the label for a single sample.
 
-        Parameters:
-        - x: data sample for side A
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample for side A.
 
-        Returns:
-            side A cluster label, side B cluster label
+        Returns
+        -------
+        tuple[int, int]
+            Side A cluster label, side B cluster label.
 
         """
         c_a = self.module_a.step_pred(x)
@@ -240,14 +406,17 @@ class SimpleARTMAP(BaseARTMAP):
         return c_a, c_b
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        predict labels for the data
+        """Predict labels for the data.
 
-        Parameters:
-        - X: data set A
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
 
-        Returns:
-            B labels for the data
+        Returns
+        -------
+        np.ndarray
+            B labels for the data.
 
         """
         check_is_fitted(self)
@@ -258,14 +427,17 @@ class SimpleARTMAP(BaseARTMAP):
         return y_b
 
     def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """
-        predict labels for the data, both A-side and B-side
+        """Predict labels for the data, both A-side and B-side.
 
-        Parameters:
-        - X: data set A
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
 
-        Returns:
-            A labels for the data, B labels for the data
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            A labels for the data, B labels for the data.
 
         """
         check_is_fitted(self)
@@ -277,14 +449,19 @@ class SimpleARTMAP(BaseARTMAP):
             y_b[i] = c_b
         return y_a, y_b
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
-        """
-        undefined function for visualizing the bounds of each cluster
+    def plot_cluster_bounds(
+        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+    ):
+        """Visualize the cluster boundaries.
 
-        Parameters:
-        - ax: figure axes
-        - colors: colors to use for each cluster
-        - linewidth: width of boundary line
+        Parameters
+        ----------
+        ax : Axes
+            Figure axes.
+        colors : IndexableOrKeyable
+            Colors to use for each cluster.
+        linewidth : int, default=1
+            Width of boundary lines.
 
         """
         colors_a = []
@@ -293,24 +470,30 @@ class SimpleARTMAP(BaseARTMAP):
         self.module_a.plot_cluster_bounds(ax, colors_a, linewidth)
 
     def visualize(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            ax: Optional[Axes] = None,
-            marker_size: int = 10,
-            linewidth: int = 1,
-            colors: Optional[Iterable] = None
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[IndexableOrKeyable] = None,
     ):
-        """
-        Visualize the clustering of the data
+        """Visualize the clustering of the data.
 
-        Parameters:
-        - X: data set
-        - y: sample labels
-        - ax: figure axes
-        - marker_size: size used for data points
-        - linewidth: width of boundary line
-        - colors: colors to use for each cluster
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set.
+        y : np.ndarray
+            Sample labels.
+        ax : Optional[Axes], default=None
+            Figure axes.
+        marker_size : int, default=10
+            Size used for data points.
+        linewidth : int, default=1
+            Width of boundary lines.
+        colors : Optional[Iterable], default=None
+            Colors to use for each cluster.
 
         """
         import matplotlib.pyplot as plt
@@ -320,10 +503,17 @@ class SimpleARTMAP(BaseARTMAP):
 
         if colors is None:
             from matplotlib.pyplot import cm
+
             colors = cm.rainbow(np.linspace(0, 1, self.n_clusters_b))
 
         for k_b, col in enumerate(colors):
             cluster_data = y == k_b
-            plt.scatter(X[cluster_data, 0], X[cluster_data, 1], color=col, marker=".", s=marker_size)
+            plt.scatter(
+                X[cluster_data, 0],
+                X[cluster_data, 1],
+                color=col,
+                marker=".",
+                s=marker_size,
+            )
 
         self.plot_cluster_bounds(ax, colors, linewidth)

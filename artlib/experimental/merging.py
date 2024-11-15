@@ -1,4 +1,23 @@
-def find(parent, i):
+from typing import List, Callable
+
+
+def find(parent: List[int], i: int) -> int:
+    """
+    Find the root of the set containing element i using path compression.
+
+    Parameters
+    ----------
+    parent : list
+        List representing the parent of each element.
+    i : int
+        The element to find the root of.
+
+    Returns
+    -------
+    int
+        The root of the set containing element i.
+
+    """
     if parent[i] == i:
         return i
     else:
@@ -6,7 +25,22 @@ def find(parent, i):
         return parent[i]
 
 
-def union(parent, rank, x, y):
+def union(parent: List[int], rank: list[int], x: int, y: int):
+    """
+    Perform union of two sets containing elements x and y using union by rank.
+
+    Parameters
+    ----------
+    parent : list
+        List representing the parent of each element.
+    rank : list
+        List representing the rank (depth) of each tree.
+    x : int
+        The first element.
+    y : int
+        The second element.
+
+    """
     root_x = find(parent, x)
     root_y = find(parent, y)
 
@@ -21,7 +55,23 @@ def union(parent, rank, x, y):
             rank[root_x] += 1
 
 
-def merge_objects(objects, can_merge):
+def merge_objects(objects: List, can_merge: Callable):
+    """
+    Merge objects into groups based on a merge condition function using Union-Find algorithm.
+
+    Parameters
+    ----------
+    objects : list
+        List of objects to be merged.
+    can_merge : callable
+        A function that takes two objects and returns True if they can be merged.
+
+    Returns
+    -------
+    list of list
+        A list of merged groups, where each group is a list of object indices.
+
+    """
     # Initialize Union-Find structure
     n = len(objects)
     parent = list(range(n))

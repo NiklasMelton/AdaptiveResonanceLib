@@ -38,9 +38,9 @@ If you're ready to contribute, here's how you can do it:
 
 5. **Run the tests** to ensure your changes don't break existing functionality.
 
-6. **Update the documentation** if you're adding new features or changing existing behavior. 
+6. **Update the documentation** if you're adding new features or changing existing behavior.
 
-7. **Submit a pull request**. Include a clear description of the changes and reference any related issues. 
+7. **Submit a pull request**. Include a clear description of the changes and reference any related issues.
 
 ## Pull Request Process
 

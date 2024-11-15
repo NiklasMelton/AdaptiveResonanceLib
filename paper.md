@@ -28,14 +28,14 @@ bibliography: references.bib
 
 # Summary
 
-The Adaptive Resonance Library (**artlib**) is a Python library that implements a wide
-range of Adaptive Resonance Theory (ART) algorithms. **artlib** currently supports eight
-elementary ART models and 11 compound ART models. These models can be applied to
-tasks such as unsupervised clustering, supervised classification, regression, and
-reinforcement learning [@da2019survey]. This library provides an extensible and
-modular framework where users can integrate custom models or extend current
-implementations, allowing for experimentation with existing and novel machine
-learning techniques.
+The Adaptive Resonance Theory Library (**artlib**) is a Python library that
+implements a wide range of Adaptive Resonance Theory (ART) algorithms. **artlib**
+currently supports eight elementary ART models and 11 compound ART models. These
+models can be applied to tasks such as unsupervised clustering, supervised
+classification, regression, and reinforcement learning [@da2019survey]. This library
+provides an extensible and modular framework where users can integrate custom models
+or extend current implementations, allowing for experimentation with existing and
+novel machine learning techniques.
 
 In addition to the diverse set of ART models, **artlib** offers implementations of
 visualization methods for various cluster geometries, along with pre-processing
@@ -105,7 +105,7 @@ models are currently implemented:
    for the resonance layer. ART2 is widely considered to not work and is not
    recommended for use. It is included here for historical purposes.
 
-3. Fuzzy ART [@carpenter1991fuzzy]: is the most cited and arguably most widely used
+3. Fuzzy ART [@carpenter1991fuzzy]: is arguably the most widely used
    ART variant at this time. Fuzzy ART is a hyper-box based clustering method,
    capable of clustering continuous-valued data. Data is pre-processed into zero-volume
    hyper-boxes through the process of complement coding before being used to
@@ -115,27 +115,26 @@ models are currently implemented:
 
 4. Hyperpshere ART [@anagnostopoulos2000hypersphere]: Hypersphere ART was designed
    to succeed Fuzzy ART with a more efficient internal knowledge representation.
-   Categories are hyperpspheres and require less internal memory however computational
-   complexity is increased relative to Fuzzy ART.
+   Categories are hyper-pspheres and require less internal memory. However,
+   computational complexity is increased relative to Fuzzy ART.
 
 5. Ellipsoid ART[@anagnostopoulos2001a; @anagnostopoulos2001b]: Ellipsoid ART is a
-   generalization of Hyperpshere ART which permits ellipsoids with arbitrary
-   rotation. Ellipsoid ART is highly order dependent as the second sample added
-   to any cluster sets the axes orientations.
+   generalization of Hyperpshere ART which finds ellipsoidal clusters with arbitrary
+   rotation. Ellipsoid ART is highly order-dependent.
 
-6. Guassian ART [@williamson1996gaussian]: clusters data in Gaussian Distributions
-   (Hyper-ellipsoids) and is similar to Bayesian ART but differs in that the
-   hyper-ellipsoid always have their principal axes square to the coordinate frame.
-   It is also faster than Bayesian ART.
+6. Guassian ART [@williamson1996gaussian]: Gaussian ART clusters data in Gaussian
+   distributions (Hyper-ellipsoids) and is similar to Bayesian ART but differs in
+   that the hyper-ellipsoid always have their principal axes square to the
+   coordinate frame. It is also faster than Bayesian ART.
 
-7. Bayesian ART [@vigdor2007bayesian]: clusters data in Bayesian Distributions
-   (Hyper-ellipsoids) and is similar to Gaussian ART but differs in that it allows
-   arbitrary rotation of the hyper-ellipsoid.
+7. Bayesian ART [@vigdor2007bayesian]: Bayesian ART clusters data in Bayesian
+   Distributions (Hyper-ellipsoids) and is similar to Gaussian ART but differs in
+   that it allows arbitrary rotation of the hyper-ellipsoid.
 
-8. Quadratic Neuron ART [@su2001application; @su2005new]: QN-ART utilizes a weight
-   vector and a quadratic term to create clusters in a hyper-ellipsoid structure. It
-   is superficially similar to ART2-A but is more sophisticated in that neurons also
-   learn a bias and quadratic activation term.
+8. Quadratic Neuron ART [@su2001application; @su2005new]: QN-ART uses a neural
+   activation and resonance method to create clusters in a hyper-ellipsoid structure. It
+   is superficially similar to ART2-A in that it uses a weight vector but it is more
+   sophisticated in that neurons also learn a bias and quadratic activation term.
 
 ## Compound Models
 A compound ART model is one which extends the functionality of one or more
@@ -152,7 +151,7 @@ models are currently implemented:
    therefore be used for both classification and regression tasks.
 
 2. Simple ARTMAP [@gotarredona1998adaptive]: Simple ARTMAP (or Simplified ARTMAP)
-   was developed to streamline the ARTMAP algorithm for classification task. As most
+   was developed to streamline the ARTMAP algorithm for classification tasks. As most
    classification problems provide discrete labels, it is possible to replace the
    B-side of the ARTMAP algorithm with the class labels directly. Simple ARTMAP does
    this and creates a mapping from B-side class labels to A-side cluster labels. The
@@ -228,71 +227,7 @@ models are currently implemented:
     cluster as well as the candidate sample and enforcing a minimum Pearson correlation
     within the subset of features belonging to at least one of the feature clusters.
 
-# Statement of Need
 
-The Adaptive Resonance Library (**artlib**) is essential for researchers, developers,
-and educators interested in adaptive neural networks, specifically ART algorithms.
-While deep learning dominates machine learning, ART models offer unique advantages
-in incremental and real-time learning environments due to their ability to learn new
-data without forgetting previously learned information.
-
-Currently, no comprehensive Python library implements a variety of ART models in an
-open-source, modular, and extensible manner. **artlib** fills this gap by offering a
-range of ART implementations that integrate seamlessly with machine learning workflows,
-including scikit-learn's `Pipeline` and `GridSearchCV` [@scikit-learn]. The library is
-designed for ease of use and high performance, leveraging Python's scientific stack
-(NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn])
-for fast numerical computation.
-
-The modular design of **artlib** enables users to create novel compound ART models,
-such as Dual Vigilance Fusion ART [@da2019dual; @tan2007intelligence] or
-Quadratic Neuron SMART [@su2001application; @su2005new; @bartfai1994hierarchical].
-This flexibility offers powerful experimental and time-saving benefits, allowing
-researchers and practitioners to evaluate models on diverse datasets efficiently.
-
-Additionally, the library serves as a valuable educational tool, providing
-well-documented code and familiar APIs to support hands-on experimentation with ART
-models. It is ideal for academic courses or personal projects in artificial
-intelligence and machine learning, making **artlib** a versatile resource.
-
-**artlib** is actively maintained and designed for future extension, allowing users
-to create new ART models, adjust parameters for specific applications, and explore ART's
-potential for novel research problems. Its integration with popular Python libraries
-ensures its adaptability to current machine learning challenges.
-
-# Comparison to Existing Implementations
-
-While there are several open-source repositories that provide
-python implementations of specific ART models [@birkjohann2023artpython;
-@aiopenlab2023art; @dilekman2022artificial; @artpy2022; @dixit2020adaptive;
-@inyoot2021art; @valixandra2021adaptive; @wan2022art2; @ray2023artpy], they lack
-modularity and are limited in scope, often implementing just one or two models. For
-instance, MATLAB-based ART toolboxes [@mathworks_art1s; @mathworks_fuzzyart_fuzzyartmap;
-@mathworks_topoart; @mathworks_art_fuzzyart_artmap] provide implementations of
-Fuzzy ART, TopoART, ART1, and ARTMAP models, but they lack the flexibility and
-modularity required for broader experimentation. The most significant existing ART
-implementation exists in julia and provides just five models
-[@Petrenko_AdaptiveResonance_jl_A_Julia_2022] but, like the previously listed
-MATLAB-based toolboxes, it is not easily accessible to Python-based work flows and
-lacks a modular design.
-
-These existing implementations of ART models may provide standalone versions of
-individual models, but they are often not designed to integrate seamlessly with modern
-Python libraries such as scikit-learn, NumPy, and SciPy. As a result, researchers and
-developers working in Python-based environments face challenges when trying to
-incorporate ART models into their machine learning pipelines.
-
-In contrast, **artlib** offers a comprehensive and modular collection of ART models,
-including both elementary and compound ART architectures. It is designed for
-interoperability with popular Python tools, enabling users to easily integrate ART
-models into machine learning workflows, optimize models using scikit-learn's
-`GridSearchCV`, and preprocess data using standard libraries. Further, **artlib**
-provides users the flexibility to construct their own compound ART modules (those
-art modules deriving properties from other, elementary modules) which
-may or may not exist in published literature. **artlib** also provides a template
-in the source code to encourage users to develop and experiment with their own custom
-ART algorithms. This flexibility and integration make **artlib** a powerful resource
-for both research and practical applications.
 
 ## General Usage
 To install AdaptiveResonanceLib, simply use pip:
@@ -396,6 +331,73 @@ model.fit(train_X_prep, train_y)
 # Predict y-channel values
 pred_y = model.predict_regression(test_Xy_prep, target_channels=[1])
 ```
+
+
+# Statement of Need
+
+The Adaptive Resonance Library (**artlib**) is essential for researchers, developers,
+and educators interested in adaptive neural networks, specifically ART algorithms.
+While deep learning dominates machine learning, ART models offer unique advantages
+in incremental and real-time learning environments due to their ability to learn new
+data without forgetting previously learned information.
+
+Currently, no comprehensive Python library implements a variety of ART models in an
+open-source, modular, and extensible manner. **artlib** fills this gap by offering a
+range of ART implementations that integrate seamlessly with machine learning workflows,
+including scikit-learn's `Pipeline` and `GridSearchCV` [@scikit-learn]. The library is
+designed for ease of use and high performance, leveraging Python's scientific stack
+(NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn])
+for fast numerical computation.
+
+The modular design of **artlib** enables users to create novel compound ART models,
+such as Dual Vigilance Fusion ART [@da2019dual; @tan2007intelligence] or
+Quadratic Neuron SMART [@su2001application; @su2005new; @bartfai1994hierarchical].
+This flexibility offers powerful experimental and time-saving benefits, allowing
+researchers and practitioners to evaluate models on diverse datasets efficiently.
+
+Additionally, the library serves as a valuable educational tool, providing
+well-documented code and familiar APIs to support hands-on experimentation with ART
+models. It is ideal for academic courses or personal projects in artificial
+intelligence and machine learning, making **artlib** a versatile resource.
+
+**artlib** is actively maintained and designed for future extension, allowing users
+to create new ART models, adjust parameters for specific applications, and explore ART's
+potential for novel research problems. Its integration with popular Python libraries
+ensures its adaptability to current machine learning challenges.
+
+# Comparison to Existing Implementations
+
+While there are several open-source repositories that provide
+python implementations of specific ART models [@birkjohann2023artpython;
+@aiopenlab2023art; @dilekman2022artificial; @artpy2022; @dixit2020adaptive;
+@inyoot2021art; @valixandra2021adaptive; @wan2022art2; @ray2023artpy], they lack
+modularity and are limited in scope, often implementing just one or two models. For
+instance, MATLAB-based ART toolboxes [@mathworks_art1s; @mathworks_fuzzyart_fuzzyartmap;
+@mathworks_topoart; @mathworks_art_fuzzyart_artmap] provide implementations of
+Fuzzy ART, TopoART, ART1, and ARTMAP models, but they lack the flexibility and
+modularity required for broader experimentation. The most significant existing ART
+implementation exists in julia and provides just five models
+[@Petrenko_AdaptiveResonance_jl_A_Julia_2022] but, like the previously listed
+MATLAB-based toolboxes, it is not easily accessible to Python-based work flows and
+lacks a modular design.
+
+These existing implementations of ART models may provide standalone versions of
+individual models, but they are often not designed to integrate seamlessly with modern
+Python libraries such as scikit-learn, NumPy, and SciPy. As a result, researchers and
+developers working in Python-based environments face challenges when trying to
+incorporate ART models into their machine learning pipelines.
+
+In contrast, **artlib** offers a comprehensive and modular collection of ART models,
+including both elementary and compound ART architectures. It is designed for
+interoperability with popular Python tools, enabling users to easily integrate ART
+models into machine learning workflows, optimize models using scikit-learn's
+`GridSearchCV`, and preprocess data using standard libraries. Further, **artlib**
+provides users the flexibility to construct their own compound ART modules (those
+art modules deriving properties from other, elementary modules) which
+may or may not exist in published literature. **artlib** also provides a template
+in the source code to encourage users to develop and experiment with their own custom
+ART algorithms. This flexibility and integration make **artlib** a powerful resource
+for both research and practical applications.
 
 
 # Acknowledgements

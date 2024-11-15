@@ -15,7 +15,7 @@ def cluster_blobs():
     data = (data > 0.5).astype(int)
     print("Data has shape:", data.shape)
 
-    params = {"rho": 0.7, "beta": 1.0, "L": 1.0}
+    params = {"rho": 0.7, "L": 1.0}
     cls = ART1(**params)
 
     X = cls.prepare_data(data)

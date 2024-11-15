@@ -207,5 +207,5 @@ Happy Modeling with AdaptiveResonanceLib!
 ## Citing this Repository
 If you use this project in your research, please cite it as:
 
-Melton, N. (2024). AdaptiveResonanceLib (Version 0.1.2)
+Melton, N. (2024). AdaptiveResonanceLib (Version 0.1.3)
 <!-- END citation -->

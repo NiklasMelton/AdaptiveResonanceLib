@@ -458,6 +458,9 @@ class BaseART(BaseEstimator, ClusterMixin):
                 T_values, T_cache = zip(
                     *[self.category_choice(x, w, params=self.params) for w in self.W]
                 )
+                # if self.sample_counter_ == 816:
+                #     print(T_values)
+                #     print(x)
             T = np.array(T_values)
             while any(~np.isnan(T)):
                 c_ = int(np.nanargmax(T))

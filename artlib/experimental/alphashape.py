@@ -5,6 +5,82 @@ import numpy as np
 import math
 from typing import Tuple, Set
 
+
+class GraphClosureTracker:
+    def __init__(self, num_nodes):
+        # Initialize each node to be its own parent (self-loop)
+        self.parent = list(range(num_nodes))
+        self.rank = [0] * num_nodes  # Rank array to optimize union operation
+        self.num_nodes = num_nodes
+        self.components = {i: {i} for i in range(num_nodes)}  # Initial components
+
+    def find(self, node):
+        # Find with path compression
+        if self.parent[node] != node:
+            self.parent[node] = self.find(self.parent[node])
+        return self.parent[node]
+
+    def union(self, node1, node2):
+        # Union by rank and update components
+        root1 = self.find(node1)
+        root2 = self.find(node2)
+
+        if root1 != root2:
+            # Attach smaller rank tree under the larger rank tree
+            if self.rank[root1] > self.rank[root2]:
+                self.parent[root2] = root1
+                # Update the components by merging sets
+                self.components[root1].update(self.components[root2])
+                del self.components[root2]
+            elif self.rank[root1] < self.rank[root2]:
+                self.parent[root1] = root2
+                self.components[root2].update(self.components[root1])
+                del self.components[root1]
+            else:
+                self.parent[root2] = root1
+                self.rank[root1] += 1
+                self.components[root1].update(self.components[root2])
+                del self.components[root2]
+
+    def add_edge(self, node1, node2):
+        # Add an edge by connecting two nodes
+        self.union(node1, node2)
+
+    def add_fully_connected_subgraph(self, nodes):
+        # Connect each pair of nodes to form a fully connected subgraph
+        for i in range(len(nodes)):
+            for j in range(i + 1, len(nodes)):
+                self.union(nodes[i], nodes[j])
+
+    def subgraph_is_already_connected(self, nodes):
+        # Check if all nodes in the given list are connected
+
+        if not nodes:
+            return True  # Empty list is trivially connected
+        # Find the root of the first node
+        root = self.find(nodes[0])
+        # Check if all other nodes share this root
+        return all(self.find(node) == root for node in nodes)
+
+    def is_connected(self, node1, node2):
+        # Check if two nodes are in the same component
+        return self.find(node1) == self.find(node2)
+
+    def __iter__(self):
+        # Make the class iterable over connected components
+        return iter(self.components.values())
+
+    def __getitem__(self, index):
+        # Make the class indexable over connected components
+        return list(self.components.values())[index]
+
+    def __len__(self):
+        # Return the number of connected components
+        return len(self.components)
+
+
+
+
 def circumcenter(points: np.ndarray) -> np.ndarray:
     """
     Calculate the circumcenter of a set of points in barycentric coordinates.
@@ -170,25 +246,27 @@ class AlphaShape:
           np.ndarray
         """
         assert points.shape[-1] > 1
+        self.points = points
         # Create a set to hold unique edges of simplices that pass the radius
         # filtering
         edges = set()
         perimeter_edges = set()
-        simplices = set()
+        self.simplices = set()
         self.perimeter_points = []
         self.alpha = alpha
         self.max_perimeter_length = max_perimeter_length
         self.centroid = 0
         self.volume = 0
         self.surface_area = 0
+        self.GCT = GraphClosureTracker(points.shape[0])
         visited_points = set()
-
-        if len(points) < 3:
+        n_points = len(points)
+        if n_points < 3:
             # handle lines and points separately
             self.perimeter_points = points
             self.centroid = np.mean(points, axis=0)
             self.volume = 0
-            if len(points) < 2:
+            if n_points < 2:
                 self.surface_area = 0
                 self.perimeter_edges = []
                 visited_points = {0}
@@ -196,6 +274,7 @@ class AlphaShape:
                 self.surface_area = 2*np.linalg.norm(points[0,:]-points[1,:], ord=2)
                 self.perimeter_edges = [(points[0,:], points[1,:])]
                 visited_points = {0, 1}
+                self.GCT.add_edge(0,1)
 
         else:
             # Whenever a simplex is found that passes the radius filter, its edges
@@ -214,7 +293,12 @@ class AlphaShape:
 
             for point_indices, circumradius, simplex_coords in alpha_simplices:
                 # Radius filter
-                if circumradius < radius_filter or not all(p in visited_points for p in point_indices):
+                check_points = point_indices.tolist()
+                if (
+                        circumradius < radius_filter or
+                        not self.GCT.subgraph_is_already_connected(check_points)
+                ):
+                    self.GCT.add_fully_connected_subgraph(point_indices.tolist())
                     for edge in itertools.combinations(
                             point_indices, r=points.shape[-1]):
                         edge = tuple(sorted(edge))
@@ -230,7 +314,7 @@ class AlphaShape:
                                 for e in itertools.combinations(edge, r=len(edge))
                             )
                     visited_points.update(tuple(point_indices))
-                    simplices.add(tuple(point_indices))
+                    self.simplices.add(tuple(point_indices))
                     simplex_centroid = np.mean(simplex_coords, axis=0)
                     simplex_volume = volume_of_simplex(simplex_coords)
                     self.volume += simplex_volume
@@ -246,7 +330,7 @@ class AlphaShape:
                 self.perimeter_points = np.vstack(
                     [points[p, :] for p in perimeter_indices]
                 )
-                self.surface_area = compute_surface_area(points, perimeter_edges, simplices)
+                self.surface_area = compute_surface_area(points, perimeter_edges, self.simplices)
 
         self.is_empty = False
         if self.max_edge_length > max_perimeter_length or len(self.perimeter_points) == 0 or points.shape[0] != len(visited_points):
@@ -282,11 +366,31 @@ class AlphaShape:
     def vertices(self):
         return self.perimeter_points
 
-    # def contains_point(self, point: np.ndarray):
-    #     if len(self.perimeter_points) < 3:
-    #         return True
-    #     delaunay = Delaunay(self.perimeter_points)
-    #     return delaunay.find_simplex(point) >= 0
+    def contains_point(self, point: np.ndarray) -> bool:
+        if len(self.points) < len(point) + 1:
+            return False
+
+        # Iterate over each simplex defined by indices in self.simplices
+        for simplex in self.simplices:
+            # Get the vertices of the simplex from perimeter points
+            vertices = self.points[list(simplex)]
+
+            # Solve for barycentric coordinates
+            try:
+                # Create an augmented matrix for the linear system (for homogeneous coordinates)
+                matrix = np.vstack([vertices.T, np.ones(len(vertices))])
+                point_h = np.append(point, 1)  # Homogeneous coordinate for the point
+                barycentric_coords = np.linalg.solve(matrix, point_h)
+
+                # Check if all barycentric coordinates are non-negative (point lies inside simplex)
+                if np.all(barycentric_coords >= 0):
+                    return True
+            except np.linalg.LinAlgError:
+                # In case vertices are degenerate and can't form a valid simplex, skip it
+                continue
+
+        # If no simplex contains the point, return False
+        return False
 
     # @property
     # def simplices(self) -> List[np.ndarray]:

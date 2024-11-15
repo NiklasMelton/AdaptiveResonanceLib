@@ -118,17 +118,22 @@ class HullART(BaseART):
             Cache used for later processing.
 
         """
-
-        new_w = deepcopy(w)
-        new_w.add_points(i.reshape((1, -1)))
-        if new_w.is_empty:
-            activation = np.nan
-            new_vol = 0
-        else:
+        if w.contains_point(i):
+            activation = 2.0
+            new_w = deepcopy(w)
             min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
             new_vol = 1. - max(new_w.volume, min_vol)
-            activation = new_vol / (1. - max(w.volume, min_vol) + params["alpha"])
-
+        else:
+            new_w = deepcopy(w)
+            new_w.add_points(i.reshape((1, -1)))
+            if new_w.is_empty:
+                activation = np.nan
+                new_vol = 0
+            else:
+                min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
+                new_vol = 1. - max(new_w.volume, min_vol)
+                # activation = new_vol / (1. - max(w.volume, min_vol) + params["alpha"])
+                activation = 1.0 - (max(new_w.volume, min_vol)-max(w.volume, min_vol))
         cache = {"new_w": new_w, "new_vol": new_vol, "activation": activation}
 
         return activation, cache

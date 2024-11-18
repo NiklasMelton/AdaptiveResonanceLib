@@ -28,21 +28,18 @@ class ART1(BaseART):
 
     """
 
-    def __init__(self, rho: float, beta: float, L: float):
+    def __init__(self, rho: float, L: float):
         """Initialize the ART1 model.
 
         Parameters
         ----------
         rho : float
             Vigilance parameter in the range [0, 1].
-        beta : float
-            Learning parameter in the range [0, 1]. A value of 1 is recommended for fast
-            learning.
         L : float
             Uncommitted node bias, a value greater than or equal to 1.
 
         """
-        params = {"rho": rho, "beta": beta, "L": L}
+        params = {"rho": rho, "L": L}
         super().__init__(params)
 
     @staticmethod
@@ -56,13 +53,10 @@ class ART1(BaseART):
 
         """
         assert "rho" in params
-        assert "beta" in params
         assert "L" in params
         assert 1.0 >= params["rho"] >= 0.0
-        assert 1.0 >= params["beta"] >= 0.0
         assert params["L"] >= 1.0
         assert isinstance(params["rho"], float)
-        assert isinstance(params["beta"], float)
         assert isinstance(params["L"], float)
 
     def validate_data(self, X: np.ndarray):

@@ -1,7 +1,7 @@
 ---
 title: 'Adaptive Resonance Lib: A Python package for Adaptive Resonance Theory (ART) models'
 tags:
-  - Python
+  - python
   - clustering
   - classification
   - regression
@@ -28,28 +28,55 @@ bibliography: references.bib
 
 # Summary
 
-The Adaptive Resonance Library (**artlib**) is a Python library that implements a wide
-range of Adaptive Resonance Theory (ART) algorithms. **artlib** currently supports eight
-elementary ART models and 11 compound ART models, including Fuzzy ART
-[@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere], Ellipsoid ART
-[@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
-[@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron
-ART [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
+The Adaptive Resonance Theory Library (**artlib**) is a Python library that
+implements a wide range of Adaptive Resonance Theory (ART) algorithms. **artlib**
+currently supports eight elementary ART models and 11 compound ART models, including
+Fuzzy ART [@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere],
+Ellipsoid ART [@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
+[@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron ART
+[@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
 [@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified
 ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART
 [@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],
 BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],
-FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. These models can be
-applied to tasks such as unsupervised clustering, supervised classification, regression,
-and reinforcement learning [@da2019survey]. This library provides an extensible and
-modular framework where users can integrate custom models or extend current
-implementations, allowing for experimentation with existing and novel machine learning
-techniques.
+FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. These
+models can be applied to tasks such as unsupervised clustering, supervised
+classification, regression, and reinforcement learning [@da2019survey]. This library
+provides an extensible and modular framework where users can integrate custom models
+or extend current implementations, allowing for experimentation with existing and
+novel machine learning techniques.
 
 In addition to the diverse set of ART models, **artlib** offers implementations of
 visualization methods for various cluster geometries, along with pre-processing
 techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
 normalization, and complement coding.
+
+
+# Adaptive Resonance Theory (ART)
+
+ART is a class of neural networks known for solving the stability-plasticity dilemma,
+making it particularly effective for classification, clustering, and incremental
+learning tasks [@grossberg1976a; @grossberg1976a; @Grossberg1980HowDA;
+@grossberg2013adaptive; @da2019survey]. ART models are designed to dynamically learn
+and adapt to new patterns without catastrophic forgetting, making them ideal for
+real-time systems requiring continuous learning.
+
+Over the years, dozens of ART variations have been published [@da2019survey],
+extending the applicability of ART to nearly all learning regimes, including
+reinforcement learning [@tan2004falcon; @tan2008integrating], hierarchical
+clustering [@bartfai1994hierarchical], topological clustering
+[@tscherepanow2010topoart], and biclustering [@xu2011bartmap; @xu2012biclustering].
+These numerous models provide an ART-based solution for most machine learning use cases.
+However, the rapid pace of bespoke model development, coupled with the challenges
+students face in learning ART's foundational principles, has contributed to a
+scarcity of open-source, user-friendly implementations for most ART variants.
+
+The ability of ART to preserve previously learned patterns while learning new data in
+real-time has made it a powerful tool in domains such as robotics, medical diagnosis,
+and adaptive control systems. **artlib** aims to extend the application of these models
+in modern machine learning pipelines, offering a unique and approachable toolkit for
+leveraging ART's strengths.
+
 
 # Statement of Need
 
@@ -117,30 +144,6 @@ in the source code to encourage users to develop and experiment with their own c
 ART algorithms. This flexibility and integration make **artlib** a powerful resource
 for both research and practical applications.
 
-# Adaptive Resonance Theory (ART)
-
-ART is a class of neural networks known for solving the stability-plasticity dilemma,
-making it particularly effective for classification, clustering, and incremental
-learning tasks [@grossberg1976a; @grossberg1976a; @Grossberg1980HowDA;
-@grossberg2013adaptive; @da2019survey]. ART models are designed to dynamically learn
-and adapt to new patterns without catastrophic forgetting, making them ideal for
-real-time systems requiring continuous learning.
-
-Over the years, dozens of ART variations have been published [@da2019survey],
-extending the applicability of ART to nearly all learning regimes, including
-reinforcement learning [@tan2004falcon; @tan2008integrating], hierarchical
-clustering [@bartfai1994hierarchical], topological clustering
-[@tscherepanow2010topoart], and biclustering [@xu2011bartmap; @xu2012biclustering].
-These numerous models provide an ART-based solution for most machine learning use cases.
-However, the rapid pace of bespoke model development, coupled with the challenges
-students face in learning ART's foundational principles, has contributed to a
-scarcity of open-source, user-friendly implementations for most ART variants.
-
-The ability of ART to preserve previously learned patterns while learning new data in
-real-time has made it a powerful tool in domains such as robotics, medical diagnosis,
-and adaptive control systems. **artlib** aims to extend the application of these models
-in modern machine learning pipelines, offering a unique and approachable toolkit for
-leveraging ART's strengths.
 
 # Acknowledgements
 

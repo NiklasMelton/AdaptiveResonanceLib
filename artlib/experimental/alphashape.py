@@ -4,6 +4,7 @@ from scipy.spatial import Delaunay
 import numpy as np
 import math
 from typing import Tuple, Set
+from itertools import combinations
 
 
 class GraphClosureTracker:
@@ -245,7 +246,8 @@ class AlphaShape:
         Returns:
           np.ndarray
         """
-        assert points.shape[-1] > 1
+        dim = points.shape[1]
+        assert dim > 1
         self.points = points
         # Create a set to hold unique edges of simplices that pass the radius
         # filtering
@@ -257,24 +259,31 @@ class AlphaShape:
         self.max_perimeter_length = max_perimeter_length
         self.centroid = 0
         self.volume = 0
-        self.surface_area = 0
+        # self.surface_area = 0
         self.GCT = GraphClosureTracker(points.shape[0])
         visited_points = set()
-        n_points = len(points)
-        if n_points < 3:
+        n_points = points.shape[0]
+        if n_points < dim+1:
             # handle lines and points separately
             self.perimeter_points = points
             self.centroid = np.mean(points, axis=0)
             self.volume = 0
             if n_points < 2:
-                self.surface_area = 0
+                # self.surface_area = 0
                 self.perimeter_edges = []
                 visited_points = {0}
             else:
-                self.surface_area = 2*np.linalg.norm(points[0,:]-points[1,:], ord=2)
-                self.perimeter_edges = [(points[0,:], points[1,:])]
-                visited_points = {0, 1}
-                self.GCT.add_edge(0,1)
+                # self.surface_area = 2*np.linalg.norm(points[0,:]-points[1,:], ord=2)
+                edge_indices = list(combinations(range(n_points), r=dim))
+                self.perimeter_edges = list(
+                    tuple(points[i,:] for i in es)
+                    for ps in edge_indices
+                    for es in itertools.combinations(ps, r=2)
+                )
+                visited_points = set(range(n_points))
+                for ps in edge_indices:
+                    for a,b in itertools.combinations(ps, r=2):
+                        self.GCT.add_edge(a,b)
 
         else:
             # Whenever a simplex is found that passes the radius filter, its edges
@@ -320,9 +329,10 @@ class AlphaShape:
                     self.volume += simplex_volume
                     self.centroid += simplex_centroid * simplex_volume
 
-            self.perimeter_edges = [
-                (points[p1,:], points[p2,:]) for p1, p2 in perimeter_edges
-            ]
+            self.perimeter_edges = list(
+                tuple(points[i,:] for i in es) for fs in perimeter_edges for es in
+                itertools.combinations(fs, r=2)
+            )
             if len(edges) > 0:
                 self.centroid /= self.volume
 
@@ -330,7 +340,7 @@ class AlphaShape:
                 self.perimeter_points = np.vstack(
                     [points[p, :] for p in perimeter_indices]
                 )
-                self.surface_area = compute_surface_area(points, perimeter_edges, self.simplices)
+                # self.surface_area = compute_surface_area(points, perimeter_edges, self.simplices)
 
         self.is_empty = False
         if self.max_edge_length > max_perimeter_length or len(self.perimeter_points) == 0 or points.shape[0] != len(visited_points):
@@ -340,10 +350,14 @@ class AlphaShape:
     @property
     def max_edge_length(self):
         if self.perimeter_edges:
-            edge_lengths = [np.linalg.norm(a-b,ord=2) for a,b in self.perimeter_edges]
-            return max(edge_lengths)
-        else:
-            return 0
+            edge_lengths = [
+                np.linalg.norm(a-b,ord=2)
+                for ps in self.perimeter_edges
+                for a,b in itertools.combinations(ps, r=2)
+            ]
+            if edge_lengths:
+                return max(edge_lengths)
+        return 0
 
 
 

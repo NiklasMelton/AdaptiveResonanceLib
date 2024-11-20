@@ -2,10 +2,11 @@ import numpy as np
 from matplotlib.axes import Axes
 from copy import deepcopy
 from typing import Optional, Iterable, List, Tuple, Dict
-
+from warnings import warn
 from artlib.experimental.alphashape import AlphaShape, equalateral_simplex_volume
 from artlib.common.BaseART import BaseART
-
+from artlib.common.utils import IndexableOrKeyable
+import inspect
 
 def plot_polygon_edges(
     edges: np.ndarray,
@@ -31,13 +32,24 @@ def plot_polygon_edges(
     for p1, p2 in edges:
         x = [p1[0], p2[0]]
         y = [p1[1], p2[1]]
-        ax.plot(
-            x,
-            y,
-            linestyle="-",
-            color=line_color,
-            linewidth=line_width,
-        )
+        if len(p1) > 2:
+            z = [p1[2], p2[2]]
+            ax.plot(
+                x,
+                y,
+                z,
+                linestyle="-",
+                color=line_color,
+                linewidth=line_width,
+            )
+        else:
+            ax.plot(
+                x,
+                y,
+                linestyle="-",
+                color=line_color,
+                linewidth=line_width,
+            )
 
 
 
@@ -254,11 +266,78 @@ class HullART(BaseART):
 
         """
         for c, w in zip(colors, self.W):
-            edges = [(e1[:2], e2[:2]) for e1, e2 in w.perimeter_edges]
+            edges = [(e1, e2) for e1, e2 in w.perimeter_edges]
 
             plot_polygon_edges(
                 edges, ax, line_width=linewidth, line_color=c
             )
+
+    def visualize(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        ax: Optional[Axes] = None,
+        marker_size: int = 10,
+        linewidth: int = 1,
+        colors: Optional[IndexableOrKeyable] = None,
+    ):
+        """Visualize the clustering of the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+        y : np.ndarray
+            Sample labels.
+        ax : matplotlib.axes.Axes, optional
+            Figure axes.
+        marker_size : int, default=10
+            Size used for data points.
+        linewidth : int, default=1
+            Width of boundary line.
+        colors : IndexableOrKeyable, optional
+            Colors to use for each cluster.
+
+        """
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            if X.shape[1] > 2:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+            else:
+                fig, ax = plt.subplots()
+
+        if colors is None:
+            from matplotlib.pyplot import cm
+
+            colors = cm.rainbow(np.linspace(0, 1, self.n_clusters))
+
+
+        for k, col in enumerate(colors):
+            cluster_data = y == k
+            if X.shape[1] > 2:
+                ax.scatter(
+                    X[cluster_data, 0],
+                    X[cluster_data, 1],
+                    X[cluster_data, 2],
+                    color=col,
+                    marker=".",
+                    s=marker_size,
+                )
+            else:
+                ax.scatter(
+                    X[cluster_data, 0],
+                    X[cluster_data, 1],
+                    color=col,
+                    marker=".",
+                    s=marker_size,
+                )
+
+        try:
+            self.plot_cluster_bounds(ax, colors, linewidth)
+        except NotImplementedError:
+            warn(f"{self.__class__.__name__} does not support plotting cluster bounds.")
 
     # def post_fit(self, X: np.ndarray):
     #     can_merge = lambda A, B: A.overlaps_with(B)

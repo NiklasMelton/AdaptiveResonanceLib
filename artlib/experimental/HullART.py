@@ -135,6 +135,7 @@ class HullART(BaseART):
             new_w = deepcopy(w)
             min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
             new_vol = 1. - max(new_w.volume, min_vol)
+
         else:
             new_w = deepcopy(w)
             new_w.add_points(i.reshape((1, -1)))
@@ -144,8 +145,12 @@ class HullART(BaseART):
             else:
                 min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
                 new_vol = 1. - max(new_w.volume, min_vol)
-                # activation = new_vol / (1. - max(w.volume, min_vol) + params["alpha"])
-                activation = 1.0 - (max(new_w.volume, min_vol)-max(w.volume, min_vol))
+                activation = new_vol / (1. - max(w.volume, min_vol) + params["alpha"])
+                # activation = 1.0 - (max(new_w.volume, min_vol)-max(w.volume, min_vol))
+
+                # activation = (len(i)-sum(new_w.side_lengths))/ (params)
+
+
         cache = {"new_w": new_w, "new_vol": new_vol, "activation": activation}
 
         return activation, cache
@@ -180,7 +185,7 @@ class HullART(BaseART):
 
         """
         assert cache is not None
-        M = float(cache["new_vol"])
+        M = cache["new_vol"]**(1/len(i))
         cache["match_criterion"] = M
 
         return M, cache

@@ -132,7 +132,7 @@ def alphasimplices(points: np.ndarray) -> np.ndarray:
       A simplex, and its circumradius as a tuple.
     """
     coords = np.asarray(points)
-    tri = Delaunay(coords)
+    tri = Delaunay(coords, qhull_options="Qz")
 
     for simplex in tri.simplices:
         simplex_points = coords[simplex]
@@ -300,6 +300,8 @@ class AlphaShape:
             alpha_simplices = list(alphasimplices(points))
             alpha_simplices.sort(key=lambda x: x[1])
 
+            added_simplex_coords = []
+
             for point_indices, circumradius, simplex_coords in alpha_simplices:
                 # Radius filter
                 check_points = point_indices.tolist()
@@ -326,6 +328,11 @@ class AlphaShape:
                     self.simplices.add(tuple(point_indices))
                     simplex_centroid = np.mean(simplex_coords, axis=0)
                     simplex_volume = volume_of_simplex(simplex_coords)
+                    added_simplex_coords.append(
+                        [
+                            simplex_coords, simplex_volume, simplex_centroid
+                        ]
+                    )
                     self.volume += simplex_volume
                     self.centroid += simplex_centroid * simplex_volume
 
@@ -405,62 +412,3 @@ class AlphaShape:
 
         # If no simplex contains the point, return False
         return False
-
-    # @property
-    # def simplices(self) -> List[np.ndarray]:
-    #     """
-    #     Generate the Delaunay simplices for the perimeter points of this AlphaShape.
-    #
-    #     Returns:
-    #         List[np.ndarray]: List of simplices, where each simplex is an array of points.
-    #     """
-    #     delaunay = Delaunay(self.perimeter_points)
-    #     return [self.perimeter_points[simplex] for simplex in delaunay.simplices]
-
-    # @staticmethod
-    # def simplex_intersects(simplex_a: np.ndarray, simplex_b: np.ndarray) -> bool:
-    #     """
-    #     Check if two simplices intersect by testing if any vertex of one simplex
-    #     is within the other.
-    #
-    #     Args:
-    #         simplex_a (np.ndarray): A simplex represented by an array of points.
-    #         simplex_b (np.ndarray): Another simplex represented by an array of points.
-    #
-    #     Returns:
-    #         bool: True if the simplices intersect, False otherwise.
-    #     """
-    #     delaunay_a = Delaunay(simplex_a)
-    #     delaunay_b = Delaunay(simplex_b)
-    #
-    #     # Check if any vertex of simplex_a is inside simplex_b
-    #     if any(delaunay_b.find_simplex(vertex) >= 0 for vertex in simplex_a):
-    #         return True
-    #
-    #     # Check if any vertex of simplex_b is inside simplex_a
-    #     if any(delaunay_a.find_simplex(vertex) >= 0 for vertex in simplex_b):
-    #         return True
-    #
-    #     return False
-
-    #
-    # def overlaps_with(self, other: 'AlphaShape') -> bool:
-    #     """
-    #     Check if this AlphaShape overlaps with another AlphaShape by examining simplex intersections.
-    #
-    #     Args:
-    #         other (AlphaShape): Another AlphaShape object.
-    #
-    #     Returns:
-    #         bool: True if the shapes overlap, False otherwise.
-    #     """
-    #     # Get simplices for both AlphaShapes
-    #     simplices_self = self.simplices
-    #     simplices_other = other.simplices
-    #
-    #     # Check if any simplex in self intersects with any simplex in other
-    #     for simplex_a in simplices_self:
-    #         for simplex_b in simplices_other:
-    #             if self.simplex_intersects(simplex_a, simplex_b):
-    #                 return True
-    #     return False

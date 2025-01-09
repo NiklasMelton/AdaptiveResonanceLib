@@ -106,6 +106,45 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.validate_params(local_params)
         return self
 
+    def set_data_bounds(self, lower_bounds: np.ndarray, upper_bounds: np.ndarray):
+        """Manually set the data bounds for normalization.
+
+        Parameters
+        ----------
+        lower_bounds : np.ndarray
+            The lower bounds for each column.
+
+        upper_bounds : np.ndarray
+            The upper bounds for each column.
+
+        """
+        if self.is_fitted_:
+            raise ValueError("Cannot change data limits after fit.")
+        self.d_min_ = lower_bounds
+        self.d_max_ = upper_bounds
+
+    def find_data_bounds(
+        self, *data_batches: list[np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Manually set the data bounds for normalization.
+
+        Parameters
+        ----------
+        *data_batches : list[np.ndarray]
+            Batches of data to be presented to the model
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            Lower and upper bounds for data.
+
+        """
+        all_data = np.vstack(data_batches)
+        lower_bounds = np.min(all_data)
+        upper_bounds = np.max(all_data)
+
+        return lower_bounds, upper_bounds
+
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """Prepare data for clustering.
 
@@ -187,8 +226,23 @@ class BaseART(BaseEstimator, ClusterMixin):
         - X: data set
 
         """
-        assert np.all(X >= 0), "Data has not been normalized"
-        assert np.all(X <= 1.0), "Data has not been normalized"
+        normalization_message = (
+            "Data has not been normalized or was not normalized "
+            "correctly. All values must fall between 0 and 1, "
+            "inclusively."
+        )
+        if self.is_fitted_:
+            normalization_message += (
+                "\nThis appears to not be the first batch of "
+                "data. Data boundaries must be calculated for "
+                "the entire data space. Prior to fitting, use "
+                "BaseART.set_data_bounds() to manually set the "
+                "bounds for your data or use "
+                "BaseART.find_data_bounds() to identify the "
+                "bounds automatically for multiple batches."
+            )
+        assert np.all(X >= 0), normalization_message
+        assert np.all(X <= 1.0), normalization_message
         self.check_dimensions(X)
 
     def category_choice(

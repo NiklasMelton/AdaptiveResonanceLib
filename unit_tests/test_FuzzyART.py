@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock
 from artlib.elementary.FuzzyART import FuzzyART
+from artlib.common.utils import compliment_code
 
 # Assuming BaseART is imported and available in the current namespace
 
@@ -161,7 +162,8 @@ def test_validate_data_again(art_model):
     # Test validate_data with normalized data
     X = np.array([[0.1, 0.2], [0.3, 0.4]])
     art_model.is_fitted_ = False
-    art_model.validate_data(X)  # Should pass without assertion error
+    X_cc = compliment_code(X)
+    art_model.validate_data(X_cc)  # Should pass without assertion error
 
     # Test validate_data with data out of bounds
     X_invalid = np.array([[-0.1, 0.2], [1.1, 0.4]])
@@ -183,8 +185,9 @@ def test_set_data_bounds(art_model):
     with pytest.raises(ValueError, match="Cannot change data limits after fit."):
         art_model.set_data_bounds(lower_bounds, upper_bounds)
     X = np.array([[0.1, 0.2], [0.3, 0.4]])
+    X_cc = compliment_code(X)
     X_norm = art_model.prepare_data(X)
-    assert np.all(X_norm == X)
+    assert np.all(X_norm == X_cc)
 
 
 def test_find_data_bounds(art_model):

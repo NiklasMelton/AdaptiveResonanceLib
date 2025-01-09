@@ -141,8 +141,8 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         all_data = np.vstack(data_batches)
-        lower_bounds = np.min(all_data)
-        upper_bounds = np.max(all_data)
+        lower_bounds = np.min(all_data, axis=0)
+        upper_bounds = np.max(all_data, axis=0)
 
         return lower_bounds, upper_bounds
 

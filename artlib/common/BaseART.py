@@ -127,7 +127,8 @@ class BaseART(BaseEstimator, ClusterMixin):
     def find_data_bounds(
         self, *data_batches: list[np.ndarray]
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Manually set the data bounds for normalization.
+        """Automatically find the data bounds for normalization from a list of data
+        batches.
 
         Parameters
         ----------

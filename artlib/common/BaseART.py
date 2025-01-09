@@ -797,13 +797,15 @@ class BaseART(BaseEstimator, ClusterMixin):
             self.post_fit(X)
             return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict labels for the data.
 
         Parameters
         ----------
         X : np.ndarray
             The dataset.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -812,6 +814,8 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.d_min_, self.d_max_)
         self.validate_data(X)
         self.check_dimensions(X)
 

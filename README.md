@@ -167,6 +167,36 @@ model.fit(train_X_prep, train_y)
 pred_y = model.predict_regression(test_Xy_prep, target_channels=[1])
 ```
 
+### Data Normalization
+
+AdaptiveResonanceLib models require feature data to be normalized between 0.0
+and 1.0 inclusively. This requires identifying the boundaries of the data space.
+
+If the first batch of your training data is representative of the entire data space,
+you dont need to do anything and artlib will identify the data bounds automatically.
+However, this will often not be sufficient and the following work-arounds will be
+needed:
+
+Users can manually set the bounds using the following code snippet or similar:
+```python
+# Set the boundaries of your data for normalization
+lower_bounds = np.array([0.]*n_features)
+upper_bounds = np.array([1.]*n_features)
+model.set_data_bounds(lower_bounds, upper_bounds)
+```
+
+Or users can present all batches of data to the model for automatic
+boundary identification:
+```python
+# Find the boundaries of your data for normalization
+all_data = [train_X, test_X]
+_, _ = model.find_data_bounds(all_data)
+```
+
+If only the boundaries of your testing data are unknown, you can call
+`model.predict()` with `clip=True` to clip testing data to the bounds seen during
+training. Only use this if you understand what you are doing.
+
 <!-- END quick-start -->
 
 <!-- START documentation -->

@@ -528,13 +528,17 @@ class FusionART(BaseART):
         c_ = int(np.argmax(T))
         return c_
 
-    def predict(self, X: np.ndarray, skip_channels: List[int] = []) -> np.ndarray:
+    def predict(
+        self, X: np.ndarray, clip: bool = False, skip_channels: List[int] = []
+    ) -> np.ndarray:
         """Predict labels for the input data.
 
         Parameters
         ----------
         X : np.ndarray
             Input dataset.
+        clip : bool
+            clip the input values to be between the previously seen data limits
         skip_channels : list of int, optional
             Channels to skip (default is []).
 
@@ -545,6 +549,8 @@ class FusionART(BaseART):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.d_min_, self.d_max_)
         self.validate_data(X)
         self.check_dimensions(X)
 

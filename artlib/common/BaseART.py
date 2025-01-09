@@ -28,6 +28,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.weight_sample_counter_: List[int] = []
         self.d_min_ = None
         self.d_max_ = None
+        self.is_fitted_ = False
 
     def __getattr__(self, key):
         if key in self.params:

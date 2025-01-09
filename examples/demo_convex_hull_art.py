@@ -3,15 +3,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from artlib.experimental.HullART import HullART
+from artlib.common.VAT import VAT
 
 
 def cluster_moons():
-    data, target = make_moons(n_samples=1000, noise=0.1, random_state=10,
+    data, target = make_moons(n_samples=1000, noise=0.08, random_state=10,
                               shuffle=False)
+    # _, s = VAT(data)
+    # data = np.array(data)[s, :]
+    # target = target[s]
     print("Data has shape:", data.shape)
 
-    params = {"rho": 0.2, "alpha": 1e-20, "alpha_hull": 8., "min_lambda": 1e-5,
-              "max_lambda": 0.4}
+    params = {"rho": 0.0, "alpha": 1e-20, "alpha_hull": 8., "min_lambda": 1e-5,
+              "max_lambda": 0.2}
     cls = HullART(**params)
 
     X = cls.prepare_data(data)
@@ -56,5 +60,5 @@ def cluster_3d_data():
 
 
 if __name__ == "__main__":
-    # cluster_moons()
-    cluster_3d_data()
+    cluster_moons()
+    # cluster_3d_data()

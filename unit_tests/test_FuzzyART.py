@@ -213,6 +213,5 @@ def test_prepare_data(art_model):
     art_model.d_min_ = np.array([1.0, 10.0])
     art_model.d_max_ = np.array([5.0, 20.0])
     normalized_X = art_model.prepare_data(X)
-    expected_normalized_X = np.array([[0.0, 0.0, 1.0, 1.0], [1.0, 1.0, 0.0, 0.0]])
-    expected_normalized_X_cc = compliment_code(expected_normalized_X)
+    expected_normalized_X_cc = np.array([[0.0, 0.0, 1.0, 1.0], [1.0, 1.0, 0.0, 0.0]])
     np.testing.assert_array_almost_equal(normalized_X, expected_normalized_X_cc)

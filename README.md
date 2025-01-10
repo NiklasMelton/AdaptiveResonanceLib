@@ -89,7 +89,7 @@ model = FuzzyART(rho=0.7, alpha = 0.0, beta=1.0)
 
 # (Optional) Tell the model the data limits for normalization
 lower_bounds = np.array([0.]*n_dim)
-upper_bounds = np.array([1.]*n_dim)
+upper_bounds = np.array([255.]*n_dim)
 model.set_data_bounds(lower_bounds, upper_bounds)
 
 # Prepare Data
@@ -122,7 +122,7 @@ module_a = GaussianART(rho=0.0, sigma_init=sigma_init)
 
 # (Optional) Tell the model the data limits for normalization
 lower_bounds = np.array([0.]*n_dim)
-upper_bounds = np.array([1.]*n_dim)
+upper_bounds = np.array([255.]*n_dim)
 module_a.set_data_bounds(lower_bounds, upper_bounds)
 
 # Initialize the SimpleARTMAP model

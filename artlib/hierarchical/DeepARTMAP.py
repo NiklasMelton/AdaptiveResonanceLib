@@ -410,13 +410,17 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             x_i += 1
         return self
 
-    def predict(self, X: Union[np.ndarray, list[np.ndarray]]) -> list[np.ndarray]:
+    def predict(
+        self, X: Union[np.ndarray, list[np.ndarray]], clip: bool = False
+    ) -> list[np.ndarray]:
         """Predict the labels for the input data.
 
         Parameters
         ----------
         X : np.ndarray or list of np.ndarray
             The input data set for prediction.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -428,7 +432,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
             x = X[-1]
         else:
             x = X
-        pred_a, pred_b = self.layers[-1].predict_ab(x)
+        pred_a, pred_b = self.layers[-1].predict_ab(x, clip=clip)
         pred = [pred_a, pred_b]
         for layer in self.layers[:-1][::-1]:
             pred.append(layer.map_a2b(pred[-1]))

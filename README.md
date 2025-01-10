@@ -76,17 +76,25 @@ Here are some quick examples to get you started with AdaptiveResonanceLib:
 ```python
 from artlib import FuzzyART
 import numpy as np
+from tensorflow.keras.datasets import mnist
 
-# Your dataset
-train_X = np.array([...]) # shape (n_samples, n_features)
-test_X = np.array([...])
+# Load the MNIST dataset
+n_dim = 28*28
+(X_train, _), (X_test, _) = mnist.load_data()
+X_train = X_train.reshape((-1, n_dim)) # flatten images
+X_test = X_test.reshape((-1, n_dim))
 
 # Initialize the Fuzzy ART model
 model = FuzzyART(rho=0.7, alpha = 0.0, beta=1.0)
 
+# (Optional) Tell the model the data limits for normalization
+lower_bounds = np.array([0.]*n_dim)
+upper_bounds = np.array([1.]*n_dim)
+model.set_data_bounds(lower_bounds, upper_bounds)
+
 # Prepare Data
-train_X_prep = model.prepare_data(train_X)
-test_X_prep = model.prepare_data(test_X)
+train_X_prep = model.prepare_data(X_train)
+test_X_prep = model.prepare_data(X_test)
 
 # Fit the model
 model.fit(train_X_prep)
@@ -100,25 +108,32 @@ predictions = model.predict(test_X_prep)
 ```python
 from artlib import GaussianART, SimpleARTMAP
 import numpy as np
+from tensorflow.keras.datasets import mnist
 
-# Your dataset
-train_X = np.array([...]) # shape (n_samples, n_features)
-train_y = np.array([...]) # shape (n_samples, ), must be integers
-test_X = np.array([...])
+# Load the MNIST dataset
+n_dim = 28*28
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+X_train = X_train.reshape((-1, n_dim)) # flatten images
+X_test = X_test.reshape((-1, n_dim))
 
 # Initialize the Gaussian ART model
-sigma_init = np.array([0.5]*train_X.shape[1]) # variance estimate for each feature
+sigma_init = np.array([0.5]*X_train.shape[1]) # variance estimate for each feature
 module_a = GaussianART(rho=0.0, sigma_init=sigma_init)
+
+# (Optional) Tell the model the data limits for normalization
+lower_bounds = np.array([0.]*n_dim)
+upper_bounds = np.array([1.]*n_dim)
+module_a.set_data_bounds(lower_bounds, upper_bounds)
 
 # Initialize the SimpleARTMAP model
 model = SimpleARTMAP(module_a=module_a)
 
 # Prepare Data
-train_X_prep = model.prepare_data(train_X)
-test_X_prep = model.prepare_data(test_X)
+train_X_prep = model.prepare_data(X_train)
+test_X_prep = model.prepare_data(X_test)
 
 # Fit the model
-model.fit(train_X_prep, train_y)
+model.fit(train_X_prep, y_train)
 
 # Predict data labels
 predictions = model.predict(test_X_prep)
@@ -131,22 +146,22 @@ from artlib import FuzzyART, HypersphereART, FusionART
 import numpy as np
 
 # Your dataset
-train_X = np.array([...]) # shape (n_samples, n_features_X)
-train_y = np.array([...]) # shape (n_samples, n_features_y)
+X_train = np.array([...]) # shape (n_samples, n_features_X)
+y_train = np.array([...]) # shape (n_samples, n_features_y)
 test_X = np.array([...])
 
 # Initialize the Fuzzy ART model
 module_x = FuzzyART(rho=0.0, alpha = 0.0, beta=1.0)
 
 # Initialize the Hypersphere ART model
-r_hat = 0.5*np.sqrt(train_X.shape[1]) # no restriction on hyperpshere size
+r_hat = 0.5*np.sqrt(X_train.shape[1]) # no restriction on hyperpshere size
 module_y = HypersphereART(rho=0.0, alpha = 0.0, beta=1.0, r_hat=r_hat)
 
 # Initialize the FusionARTMAP model
 gamma_values = [0.5, 0.5] # eqaul weight to both channels
 channel_dims = [
-  2*train_X.shape[1], # fuzzy ART complement codes data so channel dim is 2*n_features
-  train_y.shape[1]
+  2*X_train.shape[1], # fuzzy ART complement codes data so channel dim is 2*n_features
+  y_train.shape[1]
 ]
 model = FusionART(
   modules=[module_x, module_y],
@@ -155,16 +170,16 @@ model = FusionART(
 )
 
 # Prepare Data
-train_Xy = model.join_channel_data(channel_data=[train_X, train_y])
+train_Xy = model.join_channel_data(channel_data=[X_train, y_train])
 train_Xy_prep = model.prepare_data(train_Xy)
-test_Xy = model.join_channel_data(channel_data=[train_X], skip_channels=[1])
+test_Xy = model.join_channel_data(channel_data=[X_train], skip_channels=[1])
 test_Xy_prep = model.prepare_data(test_Xy)
 
 # Fit the model
-model.fit(train_X_prep, train_y)
+model.fit(train_Xy_prep)
 
-# Predict y-channel values
-pred_y = model.predict_regression(test_Xy_prep, target_channels=[1])
+# Predict y-channel values and clip X values outside previously observed ranges
+pred_y = model.predict_regression(test_Xy_prep, target_channels=[1], clip=True)
 ```
 
 ### Data Normalization

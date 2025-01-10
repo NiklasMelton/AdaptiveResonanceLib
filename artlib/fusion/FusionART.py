@@ -679,7 +679,7 @@ class FusionART(BaseART):
         return self.modules[channel].get_cluster_centers()
 
     def predict_regression(
-        self, X: np.ndarray, target_channels: List[int] = [-1]
+        self, X: np.ndarray, clip: bool = False, target_channels: List[int] = [-1]
     ) -> Union[np.ndarray, List[np.ndarray]]:
         """Predict regression values for the input data using the target channels.
 
@@ -687,6 +687,8 @@ class FusionART(BaseART):
         ----------
         X : np.ndarray
             Input dataset.
+        clip : bool
+            clip the input values to be between the previously seen data limits
         target_channels : list of int, optional
             List of target channels to use for regression. If negative values are used,
             they are considered as channels counting backward from the last channel.
@@ -701,7 +703,7 @@ class FusionART(BaseART):
 
         """
         target_channels = [self.n + k if k < 0 else k for k in target_channels]
-        C = self.predict(X, skip_channels=target_channels)
+        C = self.predict(X, clip=clip, skip_channels=target_channels)
         centers = [self.get_channel_centers(k) for k in target_channels]
         if len(target_channels) == 1:
             return np.array([centers[0][c] for c in C])

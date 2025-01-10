@@ -297,7 +297,7 @@ class ARTMAP(SimpleARTMAP):
         check_is_fitted(self)
         return super(ARTMAP, self).predict_ab(X, clip)
 
-    def predict_regression(self, X: np.ndarray) -> np.ndarray:
+    def predict_regression(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """
         Predict values for the given data using cluster centers.
         Note: ARTMAP is not recommended for regression.
@@ -307,6 +307,8 @@ class ARTMAP(SimpleARTMAP):
         ----------
         X : np.ndarray
             Data set A (independent channel).
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -314,6 +316,6 @@ class ARTMAP(SimpleARTMAP):
             Predicted values using cluster centers.
         """
         check_is_fitted(self)
-        C = self.predict(X)
+        C = self.predict(X, clip=clip)
         centers = self.module_b.get_cluster_centers()
         return np.array([centers[c] for c in C])

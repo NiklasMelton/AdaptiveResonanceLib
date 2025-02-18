@@ -154,6 +154,7 @@ def l2norm2(data: np.ndarray) -> float:
     return float(np.matmul(data, data))
 
 
+@njit
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """Get the fuzzy AND operation between two vectors.
 

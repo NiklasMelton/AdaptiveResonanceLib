@@ -21,10 +21,10 @@ def match_criterion_numba(i, w_td, dim_):
 
     Parameters
     ----------
-    i : np.ndarray (uint8)
-        Binary input vector representing the data sample.
+    i : np.ndarray (int32 or uint8)
+        Binary or integer input vector representing the data sample.
     w_td : np.ndarray (uint8)
-        Top-down weight vector of the cluster.
+        Binary top-down weight vector of the cluster.
     dim_ : int
         The number of features (dimensions) in the input vector.
 
@@ -37,7 +37,9 @@ def match_criterion_numba(i, w_td, dim_):
     """
     count = 0
     for j in range(dim_):
-        if i[j] & w_td[j]:
+        if (i[j] != 0) & (
+            w_td[j] != 0
+        ):  # Ensure binary logic while allowing integer input
             count += 1
     return count / dim_
 
@@ -51,35 +53,38 @@ def category_choice_numba(i, w_bu):
 
     Parameters
     ----------
-    i : np.ndarray (uint8)
-        Binary input vector representing the data sample.
-    w_bu : np.ndarray (uint8)
+    i : np.ndarray (int32 or uint8)
+        Binary or integer input vector representing the data sample.
+    w_bu : np.ndarray (float32)
         Bottom-up weight vector of the cluster.
 
     Returns
     -------
-    int
-        The activation value, which is the number of active features in `i`
-        that match `w_bu`.
+    float
+        The activation value, computed as the sum of element-wise multiplications.
 
     """
-    count = 0
+    activation = 0.0
     for j in range(len(i)):
-        if i[j] & w_bu[j]:
-            count += 1
-    return count
+        activation += (
+            i[j] * w_bu[j]
+        )  # Supports integer input and floating-point weights
+    return activation
 
 
 @njit
 def update_numba(i, w, L, dim_):
     """Optimized update function for ART1 using Numba.
 
+    This function updates the cluster weight vector based on the input `i`,
+    using ART1 learning rules.
+
     Parameters
     ----------
-    i : np.ndarray (uint8)
-        Binary input vector.
+    i : np.ndarray (int32 or uint8)
+        Binary or integer input vector.
     w : np.ndarray (float32)
-        Cluster weight vector.
+        Cluster weight vector, containing both bottom-up and top-down weights.
     L : float
         Uncommitted node bias parameter.
     dim_ : int
@@ -91,13 +96,13 @@ def update_numba(i, w, L, dim_):
         Updated cluster weight vector.
 
     """
-    # Extract the top-down weights
+    # Extract the top-down weights (last dim_ elements)
     w_td_new = np.empty(dim_, dtype=np.uint8)
     count = 0
 
-    # Compute the new top-down weight using bitwise AND
+    # Compute the new top-down weight using bitwise AND (but allowing integer input)
     for j in range(dim_):
-        w_td_new[j] = i[j] & w[j + dim_]  # Bitwise AND
+        w_td_new[j] = (i[j] != 0) & (w[j + dim_] != 0)  # Ensures binary logic
         if w_td_new[j]:  # Count nonzero elements
             count += 1
 
@@ -106,7 +111,7 @@ def update_numba(i, w, L, dim_):
     w_bu_new = np.empty(dim_, dtype=np.float32)
 
     for j in range(dim_):
-        w_bu_new[j] = scaling_factor * w_td_new[j]
+        w_bu_new[j] = scaling_factor * w_td_new[j]  # Multiplication remains float32
 
     # Concatenate updated weights
     updated_weights = np.empty(2 * dim_, dtype=np.float32)

@@ -216,6 +216,7 @@ class SimpleARTMAP(BaseARTMAP):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the model to the data.
 
@@ -233,6 +234,9 @@ class SimpleARTMAP(BaseARTMAP):
             Small value to adjust the vigilance.
         verbose : bool, default=False
             If True, displays a progress bar during training.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         Returns
         -------
@@ -253,7 +257,11 @@ class SimpleARTMAP(BaseARTMAP):
             if verbose:
                 from tqdm import tqdm
 
-                x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
+                x_y_iter = tqdm(
+                    enumerate(zip(X, y)),
+                    total=int(X.shape[0]),
+                    leave=leave_progress_bar,
+                )
             else:
                 x_y_iter = enumerate(zip(X, y))
             for i, (x, c_b) in x_y_iter:

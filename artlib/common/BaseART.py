@@ -613,6 +613,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the model to the data.
 
@@ -632,6 +633,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             Epsilon value used for adjusting match criterion.
         verbose : bool, default=False
             If True, displays progress of the fitting process.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         """
         self.validate_data(X)
@@ -644,7 +648,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             if verbose:
                 from tqdm import tqdm
 
-                x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
+                x_iter = tqdm(
+                    enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar
+                )
             else:
                 x_iter = enumerate(X)
             for i, x in x_iter:
@@ -711,6 +717,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
         ax: Optional[Axes] = None,
         filename: Optional[str] = None,
         colors: Optional[IndexableOrKeyable] = None,
@@ -736,6 +743,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             Epsilon value used for adjusting match criterion.
         verbose : bool, default=False
             If True, displays progress of the fitting process.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
         ax : matplotlib.axes.Axes, optional
             Figure axes.
         colors : IndexableOrKeyable, optional
@@ -777,7 +787,9 @@ class BaseART(BaseEstimator, ClusterMixin):
                 if verbose:
                     from tqdm import tqdm
 
-                    x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
+                    x_iter = tqdm(
+                        enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar
+                    )
                 else:
                     x_iter = enumerate(X)
                 for i, x in x_iter:

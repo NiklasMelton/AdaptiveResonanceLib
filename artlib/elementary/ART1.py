@@ -145,7 +145,6 @@ class ART1(BaseART):
         """
         params = {"rho": rho, "L": L}
         super().__init__(params)
-        self.scaling_factor_ = params["L"] / (params["L"] - 1 + self.dim_)
 
     @staticmethod
     def validate_params(params: dict):
@@ -286,8 +285,8 @@ class ART1(BaseART):
 
         """
         w_td_new = i
-
-        w_bu_new = self.scaling_factor_ * i
+        scaling_factor_ = params["L"] / (params["L"] - 1 + self.dim_)
+        w_bu_new = scaling_factor_ * i
         return np.concatenate([w_bu_new, w_td_new])
 
     def get_cluster_centers(self) -> List[np.ndarray]:

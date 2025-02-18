@@ -30,6 +30,7 @@ numpy = ">=1.19.4"
 scipy = ">=1.5.4"
 scikit-learn = ">=1.0"
 matplotlib = ">=3.3.3"
+numba = ">=0.57.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"

@@ -36,7 +36,13 @@ def normalize(
     if d_max is None:
         d_max = np.max(data, axis=0)
 
-    normalized = (data - d_min) / (d_max - d_min)
+    # Avoid division by zero
+    range_vals = d_max - d_min
+    mask = range_vals == 0  # Identify columns where d_max == d_min
+
+    # Normalize safely
+    normalized = np.zeros_like(data, dtype=np.float64)  # Default all to zero
+    normalized[:, ~mask] = (data[:, ~mask] - d_min[~mask]) / range_vals[~mask]
     return normalized, d_max, d_min
 
 

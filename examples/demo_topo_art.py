@@ -20,7 +20,7 @@ def cluster_blobs():
     X = base_art.prepare_data(data)
     print("Prepared data has shape:", X.shape)
 
-    cls = TopoART(base_art, betta_lower=0.3, tau=150, phi=35)
+    cls = TopoART(base_art, beta_lower=0.3, tau=150, phi=35)
     cls = cls.fit(X, max_iter=5)
     y = cls.labels_
 

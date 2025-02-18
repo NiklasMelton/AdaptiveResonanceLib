@@ -174,6 +174,7 @@ class ARTMAP(SimpleARTMAP):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the ARTMAP model to the data.
 
@@ -191,6 +192,9 @@ class ARTMAP(SimpleARTMAP):
             Small increment to modify the vigilance parameter.
         verbose : bool, default=False
             If True, displays a progress bar during training.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         Returns
         -------
@@ -206,6 +210,7 @@ class ARTMAP(SimpleARTMAP):
             max_iter=max_iter,
             match_tracking=match_tracking,
             epsilon=epsilon,
+            verbose=verbose,
         )
 
         y_c = self.module_b.labels_
@@ -217,6 +222,7 @@ class ARTMAP(SimpleARTMAP):
             match_tracking=match_tracking,
             epsilon=epsilon,
             verbose=verbose,
+            leave_progress_bar=leave_progress_bar,
         )
 
         return self

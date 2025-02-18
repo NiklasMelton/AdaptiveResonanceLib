@@ -1,12 +1,10 @@
 """General utilities used throughout ARTLib."""
 import numpy as np
-from numba import njit
 from typing import Tuple, Optional, Mapping, Sequence, Union, Any
 
 IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
 
-@njit
 def normalize(
     data: np.ndarray,
     d_max: Optional[np.ndarray] = None,
@@ -38,22 +36,16 @@ def normalize(
     if d_max is None:
         d_max = np.max(data, axis=0)
 
+    # Avoid division by zero
     range_vals = d_max - d_min
-    mask = (
-        range_vals == 0
-    )  # Identify columns with zero range to prevent division by zero
+    mask = range_vals == 0  # Identify columns where d_max == d_min
 
-    normalized = np.empty_like(data, dtype=np.float64)  # Preallocate
-    for i in range(data.shape[1]):
-        if mask[i]:  # If max == min, set entire column to zero
-            normalized[:, i] = 0.0
-        else:
-            normalized[:, i] = (data[:, i] - d_min[i]) / range_vals[i]
-
+    # Normalize safely
+    normalized = np.zeros_like(data, dtype=np.float64)  # Default all to zero
+    normalized[:, ~mask] = (data[:, ~mask] - d_min[~mask]) / range_vals[~mask]
     return normalized, d_max, d_min
 
 
-@njit
 def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.ndarray:
     """Restore column-wise normalized data to original scale.
 
@@ -75,7 +67,6 @@ def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.n
     return data * (d_max - d_min) + d_min
 
 
-@njit
 def compliment_code(data: np.ndarray) -> np.ndarray:
     """Compliment code the data.
 
@@ -90,18 +81,12 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
         Compliment coded data.
 
     """
-    n, m = data.shape
-    cc_data = np.empty((n, 2 * m), dtype=np.float64)
-
-    for i in range(m):
-        cc_data[:, i] = data[:, i]
-        cc_data[:, i + m] = 1.0 - data[:, i]
-
+    cc_data = np.hstack([data, 1.0 - data])
     return cc_data
 
 
 def de_compliment_code(data: np.ndarray) -> np.ndarray:
-    """Find the centroid of compliment coded data with a shape assertion.
+    """Find the centroid of compliment coded data.
 
     Parameters
     ----------
@@ -114,22 +99,21 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
         De-compliment coded data.
 
     """
-    # Ensure the number of columns is even so that it can be split evenly
-    if data.shape[1] % 2 != 0:
-        raise ValueError("The number of columns must be even")
-
-    return _de_compliment_code_numba(data)
-
-
-@njit
-def _de_compliment_code_numba(data: np.ndarray) -> np.ndarray:
-    """Numba-optimized de-compliment coding function (assumes valid input)."""
+    # Get the shape of the array
     n, total_columns = data.shape
+
+    # Ensure the number of columns is even so that it can be split evenly
+    assert total_columns % 2 == 0, "The number of columns must be even"
+
+    # Calculate the number of columns in each resulting array
     m = total_columns // 2
 
-    mean_array = np.empty((n, m), dtype=np.float64)
-    for i in range(m):
-        mean_array[:, i] = (data[:, i] + (1 - data[:, i + m])) / 2
+    # Split the array into two arrays of shape n x m
+    arr1 = data[:, :m]
+    arr2 = 1 - data[:, m:]
+
+    # Find the element-wise mean
+    mean_array = (arr1 + arr2) / 2
 
     return mean_array
 
@@ -148,7 +132,7 @@ def l1norm(x: np.ndarray) -> float:
         L1 norm.
 
     """
-    return float(np.sum(np.abs(x)))
+    return float(np.sum(np.absolute(x)))
 
 
 def l2norm2(data: np.ndarray) -> float:
@@ -165,7 +149,7 @@ def l2norm2(data: np.ndarray) -> float:
         Squared L2 norm.
 
     """
-    return float(np.dot(data, data))
+    return float(np.matmul(data, data))
 
 
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:

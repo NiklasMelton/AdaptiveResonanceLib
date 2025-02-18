@@ -9,6 +9,111 @@
 import numpy as np
 from typing import Optional, List, Tuple, Dict
 from artlib.common.BaseART import BaseART
+from numba import njit
+
+
+@njit
+def match_criterion_numba(i, w_td, dim_):
+    """Compute the match criterion for ART1 clustering.
+
+    This function calculates the proportion of active features in the input `i`
+    that match the corresponding features in the top-down weight vector `w_td`.
+
+    Parameters
+    ----------
+    i : np.ndarray (uint8)
+        Binary input vector representing the data sample.
+    w_td : np.ndarray (uint8)
+        Top-down weight vector of the cluster.
+    dim_ : int
+        The number of features (dimensions) in the input vector.
+
+    Returns
+    -------
+    float
+        The match criterion value, computed as the ratio of matching features
+        to the total number of features.
+
+    """
+    count = 0
+    for j in range(dim_):
+        if i[j] & w_td[j]:
+            count += 1
+    return count / dim_
+
+
+@njit
+def category_choice_numba(i, w_bu):
+    """Compute the category choice activation for ART1.
+
+    This function calculates the category choice value, which represents the
+    strength of association between an input `i` and a bottom-up weight vector `w_bu`.
+
+    Parameters
+    ----------
+    i : np.ndarray (uint8)
+        Binary input vector representing the data sample.
+    w_bu : np.ndarray (uint8)
+        Bottom-up weight vector of the cluster.
+
+    Returns
+    -------
+    int
+        The activation value, which is the number of active features in `i`
+        that match `w_bu`.
+
+    """
+    count = 0
+    for j in range(len(i)):
+        if i[j] & w_bu[j]:
+            count += 1
+    return count
+
+
+@njit
+def update_numba(i, w, L, dim_):
+    """Optimized update function for ART1 using Numba.
+
+    Parameters
+    ----------
+    i : np.ndarray (uint8)
+        Binary input vector.
+    w : np.ndarray (float32)
+        Cluster weight vector.
+    L : float
+        Uncommitted node bias parameter.
+    dim_ : int
+        Feature dimension.
+
+    Returns
+    -------
+    np.ndarray
+        Updated cluster weight vector.
+
+    """
+    # Extract the top-down weights
+    w_td_new = np.empty(dim_, dtype=np.uint8)
+    count = 0
+
+    # Compute the new top-down weight using bitwise AND
+    for j in range(dim_):
+        w_td_new[j] = i[j] & w[j + dim_]  # Bitwise AND
+        if w_td_new[j]:  # Count nonzero elements
+            count += 1
+
+    # Compute the new bottom-up weights
+    scaling_factor = L / (L - 1 + count)
+    w_bu_new = np.empty(dim_, dtype=np.float32)
+
+    for j in range(dim_):
+        w_bu_new[j] = scaling_factor * w_td_new[j]
+
+    # Concatenate updated weights
+    updated_weights = np.empty(2 * dim_, dtype=np.float32)
+    updated_weights[:dim_] = w_bu_new
+    updated_weights[dim_:] = w_td_new
+
+    return updated_weights
 
 
 class ART1(BaseART):
@@ -94,7 +199,8 @@ class ART1(BaseART):
 
         """
         w_bu = w[: self.dim_]
-        return np.count_nonzero(i & w_bu), None
+        # return np.count_nonzero(i & w_bu), None
+        return category_choice_numba(i, w_bu), None
 
     def match_criterion(
         self,
@@ -125,7 +231,8 @@ class ART1(BaseART):
 
         """
         w_td = w[self.dim_ :]
-        return np.count_nonzero(i & w_td) / self.dim_, cache
+        # return np.count_nonzero(i & w_td) / self.dim_, cache
+        return match_criterion_numba(i, w_td, self.dim_), cache
 
     def update(
         self,
@@ -153,14 +260,14 @@ class ART1(BaseART):
             Updated cluster weight.
 
         """
-        w_td = w[self.dim_ :]
-
-        w_td_new = i & w_td
-        w_bu_new = (
-            params["L"] / (params["L"] - 1 + np.count_nonzero(w_td_new))
-        ) * w_td_new
-
-        return np.concatenate([w_bu_new, w_td_new])
+        # w_td = w[self.dim_ :]
+        # w_td_new = i & w_td
+        # w_bu_new = (
+        #     params["L"] / (params["L"] - 1 + np.count_nonzero(w_td_new))
+        # ) * w_td_new
+        #
+        # return np.concatenate([w_bu_new, w_td_new])
+        return update_numba(i, w, params["L"], self.dim_)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.

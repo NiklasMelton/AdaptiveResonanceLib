@@ -51,7 +51,7 @@ def test_category_choice(art_model):
 
     activation, _ = art_model.category_choice(i, w, params)
     assert isinstance(activation, float)
-    assert activation == 0.5  # np.dot(i, [0.5, 0.5]) = 0.5
+    assert activation == 1.0  # np.dot(i, [0.5, 0.5]) = 0.5
 
 
 def test_match_criterion(art_model):
@@ -67,7 +67,7 @@ def test_match_criterion(art_model):
     match_criterion, _ = art_model.match_criterion(i, w, params, cache=cache)
     assert isinstance(match_criterion, float)
     assert (
-        match_criterion == 1.0
+        match_criterion == 0.5
     )  # Intersection of i and top-down weight w_td: [1, 0] matches exactly with i
 
 

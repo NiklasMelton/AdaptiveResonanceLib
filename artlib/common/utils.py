@@ -1,5 +1,6 @@
 """General utilities used throughout ARTLib."""
 import numpy as np
+from numba import njit
 from typing import Tuple, Optional, Mapping, Sequence, Union, Any
 
 IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
@@ -118,8 +119,9 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
     return mean_array
 
 
+@njit
 def l1norm(x: np.ndarray) -> float:
-    """Get the L1 norm of a vector.
+    """Get the L1 norm of a vector using Numba.
 
     Parameters
     ----------
@@ -132,7 +134,7 @@ def l1norm(x: np.ndarray) -> float:
         L1 norm.
 
     """
-    return float(np.sum(np.absolute(x)))
+    return np.sum(np.abs(x))  # np.absolute is the same as np.abs
 
 
 def l2norm2(data: np.ndarray) -> float:
@@ -152,6 +154,7 @@ def l2norm2(data: np.ndarray) -> float:
     return float(np.matmul(data, data))
 
 
+@njit
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """Get the fuzzy AND operation between two vectors.
 

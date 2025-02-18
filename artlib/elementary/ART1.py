@@ -9,7 +9,6 @@
 import numpy as np
 from typing import Optional, List, Tuple, Dict
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import l1norm
 
 
 class ART1(BaseART):
@@ -41,6 +40,7 @@ class ART1(BaseART):
         """
         params = {"rho": rho, "L": L}
         super().__init__(params)
+        self.scaling_factor_ = params["L"] / (params["L"] - 1 + self.dim_)
 
     @staticmethod
     def validate_params(params: dict):
@@ -68,7 +68,7 @@ class ART1(BaseART):
             The dataset.
 
         """
-        assert np.array_equal(X, X.astype(bool)), "ART1 only supports binary data"
+        assert ((X == 0) | (X == 1)).all(), "ART1 only supports binary data"
         self.check_dimensions(X)
 
     def category_choice(
@@ -94,7 +94,7 @@ class ART1(BaseART):
 
         """
         w_bu = w[: self.dim_]
-        return float(np.dot(i, w_bu)), None
+        return np.count_nonzero(i & w_bu), None
 
     def match_criterion(
         self,
@@ -125,7 +125,7 @@ class ART1(BaseART):
 
         """
         w_td = w[self.dim_ :]
-        return l1norm(np.logical_and(i, w_td)) / l1norm(i), cache
+        return np.count_nonzero(i & w_td) / self.dim_, cache
 
     def update(
         self,
@@ -155,8 +155,11 @@ class ART1(BaseART):
         """
         w_td = w[self.dim_ :]
 
-        w_td_new = np.logical_and(i, w_td)
-        w_bu_new = (params["L"] / (params["L"] - 1 + l1norm(w_td_new))) * w_td_new
+        w_td_new = i & w_td
+        w_bu_new = (
+            params["L"] / (params["L"] - 1 + np.count_nonzero(w_td_new))
+        ) * w_td_new
+
         return np.concatenate([w_bu_new, w_td_new])
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
@@ -176,7 +179,8 @@ class ART1(BaseART):
 
         """
         w_td_new = i
-        w_bu_new = (params["L"] / (params["L"] - 1 + self.dim_)) * w_td_new
+
+        w_bu_new = self.scaling_factor_ * i
         return np.concatenate([w_bu_new, w_td_new])
 
     def get_cluster_centers(self) -> List[np.ndarray]:

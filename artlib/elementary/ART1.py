@@ -177,6 +177,9 @@ class ART1(BaseART):
             The dataset.
 
         """
+        assert X.dtype == np.bool_ or np.issubdtype(
+            X.dtype, np.integer
+        ), "ART1 only supports binary data"
         assert ((X == 0) | (X == 1)).all(), "ART1 only supports binary data"
         self.check_dimensions(X)
 
@@ -203,8 +206,10 @@ class ART1(BaseART):
 
         """
         w_bu = w[: self.dim_]
-        # return np.count_nonzero(i & w_bu), None
-        return category_choice_numba(i, w_bu), None
+        return np.count_nonzero(i & w_bu), None
+        # # In practice, numba seems to be slower for this function despite what
+        # # profiling would indicate
+        # return category_choice_numba(i, w_bu), None
 
     def match_criterion(
         self,

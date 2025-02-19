@@ -206,7 +206,7 @@ class ART1(BaseART):
 
         """
         w_bu = w[: self.dim_]
-        return np.count_nonzero(i & w_bu), None
+        return float(np.dot(i, w_bu)), None
         # # In practice, numba seems to be slower for this function despite what
         # # profiling would indicate
         # return category_choice_numba(i, w_bu), None

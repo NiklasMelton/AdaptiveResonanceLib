@@ -30,6 +30,7 @@ from artlib.elementary.BayesianART import BayesianART
 from artlib.elementary.EllipsoidART import EllipsoidART
 from artlib.elementary.GaussianART import GaussianART
 from artlib.elementary.FuzzyART import FuzzyART
+from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
 from artlib.elementary.HypersphereART import HypersphereART
 from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 
@@ -67,6 +68,7 @@ __all__ = [
     "HypersphereART",
     "QuadraticNeuronART",
     "FuzzyART",
+    "BinaryFuzzyART",
     "TopoART",
     "DualVigilanceART",
     "ARTMAP",

@@ -52,6 +52,8 @@ from artlib.biclustering.BARTMAP import BARTMAP
 from artlib.topological.TopoART import TopoART
 from artlib.topological.DualVigilanceART import DualVigilanceART
 
+from artlib.cpp_optimized.BinaryFuzzyARTMAP import BinaryFuzzyARTMAP
+
 __all__ = [
     "BaseART",
     "BaseARTMAP",
@@ -81,4 +83,5 @@ __all__ = [
     "CVIART",
     "FALCON",
     "TD_FALCON",
+    "BinaryFuzzyARTMAP",
 ]

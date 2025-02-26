@@ -1,3 +1,19 @@
+[project]
+name = "artlib"
+version = "0.1.3"
+description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
+authors = [{ name = "Niklas M. Melton", email = "niklasmelton@gmail.com" }]
+license = { text = "MIT" }
+readme = "README.md"
+
+dependencies = [
+    "numpy>=1.19.4",
+    "scipy>=1.5.4",
+    "scikit-learn>=1.0",
+    "matplotlib>=3.3.3",
+    "numba>=0.57.0"
+]
+
 [tool.poetry]
 name = "artlib"
 version = "0.1.3"
@@ -8,21 +24,10 @@ homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 readme = "README.md"
-keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
 
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
+[tool.setuptools.packages.find]
+include = ["artlib*"]
+exclude = ["data*", "figures*", "templates*"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -38,12 +43,13 @@ pre-commit = "^4.0.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^6.2.1"
-sphinx-rtd-theme = "^1.0.0"  # If you're using the Read the Docs theme
+sphinx-rtd-theme = "^1.0.0"
 sphinx-autoapi = ">=3.0.0"
 myst-parser = "^1.0"
 cffconvert = "^2.0.0"
 sphinxcontrib-bibtex = "^2.0.0"
 
+# Specify build system for C++ extensions
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools", "wheel", "pybind11"]
+build-backend = "setuptools.build_meta"

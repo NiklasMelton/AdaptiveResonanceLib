@@ -224,7 +224,7 @@ private:
         }
 
         auto match_op = _match_tracking_operator(MT_);
-        if MT_ == "MT-" || (match_op(w1, rho_w1_)) {
+        if ((MT_ == "MT-") || (match_op(w1, rho_w1_))) {
             return static_cast<double>(w1) / (alpha_ + sum_w);
         }
         return std::nan("");

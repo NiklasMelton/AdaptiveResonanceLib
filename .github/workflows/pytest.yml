@@ -32,8 +32,11 @@ jobs:
 
     - name: Install wheel
       run: |
-        pip install dist/*.whl
-        # Now the compiled extension is in site-packages
+        poetry run pip install dist/*.whl
+
+    - name: Debug installed 'artlib'
+      run: |
+        poetry run pip show -f artlib
 
     - name: Run tests
       run: |

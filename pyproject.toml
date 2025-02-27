@@ -9,9 +9,6 @@ repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 readme = "README.md"
 keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
-packages = [
-  { include = "artlib" },
-]
 include = [
     "artlib/cpp_optimized/*.cpp",
     "artlib/cpp_optimized/__init__.py"

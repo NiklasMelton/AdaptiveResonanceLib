@@ -115,7 +115,7 @@ public:
             rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
         }
         assert(
-            num_features == 2*dim_original_,
+            num_features == 2*dim_original_ &&
             "Number of features do not match existing weights"
         )
 

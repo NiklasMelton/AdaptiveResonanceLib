@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <functional>
+#include <stdexcept>
+#include <cstring>
 
 namespace py = pybind11;
 
@@ -15,16 +18,81 @@ public:
         std::vector<int> weight;
     };
 
-    BinaryFuzzyARTMAP(double rho, double alpha, std::string MT, double epsilon)
+    BinaryFuzzyARTMAP(double rho,
+                      double alpha,
+                      std::string MT,
+                      double epsilon,
+                      py::object weights = py::none(),
+                      py::object cluster_labels = py::none())
         : base_rho_(rho), alpha_(alpha), MT_(MT), epsilon_(epsilon)
     {
         // We do NOT know dim_original_ yet, so we simply set to 0 here.
         // We'll infer it in fit() from the data.
         dim_original_ = 0;
         rho_w1_       = 0;
+        bool have_weights         = !weights.is_none();
+        bool have_cluster_labels  = !cluster_labels.is_none();
+        // Must provide both or neither:
+        if (have_weights != have_cluster_labels) {
+            throw std::invalid_argument(
+                "You must provide BOTH 'weights' and 'cluster_labels' OR neither."
+            );
+        }
+        // If the user passed existing data, initialize from them.
+        if (have_weights) {
+            // We expect 'weights' to be a list of 1D arrays
+            // exactly matching how we produce `weight_arrays` in fit().
+            py::list w_list = weights.cast<py::list>();
+
+            // We also expect 'cluster_labels' to be a 1D int array
+            py::array_t<int> c_array = cluster_labels.cast<py::array_t<int>>();
+            py::buffer_info c_info   = c_array.request();
+
+            if (c_info.ndim != 1) {
+                throw std::runtime_error("cluster_labels must be a 1D array.");
+            }
+
+            py::ssize_t n_clusters = w_list.size();
+            if (c_info.shape[0] != n_clusters) {
+                throw std::runtime_error(
+                    "Inconsistent sizes: weights has " + std::to_string(n_clusters)
+                    + " clusters, but cluster_labels has length "
+                    + std::to_string(c_info.shape[0]) + "."
+                );
+            }
+
+            // Convert cluster_labels to a simple pointer
+            const int* c_ptr = static_cast<const int*>(c_info.ptr);
+
+            // Initialize clusters_ and cluster_map_
+            clusters_.resize(n_clusters);
+
+            for (py::ssize_t i = 0; i < n_clusters; ++i) {
+                // Each entry in w_list should be a 1D array.
+                py::array_t<int> w_array = w_list[i].cast<py::array_t<int>>();
+                py::buffer_info w_info   = w_array.request();
+
+                if (w_info.ndim != 1) {
+                    throw std::runtime_error("Each weight array must be 1D.");
+                }
+
+                // Copy data into clusters_[i].weight
+                py::ssize_t weight_size = w_info.shape[0];
+                clusters_[i].weight.resize(static_cast<size_t>(weight_size));
+                std::memcpy(
+                    clusters_[i].weight.data(),
+                    w_info.ptr,
+                    static_cast<size_t>(weight_size) * sizeof(int)
+                );
+
+                // cluster_map_[i] = label
+                cluster_map_[static_cast<int>(i)] = c_ptr[i];
+            }
+        }
     }
 
-    std::tuple<py::array_t<int>, std::vector<py::array_t<int>>, py::array_t<int>> fit(py::array_t<int> X, py::array_t<int> y) {
+    std::tuple<py::array_t<int>, std::vector<py::array_t<int>>, py::array_t<int>>
+    fit(py::array_t<int> X, py::array_t<int> y) {
         py::buffer_info x_buf = X.request(), y_buf = y.request();
 
         assert(x_buf.ndim == 2 && "X must be a 2D array");
@@ -40,8 +108,16 @@ public:
         int num_samples = static_cast<int>(num_samples_ssize);
         int num_features = static_cast<int>(num_features_ssize);
 
-        dim_original_ = num_features / 2;
-        rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
+
+        // If we haven't set dim_original_ yet, do so now:
+        if (dim_original_ == 0) {
+            dim_original_ = num_features / 2;  // typical assumption
+            rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
+        }
+        assert(
+            num_features == 2*dim_original_,
+            "Number of features do not match existing weights"
+        )
 
         auto x_ptr = static_cast<int*>(x_buf.ptr);
         auto y_ptr = static_cast<int*>(y_buf.ptr);
@@ -105,7 +181,7 @@ private:
 
         for (size_t i = 0; i < clusters_.size(); ++i) {
             int w1;
-            double T = category_choice(sample, clusters_[i].weight, w1);
+            double T = category_choice(sample, clusters_[i].weight, w1, MT_);
             if (!std::isnan(T)) {
                 T_values.emplace_back(T, static_cast<int>(i), w1);
             }
@@ -138,7 +214,8 @@ private:
         return new_cluster_id;
     }
 
-    double category_choice(const std::vector<int>& i, const std::vector<int>& w, int &w1) {
+    double category_choice(const std::vector<int>& i, const std::vector<int>& w, int
+    &w1, const std::string MT_) {
         w1 = 0;
         int sum_w = 0;
         for (size_t j = 0; j < i.size(); ++j) {
@@ -147,7 +224,7 @@ private:
         }
 
         auto match_op = _match_tracking_operator(MT_);
-        if (match_op(w1, rho_w1_)) {
+        if MT_ == "MT-" || (match_op(w1, rho_w1_)) {
             return static_cast<double>(w1) / (alpha_ + sum_w);
         }
         return std::nan("");
@@ -198,19 +275,77 @@ private:
     }
 };
 
+// This free function creates a temporary BinaryFuzzyARTMAP model, runs fit,
+// and returns exactly the same results you'd get from the class-based usage.
+std::tuple<py::array_t<int>,
+           std::vector<py::array_t<int>>,
+           py::array_t<int>>
+FitBinaryFuzzyARTMAP(py::array_t<int> X,
+                     py::array_t<int> y,
+                     double rho,
+                     double alpha,
+                     std::string MT,
+                     double epsilon,
+                     py::object weights = py::none(),
+                     py::object cluster_labels = py::none())
+{
+    // Just construct the model with these parameters, then fit
+    BinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+    return model.fit(X, y);
+}
+
 PYBIND11_MODULE(BinaryFuzzyARTMAP, m) {
     py::class_<BinaryFuzzyARTMAP>(m, "BinaryFuzzyARTMAP")
-        .def(py::init<double, double, std::string, double>(),
+        .def(py::init<double, double, std::string, double,
+                      py::object, py::object>(),
              py::arg("rho"),
              py::arg("alpha"),
              py::arg("MT"),
-             py::arg("epsilon"))
+             py::arg("epsilon"),
+             py::arg("weights")        = py::none(),
+             py::arg("cluster_labels") = py::none(),
+             R"doc(
+Construct a BinaryFuzzyARTMAP model.
 
-        .def("fit", &BinaryFuzzyARTMAP::fit)
+Optionally provide:
+
+    weights        -- a Python list of 1D numpy int arrays (one for each cluster)
+    cluster_labels -- a 1D numpy int array mapping cluster_id -> label
+
+Either provide both or neither for partial initialization vs. fresh model.
+)doc")
+
+        .def("fit", &BinaryFuzzyARTMAP::fit,
+             py::arg("X"), py::arg("y"),
+             R"doc(
+Fit the model given data X and labels y.
+
+Returns:
+    (labels_out, weight_arrays, cluster_labels_out)
+)doc")
 
         .def("__repr__",
-            [](const BinaryFuzzyARTMAP &a) {
-                return "<BinaryFuzzyARTMAP model>";
-            }
-        );
+             [](const BinaryFuzzyARTMAP &m) {
+                 return "<BinaryFuzzyARTMAP model>";
+             });
+
+    // The free function that can also take optional weights, cluster_labels
+    m.def("FitBinaryFuzzyARTMAP",
+          &FitBinaryFuzzyARTMAP,
+          py::arg("X"),
+          py::arg("y"),
+          py::arg("rho"),
+          py::arg("alpha"),
+          py::arg("MT"),
+          py::arg("epsilon"),
+          py::arg("weights")        = py::none(),
+          py::arg("cluster_labels") = py::none(),
+          R"doc(
+Fit BinaryFuzzyARTMAP in a single function call.
+
+Optionally re-initialize from existing weights/cluster_labels for partial fits.
+
+Either provide BOTH 'weights' (a list of 1D arrays) and 'cluster_labels' (1D array)
+or leave both as None.
+)doc");
 }

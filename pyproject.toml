@@ -11,7 +11,6 @@ readme = "README.md"
 keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
 packages = [
   { include = "artlib" },
-  { include = "artlib.cpp_optimized" }
 ]
 
 classifiers = [

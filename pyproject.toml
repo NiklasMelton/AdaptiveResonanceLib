@@ -24,7 +24,6 @@ homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 readme = "README.md"
-build = "build_extension.py"
 
 [tool.setuptools.packages.find]
 include = ["artlib*"]
@@ -54,3 +53,6 @@ sphinxcontrib-bibtex = "^2.0.0"
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools", "pybind11"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.build]
+script = "build_extension.py"

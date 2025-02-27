@@ -8,7 +8,6 @@ readme = "README.md"
 homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
-build = "build_extension.py"
 
 [tool.poetry.dependencies]
 python = "^3.9"

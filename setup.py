@@ -1,8 +1,8 @@
 # setup.py
-import os
 import sys
+import os
 import pybind11
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 
 extra_compile_args = ["/std:c++17"] if sys.platform == "win32" else ["-std=c++17"]
 
@@ -19,6 +19,6 @@ ext_modules = [
 setup(
     name="artlib",
     version="0.1.3",
-    packages=["artlib", "artlib.cpp_optimized"],
+    packages=find_packages(),  # This ensures artlib, artlib.common, etc. are all included
     ext_modules=ext_modules,
 )

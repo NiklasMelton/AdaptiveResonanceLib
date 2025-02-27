@@ -35,8 +35,8 @@ homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 
 [build-system]
 requires = [
-    "poetry-core>=1.0.0",
-    "setuptools",          # needed for Extension(), build_ext, etc.
-    "pybind11"             # needed at build time for <pybind11.get_include()>
+  "setuptools>=61.0",   # needed for PEP 517
+  "wheel",
+  "pybind11"
 ]
-build-backend = "poetry.core.masonry.api"
+build-backend = "setuptools.build_meta"

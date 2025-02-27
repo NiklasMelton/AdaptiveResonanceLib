@@ -45,4 +45,4 @@ repos:
           - --follow-imports=silent
 
 exclude: ^(unit_tests/|scripts/|artlib/experimental/|examples/|docs/|artlib/cvi
-  /|build_extension.py)
+  /|setup.py)

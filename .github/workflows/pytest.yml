@@ -35,15 +35,6 @@ jobs:
         pip install dist/*.whl
         # Now the compiled extension is in site-packages
 
-    - name: Show installed 'artlib'
-      run: |
-        poetry run pip show -f artlib
-        poetry run python -c "import sys; print(sys.path)"
-
-    - name: Debug Poetry Package Contents
-      run: |
-        tar -tf dist/*.tar.gz | grep cpp_optimized || echo "No C++ files found!"
-
     - name: Run tests
       run: |
         poetry run pytest unit_tests/ --maxfail=5 --disable-warnings -v --tb=short --junitxml=./test-results/pytest-report.xml  # Ensure JUnit XML report is generated

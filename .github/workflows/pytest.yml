@@ -25,6 +25,16 @@ jobs:
         pip install poetry
         poetry install --with dev  # Install dependencies from pyproject.toml, including dev dependencies
 
+    - name: Build wheel
+      run: |
+        poetry build
+        ls -l dist  # show the generated wheel
+
+    - name: Install wheel
+      run: |
+        pip install dist/*.whl
+        # Now the compiled extension is in site-packages
+
     - name: Show installed 'artlib'
       run: |
         poetry run pip show -f artlib
@@ -32,9 +42,7 @@ jobs:
 
     - name: Debug Poetry Package Contents
       run: |
-        poetry build
         tar -tf dist/*.tar.gz | grep cpp_optimized || echo "No C++ files found!"
-
 
     - name: Run tests
       run: |

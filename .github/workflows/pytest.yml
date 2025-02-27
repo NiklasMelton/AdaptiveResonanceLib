@@ -25,10 +25,16 @@ jobs:
         pip install poetry
         poetry install --with dev  # Install dependencies from pyproject.toml, including dev dependencies
 
+    - name: Show installed 'artlib'
+      run: |
+        poetry run pip show -f artlib
+        poetry run python -c "import sys; print(sys.path)"
+
     - name: Debug Poetry Package Contents
       run: |
         poetry build
         tar -tf dist/*.tar.gz | grep cpp_optimized || echo "No C++ files found!"
+
 
     - name: Run tests
       run: |

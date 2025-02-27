@@ -117,7 +117,7 @@ public:
         assert(
             num_features == 2*dim_original_ &&
             "Number of features do not match existing weights"
-        )
+        );
 
         auto x_ptr = static_cast<int*>(x_buf.ptr);
         auto y_ptr = static_cast<int*>(y_buf.ptr);

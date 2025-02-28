@@ -90,7 +90,9 @@ public:
             }
         }
     }
-
+    // ============================================
+    // FIT
+    // ============================================
     std::tuple<py::array_t<int>, std::vector<py::array_t<int>>, py::array_t<int>>
     fit(py::array_t<int> X, py::array_t<int> y) {
         py::buffer_info x_buf = X.request(), y_buf = y.request();
@@ -151,6 +153,84 @@ public:
                     cluster_labels.size() * sizeof(int));
 
         return std::make_tuple(labels_out, weight_arrays, cluster_labels_out);
+    }
+
+    // ============================================
+    // PREDICT
+    // ============================================
+    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<int> X)
+    {
+        // If we have no clusters, we can't predict
+        if (clusters_.empty()) {
+            throw std::runtime_error(
+                "Cannot call predict() because the model has no clusters. "
+                "Call fit() or provide existing weights."
+            );
+        }
+
+        py::buffer_info x_buf = X.request();
+        assert(x_buf.ndim == 2 && "X must be a 2D array");
+
+        py::ssize_t num_samples_ssize  = x_buf.shape[0];
+        py::ssize_t num_features_ssize = x_buf.shape[1];
+
+        assert(num_samples_ssize  <= std::numeric_limits<int>::max());
+        assert(num_features_ssize <= std::numeric_limits<int>::max());
+
+        int num_samples  = static_cast<int>(num_samples_ssize);
+        int num_features = static_cast<int>(num_features_ssize);
+
+        // If dim_original_ is 0, attempt to infer it
+        if (dim_original_ == 0) {
+            dim_original_ = num_features / 2;
+            rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
+        }
+
+        assert(
+            num_features == 2*dim_original_ &&
+            "Number of features do not match existing weights"
+        );
+
+        auto x_ptr = static_cast<int*>(x_buf.ptr);
+
+        std::vector<int> predictions_a(num_samples);
+        std::vector<int> predictions_b(num_samples);
+
+        for (int i = 0; i < num_samples; ++i) {
+            // Extract one sample
+            const int* row_ptr = x_ptr + i * num_features;
+            std::vector<int> sample(row_ptr, row_ptr + num_features);
+
+            // We'll keep track of the best T so far
+            double best_T = -1.0;
+            int best_cluster = -1;
+
+            for (size_t c = 0; c < clusters_.size(); ++c) {
+                double T = category_choice_predict(sample, clusters_[c].weight);
+                // If T is better, update
+                if (T > best_T) {
+                    best_T = T;
+                    best_cluster = static_cast<int>(c);
+                }
+            }
+
+            // The predicted label is cluster_map_[best_cluster]
+            predictions_b[i] = cluster_map_.at(best_cluster);
+            predictions_a[i] = best_cluster;
+        }
+
+        // Convert to a py::array
+        py::array_t<int> pred_a_out(predictions_a.size());
+        std::memcpy(pred_a_out.mutable_data(),
+                    predictions_a.data(),
+                    predictions_a.size() * sizeof(int));
+
+        py::array_t<int> pred_b_out(predictions_b.size());
+        std::memcpy(pred_b_out.mutable_data(),
+                    predictions_b.data(),
+                    predictions_b.size() * sizeof(int));
+
+        return std::make_tuple(pred_a_out, pred_b_out);
     }
 
 private:
@@ -275,6 +355,9 @@ private:
     }
 };
 
+// =======================================================================
+// Free function for fit, same as before
+// =======================================================================
 // This free function creates a temporary BinaryFuzzyARTMAP model, runs fit,
 // and returns exactly the same results you'd get from the class-based usage.
 std::tuple<py::array_t<int>,
@@ -292,6 +375,25 @@ FitBinaryFuzzyARTMAP(py::array_t<int> X,
     // Just construct the model with these parameters, then fit
     BinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
     return model.fit(X, y);
+}
+
+// =======================================================================
+// NEW: Free function for predict
+// =======================================================================
+std::tuple<py::array_t<int>,
+           py::array_t<int>>
+PredictBinaryFuzzyARTMAP(py::array_t<int> X,
+                         double rho,
+                         double alpha,
+                         std::string MT,
+                         double epsilon,
+                         py::object weights = py::none(),
+                         py::object cluster_labels = py::none())
+{
+    // Construct ephemeral model
+    BinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+    // Then call predict
+    return model.predict(X);
 }
 
 PYBIND11_MODULE(BinaryFuzzyARTMAP, m) {
@@ -347,5 +449,25 @@ Optionally re-initialize from existing weights/cluster_labels for partial fits.
 
 Either provide BOTH 'weights' (a list of 1D arrays) and 'cluster_labels' (1D array)
 or leave both as None.
+)doc");
+
+    // The free function for prediction
+    m.def("PredictBinaryFuzzyARTMAP",
+          &PredictBinaryFuzzyARTMAP,
+          py::arg("X"),
+          py::arg("rho"),
+          py::arg("alpha"),
+          py::arg("MT"),
+          py::arg("epsilon"),
+          py::arg("weights")        = py::none(),
+          py::arg("cluster_labels") = py::none(),
+          R"doc(
+Predict labels using a temporary BinaryFuzzyARTMAP model.
+
+If no weights/cluster_labels are provided, the model has no clusters and will fail.
+If you want to do partial usage, provide both 'weights' and 'cluster_labels'.
+
+Returns:
+    A 1D numpy array of predicted labels.
 )doc");
 }

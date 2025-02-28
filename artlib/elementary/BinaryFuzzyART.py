@@ -39,7 +39,7 @@ class BinaryFuzzyART(FuzzyART):
     """Fuzzy ART optimized for binary input data."""
 
     def __init__(self, rho: float, alpha: float):
-        """Initialize the Fuzzy ARTb model.
+        """Initialize the Binary Fuzzy ART model.
 
         Parameters
         ----------

@@ -12,13 +12,13 @@
 
 namespace py = pybind11;
 
-class BinaryFuzzyARTMAP {
+class cppBinaryFuzzyARTMAP {
 public:
     struct Cluster {
         std::vector<int> weight;
     };
 
-    BinaryFuzzyARTMAP(double rho,
+    cppBinaryFuzzyARTMAP(double rho,
                       double alpha,
                       std::string MT,
                       double epsilon,
@@ -372,7 +372,7 @@ private:
 // =======================================================================
 // Free function for fit, same as before
 // =======================================================================
-// This free function creates a temporary BinaryFuzzyARTMAP model, runs fit,
+// This free function creates a temporary cppBinaryFuzzyARTMAP model, runs fit,
 // and returns exactly the same results you'd get from the class-based usage.
 std::tuple<py::array_t<int>,
            std::vector<py::array_t<int>>,
@@ -387,7 +387,7 @@ FitBinaryFuzzyARTMAP(py::array_t<int> X,
                      py::object cluster_labels = py::none())
 {
     // Just construct the model with these parameters, then fit
-    BinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
     return model.fit(X, y);
 }
 
@@ -405,13 +405,13 @@ PredictBinaryFuzzyARTMAP(py::array_t<int> X,
                          py::object cluster_labels = py::none())
 {
     // Construct ephemeral model
-    BinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
     // Then call predict
     return model.predict(X);
 }
 
-PYBIND11_MODULE(BinaryFuzzyARTMAP, m) {
-    py::class_<BinaryFuzzyARTMAP>(m, "BinaryFuzzyARTMAP")
+PYBIND11_MODULE(cppBinaryFuzzyARTMAP, m) {
+    py::class_<cppBinaryFuzzyARTMAP>(m, "cppBinaryFuzzyARTMAP")
         .def(py::init<double, double, std::string, double,
                       py::object, py::object>(),
              py::arg("rho"),
@@ -421,7 +421,7 @@ PYBIND11_MODULE(BinaryFuzzyARTMAP, m) {
              py::arg("weights")        = py::none(),
              py::arg("cluster_labels") = py::none(),
              R"doc(
-Construct a BinaryFuzzyARTMAP model.
+Construct a cppBinaryFuzzyARTMAP model.
 
 Optionally provide:
 
@@ -431,7 +431,7 @@ Optionally provide:
 Either provide both or neither for partial initialization vs. fresh model.
 )doc")
 
-        .def("fit", &BinaryFuzzyARTMAP::fit,
+        .def("fit", &cppBinaryFuzzyARTMAP::fit,
              py::arg("X"), py::arg("y"),
              R"doc(
 Fit the model given data X and labels y.
@@ -441,8 +441,8 @@ Returns:
 )doc")
 
         .def("__repr__",
-             [](const BinaryFuzzyARTMAP &m) {
-                 return "<BinaryFuzzyARTMAP model>";
+             [](const cppBinaryFuzzyARTMAP &m) {
+                 return "<cppBinaryFuzzyARTMAP model>";
              });
 
     // The free function that can also take optional weights, cluster_labels
@@ -457,7 +457,7 @@ Returns:
           py::arg("weights")        = py::none(),
           py::arg("cluster_labels") = py::none(),
           R"doc(
-Fit BinaryFuzzyARTMAP in a single function call.
+Fit cppBinaryFuzzyARTMAP in a single function call.
 
 Optionally re-initialize from existing weights/cluster_labels for partial fits.
 
@@ -476,7 +476,7 @@ or leave both as None.
           py::arg("weights")        = py::none(),
           py::arg("cluster_labels") = py::none(),
           R"doc(
-Predict labels using a temporary BinaryFuzzyARTMAP model.
+Predict labels using a temporary cppBinaryFuzzyARTMAP model.
 
 If no weights/cluster_labels are provided, the model has no clusters and will fail.
 If you want to do partial usage, provide both 'weights' and 'cluster_labels'.

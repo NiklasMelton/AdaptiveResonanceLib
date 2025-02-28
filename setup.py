@@ -8,8 +8,8 @@ extra_compile_args = ["/std:c++17"] if sys.platform == "win32" else ["-std=c++17
 
 ext_modules = [
     Extension(
-        "artlib.cpp_optimized.BinaryFuzzyARTMAP",
-        [os.path.join("artlib", "cpp_optimized", "BinaryFuzzyARTMAP.cpp")],
+        "artlib.cpp_optimized.cppBinaryFuzzyARTMAP",
+        [os.path.join("artlib", "cpp_optimized", "cppBinaryFuzzyARTMAP.cpp")],
         include_dirs=[pybind11.get_include()],
         language="c++",
         extra_compile_args=extra_compile_args,

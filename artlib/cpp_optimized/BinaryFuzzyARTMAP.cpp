@@ -310,6 +310,20 @@ private:
         return std::nan("");
     }
 
+    // For predict only (no skip / no vigilance):
+    double category_choice_predict(const std::vector<int>& sample,
+                                   const std::vector<int>& w)
+    {
+        // Just compute the same formula T = |sample & w| / (alpha + |w|)
+        int w1 = 0;
+        int sum_w = 0;
+        for (size_t j = 0; j < sample.size(); ++j) {
+            w1    += (sample[j] & w[j]);
+            sum_w += w[j];
+        }
+        return (double) w1 / (alpha_ + sum_w);
+    }
+
     bool validate_hypothesis(int cluster_id, int c_b) {
         return cluster_map_.find(cluster_id) == cluster_map_.end() || cluster_map_[cluster_id] == c_b;
     }

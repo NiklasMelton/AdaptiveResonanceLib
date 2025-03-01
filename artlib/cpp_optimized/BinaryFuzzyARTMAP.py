@@ -232,7 +232,15 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
         self.module_a.validate_data(X)
         self.module_a.check_dimensions(X)
-        _, y_b = PredictBinaryFuzzyARTMAP(X)
+
+        existing_W = np.array(self.module_a.W)
+        existing_cluster_labels = np.array(
+            [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+        )
+
+        _, y_b = PredictBinaryFuzzyARTMAP(
+            X, weights=existing_W, cluster_labels=existing_cluster_labels
+        )
         return y_b
 
     def predict_ab(
@@ -258,5 +266,13 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
         self.module_a.validate_data(X)
         self.module_a.check_dimensions(X)
-        y_a, y_b = PredictBinaryFuzzyARTMAP(X)
+
+        existing_W = np.array(self.module_a.W)
+        existing_cluster_labels = np.array(
+            [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+        )
+
+        y_a, y_b = PredictBinaryFuzzyARTMAP(
+            X, weights=existing_W, cluster_labels=existing_cluster_labels
+        )
         return y_a, y_b

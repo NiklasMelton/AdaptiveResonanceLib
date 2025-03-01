@@ -38,7 +38,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
         """
         module_a = BinaryFuzzyART(rho=rho, alpha=alpha)
-        super(BinaryFuzzyARTMAP, self).__init__(module_a)
+        super().__init__(module_a)
 
     def _synchronize_cpp_results(
         self,
@@ -67,9 +67,9 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             self.module_a.weight_sample_counter_ = []
 
         # concatenate new module_a labels to the existing labels
-        self.module_a.labels_ = np.stack(
+        self.module_a.labels_ = np.concatenate(
             [self.module_a.labels_, labels_a_out.flatten()]
-        )
+        ).flatten()
         # update module_a sample counter
         new_sample_counts = list(map(int, np.bincount(labels_a_out)))
 

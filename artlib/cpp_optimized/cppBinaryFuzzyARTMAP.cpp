@@ -397,15 +397,12 @@ FitBinaryFuzzyARTMAP(py::array_t<int> X,
 std::tuple<py::array_t<int>,
            py::array_t<int>>
 PredictBinaryFuzzyARTMAP(py::array_t<int> X,
-                         double rho,
-                         double alpha,
-                         std::string MT,
-                         double epsilon,
                          py::object weights = py::none(),
                          py::object cluster_labels = py::none())
 {
     // Construct ephemeral model
-    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+    // just need to provide some dummy parameters
+    cppBinaryFuzzyARTMAP model(0.0, 0.0, "MT+", 0.0, weights, cluster_labels);
     // Then call predict
     return model.predict(X);
 }
@@ -469,17 +466,12 @@ or leave both as None.
     m.def("PredictBinaryFuzzyARTMAP",
           &PredictBinaryFuzzyARTMAP,
           py::arg("X"),
-          py::arg("rho"),
-          py::arg("alpha"),
-          py::arg("MT"),
-          py::arg("epsilon"),
           py::arg("weights")        = py::none(),
           py::arg("cluster_labels") = py::none(),
           R"doc(
 Predict labels using a temporary cppBinaryFuzzyARTMAP model.
 
 If no weights/cluster_labels are provided, the model has no clusters and will fail.
-If you want to do partial usage, provide both 'weights' and 'cluster_labels'.
 
 Returns:
     A 1D numpy array of predicted labels.

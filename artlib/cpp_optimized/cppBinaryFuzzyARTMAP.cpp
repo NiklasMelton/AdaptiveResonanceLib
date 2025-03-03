@@ -233,6 +233,212 @@ public:
         return std::make_tuple(pred_a_out, pred_b_out);
     }
 
+    /**
+     * @brief Compute the T-value ("category choice") for each existing cluster,
+     *        re-using the same internal logic as step_fit / predict, but without
+     *        any skipping or vigilance checks.
+     *
+     * @param sample A 1D array of int features.
+     * @return 1D array of double T-values, one per cluster (could be NaN for some).
+     */
+    py::array_t<double> compute_activations_for_sample(py::array_t<int> sample) {
+        // 1) Check that we have at least one cluster
+        if (clusters_.empty()) {
+            throw std::runtime_error(
+                "Model has no clusters. Provide valid 'weights' + 'cluster_labels' first."
+            );
+        }
+
+        // 2) Validate sample is 1D
+        py::buffer_info sample_info = sample.request();
+        if (sample_info.ndim != 1) {
+            throw std::runtime_error("Expected 'sample' to be a 1D array.");
+        }
+
+        // Convert input sample into a std::vector<int>
+        auto sample_ptr = static_cast<int*>(sample_info.ptr);
+        std::vector<int> sample_vec(sample_ptr, sample_ptr + sample_info.shape[0]);
+
+        // 3) For each cluster, we call the exact same 'category_choice(...)'
+        //    that the model uses in 'step_fit(...)'.
+        //    NOTE: This might return NaN for some clusters, if vigilance fails for "MT_" logic.
+        //    But that is the same logic the class uses, so we won't second-guess it here.
+        std::vector<double> activations(clusters_.size());
+        for (size_t c = 0; c < clusters_.size(); ++c) {
+            int w1 = 0;  // dummy reference param
+            double T = category_choice(sample_vec, clusters_[c].weight, w1, MT_);
+            activations[c] = T; // possibly NaN if fails vigilance
+        }
+
+        // 4) Convert results into a py::array_t<double> to return
+        py::array_t<double> out_array(activations.size());
+        std::memcpy(out_array.mutable_data(),
+                    activations.data(),
+                    activations.size() * sizeof(double));
+
+        return out_array;
+    }
+
+    /**
+     * @brief Perform a single-sample "step_fit" but verbosely log each cluster
+     *        check in order. Returns (final_cluster_id, log_list).
+     *
+     * @param sample A 1D numpy array of ints (the input pattern).
+     * @param c_b    The label for this sample.
+     *
+     * @return (final_cluster_id, log_list)
+     *         final_cluster_id = the cluster we ended up assigning or creating
+     *         log_list         = python list of dicts describing each step
+     */
+    std::tuple<int, py::list>
+    verbose_step_fit_single_sample(py::array_t<int> sample, int c_b)
+    {
+        py::list log_list;
+
+        // ----------------------------------------------------
+        // 1) Convert the input sample to std::vector<int>
+        // ----------------------------------------------------
+        py::buffer_info buf_info = sample.request();
+        if (buf_info.ndim != 1) {
+            throw std::runtime_error("`sample` must be a 1D array.");
+        }
+        auto s_ptr = static_cast<int*>(buf_info.ptr);
+        std::vector<int> sample_vec(s_ptr, s_ptr + buf_info.shape[0]);
+
+        // If dim_original_ is 0 and we do have clusters, try to infer it
+        if (!clusters_.empty() && dim_original_ == 0) {
+            const auto &w0 = clusters_[0].weight;
+            dim_original_ = static_cast<int>(w0.size() / 2);
+            rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
+        }
+
+        // ----------------------------------------------------
+        // 2) If no clusters exist => create the first cluster
+        // ----------------------------------------------------
+        if (clusters_.empty()) {
+            // Possibly reset rho first, in case we rely on it
+            double old_rho = rho_;
+            reset_rho();
+
+            py::dict entry;
+            entry["stage"]        = "no_clusters_yet";
+            entry["final_action"] = "created_cluster_0";
+            entry["rho_before"]   = old_rho;
+            entry["rho_after"]    = rho_;
+
+            log_list.append(entry);
+
+            clusters_.push_back({ sample_vec });
+            cluster_map_[0] = c_b;
+
+            return std::make_tuple(0, log_list);
+        }
+
+        // ----------------------------------------------------
+        // 3) Otherwise, replicate step_fit logic with logging
+        // ----------------------------------------------------
+
+        // a) reset rho
+        reset_rho(); // sets rho_ = base_rho_
+
+        // b) gather T-values
+        std::vector<std::tuple<double,int,int>> T_values;
+        T_values.reserve(clusters_.size());
+
+        for (size_t i = 0; i < clusters_.size(); ++i) {
+            int w1;
+            double T = category_choice(sample_vec, clusters_[i].weight, w1, MT_);
+            // If T is NaN => it failed the mini-check
+            if (!std::isnan(T)) {
+                T_values.emplace_back(T, static_cast<int>(i), w1);
+            }
+        }
+
+        // c) sort descending by T
+        std::sort(T_values.begin(), T_values.end(),
+                  [](auto &a, auto &b) {
+                      return std::get<0>(a) > std::get<0>(b);
+                  });
+
+        // Vigilance operator
+        auto match_op = _match_tracking_operator(MT_);
+
+        int final_cluster_id = -1;
+
+        // d) check each cluster in order
+        for (auto &tv : T_values) {
+            double T  = std::get<0>(tv);
+            int    c  = std::get<1>(tv);
+            int    w1 = std::get<2>(tv);
+
+            py::dict entry;
+            entry["cluster_index"]   = c;
+            entry["activation"]      = T;
+            double vig_value         = double(w1) / double(dim_original_);
+            entry["vigilance_value"] = vig_value;
+            double old_rho           = rho_;
+            entry["rho_before"]      = old_rho;
+
+            bool pass_vigilance = match_op(vig_value, rho_);
+            entry["passed_vigilance"] = pass_vigilance;
+
+            if (pass_vigilance) {
+                bool pass_hypothesis = validate_hypothesis(c, c_b);
+                entry["passed_hypothesis"] = pass_hypothesis;
+                if (pass_hypothesis) {
+                    // update cluster
+                    clusters_[c].weight = update(sample_vec, clusters_[c].weight);
+                    cluster_map_[c]     = c_b;
+                    final_cluster_id    = c;
+
+                    entry["rho_after"]    = rho_;
+                    entry["final_action"] = "updated_cluster";
+                    log_list.append(entry);
+                    break; // done
+                } else {
+                    // fails hypothesis => match_tracking
+                    bool keep_searching = _match_tracking(w1);
+                    entry["rho_after"]   = rho_;
+                    entry["final_action"] = keep_searching
+                                            ? "continue_search"
+                                            : "stop_search";
+                    log_list.append(entry);
+
+                    if (!keep_searching) {
+                        break;
+                    }
+                }
+            } else {
+                // skip
+                entry["passed_hypothesis"] = py::none();
+                entry["rho_after"]         = rho_;
+                entry["final_action"]      = "skip_cluster";
+                log_list.append(entry);
+            }
+        }
+
+        // e) if final_cluster_id is still -1 => new cluster
+        if (final_cluster_id < 0) {
+            int new_id = static_cast<int>(clusters_.size());
+            clusters_.push_back({ sample_vec });
+            cluster_map_[new_id] = c_b;
+            final_cluster_id = new_id;
+
+            py::dict entry;
+            entry["cluster_index"]     = new_id;
+            entry["activation"]        = py::none();
+            entry["vigilance_value"]   = py::none();
+            entry["passed_vigilance"]  = py::none();
+            entry["passed_hypothesis"] = py::none();
+            entry["rho_before"]        = rho_;
+            entry["rho_after"]         = rho_;
+            entry["final_action"]      = "created_new_cluster";
+            log_list.append(entry);
+        }
+
+        return std::make_tuple(final_cluster_id, log_list);
+    }
+
 private:
     double base_rho_;
     double rho_;
@@ -407,6 +613,53 @@ PredictBinaryFuzzyARTMAP(py::array_t<int> X,
     return model.predict(X);
 }
 
+// =======================================================================
+// NEW: Free function for debugging activations
+// =======================================================================
+
+py::array_t<double>
+ComputeActivationsBinaryFuzzyARTMAP(py::array_t<int> sample,
+                                    double rho,
+                                    double alpha,
+                                    std::string MT,
+                                    double epsilon,
+                                    py::object weights = py::none(),
+                                    py::object cluster_labels = py::none())
+{
+    // 1) Construct a "throwaway" model from the user-provided weights/labels
+    //    (and the same hyperparams that matter for category_choice, e.g. alpha).
+    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+
+    // 2) Ask it to compute T-values for the sample
+    return model.compute_activations_for_sample(sample);
+}
+
+// =======================================================================
+// NEW: Free function for verbose step_fit
+// =======================================================================
+
+std::tuple<int, py::list>
+VerboseStepFitBinaryFuzzyARTMAP(py::array_t<int> sample,
+                                int label,
+                                double rho,
+                                double alpha,
+                                std::string MT,
+                                double epsilon,
+                                py::object weights,
+                                py::object cluster_labels)
+{
+    // ephemeral model:
+    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
+
+    // call that public method
+    return model.verbose_step_fit_single_sample(sample, label);
+}
+
+// =======================================================================
+// PYBIND
+// =======================================================================
+
+
 PYBIND11_MODULE(cppBinaryFuzzyARTMAP, m) {
     py::class_<cppBinaryFuzzyARTMAP>(m, "cppBinaryFuzzyARTMAP")
         .def(py::init<double, double, std::string, double,
@@ -476,4 +729,39 @@ If no weights/cluster_labels are provided, the model has no clusters and will fa
 Returns:
     A 1D numpy array of predicted labels.
 )doc");
+
+    m.def("ComputeActivationsBinaryFuzzyARTMAP",
+          &ComputeActivationsBinaryFuzzyARTMAP,
+          py::arg("sample"),
+          py::arg("rho"),
+          py::arg("alpha"),
+          py::arg("MT"),
+          py::arg("epsilon"),
+          py::arg("weights")        = py::none(),
+          py::arg("cluster_labels") = py::none(),
+          R"doc(
+Compute the activation (T-values) of a single sample against a set of existing
+weights/cluster_labels by constructing a temporary cppBinaryFuzzyARTMAP model
+(including alpha, which is used in T = |sample & w| / (alpha + |w|)).
+
+Returns a 1D NumPy float64 array of T-values (same length as the number of clusters).
+)doc"
+    );
+
+    m.def("VerboseStepFitBinaryFuzzyARTMAP",
+      &VerboseStepFitBinaryFuzzyARTMAP,
+      py::arg("sample"),
+      py::arg("label"),
+      py::arg("rho"),
+      py::arg("alpha"),
+      py::arg("MT"),
+      py::arg("epsilon"),
+      py::arg("weights")        = py::none(),
+      py::arg("cluster_labels") = py::none(),
+      R"doc(
+Constructs a temporary model from the given weights+labels, then calls
+verbose_step_fit_single_sample(...) on that ephemeral model. Returns
+(final_cluster_id, log_list) without modifying your real model.
+)doc");
+
 }

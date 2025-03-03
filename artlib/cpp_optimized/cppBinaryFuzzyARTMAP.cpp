@@ -234,52 +234,6 @@ public:
     }
 
     /**
-     * @brief Compute the T-value ("category choice") for each existing cluster,
-     *        re-using the same internal logic as step_fit / predict, but without
-     *        any skipping or vigilance checks.
-     *
-     * @param sample A 1D array of int features.
-     * @return 1D array of double T-values, one per cluster (could be NaN for some).
-     */
-    py::array_t<double> compute_activations_for_sample(py::array_t<int> sample) {
-        // 1) Check that we have at least one cluster
-        if (clusters_.empty()) {
-            throw std::runtime_error(
-                "Model has no clusters. Provide valid 'weights' + 'cluster_labels' first."
-            );
-        }
-
-        // 2) Validate sample is 1D
-        py::buffer_info sample_info = sample.request();
-        if (sample_info.ndim != 1) {
-            throw std::runtime_error("Expected 'sample' to be a 1D array.");
-        }
-
-        // Convert input sample into a std::vector<int>
-        auto sample_ptr = static_cast<int*>(sample_info.ptr);
-        std::vector<int> sample_vec(sample_ptr, sample_ptr + sample_info.shape[0]);
-
-        // 3) For each cluster, we call the exact same 'category_choice(...)'
-        //    that the model uses in 'step_fit(...)'.
-        //    NOTE: This might return NaN for some clusters, if vigilance fails for "MT_" logic.
-        //    But that is the same logic the class uses, so we won't second-guess it here.
-        std::vector<double> activations(clusters_.size());
-        for (size_t c = 0; c < clusters_.size(); ++c) {
-            int w1 = 0;  // dummy reference param
-            double T = category_choice(sample_vec, clusters_[c].weight, w1, MT_);
-            activations[c] = T; // possibly NaN if fails vigilance
-        }
-
-        // 4) Convert results into a py::array_t<double> to return
-        py::array_t<double> out_array(activations.size());
-        std::memcpy(out_array.mutable_data(),
-                    activations.data(),
-                    activations.size() * sizeof(double));
-
-        return out_array;
-    }
-
-    /**
      * @brief Perform a single-sample "step_fit" but verbosely log each cluster
      *        check in order. Returns (final_cluster_id, log_list).
      *
@@ -305,100 +259,98 @@ public:
         auto s_ptr = static_cast<int*>(buf_info.ptr);
         std::vector<int> sample_vec(s_ptr, s_ptr + buf_info.shape[0]);
 
-        // If dim_original_ is 0 and we do have clusters, try to infer it
+        // If dim_original_ is 0 but we have clusters, try to infer
         if (!clusters_.empty() && dim_original_ == 0) {
             const auto &w0 = clusters_[0].weight;
             dim_original_ = static_cast<int>(w0.size() / 2);
             rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
         }
 
-        // ----------------------------------------------------
-        // 2) If no clusters exist => create the first cluster
-        // ----------------------------------------------------
+        // 2) If no clusters => create first
         if (clusters_.empty()) {
-            // Possibly reset rho first, in case we rely on it
             double old_rho = rho_;
             reset_rho();
 
             py::dict entry;
-            entry["stage"]        = "no_clusters_yet";
-            entry["final_action"] = "created_cluster_0";
-            entry["rho_before"]   = old_rho;
-            entry["rho_after"]    = rho_;
-
+            entry["stage"]          = "no_clusters_yet";
+            entry["final_action"]   = "created_cluster_0";
+            entry["rho_before"]     = old_rho;
+            entry["rho_after"]      = rho_;
             log_list.append(entry);
 
             clusters_.push_back({ sample_vec });
             cluster_map_[0] = c_b;
-
             return std::make_tuple(0, log_list);
         }
 
-        // ----------------------------------------------------
-        // 3) Otherwise, replicate step_fit logic with logging
-        // ----------------------------------------------------
-
-        // a) reset rho
+        // 3) reset rho
+        double old_rho = rho_;
         reset_rho(); // sets rho_ = base_rho_
 
-        // b) gather T-values
-        std::vector<std::tuple<double,int,int>> T_values;
-        T_values.reserve(clusters_.size());
+        // 4) Gather T-values
+        size_t n_clusters = clusters_.size();
+        std::vector<double> T_values(n_clusters, std::nan(""));
+        std::vector<int>    w1_values(n_clusters, 0);
 
-        for (size_t i = 0; i < clusters_.size(); ++i) {
+        for (size_t i = 0; i < n_clusters; ++i) {
             int w1;
             double T = category_choice(sample_vec, clusters_[i].weight, w1, MT_);
-            // If T is NaN => it failed the mini-check
             if (!std::isnan(T)) {
-                T_values.emplace_back(T, static_cast<int>(i), w1);
+                T_values[i]  = T;
+                w1_values[i] = w1;
             }
         }
 
-        // c) sort descending by T
-        std::sort(T_values.begin(), T_values.end(),
-                  [](auto &a, auto &b) {
-                      return std::get<0>(a) > std::get<0>(b);
-                  });
-
-        // Vigilance operator
         auto match_op = _match_tracking_operator(MT_);
-
         int final_cluster_id = -1;
 
-        // d) check each cluster in order
-        for (auto &tv : T_values) {
-            double T  = std::get<0>(tv);
-            int    c  = std::get<1>(tv);
-            int    w1 = std::get<2>(tv);
+        // 5) Repeatedly pick argmax until we find or run out
+        while (true) {
+            // find argmax
+            int best_idx = -1;
+            double best_val = -1.0;
+            for (size_t i = 0; i < n_clusters; ++i) {
+                double tv = T_values[i];
+                if (!std::isnan(tv) && tv > best_val) {
+                    best_val = tv;
+                    best_idx = static_cast<int>(i);
+                }
+            }
 
+            // If best_idx == -1 => all T are NaN => break => new cluster
+            if (best_idx < 0) {
+                break;
+            }
+
+            // build a log dict for this attempt
             py::dict entry;
-            entry["cluster_index"]   = c;
-            entry["activation"]      = T;
-            double vig_value         = double(w1) / double(dim_original_);
+            entry["cluster_index"]   = best_idx;
+            entry["activation"]      = T_values[best_idx];
+            entry["rho_before"]      = rho_;
+            double w1 = static_cast<double>(w1_values[best_idx]);
+            double vig_value = w1 / dim_original_;
             entry["vigilance_value"] = vig_value;
-            double old_rho           = rho_;
-            entry["rho_before"]      = old_rho;
 
             bool pass_vigilance = match_op(vig_value, rho_);
             entry["passed_vigilance"] = pass_vigilance;
 
             if (pass_vigilance) {
-                bool pass_hypothesis = validate_hypothesis(c, c_b);
+                bool pass_hypothesis = validate_hypothesis(best_idx, c_b);
                 entry["passed_hypothesis"] = pass_hypothesis;
+
                 if (pass_hypothesis) {
                     // update cluster
-                    clusters_[c].weight = update(sample_vec, clusters_[c].weight);
-                    cluster_map_[c]     = c_b;
-                    final_cluster_id    = c;
-
-                    entry["rho_after"]    = rho_;
-                    entry["final_action"] = "updated_cluster";
+                    clusters_[best_idx].weight = update(sample_vec, clusters_[best_idx].weight);
+                    cluster_map_[best_idx]     = c_b;
+                    final_cluster_id           = best_idx;
+                    entry["rho_after"]         = rho_;
+                    entry["final_action"]      = "updated_cluster";
                     log_list.append(entry);
                     break; // done
                 } else {
-                    // fails hypothesis => match_tracking
-                    bool keep_searching = _match_tracking(w1);
-                    entry["rho_after"]   = rho_;
+                    // fails hypothesis => match tracking
+                    bool keep_searching = _match_tracking(static_cast<int>(w1));
+                    entry["rho_after"] = rho_;
                     entry["final_action"] = keep_searching
                                             ? "continue_search"
                                             : "stop_search";
@@ -407,17 +359,21 @@ public:
                     if (!keep_searching) {
                         break;
                     }
+                    // skip this cluster from further consideration
+                    T_values[best_idx] = std::nan("");
                 }
             } else {
-                // skip
+                // skip cluster
                 entry["passed_hypothesis"] = py::none();
                 entry["rho_after"]         = rho_;
                 entry["final_action"]      = "skip_cluster";
                 log_list.append(entry);
+
+                T_values[best_idx] = std::nan("");
             }
         }
 
-        // e) if final_cluster_id is still -1 => new cluster
+        // 6) if still -1 => create a new cluster
         if (final_cluster_id < 0) {
             int new_id = static_cast<int>(clusters_.size());
             clusters_.push_back({ sample_vec });
@@ -455,50 +411,90 @@ private:
     }
 
     int step_fit(const std::vector<int>& sample, int c_b) {
+        // 1) reset vigilance
         reset_rho();
 
+        // 2) If no clusters => create first
         if (clusters_.empty()) {
             clusters_.push_back({sample});
             cluster_map_[0] = c_b;
             return 0;
         }
 
-        std::vector<std::tuple<double, int, int>> T_values;
+        // 3) Compute T-values for each cluster
+        //    We'll store them in a vector of doubles, one per cluster.
+        //    We'll also store w1 in a parallel vector so we can do vigilance checks.
+        size_t n_clusters = clusters_.size();
+        std::vector<double> T_values(n_clusters, std::nan(""));
+        std::vector<int>    w1_values(n_clusters, 0);
 
-        for (size_t i = 0; i < clusters_.size(); ++i) {
+        // For each cluster i, compute T. If T=NaN, that means we skip it outright
+        for (size_t i = 0; i < n_clusters; ++i) {
             int w1;
             double T = category_choice(sample, clusters_[i].weight, w1, MT_);
             if (!std::isnan(T)) {
-                T_values.emplace_back(T, static_cast<int>(i), w1);
+                T_values[i]  = T;
+                w1_values[i] = w1;
+            } else {
+                T_values[i]  = std::nan("");
+                w1_values[i] = w1; // w1 might be meaningless here
             }
         }
-
-        std::sort(T_values.begin(), T_values.end(), [](const auto& a, const auto& b) {
-            return std::get<0>(a) > std::get<0>(b);
-        });
 
         auto match_op = _match_tracking_operator(MT_);
 
-        for (const auto& [T, c, w1] : T_values) {
-            if (match_op(static_cast<double>(w1) / dim_original_, rho_)) {
-                if (validate_hypothesis(c, c_b)) {
-                    clusters_[c].weight = update(sample, clusters_[c].weight);
-                    cluster_map_[c] = c_b;
-                    return c;
+        // 4) Repeatedly pick argmax until we find a cluster or run out of T
+        while (true) {
+            // find argmax of T_values
+            int best_idx = -1;
+            double best_val = -1.0;
+            for (size_t i = 0; i < n_clusters; ++i) {
+                double tv = T_values[i];
+                if (!std::isnan(tv) && tv > best_val) {
+                    best_val = tv;
+                    best_idx = static_cast<int>(i);
+                }
+            }
+
+            // If best_idx == -1 => all T are NaN => break => we create new cluster
+            if (best_idx < 0) {
+                break;
+            }
+
+            // Check vigilance
+            int w1  = w1_values[best_idx];
+            double vig_value = static_cast<double>(w1) / dim_original_;
+            bool pass_vigilance = match_op(vig_value, rho_);
+            if (pass_vigilance) {
+                // Check hypothesis
+                if (validate_hypothesis(best_idx, c_b)) {
+                    // update cluster
+                    clusters_[best_idx].weight = update(sample, clusters_[best_idx].weight);
+                    cluster_map_[best_idx]     = c_b;
+                    return best_idx; // done
                 } else {
+                    // Fails hypothesis => do match_tracking
                     bool keep_searching = _match_tracking(w1);
                     if (!keep_searching) {
+                        // we stop => break => new cluster
                         break;
                     }
+                    // else continue searching => mark T[best_idx] = NaN so we skip this cluster
+                    T_values[best_idx] = std::nan("");
                 }
+            } else {
+                // fails vigilance => skip this cluster
+                T_values[best_idx] = std::nan("");
             }
         }
 
+        // 5) If we reach here => no existing cluster chosen => create new cluster
         int new_cluster_id = static_cast<int>(clusters_.size());
         clusters_.push_back({sample});
         cluster_map_[new_cluster_id] = c_b;
         return new_cluster_id;
     }
+
 
     double category_choice(const std::vector<int>& i, const std::vector<int>& w, int
     &w1, const std::string MT_) {
@@ -536,22 +532,28 @@ private:
 
     bool _match_tracking(int w1) {
         double M = static_cast<double>(w1) / dim_original_;
+
+        // 1) Adjust rho_ based on method:
         if (MT_ == "MT+") {
             rho_ = M + epsilon_;
-            return true;
         } else if (MT_ == "MT-") {
             rho_ = M - epsilon_;
-            return true;
         } else if (MT_ == "MT0") {
             rho_ = M;
-            return true;
         } else if (MT_ == "MT1") {
             rho_ = std::numeric_limits<double>::infinity();
-            return false;
         } else if (MT_ == "MT~") {
-            return true;
+            // do nothing (no change to rho_)
         } else {
             throw std::invalid_argument("Invalid Match Tracking Method: " + MT_);
+        }
+
+        // 2) If method == "MT1" or we exceed rho_ > 1.0, stop searching.
+        //    Otherwise, keep searching.
+        if (MT_ == "MT1" || rho_ > 1.0) {
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -576,7 +578,7 @@ private:
 };
 
 // =======================================================================
-// Free function for fit, same as before
+// Free function for fit
 // =======================================================================
 // This free function creates a temporary cppBinaryFuzzyARTMAP model, runs fit,
 // and returns exactly the same results you'd get from the class-based usage.
@@ -611,27 +613,6 @@ PredictBinaryFuzzyARTMAP(py::array_t<int> X,
     cppBinaryFuzzyARTMAP model(0.0, 0.0, "MT+", 0.0, weights, cluster_labels);
     // Then call predict
     return model.predict(X);
-}
-
-// =======================================================================
-// NEW: Free function for debugging activations
-// =======================================================================
-
-py::array_t<double>
-ComputeActivationsBinaryFuzzyARTMAP(py::array_t<int> sample,
-                                    double rho,
-                                    double alpha,
-                                    std::string MT,
-                                    double epsilon,
-                                    py::object weights = py::none(),
-                                    py::object cluster_labels = py::none())
-{
-    // 1) Construct a "throwaway" model from the user-provided weights/labels
-    //    (and the same hyperparams that matter for category_choice, e.g. alpha).
-    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
-
-    // 2) Ask it to compute T-values for the sample
-    return model.compute_activations_for_sample(sample);
 }
 
 // =======================================================================
@@ -729,24 +710,6 @@ If no weights/cluster_labels are provided, the model has no clusters and will fa
 Returns:
     A 1D numpy array of predicted labels.
 )doc");
-
-    m.def("ComputeActivationsBinaryFuzzyARTMAP",
-          &ComputeActivationsBinaryFuzzyARTMAP,
-          py::arg("sample"),
-          py::arg("rho"),
-          py::arg("alpha"),
-          py::arg("MT"),
-          py::arg("epsilon"),
-          py::arg("weights")        = py::none(),
-          py::arg("cluster_labels") = py::none(),
-          R"doc(
-Compute the activation (T-values) of a single sample against a set of existing
-weights/cluster_labels by constructing a temporary cppBinaryFuzzyARTMAP model
-(including alpha, which is used in T = |sample & w| / (alpha + |w|)).
-
-Returns a 1D NumPy float64 array of T-values (same length as the number of clusters).
-)doc"
-    );
 
     m.def("VerboseStepFitBinaryFuzzyARTMAP",
       &VerboseStepFitBinaryFuzzyARTMAP,

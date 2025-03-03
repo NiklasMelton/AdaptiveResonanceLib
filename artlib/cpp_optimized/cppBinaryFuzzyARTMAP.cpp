@@ -233,168 +233,6 @@ public:
         return std::make_tuple(pred_a_out, pred_b_out);
     }
 
-    /**
-     * @brief Perform a single-sample "step_fit" but verbosely log each cluster
-     *        check in order. Returns (final_cluster_id, log_list).
-     *
-     * @param sample A 1D numpy array of ints (the input pattern).
-     * @param c_b    The label for this sample.
-     *
-     * @return (final_cluster_id, log_list)
-     *         final_cluster_id = the cluster we ended up assigning or creating
-     *         log_list         = python list of dicts describing each step
-     */
-    std::tuple<int, py::list>
-    verbose_step_fit_single_sample(py::array_t<int> sample, int c_b)
-    {
-        py::list log_list;
-
-        // ----------------------------------------------------
-        // 1) Convert the input sample to std::vector<int>
-        // ----------------------------------------------------
-        py::buffer_info buf_info = sample.request();
-        if (buf_info.ndim != 1) {
-            throw std::runtime_error("`sample` must be a 1D array.");
-        }
-        auto s_ptr = static_cast<int*>(buf_info.ptr);
-        std::vector<int> sample_vec(s_ptr, s_ptr + buf_info.shape[0]);
-
-        // If dim_original_ is 0 but we have clusters, try to infer
-        if (!clusters_.empty() && dim_original_ == 0) {
-            const auto &w0 = clusters_[0].weight;
-            dim_original_ = static_cast<int>(w0.size() / 2);
-            rho_w1_       = static_cast<int>(base_rho_ * dim_original_);
-        }
-
-        // 2) If no clusters => create first
-        if (clusters_.empty()) {
-            double old_rho = rho_;
-            reset_rho();
-
-            py::dict entry;
-            entry["stage"]          = "no_clusters_yet";
-            entry["final_action"]   = "created_cluster_0";
-            entry["rho_before"]     = old_rho;
-            entry["rho_after"]      = rho_;
-            log_list.append(entry);
-
-            clusters_.push_back({ sample_vec });
-            cluster_map_[0] = c_b;
-            return std::make_tuple(0, log_list);
-        }
-
-        // 3) reset rho
-        double old_rho = rho_;
-        reset_rho(); // sets rho_ = base_rho_
-
-        // 4) Gather T-values
-        size_t n_clusters = clusters_.size();
-        std::vector<double> T_values(n_clusters, std::nan(""));
-        std::vector<int>    w1_values(n_clusters, 0);
-
-        for (size_t i = 0; i < n_clusters; ++i) {
-            int w1;
-            double T = category_choice(sample_vec, clusters_[i].weight, w1, MT_);
-            if (!std::isnan(T)) {
-                T_values[i]  = T;
-                w1_values[i] = w1;
-            }
-        }
-
-        auto match_op = _match_tracking_operator(MT_);
-        int final_cluster_id = -1;
-
-        // 5) Repeatedly pick argmax until we find or run out
-        while (true) {
-            // find argmax
-            int best_idx = -1;
-            double best_val = -1.0;
-            for (size_t i = 0; i < n_clusters; ++i) {
-                double tv = T_values[i];
-                if (!std::isnan(tv) && tv > best_val) {
-                    best_val = tv;
-                    best_idx = static_cast<int>(i);
-                }
-            }
-
-            // If best_idx == -1 => all T are NaN => break => new cluster
-            if (best_idx < 0) {
-                break;
-            }
-
-            // build a log dict for this attempt
-            py::dict entry;
-            entry["cluster_index"]   = best_idx;
-            entry["activation"]      = T_values[best_idx];
-            entry["rho_before"]      = rho_;
-            double w1 = static_cast<double>(w1_values[best_idx]);
-            double vig_value = w1 / dim_original_;
-            entry["vigilance_value"] = vig_value;
-
-            bool pass_vigilance = match_op(vig_value, rho_);
-            entry["passed_vigilance"] = pass_vigilance;
-
-            if (pass_vigilance) {
-                bool pass_hypothesis = validate_hypothesis(best_idx, c_b);
-                entry["passed_hypothesis"] = pass_hypothesis;
-
-                if (pass_hypothesis) {
-                    // update cluster
-                    clusters_[best_idx].weight = update(sample_vec, clusters_[best_idx].weight);
-                    cluster_map_[best_idx]     = c_b;
-                    final_cluster_id           = best_idx;
-                    entry["rho_after"]         = rho_;
-                    entry["final_action"]      = "updated_cluster";
-                    log_list.append(entry);
-                    break; // done
-                } else {
-                    // fails hypothesis => match tracking
-                    bool keep_searching = _match_tracking(static_cast<int>(w1));
-                    entry["rho_after"] = rho_;
-                    entry["final_action"] = keep_searching
-                                            ? "continue_search"
-                                            : "stop_search";
-                    log_list.append(entry);
-
-                    if (!keep_searching) {
-                        break;
-                    }
-                    // skip this cluster from further consideration
-                    T_values[best_idx] = std::nan("");
-                }
-            } else {
-                // skip cluster
-                entry["passed_hypothesis"] = py::none();
-                entry["rho_after"]         = rho_;
-                entry["final_action"]      = "skip_cluster";
-                log_list.append(entry);
-
-                T_values[best_idx] = std::nan("");
-            }
-        }
-
-        // 6) if still -1 => create a new cluster
-        if (final_cluster_id < 0) {
-            int new_id = static_cast<int>(clusters_.size());
-            clusters_.push_back({ sample_vec });
-            cluster_map_[new_id] = c_b;
-            final_cluster_id = new_id;
-
-            py::dict entry;
-            entry["cluster_index"]     = new_id;
-            entry["activation"]        = py::none();
-            entry["vigilance_value"]   = py::none();
-            entry["passed_vigilance"]  = py::none();
-            entry["passed_hypothesis"] = py::none();
-            entry["rho_before"]        = rho_;
-            entry["rho_after"]         = rho_;
-            entry["final_action"]      = "created_new_cluster";
-            log_list.append(entry);
-        }
-
-        return std::make_tuple(final_cluster_id, log_list);
-    }
-
 private:
     double base_rho_;
     double rho_;
@@ -616,27 +454,6 @@ PredictBinaryFuzzyARTMAP(py::array_t<int> X,
 }
 
 // =======================================================================
-// NEW: Free function for verbose step_fit
-// =======================================================================
-
-std::tuple<int, py::list>
-VerboseStepFitBinaryFuzzyARTMAP(py::array_t<int> sample,
-                                int label,
-                                double rho,
-                                double alpha,
-                                std::string MT,
-                                double epsilon,
-                                py::object weights,
-                                py::object cluster_labels)
-{
-    // ephemeral model:
-    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
-
-    // call that public method
-    return model.verbose_step_fit_single_sample(sample, label);
-}
-
-// =======================================================================
 // PYBIND
 // =======================================================================
 
@@ -653,12 +470,9 @@ PYBIND11_MODULE(cppBinaryFuzzyARTMAP, m) {
              py::arg("cluster_labels") = py::none(),
              R"doc(
 Construct a cppBinaryFuzzyARTMAP model.
-
 Optionally provide:
-
     weights        -- a Python list of 1D numpy int arrays (one for each cluster)
     cluster_labels -- a 1D numpy int array mapping cluster_id -> label
-
 Either provide both or neither for partial initialization vs. fresh model.
 )doc")
 
@@ -666,7 +480,6 @@ Either provide both or neither for partial initialization vs. fresh model.
              py::arg("X"), py::arg("y"),
              R"doc(
 Fit the model given data X and labels y.
-
 Returns:
     (labels_out, weight_arrays, cluster_labels_out)
 )doc")
@@ -689,9 +502,7 @@ Returns:
           py::arg("cluster_labels") = py::none(),
           R"doc(
 Fit cppBinaryFuzzyARTMAP in a single function call.
-
 Optionally re-initialize from existing weights/cluster_labels for partial fits.
-
 Either provide BOTH 'weights' (a list of 1D arrays) and 'cluster_labels' (1D array)
 or leave both as None.
 )doc");
@@ -704,27 +515,9 @@ or leave both as None.
           py::arg("cluster_labels") = py::none(),
           R"doc(
 Predict labels using a temporary cppBinaryFuzzyARTMAP model.
-
 If no weights/cluster_labels are provided, the model has no clusters and will fail.
-
 Returns:
     A 1D numpy array of predicted labels.
-)doc");
-
-    m.def("VerboseStepFitBinaryFuzzyARTMAP",
-      &VerboseStepFitBinaryFuzzyARTMAP,
-      py::arg("sample"),
-      py::arg("label"),
-      py::arg("rho"),
-      py::arg("alpha"),
-      py::arg("MT"),
-      py::arg("epsilon"),
-      py::arg("weights")        = py::none(),
-      py::arg("cluster_labels") = py::none(),
-      R"doc(
-Constructs a temporary model from the given weights+labels, then calls
-verbose_step_fit_single_sample(...) on that ephemeral model. Returns
-(final_cluster_id, log_list) without modifying your real model.
 )doc");
 
 }

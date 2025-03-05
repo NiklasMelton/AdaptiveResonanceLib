@@ -18,8 +18,8 @@ from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
 from artlib.common.utils import (
     normalize,
-    compliment_code,
-    de_compliment_code,
+    complement_code,
+    de_complement_code,
     de_normalize,
 )
 from artlib.common.VAT import VAT
@@ -58,8 +58,8 @@ __all__ = [
     "BaseART",
     "BaseARTMAP",
     "normalize",
-    "compliment_code",
-    "de_compliment_code",
+    "complement_code",
+    "de_complement_code",
     "de_normalize",
     "VAT",
     "ART1",

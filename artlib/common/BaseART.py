@@ -435,20 +435,26 @@ class BaseART(BaseEstimator, ClusterMixin):
         M = cache["match_criterion"]
         if method == "MT+":
             self.params["rho"] = M + epsilon
-            return True
+            # return True
         elif method == "MT-":
             self.params["rho"] = M - epsilon
-            return True
+            # return True
         elif method == "MT0":
             self.params["rho"] = M
-            return True
+            # return True
         elif method == "MT1":
             self.params["rho"] = np.inf
-            return False
+            # return False
         elif method == "MT~":
-            return True
+            pass
+            # return True
         else:
             raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+        if method == "MT1" or self.params["rho"] > 1.0:
+            return False
+        else:
+            return True
 
     @staticmethod
     def _match_tracking_operator(

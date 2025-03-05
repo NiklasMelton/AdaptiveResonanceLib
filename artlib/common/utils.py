@@ -68,8 +68,8 @@ def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.n
     return data * (d_max - d_min) + d_min
 
 
-def compliment_code(data: np.ndarray) -> np.ndarray:
-    """Compliment code the data.
+def complement_code(data: np.ndarray) -> np.ndarray:
+    """Complement code the data.
 
     Parameters
     ----------
@@ -79,15 +79,15 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Compliment coded data.
+        complement coded data.
 
     """
     cc_data = np.hstack([data, 1.0 - data])
     return cc_data
 
 
-def de_compliment_code(data: np.ndarray) -> np.ndarray:
-    """Find the centroid of compliment coded data.
+def de_complement_code(data: np.ndarray) -> np.ndarray:
+    """Find the centroid of complement coded data.
 
     Parameters
     ----------
@@ -97,7 +97,7 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        De-compliment coded data.
+        De-complement coded data.
 
     """
     # Get the shape of the array

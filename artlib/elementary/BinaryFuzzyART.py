@@ -77,14 +77,14 @@ class BinaryFuzzyART(FuzzyART):
             Dataset.
 
         """
-        assert X.shape[1] % 2 == 0, "Data has not been compliment coded"
+        assert X.shape[1] % 2 == 0, "Data has not been complement coded"
         assert X.dtype == np.bool_ or np.issubdtype(
             X.dtype, np.integer
         ), "Binary Fuzzy ART only supports binary data"
         assert ((X == 0) | (X == 1)).all(), "Binary Fuzzy ART only supports binary data"
         assert np.all(
             abs(np.sum(X, axis=1) - float(X.shape[1] / 2)) <= 0.01
-        ), "Data has not been compliment coded"
+        ), "Data has not been complement coded"
         self.check_dimensions(X)
 
     def category_choice(

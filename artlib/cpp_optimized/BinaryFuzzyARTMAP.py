@@ -63,12 +63,12 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         """
         if not incremental:
             self.map: dict[int, int] = dict()
-            self.module_a.labels_ = np.array(())
+            self.module_a.labels_ = np.array((), dtype=int)
             self.module_a.weight_sample_counter_ = []
 
         # concatenate new module_a labels to the existing labels
         self.module_a.labels_ = np.concatenate(
-            [self.module_a.labels_, labels_a_out.flatten()]
+            [self.module_a.labels_, labels_a_out.flatten().astype(int)]
         ).flatten()
         # update module_a sample counter
         new_sample_counts = list(map(int, np.bincount(labels_a_out)))
@@ -239,7 +239,13 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         )
 
         _, y_b = PredictBinaryFuzzyARTMAP(
-            X, weights=existing_W, cluster_labels=existing_cluster_labels
+            X,
+            rho=self.module_a.params["rho"],
+            alpha=self.module_a.params["alpha"],
+            MT="",
+            epsilon=0.0,  # match your training setup
+            weights=existing_W,
+            cluster_labels=existing_cluster_labels,
         )
         return y_b
 
@@ -273,6 +279,12 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         )
 
         y_a, y_b = PredictBinaryFuzzyARTMAP(
-            X, weights=existing_W, cluster_labels=existing_cluster_labels
+            X,
+            rho=self.module_a.params["rho"],
+            alpha=self.module_a.params["alpha"],
+            MT="",
+            epsilon=0.0,  # match your training setup
+            weights=existing_W,
+            cluster_labels=existing_cluster_labels,
         )
         return y_a, y_b

@@ -440,16 +440,17 @@ FitBinaryFuzzyARTMAP(py::array_t<int> X,
 // =======================================================================
 // NEW: Free function for predict
 // =======================================================================
-std::tuple<py::array_t<int>,
-           py::array_t<int>>
+std::tuple<py::array_t<int>, py::array_t<int>>
 PredictBinaryFuzzyARTMAP(py::array_t<int> X,
+                         double rho,
+                         double alpha,
+                         std::string MT,
+                         double epsilon,
                          py::object weights = py::none(),
                          py::object cluster_labels = py::none())
 {
-    // Construct ephemeral model
-    // just need to provide some dummy parameters
-    cppBinaryFuzzyARTMAP model(0.0, 0.0, "MT+", 0.0, weights, cluster_labels);
-    // Then call predict
+    // Use the same hyperparameters for the ephemeral model
+    cppBinaryFuzzyARTMAP model(rho, alpha, MT, epsilon, weights, cluster_labels);
     return model.predict(X);
 }
 
@@ -507,17 +508,45 @@ Either provide BOTH 'weights' (a list of 1D arrays) and 'cluster_labels' (1D arr
 or leave both as None.
 )doc");
 
-    // The free function for prediction
-    m.def("PredictBinaryFuzzyARTMAP",
-          &PredictBinaryFuzzyARTMAP,
-          py::arg("X"),
-          py::arg("weights")        = py::none(),
-          py::arg("cluster_labels") = py::none(),
-          R"doc(
-Predict labels using a temporary cppBinaryFuzzyARTMAP model.
-If no weights/cluster_labels are provided, the model has no clusters and will fail.
-Returns:
-    A 1D numpy array of predicted labels.
-)doc");
+    m.def(
+        "PredictBinaryFuzzyARTMAP",
+        &PredictBinaryFuzzyARTMAP,
+        py::arg("X"),
+        py::arg("rho"),
+        py::arg("alpha"),
+        py::arg("MT"),
+        py::arg("epsilon"),
+        py::arg("weights")        = py::none(),
+        py::arg("cluster_labels") = py::none(),
+        R"doc(
+Predict labels using a temporary cppBinaryFuzzyARTMAP model,
+with the same hyperparameters used during training:
+
+Parameters
+----------
+X : np.ndarray
+    Data set (2D array).
+rho : float
+    Vigilance parameter (0.0 <= rho <= 1.0).
+alpha : float
+    Choice parameter (alpha >= 0.0).
+MT : str
+    Match tracking mode, e.g. 'MT+', 'MT-', 'MT~', etc.
+epsilon : float
+    Epsilon for match tracking adjustments.
+weights : list of 1D np.ndarray, optional
+    The cluster weight vectors (list of arrays). If not provided,
+    the model has no clusters and predict will fail.
+cluster_labels : np.ndarray, optional
+    1D array mapping cluster index -> label.
+
+Returns
+-------
+pred_a : np.ndarray
+    1D array of predicted cluster indices.
+pred_b : np.ndarray
+    1D array of final mapped labels (the "side-B" labels).
+)doc"
+    );
 
 }

@@ -45,7 +45,7 @@ AdaptiveResonanceLib includes implementations for the following ART models:
 ## Comparison of Elementary Models
 
 [comment]: <> (![Comparison of Elementary Images]&#40;https://github.com/NiklasMelton/AdaptiveResonanceLib/raw/main/docs/_static/comparison_of_elementary_methods.jpg?raw=true"&#41;)
-![Comparison of Elementary Images](https://github.com/NiklasMelton/AdaptiveResonanceLib/raw/develop/_static/img/comparison_of_elementary_methods.jpg?raw=true")
+![Comparison of Elementary Images](https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/develop/docs/_static/img/comparison_of_elementary_methods.jpg?raw=true")
 <!-- END comparison_of_elementary_models -->
 
 <!-- START installation -->

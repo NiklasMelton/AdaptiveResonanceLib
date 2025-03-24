@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Adjust this to your desired Python version
+          python-version: '3.9'
 
       - name: Install Poetry
         run: |
@@ -32,14 +32,23 @@ jobs:
         run: |
           poetry run pip install pre-commit
 
+      # Fetch the base branch for pull request or push event
+      - name: Set base branch
+        id: base_branch
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "Base branch is: ${{ github.event.pull_request.base.ref }}"
+            echo "BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # For push events, assume the current branch is the base (e.g., main or develop)
+            echo "BASE_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+            echo "Base branch is: ${GITHUB_REF#refs/heads/}"
+          fi
+
       - name: Fetch the base branch
         run: |
-          git fetch origin ${GITHUB_BASE_REF}:${GITHUB_BASE_REF}
-        env:
-          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          git fetch origin $BASE_BRANCH:$BASE_BRANCH
 
       - name: Run pre-commit on changed files
         run: |
-          poetry run pre-commit run --from-ref origin/${GITHUB_BASE_REF} --to-ref HEAD
-        env:
-          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          poetry run pre-commit run --from-ref origin/${BASE_BRANCH} --to-ref HEAD

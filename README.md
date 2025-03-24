@@ -73,6 +73,7 @@ Here are some quick examples to get you started with AdaptiveResonanceLib:
 
 ### Clustering Data with the Fuzzy ART model
 
+
 ```python
 from artlib import FuzzyART
 import numpy as np

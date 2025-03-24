@@ -45,9 +45,13 @@ jobs:
             echo "Base branch is: ${GITHUB_REF#refs/heads/}"
           fi
 
+      - name: Check out the base branch (if necessary)
+        run: |
+          git checkout $BASE_BRANCH || echo "Already on the base branch."
+
       - name: Fetch the base branch
         run: |
-          git fetch origin $BASE_BRANCH:$BASE_BRANCH
+          git fetch origin $BASE_BRANCH
 
       - name: Run pre-commit on changed files
         run: |

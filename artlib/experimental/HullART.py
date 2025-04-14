@@ -3,54 +3,11 @@ from matplotlib.axes import Axes
 from copy import deepcopy
 from typing import Optional, Iterable, List, Tuple, Dict
 from warnings import warn
-from artlib.experimental.alphashape import AlphaShape, equalateral_simplex_volume
+from artlib.experimental.AlphaShape import (AlphaShape, equalateral_simplex_volume,
+                                            plot_polygon_edges)
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
 import inspect
-
-def plot_polygon_edges(
-    edges: np.ndarray,
-    ax: Axes,
-    line_color: str = "b",
-    line_width: float = 1.0,
-):
-    """
-    Plots a convex polygon given its vertices using Matplotlib.
-
-    Parameters
-    ----------
-    vertices : np.ndarray
-        A list of edges representing a polygon.
-    ax : matplotlib.axes.Axes
-        A matplotlib Axes object to plot on.
-    line_color : str, optional
-        The color of the polygon lines, by default 'b'.
-    line_width : float, optional
-        The width of the polygon lines, by default 1.0.
-
-    """
-    for p1, p2 in edges:
-        x = [p1[0], p2[0]]
-        y = [p1[1], p2[1]]
-        if len(p1) > 2:
-            z = [p1[2], p2[2]]
-            ax.plot(
-                x,
-                y,
-                z,
-                linestyle="-",
-                color=line_color,
-                linewidth=line_width,
-            )
-        else:
-            ax.plot(
-                x,
-                y,
-                linestyle="-",
-                color=line_color,
-                linewidth=line_width,
-            )
-
 
 
 class HullART(BaseART):

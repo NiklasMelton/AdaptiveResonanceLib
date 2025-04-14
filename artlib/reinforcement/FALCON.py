@@ -12,7 +12,7 @@
 import numpy as np
 from typing import Optional, Literal, Tuple, Union, List
 from artlib.common.BaseART import BaseART
-from artlib.common.utils import compliment_code, de_compliment_code
+from artlib.common.utils import complement_code, de_complement_code
 from artlib.fusion.FusionART import FusionART
 
 
@@ -380,7 +380,7 @@ class TD_FALCON(FALCON):
 
         """
         # calculate SARSA values
-        rewards_dcc = de_compliment_code(rewards)
+        rewards_dcc = de_complement_code(rewards)
         if len(states) > 1:
             if hasattr(self.fusion_art.modules[0], "W"):
                 # if FALCON has been trained get predicted rewards
@@ -394,8 +394,8 @@ class TD_FALCON(FALCON):
             )
             # ensure SARSA values are between 0 and 1
             sarsa_rewards = np.maximum(np.minimum(sarsa_rewards, 1.0), 0.0)
-            # compliment code rewards
-            sarsa_rewards_fit = compliment_code(sarsa_rewards)
+            # complement code rewards
+            sarsa_rewards_fit = complement_code(sarsa_rewards)
             # we cant train on the final state because no rewards are generated after it
             states_fit = states[:-1, :]
             actions_fit = actions[:-1, :]
@@ -404,7 +404,7 @@ class TD_FALCON(FALCON):
             if single_sample_reward is None:
                 sarsa_rewards_fit = rewards
             else:
-                sarsa_rewards_fit = compliment_code(np.array([[single_sample_reward]]))
+                sarsa_rewards_fit = complement_code(np.array([[single_sample_reward]]))
             states_fit = states
             actions_fit = actions
 

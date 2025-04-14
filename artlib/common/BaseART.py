@@ -28,6 +28,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.weight_sample_counter_: List[int] = []
         self.d_min_ = None
         self.d_max_ = None
+        self.is_fitted_ = False
 
     def __getattr__(self, key):
         if key in self.params:
@@ -105,6 +106,46 @@ class BaseART(BaseEstimator, ClusterMixin):
             valid_params[key].set_params(**sub_params)
         self.validate_params(local_params)
         return self
+
+    def set_data_bounds(self, lower_bounds: np.ndarray, upper_bounds: np.ndarray):
+        """Manually set the data bounds for normalization.
+
+        Parameters
+        ----------
+        lower_bounds : np.ndarray
+            The lower bounds for each column.
+
+        upper_bounds : np.ndarray
+            The upper bounds for each column.
+
+        """
+        if self.is_fitted_:
+            raise ValueError("Cannot change data limits after fit.")
+        self.d_min_ = lower_bounds
+        self.d_max_ = upper_bounds
+
+    def find_data_bounds(
+        self, *data_batches: list[np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Automatically find the data bounds for normalization from a list of data
+        batches.
+
+        Parameters
+        ----------
+        *data_batches : list[np.ndarray]
+            Batches of data to be presented to the model
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            Lower and upper bounds for data.
+
+        """
+        all_data = np.vstack(data_batches)
+        lower_bounds = np.min(all_data, axis=0)
+        upper_bounds = np.max(all_data, axis=0)
+
+        return lower_bounds, upper_bounds
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """Prepare data for clustering.
@@ -187,8 +228,23 @@ class BaseART(BaseEstimator, ClusterMixin):
         - X: data set
 
         """
-        assert np.all(X >= 0), "Data has not been normalized"
-        assert np.all(X <= 1.0), "Data has not been normalized"
+        normalization_message = (
+            "Data has not been normalized or was not normalized "
+            "correctly. All values must fall between 0 and 1, "
+            "inclusively."
+        )
+        if self.is_fitted_:
+            normalization_message += (
+                "\nThis appears to not be the first batch of "
+                "data. Data boundaries must be calculated for "
+                "the entire data space. Prior to fitting, use "
+                "BaseART.set_data_bounds() to manually set the "
+                "bounds for your data or use "
+                "BaseART.find_data_bounds() to identify the "
+                "bounds automatically for multiple batches."
+            )
+        assert np.all(X >= 0), normalization_message
+        assert np.all(X <= 1.0), normalization_message
         self.check_dimensions(X)
 
     def category_choice(
@@ -379,20 +435,26 @@ class BaseART(BaseEstimator, ClusterMixin):
         M = cache["match_criterion"]
         if method == "MT+":
             self.params["rho"] = M + epsilon
-            return True
+            # return True
         elif method == "MT-":
             self.params["rho"] = M - epsilon
-            return True
+            # return True
         elif method == "MT0":
             self.params["rho"] = M
-            return True
+            # return True
         elif method == "MT1":
             self.params["rho"] = np.inf
-            return False
+            # return False
         elif method == "MT~":
-            return True
+            pass
+            # return True
         else:
             raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+        if method == "MT1" or self.params["rho"] > 1.0:
+            return False
+        else:
+            return True
 
     @staticmethod
     def _match_tracking_operator(
@@ -557,6 +619,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the model to the data.
 
@@ -576,6 +639,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             Epsilon value used for adjusting match criterion.
         verbose : bool, default=False
             If True, displays progress of the fitting process.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         """
         self.validate_data(X)
@@ -588,7 +654,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             if verbose:
                 from tqdm import tqdm
 
-                x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
+                x_iter = tqdm(
+                    enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar
+                )
             else:
                 x_iter = enumerate(X)
             for i, x in x_iter:
@@ -655,6 +723,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 0.0,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
         ax: Optional[Axes] = None,
         filename: Optional[str] = None,
         colors: Optional[IndexableOrKeyable] = None,
@@ -680,6 +749,9 @@ class BaseART(BaseEstimator, ClusterMixin):
             Epsilon value used for adjusting match criterion.
         verbose : bool, default=False
             If True, displays progress of the fitting process.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
         ax : matplotlib.axes.Axes, optional
             Figure axes.
         colors : IndexableOrKeyable, optional
@@ -721,7 +793,9 @@ class BaseART(BaseEstimator, ClusterMixin):
                 if verbose:
                     from tqdm import tqdm
 
-                    x_iter = tqdm(enumerate(X), total=int(X.shape[0]))
+                    x_iter = tqdm(
+                        enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar
+                    )
                 else:
                     x_iter = enumerate(X)
                 for i, x in x_iter:
@@ -742,13 +816,15 @@ class BaseART(BaseEstimator, ClusterMixin):
             self.post_fit(X)
             return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict labels for the data.
 
         Parameters
         ----------
         X : np.ndarray
             The dataset.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -757,6 +833,8 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.d_min_, self.d_max_)
         self.validate_data(X)
         self.check_dimensions(X)
 

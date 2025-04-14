@@ -18,8 +18,8 @@ from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
 from artlib.common.utils import (
     normalize,
-    compliment_code,
-    de_compliment_code,
+    complement_code,
+    de_complement_code,
     de_normalize,
 )
 from artlib.common.VAT import VAT
@@ -30,6 +30,7 @@ from artlib.elementary.BayesianART import BayesianART
 from artlib.elementary.EllipsoidART import EllipsoidART
 from artlib.elementary.GaussianART import GaussianART
 from artlib.elementary.FuzzyART import FuzzyART
+from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
 from artlib.elementary.HypersphereART import HypersphereART
 from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 
@@ -51,12 +52,14 @@ from artlib.biclustering.BARTMAP import BARTMAP
 from artlib.topological.TopoART import TopoART
 from artlib.topological.DualVigilanceART import DualVigilanceART
 
+from artlib.cpp_optimized.BinaryFuzzyARTMAP import BinaryFuzzyARTMAP
+
 __all__ = [
     "BaseART",
     "BaseARTMAP",
     "normalize",
-    "compliment_code",
-    "de_compliment_code",
+    "complement_code",
+    "de_complement_code",
     "de_normalize",
     "VAT",
     "ART1",
@@ -67,6 +70,7 @@ __all__ = [
     "HypersphereART",
     "QuadraticNeuronART",
     "FuzzyART",
+    "BinaryFuzzyART",
     "TopoART",
     "DualVigilanceART",
     "ARTMAP",
@@ -79,4 +83,5 @@ __all__ = [
     "CVIART",
     "FALCON",
     "TD_FALCON",
+    "BinaryFuzzyARTMAP",
 ]

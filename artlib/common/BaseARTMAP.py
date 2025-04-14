@@ -138,13 +138,15 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict labels for the data.
 
         Parameters
         ----------
         X : np.ndarray
             Dataset A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -154,13 +156,17 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """
         raise NotImplementedError
 
-    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict_ab(
+        self, X: np.ndarray, clip: bool = False
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict labels for the data, both A-side and B-side.
 
         Parameters
         ----------
         X : np.ndarray
             Dataset A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------

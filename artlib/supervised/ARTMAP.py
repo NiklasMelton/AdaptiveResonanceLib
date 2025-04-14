@@ -174,6 +174,7 @@ class ARTMAP(SimpleARTMAP):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the ARTMAP model to the data.
 
@@ -191,6 +192,9 @@ class ARTMAP(SimpleARTMAP):
             Small increment to modify the vigilance parameter.
         verbose : bool, default=False
             If True, displays a progress bar during training.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         Returns
         -------
@@ -206,6 +210,7 @@ class ARTMAP(SimpleARTMAP):
             max_iter=max_iter,
             match_tracking=match_tracking,
             epsilon=epsilon,
+            verbose=verbose,
         )
 
         y_c = self.module_b.labels_
@@ -217,6 +222,7 @@ class ARTMAP(SimpleARTMAP):
             match_tracking=match_tracking,
             epsilon=epsilon,
             verbose=verbose,
+            leave_progress_bar=leave_progress_bar,
         )
 
         return self
@@ -257,13 +263,15 @@ class ARTMAP(SimpleARTMAP):
         )
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict the labels for the given data.
 
         Parameters
         ----------
         X : np.ndarray
             Data set A (independent channel).
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -272,15 +280,19 @@ class ARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
-        return super(ARTMAP, self).predict(X)
+        return super(ARTMAP, self).predict(X, clip)
 
-    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict_ab(
+        self, X: np.ndarray, clip: bool = False
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict both A-side and B-side labels for the given data.
 
         Parameters
         ----------
         X : np.ndarray
             Data set A (independent channel).
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -289,9 +301,9 @@ class ARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
-        return super(ARTMAP, self).predict_ab(X)
+        return super(ARTMAP, self).predict_ab(X, clip)
 
-    def predict_regression(self, X: np.ndarray) -> np.ndarray:
+    def predict_regression(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """
         Predict values for the given data using cluster centers.
         Note: ARTMAP is not recommended for regression.
@@ -301,6 +313,8 @@ class ARTMAP(SimpleARTMAP):
         ----------
         X : np.ndarray
             Data set A (independent channel).
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -308,6 +322,6 @@ class ARTMAP(SimpleARTMAP):
             Predicted values using cluster centers.
         """
         check_is_fitted(self)
-        C = self.predict(X)
+        C = self.predict(X, clip=clip)
         centers = self.module_b.get_cluster_centers()
         return np.array([centers[c] for c in C])

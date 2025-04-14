@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from artlib import TD_FALCON, FuzzyART, compliment_code
+from artlib import TD_FALCON, FuzzyART, complement_code
 import gymnasium as gym
 from collections import defaultdict
 import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ def prune_clusters(cls):
     cls.fusion_art.modules[0].W = [row for row in unique_states]
     cls.fusion_art.modules[1].W = [row for row in unique_actions]
     cls.fusion_art.modules[2].W = [
-        row for row in compliment_code(unique_rewards.reshape((-1, 1)))
+        row for row in complement_code(unique_rewards.reshape((-1, 1)))
     ]
 
     return cls
@@ -44,10 +44,10 @@ def update_FALCON(records, cls, shrink_ratio):
     actions = np.array(records["actions"]).reshape((-1, 1))
     rewards = np.array(records["rewards"]).reshape((-1, 1))
 
-    # compliment code states and actions
-    states_cc = compliment_code(states)
-    actions_cc = compliment_code(actions)
-    rewards_cc = compliment_code(rewards)
+    # complement code states and actions
+    states_cc = complement_code(states)
+    actions_cc = complement_code(actions)
+    rewards_cc = complement_code(rewards)
 
     # states_fit, actions_fit, sarsa_rewards_fit = cls.calculate_SARSA(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
 
@@ -109,7 +109,7 @@ def training_cycle(
         past_states = []
         for _ in range(steps):
             # get an action
-            observation_cc = compliment_code(
+            observation_cc = complement_code(
                 np.array([n_observation]).reshape(1, -1)
             )
             if np.random.random() < explore_rate:
@@ -196,7 +196,7 @@ def demo_cycle(cls, epochs, steps, render_mode=None):
         past_states = []
         for _ in range(steps):
             # get an action
-            observation_cc = compliment_code(
+            observation_cc = complement_code(
                 np.array([n_observation]).reshape(1, -1)
             )
             cls_action = cls.get_action(

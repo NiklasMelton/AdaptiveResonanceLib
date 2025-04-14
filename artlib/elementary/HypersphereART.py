@@ -203,7 +203,7 @@ class HypersphereART(BaseART):
 
         radius_new = radius + (params["beta"] / 2) * (max_radius - radius)
         centroid_new = centroid + (params["beta"] / 2) * (i - centroid) * (
-            1 - (min(radius, i_radius) / i_radius)
+            1 - (min(radius, i_radius) / (i_radius + params["alpha"]))
         )
 
         return np.concatenate([centroid_new, [radius_new]])

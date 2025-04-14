@@ -216,6 +216,7 @@ class SimpleARTMAP(BaseARTMAP):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the model to the data.
 
@@ -233,6 +234,9 @@ class SimpleARTMAP(BaseARTMAP):
             Small value to adjust the vigilance.
         verbose : bool, default=False
             If True, displays a progress bar during training.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         Returns
         -------
@@ -253,7 +257,11 @@ class SimpleARTMAP(BaseARTMAP):
             if verbose:
                 from tqdm import tqdm
 
-                x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
+                x_y_iter = tqdm(
+                    enumerate(zip(X, y)),
+                    total=int(X.shape[0]),
+                    leave=leave_progress_bar,
+                )
             else:
                 x_y_iter = enumerate(zip(X, y))
             for i, (x, c_b) in x_y_iter:
@@ -405,13 +413,15 @@ class SimpleARTMAP(BaseARTMAP):
         c_b = self.map[c_a]
         return c_a, c_b
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict labels for the data.
 
         Parameters
         ----------
         X : np.ndarray
             Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -420,19 +430,27 @@ class SimpleARTMAP(BaseARTMAP):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X)
+        self.module_a.check_dimensions(X)
         y_b = np.zeros((X.shape[0],), dtype=int)
         for i, x in enumerate(X):
             c_a, c_b = self.step_pred(x)
             y_b[i] = c_b
         return y_b
 
-    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict_ab(
+        self, X: np.ndarray, clip: bool = False
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict labels for the data, both A-side and B-side.
 
         Parameters
         ----------
         X : np.ndarray
             Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -441,6 +459,10 @@ class SimpleARTMAP(BaseARTMAP):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X)
+        self.module_a.check_dimensions(X)
         y_a = np.zeros((X.shape[0],), dtype=int)
         y_b = np.zeros((X.shape[0],), dtype=int)
         for i, x in enumerate(X):

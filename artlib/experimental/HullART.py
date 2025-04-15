@@ -1,13 +1,10 @@
 import numpy as np
 from matplotlib.axes import Axes
-from copy import deepcopy
 from typing import Optional, Iterable, List, Tuple, Dict
 from warnings import warn
-from artlib.experimental.AlphaShape import (AlphaShape, equalateral_simplex_volume,
-                                            plot_polygon_edges)
+from artlib.experimental.AlphaShape import (AlphaShape, plot_polygon_edges)
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
-import inspect
 
 
 class HullART(BaseART):
@@ -15,7 +12,7 @@ class HullART(BaseART):
     Hull ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float, alpha_hull: float, min_lambda: float, max_lambda: float):
+    def __init__(self, rho: float, alpha: float):
         """
         Initializes the HullART object.
 
@@ -24,13 +21,9 @@ class HullART(BaseART):
         rho : float
             Vigilance parameter.
         alpha : float
-            Choice parameter.
-        alpha_hull : float
             alpha shape parameter.
-        lambda : float
-            minimum volume.
         """
-        params = {"rho": rho, "alpha": alpha, "alpha_hull": alpha_hull, "min_lambda": min_lambda, "max_lambda": max_lambda}
+        params = {"rho": rho, "alpha": alpha}
         super().__init__(params)
 
     @staticmethod
@@ -52,17 +45,6 @@ class HullART(BaseART):
         assert params["alpha"] >= 0.0
         assert isinstance(params["alpha"], float)
 
-        assert "alpha_hull" in params
-        assert params["alpha_hull"] >= 0.0
-        assert isinstance(params["alpha_hull"], float)
-
-        assert "min_lambda" in params
-        assert params["min_lambda"] >= 0.0
-        assert isinstance(params["min_lambda"], float)
-
-        assert "max_lambda" in params
-        assert params["max_lambda"] >= 0.0
-        assert isinstance(params["max_lambda"], float)
 
     def category_choice(
         self, i: np.ndarray, w: AlphaShape, params: dict
@@ -87,28 +69,10 @@ class HullART(BaseART):
             Cache used for later processing.
 
         """
-        if w.contains_point(i):
-            activation = 2.0
-            new_w = deepcopy(w)
-            min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
-            new_vol = 1. - max(new_w.volume, min_vol)
+        dim = i.size
+        activation = 1.0-(w.distance_to_surface(i)/np.sqrt(dim))
 
-        else:
-            new_w = deepcopy(w)
-            new_w.add_points(i.reshape((1, -1)))
-            if new_w.is_empty:
-                activation = np.nan
-                new_vol = 0
-            else:
-                min_vol = equalateral_simplex_volume(len(i), params["min_lambda"])
-                new_vol = 1. - max(new_w.volume, min_vol)
-                activation = new_vol / (1. - max(w.volume, min_vol) + params["alpha"])
-                # activation = 1.0 - (max(new_w.volume, min_vol)-max(w.volume, min_vol))
-
-                # activation = (len(i)-sum(new_w.side_lengths))/ (params)
-
-
-        cache = {"new_w": new_w, "new_vol": new_vol, "activation": activation}
+        cache = None
 
         return activation, cache
 
@@ -141,9 +105,9 @@ class HullART(BaseART):
             Cache used for later processing.
 
         """
-        assert cache is not None
-        M = cache["new_vol"]**(1/len(i))
-        cache["match_criterion"] = M
+        dim = i.size
+        dist = np.max(np.linalg.norm(w.perimeter_points - i, axis=1))
+        M = 1.0 - (dist/np.sqrt(dim))
 
         return M, cache
 
@@ -174,7 +138,8 @@ class HullART(BaseART):
             Updated cluster weight.
 
         """
-        return cache["new_w"]
+        w.add_points(i.reshape(1,-1))
+        return w
 
     def new_weight(self, i: np.ndarray, params: dict) -> AlphaShape:
         """
@@ -193,7 +158,7 @@ class HullART(BaseART):
             New cluster weight.
 
         """
-        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha_hull"], max_perimeter_length=params["max_lambda"])
+        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha"])
         return new_w
 
     def get_cluster_centers(self) -> List[np.ndarray]:

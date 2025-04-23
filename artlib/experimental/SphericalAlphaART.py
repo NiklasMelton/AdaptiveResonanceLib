@@ -12,9 +12,9 @@ from artlib.experimental.AlphaART import AlphaART
 import operator
 from copy import deepcopy
 
-class AlphaART(AlphaART):
+class SphericalAlphaART(AlphaART):
     """
-    Alpha-Shape ART for Clustering
+    Spherical Alpha-Shape ART for Clustering on Spherical Surfaces
     """
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
@@ -23,7 +23,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         X : np.ndarray
-            The dataset.
+            The dataset in lat-lon form.
 
         Returns
         -------
@@ -39,7 +39,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         X : np.ndarray
-            The dataset.
+            The dataset in lat-lon form.
 
         Returns
         -------
@@ -56,7 +56,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         X : np.ndarray
-            The dataset.
+            The dataset in lat-lon form.
 
         """
         assert X.shape[1] == 2
@@ -65,7 +65,7 @@ class AlphaART(AlphaART):
         """Validates the data prior to clustering.
 
         Parameters:
-        - X: data set
+        - X: The dataset in lat-lon form.
 
         """
         # Check latitude and longitude ranges
@@ -83,7 +83,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         i : np.ndarray
-            Data sample.
+            Data sample in lat-lon form.
         w : AlphaShape
             Cluster weight or information.
         params : dict
@@ -116,7 +116,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         i : np.ndarray
-            Data sample.
+            Data sample in lat-lon form.
         w : AlphaShape
             Cluster weight or information.
         params : dict
@@ -151,7 +151,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         i : np.ndarray
-            Data sample.
+            Data sample in lat-lon form.
         params : dict
             Dictionary containing parameters for the algorithm.
 
@@ -200,7 +200,7 @@ class AlphaART(AlphaART):
         Parameters
         ----------
         X : np.ndarray
-            The dataset.
+            The dataset in lat-lon form.
         y : np.ndarray
             Sample labels.
         ax : matplotlib.axes.Axes, optional

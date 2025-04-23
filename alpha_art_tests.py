@@ -1,5 +1,5 @@
 from artlib import FuzzyART, SimpleARTMAP, HypersphereART, VAT
-from artlib.experimental.HullART import HullART
+from artlib.experimental.AlphaART import AlphaART
 import numpy as np
 from ucimlrepo import fetch_ucirepo
 import pandas as pd
@@ -48,13 +48,10 @@ art_models = [
     (FuzzyART, {"rho": 0.0, "alpha": 1e-5, "beta": 1.0}),
     (HypersphereART, {"rho": 0.0, "alpha": 1e-5, "beta": 1.0, "r_hat": None}),
     (
-        HullART,
+        AlphaART,
         {
             "rho": 0.0,
-            "alpha": 1e-5,
-            "alpha_hull": 0.0,
-            "min_lambda": 1e-5,
-            "max_lambda": 0.2,
+            "alpha": 0.0,
         },
     ),
 ]
@@ -520,5 +517,5 @@ def test_datasets():
 
 if __name__ == "__main__":
     num_workers = 8
-    results = perform_tests(parquet_file="hull_art.parquet", num_workers=num_workers)
+    results = perform_tests(parquet_file="alpha_art.parquet", num_workers=num_workers)
     # test_datasets()

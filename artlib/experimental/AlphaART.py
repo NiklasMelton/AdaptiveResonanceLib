@@ -1,20 +1,21 @@
 import numpy as np
 from matplotlib.axes import Axes
-from typing import Optional, Iterable, List, Tuple, Dict
+from typing import Optional, Iterable, List, Tuple, Dict, Callable
 from warnings import warn
-from artlib.experimental.AlphaShape import (AlphaShape, plot_polygon_edges)
+from pyalphashape import (AlphaShape, plot_polygon_edges)
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
+import operator
+from copy import deepcopy
 
-
-class HullART(BaseART):
+class AlphaART(BaseART):
     """
-    Hull ART for Clustering
+    Alpha-Shape ART for Clustering
     """
 
     def __init__(self, rho: float, alpha: float):
         """
-        Initializes the HullART object.
+        Initializes the AlphaART object.
 
         Parameters
         ----------
@@ -72,7 +73,7 @@ class HullART(BaseART):
         dim = i.size
         activation = 1.0-(w.distance_to_surface(i)/np.sqrt(dim))
 
-        cache = None
+        cache = {"internal": activation >= 1.0}
 
         return activation, cache
 
@@ -105,11 +106,63 @@ class HullART(BaseART):
             Cache used for later processing.
 
         """
-        dim = i.size
-        dist = np.max(np.linalg.norm(w.perimeter_points - i, axis=1))
-        M = 1.0 - (dist/np.sqrt(dim))
+        assert cache is not None and "internal" in cache
+        if cache["internal"]:
+            M = 1.0
+        else:
+            dim = i.size
+            dist = np.max(np.linalg.norm(w.perimeter_points - i, axis=1))
+            M = 1.0 - (dist/np.sqrt(dim))
 
         return M, cache
+
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: Dict,
+        cache: Optional[Dict] = None,
+        op: Callable = operator.ge,
+    ) -> Tuple[bool, Dict]:
+        """Get the binary match criterion of the cluster.
+
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
+
+        Returns
+        -------
+        tuple
+            Binary match criterion and cache used for later processing.
+
+        """
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        M_bin = op(M, params["rho"])
+        new_w = None
+
+        if cache is None:
+            cache = dict()
+
+        if M_bin:
+            if "internal" in cache and cache["internal"] == True:
+                new_w = w
+            else:
+                new_w = deepcopy(w)
+                new_w.add_points(i.reshape(1,-1), perimeter_only=True)
+                if new_w.is_empty:
+                    M_bin = False
+
+        cache["new_w"] = new_w
+        cache["match_criterion"] = M
+        cache["match_criterion_bin"] = M_bin
+        return M_bin, cache
 
     def update(
         self,
@@ -138,8 +191,8 @@ class HullART(BaseART):
             Updated cluster weight.
 
         """
-        w.add_points(i.reshape(1,-1))
-        return w
+        assert cache is not None and "new_w" in cache
+        return cache["new_w"]
 
     def new_weight(self, i: np.ndarray, params: dict) -> AlphaShape:
         """
@@ -154,7 +207,7 @@ class HullART(BaseART):
 
         Returns
         -------
-        GeneralHull
+        AlphaShape
             New cluster weight.
 
         """
@@ -266,18 +319,5 @@ class HullART(BaseART):
         except NotImplementedError:
             warn(f"{self.__class__.__name__} does not support plotting cluster bounds.")
 
-    # def post_fit(self, X: np.ndarray):
-    #     can_merge = lambda A, B: A.overlaps_with(B)
-    #     merges = merge_objects(self.W, can_merge)
-    #     new_W = []
-    #     new_labels = np.zeros_like(self.labels_)
-    #     for i, items in enumerate(merges):
-    #         points = np.vstack([self.W[item].perimeter_points for item in items])
-    #         new_W.append(AlphaShape(points, self.W[items[0]].alpha))
-    #         for item in items:
-    #             new_labels[self.labels_ == item] = i
-    #
-    #     self.W = new_W
-    #     self.labels_ = new_labels
 
 

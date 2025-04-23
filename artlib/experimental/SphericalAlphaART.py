@@ -17,39 +17,62 @@ class AlphaART(AlphaART):
     Alpha-Shape ART for Clustering
     """
 
-    def __init__(self, rho: float, alpha: float):
-        """
-        Initializes the SphericalAlphaART object.
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """Prepare data for clustering.
 
         Parameters
         ----------
-        rho : float
-            Vigilance parameter.
-        alpha : float
-            alpha shape parameter.
-        """
-        params = {"rho": rho, "alpha": alpha}
-        super().__init__(params)
+        X : np.ndarray
+            The dataset.
 
-    @staticmethod
-    def validate_params(params: dict):
+        Returns
+        -------
+        np.ndarray
+            Normalized data.
+
         """
-        Validates clustering parameters.
+        return X
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """Restore data to state prior to preparation.
 
         Parameters
         ----------
-        params : dict
-            Dictionary containing parameters for the algorithm.
+        X : np.ndarray
+            The dataset.
+
+        Returns
+        -------
+        np.ndarray
+            Restored data.
 
         """
-        assert "rho" in params
-        assert params["rho"] >= 0.0
-        assert isinstance(params["rho"], float)
+        return X
 
-        assert "alpha" in params
-        assert params["alpha"] >= 0.0
-        assert isinstance(params["alpha"], float)
 
+    def check_dimensions(self, X: np.ndarray):
+        """Check the data has the correct dimensions.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            The dataset.
+
+        """
+        assert X.shape[1] == 2
+
+    def validate_data(self, X: np.ndarray):
+        """Validates the data prior to clustering.
+
+        Parameters:
+        - X: data set
+
+        """
+        # Check latitude and longitude ranges
+        lat_valid = np.all((-90.0 <= X[:, 0]) & (X[:, 0] <= 90.0))
+        lon_valid = np.all((-180.0 <= X[:, 1]) & (X[:, 1] <= 180.0))
+        assert lat_valid and lon_valid, ("Data must be latitude and longitude in "
+                                         "decimal form")
 
     def category_choice(
         self, i: np.ndarray, w: SphericalAlphaShape, params: dict

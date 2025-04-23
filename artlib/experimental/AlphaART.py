@@ -156,7 +156,7 @@ class AlphaART(BaseART):
             else:
                 new_w = deepcopy(w)
                 new_w.add_points(i.reshape(1,-1), perimeter_only=True)
-                if new_w.is_empty:
+                if new_w.is_empty or not new_w.contains_point(i):
                     M_bin = False
 
         cache["new_w"] = new_w

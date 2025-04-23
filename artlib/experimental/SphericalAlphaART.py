@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib.axes import Axes
-from typing import Optional, Iterable, List, Tuple, Dict, Callable
+from typing import Optional, Iterable, Tuple, Dict
 from warnings import warn
 from pyalphashape import (
     SphericalAlphaShape,
@@ -9,8 +9,6 @@ from pyalphashape import (
 )
 from artlib.common.utils import IndexableOrKeyable
 from artlib.experimental.AlphaART import AlphaART
-import operator
-from copy import deepcopy
 
 class SphericalAlphaART(AlphaART):
     """

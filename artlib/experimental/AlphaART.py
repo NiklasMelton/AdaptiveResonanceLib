@@ -149,15 +149,17 @@ class AlphaART(BaseART):
 
         if cache is None:
             cache = dict()
-
+        cache["valid_shape"] = True
         if M_bin:
             if "internal" in cache and cache["internal"] == True:
                 new_w = w
             else:
                 new_w = deepcopy(w)
                 new_w.add_points(i.reshape(1,-1), perimeter_only=True)
-                if new_w.is_empty or not new_w.contains_point(i):
+                # if new_w.is_empty or not new_w.contains_point(i):
+                if new_w.is_empty:
                     M_bin = False
+                    cache["valid_shape"] = False
 
         cache["new_w"] = new_w
         cache["match_criterion"] = M

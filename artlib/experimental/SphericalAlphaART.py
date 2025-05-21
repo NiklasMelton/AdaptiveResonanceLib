@@ -14,7 +14,7 @@ class SphericalAlphaART(AlphaART):
     """
     Spherical Alpha-Shape ART for Clustering on Spherical Surfaces
     """
-
+    data_format = "latlon"
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """Prepare data for clustering.
 
@@ -134,7 +134,7 @@ class SphericalAlphaART(AlphaART):
         if cache["internal"]:
             M = 1.0
         else:
-            pt = latlon_to_unit_vectors(i)
+            pt = latlon_to_unit_vectors(i[None, :])[0]
             dot_products = np.clip(w.perimeter_points @ pt, -1.0, 1.0)
             angles = np.arccos(dot_products)
             dist = np.max(angles)
@@ -181,7 +181,7 @@ class SphericalAlphaART(AlphaART):
         """
         for c, w in zip(colors, self.W):
             plot_spherical_alpha_shape(
-                w, ax, line_width=linewidth, line_color=c, fill=False
+                w, ax=ax, line_width=linewidth, line_color=c, fill=False
             )
 
     def visualize(

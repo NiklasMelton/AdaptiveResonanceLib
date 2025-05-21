@@ -2,7 +2,7 @@ from sklearn.datasets import make_moons, make_blobs
 import matplotlib.pyplot as plt
 import numpy as np
 
-from artlib.experimental.HullART import HullART
+from artlib.experimental.AlphaART import HullART
 from artlib.common.VAT import VAT
 
 

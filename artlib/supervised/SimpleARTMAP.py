@@ -276,6 +276,95 @@ class SimpleARTMAP(BaseARTMAP):
                 self.module_a.post_step_fit(X)
         return self
 
+    def fit_gif(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+        verbose: bool = False,
+        leave_progress_bar: bool = True,
+        ax: Optional[Axes] = None,
+        filename: Optional[str] = None,
+        fps: int = 5,
+        final_hold_secs: float = 0.0,
+        colors: Optional[IndexableOrKeyable] = None,
+        n_class_estimate: Optional[int] = None,
+        max_iter: int = 1,
+        **kwargs,
+    ):
+        """Fit the supervised model to the data and make a gif of the process."""
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import PillowWriter
+        from sklearn.utils.multiclass import unique_labels
+
+        if ax is None:
+            fig, ax = plt.subplots()
+            ax.set_xlim(-0.1, 1.1)
+            ax.set_ylim(-0.1, 1.1)
+
+        if filename is None:
+            filename = f"fit_gif_supervised_{self.__class__.__name__}.gif"
+
+        # Determine colors if not provided
+        if colors is None:
+            from matplotlib.pyplot import cm
+
+            class_labels = np.unique(y)
+            if n_class_estimate is None:
+                n_class_estimate = len(class_labels)
+            colormap = cm.rainbow(np.linspace(0, 1, n_class_estimate))
+            colors = colormap  # assumes class indices are 0...n-1
+
+        # Initialize and fit
+        self.validate_data(X, y)
+        self.classes_ = unique_labels(y)
+        self.labels_ = y
+        self.module_a.W = []
+        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
+
+        writer = PillowWriter(fps=fps)
+        with writer.saving(ax.figure, filename, dpi=80):
+            for _ in range(max_iter):
+                if verbose:
+                    from tqdm import tqdm
+
+                    iterator = tqdm(
+                        enumerate(zip(X, y)),
+                        total=len(X),
+                        leave=leave_progress_bar,
+                    )
+                else:
+                    iterator = enumerate(zip(X, y))
+
+                for i, (x, c_b) in iterator:
+                    self.module_a.pre_step_fit(X)
+                    c_a = self.step_fit(
+                        x,
+                        c_b,
+                        match_tracking=match_tracking,
+                        epsilon=epsilon,
+                    )
+                    self.module_a.labels_[i] = c_a
+                    self.module_a.post_step_fit(X)
+
+                    ax.clear()
+                    ax.set_xlim(-0.1, 1.1)
+                    ax.set_ylim(-0.1, 1.1)
+                    self.visualize(X[: i + 1], y[: i + 1], ax, colors=colors, **kwargs)
+                    writer.grab_frame()
+
+            self.module_a.post_fit(X)
+
+            n_extra_frames = int(np.ceil(final_hold_secs * fps))
+            for _ in range(n_extra_frames):
+                ax.clear()
+                ax.set_xlim(-0.1, 1.1)
+                ax.set_ylim(-0.1, 1.1)
+                self.visualize(X, y, ax, colors=colors, **kwargs)
+                writer.grab_frame()
+        return self
+
     def partial_fit(
         self,
         X: np.ndarray,
@@ -489,7 +578,7 @@ class SimpleARTMAP(BaseARTMAP):
         colors_a = []
         for k_a in range(self.n_clusters):
             colors_a.append(colors[self.map[k_a]])
-        self.module_a.plot_cluster_bounds(ax, colors_a, linewidth)
+        self.module_a.plot_cluster_bounds(ax=ax, colors=colors_a, linewidth=linewidth)
 
     def visualize(
         self,
@@ -521,7 +610,11 @@ class SimpleARTMAP(BaseARTMAP):
         import matplotlib.pyplot as plt
 
         if ax is None:
-            fig, ax = plt.subplots()
+            if self.module_a.data_format in ["latlon"]:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection="3d")
+            else:
+                fig, ax = plt.subplots()
 
         if colors is None:
             from matplotlib.pyplot import cm
@@ -530,12 +623,13 @@ class SimpleARTMAP(BaseARTMAP):
 
         for k_b, col in enumerate(colors):
             cluster_data = y == k_b
-            plt.scatter(
-                X[cluster_data, 0],
-                X[cluster_data, 1],
-                color=col,
-                marker=".",
-                s=marker_size,
-            )
+            if self.module_a.data_format == "default":
+                plt.scatter(
+                    X[cluster_data, 0],
+                    X[cluster_data, 1],
+                    color=col,
+                    marker=".",
+                    s=marker_size,
+                )
 
-        self.plot_cluster_bounds(ax, colors, linewidth)
+        self.plot_cluster_bounds(ax=ax, colors=colors, linewidth=linewidth)

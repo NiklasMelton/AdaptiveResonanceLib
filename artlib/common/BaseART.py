@@ -14,6 +14,8 @@ import operator
 class BaseART(BaseEstimator, ClusterMixin):
     """Generic implementation of Adaptive Resonance Theory (ART)"""
 
+    data_format = "default"
+
     def __init__(self, params: Dict):
         """
         Parameters

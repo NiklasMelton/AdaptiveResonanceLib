@@ -525,8 +525,9 @@ class FusionART(BaseART):
                 else:
                     T[c_] = np.nan
                     if not (m and no_match_reset):
+                        params = {i: self.modules[i].params for i in range(len(cache))}
                         keep_searching = self._match_tracking(
-                            cache, epsilon, self.params, match_tracking
+                            cache, epsilon, params, match_tracking
                         )
                         if not keep_searching:
                             T[:] = np.nan

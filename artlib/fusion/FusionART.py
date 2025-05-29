@@ -433,7 +433,7 @@ class FusionART(BaseART):
                 keep_searching.append(True)
         return all(keep_searching)
 
-    def _set_params(self, new_params: List[Dict]):
+    def _set_params(self, new_params: Dict):
         """Set the parameters for each module in FusionART.
 
         Parameters
@@ -456,6 +456,86 @@ class FusionART(BaseART):
 
         """
         return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
+
+    def step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ) -> int:
+        """Fit the model to a single sample.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample.
+        match_reset_func : callable, optional
+            A callable that influences cluster creation.
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+            Method for resetting match criterion.
+        epsilon : float, default=0.0
+            Epsilon value used for adjusting match criterion.
+
+        Returns
+        -------
+        int
+            Cluster label of the input sample.
+
+        """
+        self.sample_counter_ += 1
+        base_params = self._deep_copy_params()
+        mt_operator = self._match_tracking_operator(match_tracking)
+        if len(self.W) == 0:
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            return 0
+        else:
+            if match_tracking in ["MT~"] and match_reset_func is not None:
+                T_values, T_cache = zip(
+                    *[
+                        self.category_choice(x, w, params=self.params)
+                        if match_reset_func(x, w, c_, params=self.params, cache=None)
+                        else (np.nan, None)
+                        for c_, w in enumerate(self.W)
+                    ]
+                )
+            else:
+                T_values, T_cache = zip(
+                    *[self.category_choice(x, w, params=self.params) for w in self.W]
+                )
+            T = np.array(T_values)
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
+                w = self.W[c_]
+                cache = T_cache[c_]
+                m, cache = self.match_criterion_bin(
+                    x, w, params=self.params, cache=cache, op=mt_operator
+                )
+                if match_tracking in ["MT~"] and match_reset_func is not None:
+                    no_match_reset = True
+                else:
+                    no_match_reset = match_reset_func is None or match_reset_func(
+                        x, w, c_, params=self.params, cache=cache
+                    )
+                if m and no_match_reset:
+                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    self._set_params(base_params)
+                    return c_
+                else:
+                    T[c_] = np.nan
+                    if not (m and no_match_reset):
+                        keep_searching = self._match_tracking(
+                            cache, epsilon, self.params, match_tracking
+                        )
+                        if not keep_searching:
+                            T[:] = np.nan
+
+            c_new = len(self.W)
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            self._set_params(base_params)
+            return c_new
 
     def partial_fit(
         self,

@@ -1,9 +1,6 @@
-"""Fuzzy ARTMAP – C++‑accelerated wrapper."""
-from __future__ import annotations
-
+"""Fuzzy ARTMAP :cite:`carpenter1991fuzzy`."""
 import numpy as np
 from typing import Literal
-
 from artlib.cpp_optimized.cppFuzzyARTMAP import (  # ← new backend
     FitFuzzyARTMAP,
     PredictFuzzyARTMAP,
@@ -15,39 +12,57 @@ from sklearn.utils.validation import check_is_fitted
 
 
 class FuzzyARTMAP(SimpleARTMAP):
-    """C++‑optimised Fuzzy ARTMAP.
+    """FuzzyARTMAP for Classification. optimized with C++
 
-    A thin wrapper around the `cppFuzzyARTMAP` free functions that keeps
-    the Python‑side state (`module_a`, label maps, sample counters) in sync
-    with the C++ core.
+    This module implements FuzzyARTMAP
+
+    FuzzyARTMAP is a non-modular classification model which has been highly
+    optimized for run-time performance. Fit and predict functions are implemented in
+    c++ for efficient execution. This class acts as a wrapper for the underlying c++
+    functions and to provide compatibility with the artlib style and usage.
+    Functionally, FuzzyARTMAP behaves as a special case of
+    :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
+    :class:`~artlib.elementary.FuzzyART.FuzzyART`.
 
     """
 
-    # ---------------------------------------------------------------------
-    # construction
-    # ---------------------------------------------------------------------
     def __init__(self, rho: float, alpha: float, beta: float):
-        """
+        """Initialize the Binary Fuzzy ARTMAP model.
+
         Parameters
         ----------
-        rho   : float  – vigilance (0 ≤ ρ ≤ 1)
-        alpha : float  – choice (α ≥ 0)
-        beta  : float  – learning‑rate (0 < β ≤ 1)
+        rho : float
+            Vigilance parameter.
+        alpha : float
+            Choice parameter.
+        beta : float
+            Learning rate.
+
         """
         module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)
         super().__init__(module_a)
 
-    # ---------------------------------------------------------------------
-    # helper – mirror C++ results back to Python objects
-    # ---------------------------------------------------------------------
-    def _sync_cpp(
+    def _synchronize_cpp_results(
         self,
         labels_a_out: np.ndarray,
         weights_arrays: list[np.ndarray],
         cluster_labels_out: np.ndarray,
-        *,
         incremental: bool = False,
     ):
+        """Synchronize the python class with the output of the c++ code.
+
+        Parameters
+        ----------
+        labels_a_out : np.ndarray
+            A 1D numpy array containing the a-side labels from fitting
+        weights_arrays : np.ndarray
+            A 2D numpy array where rows are the Binary Fuzzy ART weights
+        cluster_labels_out : np.ndarray
+            A 1D numpy array describing the map from a-side to b-side cluster labels
+        incremental: bool, default=False
+            This flag is set to true when synchronizing after a partial_fit
+
+        """
         if not incremental:
             self.map: dict[int, int] = {}
             self.module_a.labels_ = np.array((), dtype=int)
@@ -77,20 +92,41 @@ class FuzzyARTMAP(SimpleARTMAP):
             else:
                 self.map[c_a] = int(c_b)
 
-    # ---------------------------------------------------------------------
-    # batch fit
-    # ---------------------------------------------------------------------
     def fit(
         self,
         X: np.ndarray,
         y: np.ndarray,
-        *,
         max_iter: int = 1,
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
         leave_progress_bar: bool = True,
     ):
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        max_iter : int, default=1
+            Number of iterations to fit the model on the same data set.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+        verbose : bool, default=False
+            non functional. Left for compatibility
+        leave_progress_bar : bool, default=True
+            non functional. Left for compatibility
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The fitted model.
+
+        """
         SimpleARTMAP.validate_data(self, X, y)
         self.classes_ = unique_labels(y)
         self.labels_ = y
@@ -108,21 +144,36 @@ class FuzzyARTMAP(SimpleARTMAP):
             weights=None,
             cluster_labels=None,
         )
-        self._sync_cpp(la, W, cl)
+        self._synchronize_cpp_results(la, W, cl)
         self.module_a.is_fitted_ = True
         return self
 
-    # ---------------------------------------------------------------------
-    # incremental fit
-    # ---------------------------------------------------------------------
     def partial_fit(
         self,
         X: np.ndarray,
         y: np.ndarray,
-        *,
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
+        """Partial fit the model to the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The partially fitted model.
+
+        """
         SimpleARTMAP.validate_data(self, X, y)
 
         if not hasattr(self, "labels_"):
@@ -149,17 +200,35 @@ class FuzzyARTMAP(SimpleARTMAP):
             weights=existing_W,
             cluster_labels=existing_map,
         )
-        self._sync_cpp(la, W, cl, incremental=True)
+        self._synchronize_cpp_results(la, W, cl, incremental=True)
         self.module_a.is_fitted_ = True
         return self
 
-    # ---------------------------------------------------------------------
-    # prediction helpers
-    # ---------------------------------------------------------------------
-    def _predict_cpp(self, X: np.ndarray):
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
+        """Predict labels for the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
+
+        Returns
+        -------
+        np.ndarray
+            B labels for the data.
+
+        """
+        check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X)
+        self.module_a.check_dimensions(X)
+
         W = np.array(self.module_a.W, dtype=float)
         cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        return PredictFuzzyARTMAP(
+        _, y_b = PredictFuzzyARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
@@ -169,21 +238,40 @@ class FuzzyARTMAP(SimpleARTMAP):
             weights=W,
             cluster_labels=cl,
         )
-
-    def predict(self, X: np.ndarray, *, clip: bool = False) -> np.ndarray:
-        check_is_fitted(self)
-        if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
-        _, y_b = self._predict_cpp(X)
         return y_b
 
-    def predict_ab(self, X: np.ndarray, *, clip: bool = False):
+    def predict_ab(self, X: np.ndarray, clip: bool = False):
+        """Predict labels for the data, both A-side and B-side.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            A labels for the data, B labels for the data.
+
+        """
         check_is_fitted(self)
         if clip:
             X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
         self.module_a.validate_data(X)
         self.module_a.check_dimensions(X)
-        y_a, y_b = self._predict_cpp(X)
+
+        W = np.array(self.module_a.W, dtype=float)
+        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
+        y_a, y_b = PredictFuzzyARTMAP(
+            X,
+            rho=self.module_a.params["rho"],
+            alpha=self.module_a.params["alpha"],
+            beta=self.module_a.params["beta"],
+            MT="",
+            epsilon=0.0,
+            weights=W,
+            cluster_labels=cl,
+        )
         return y_a, y_b

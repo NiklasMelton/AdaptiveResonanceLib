@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import load_iris, make_blobs
 import matplotlib.pyplot as plt
 
-from artlib import FuzzyART, SimpleARTMAP, QuadraticNeuronART
+from artlib import FuzzyARTMAP
 
 
 def cluster_iris():
@@ -18,20 +18,10 @@ def cluster_iris():
     )
 
     params = {"rho": 0.0, "alpha": 0.0, "beta": 1.0}
-    art = FuzzyART(**params)
-    # params = {
-    #     "rho": 0.0,
-    #     "s_init": 0.9,
-    #     "lr_b": 0.1,
-    #     "lr_w": 0.1,
-    #     "lr_s": 0.1
-    # }
-    # art = QuadraticNeuronART(**params)
+    cls = FuzzyARTMAP(**params)
 
-    X = art.prepare_data(data)
+    X = cls.prepare_data(data)
     print("Prepared data has shape:", X.shape)
-
-    cls = SimpleARTMAP(art)
 
     cls = cls.fit(X_train, y_train)
 
@@ -60,21 +50,10 @@ def cluster_blobs():
     print("Data has shape:", data.shape)
 
     params = {"rho": 0.9, "alpha": 0.0, "beta": 1.0}
-    art = FuzzyART(**params)
+    cls = FuzzyARTMAP(**params)
 
-    # params = {
-    #     "rho": 0.0,
-    #     "s_init": 0.9,
-    #     "lr_b": 0.1,
-    #     "lr_w": 0.1,
-    #     "lr_s": 0.1
-    # }
-    # art = QuadraticNeuronART(**params)
-
-    X = art.prepare_data(data)
+    X = cls.prepare_data(data)
     print("Prepared data has shape:", X.shape)
-
-    cls = SimpleARTMAP(art)
 
     cls = cls.fit(X, target)
     y = cls.labels_

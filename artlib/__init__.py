@@ -54,6 +54,7 @@ from artlib.topological.DualVigilanceART import DualVigilanceART
 
 from artlib.cpp_optimized.BinaryFuzzyARTMAP import BinaryFuzzyARTMAP
 from artlib.cpp_optimized.FuzzyARTMAP import FuzzyARTMAP
+from artlib.cpp_optimized.HypersphereARTMAP import HypersphereARTMAP
 
 __all__ = [
     "BaseART",
@@ -86,4 +87,5 @@ __all__ = [
     "TD_FALCON",
     "BinaryFuzzyARTMAP",
     "FuzzyARTMAP",
+    "HypersphereARTMAP",
 ]

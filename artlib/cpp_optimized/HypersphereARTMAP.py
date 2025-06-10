@@ -1,34 +1,34 @@
-"""Fuzzy ARTMAP :cite:`carpenter1991fuzzy`."""
+"""Hypersphere ARTMAP :cite:`anagnostopoulos2000hypersphere`."""
+
 import numpy as np
 from typing import Literal, Tuple
-from artlib.cpp_optimized.cppFuzzyARTMAP import (
-    FitFuzzyARTMAP,
-    PredictFuzzyARTMAP,
+from artlib.cpp_optimized.cppHypersphereARTMAP import (
+    FitHypersphereARTMAP,
+    PredictHypersphereARTMAP,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.elementary.FuzzyART import FuzzyART
+from artlib.elementary.HypersphereART import HypersphereART
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
 
 
-class FuzzyARTMAP(SimpleARTMAP):
-    """FuzzyARTMAP for Classification. optimized with C++
+class HypersphereARTMAP(SimpleARTMAP):
+    """HypersphereARTMAP for Classification. optimized with C++
 
-    This module implements FuzzyARTMAP
+    This module implements HypersphereARTMAP
 
-    FuzzyARTMAP is a non-modular classification model which has been highly
+    HypersphereARTMAP is a non-modular classification model which has been highly
     optimized for run-time performance. Fit and predict functions are implemented in
     c++ for efficient execution. This class acts as a wrapper for the underlying c++
     functions and to provide compatibility with the artlib style and usage.
-    Functionally, FuzzyARTMAP behaves as a special case of
+    Functionally, HypersphereARTMAP behaves as a special case of
     :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
-    :class:`~artlib.elementary.FuzzyART.FuzzyART`.
+    :class:`~artlib.elementary.HypersphereART.HypersphereART`.
 
     """
 
-    def __init__(self, rho: float, alpha: float, beta: float):
-        """Initialize the Fuzzy ARTMAP model.
-
+    def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
+        """
         Parameters
         ----------
         rho : float
@@ -36,11 +36,14 @@ class FuzzyARTMAP(SimpleARTMAP):
         alpha : float
             Choice parameter.
         beta : float
-            Learning rate.
-
+            Learning‑rate parameter.
+        r_hat : float
+            Global upper bound on cluster radius (must be > 0).
         """
-        module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)
+        module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
         super().__init__(module_a)
+        # store r_hat so we can forward it to the C++ layer
+        self._r_hat = float(r_hat)
 
     def _synchronize_cpp_results(
         self,
@@ -56,7 +59,7 @@ class FuzzyARTMAP(SimpleARTMAP):
         labels_a_out : np.ndarray
             A 1D numpy array containing the a-side labels from fitting
         weights_arrays : np.ndarray
-            A 2D numpy array where rows are the Fuzzy ART weights
+            A 2D numpy array where rows are the Binary Fuzzy ART weights
         cluster_labels_out : np.ndarray
             A 1D numpy array describing the map from a-side to b-side cluster labels
         incremental: bool, default=False
@@ -82,10 +85,10 @@ class FuzzyARTMAP(SimpleARTMAP):
         for k, c in enumerate(new_counts):
             self.module_a.weight_sample_counter_[k] += int(c)
 
-        # weights (float64 arrays)
+        # weights
         self.module_a.W = [w for w in weights_arrays]
 
-        # A→B mapping
+        # A → B map
         for c_a, c_b in enumerate(cluster_labels_out):
             if c_a in self.map:
                 assert self.map[c_a] == c_b, "Incremental fit changed cluster map."
@@ -133,12 +136,13 @@ class FuzzyARTMAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
-        la, W, cl = FitFuzzyARTMAP(
+        la, W, cl = FitHypersphereARTMAP(
             X,
             y,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
+            r_hat=self._r_hat,
             MT=match_tracking,
             epsilon=epsilon,
             weights=None,
@@ -189,12 +193,13 @@ class FuzzyARTMAP(SimpleARTMAP):
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitFuzzyARTMAP(
+        la, W, cl = FitHypersphereARTMAP(
             X,
             y,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
+            r_hat=self._r_hat,
             MT=match_tracking,
             epsilon=epsilon,
             weights=existing_W,
@@ -228,11 +233,12 @@ class FuzzyARTMAP(SimpleARTMAP):
 
         W = np.array(self.module_a.W, dtype=float)
         cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        _, y_b = PredictFuzzyARTMAP(
+        _, y_b = PredictHypersphereARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
+            r_hat=self._r_hat,
             MT="",
             epsilon=0.0,
             weights=W,
@@ -266,11 +272,12 @@ class FuzzyARTMAP(SimpleARTMAP):
 
         W = np.array(self.module_a.W, dtype=float)
         cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        y_a, y_b = PredictFuzzyARTMAP(
+        y_a, y_b = PredictHypersphereARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
+            r_hat=self._r_hat,
             MT="",
             epsilon=0.0,
             weights=W,

@@ -61,8 +61,9 @@ Welcome to AdaptiveResonanceLib, a comprehensive and modular Python library for 
 ## Adaptive Resonance Theory (ART)
 
 **Adaptive Resonance Theory (ART)** is both
-1. a neuroscientific theory of how the brain balances *plasticity* (learning new information) with *stability* (retaining what it already knows), and
-2. a family of machine‑learning algorithms that operationalise this idea for
+1. A neuroscientific theory of how the brain balances *plasticity* (learning new
+   information) with *stability* (retaining what it already knows), and
+2. A family of machine‑learning algorithms that operationalise this idea for
    clustering, classification, continual‑learning, and other tasks.
 
 First proposed by Stephen Grossberg and Gail Carpenter in the mid‑1970s , ART models treat learning as an **interactive search** between *bottom‑up evidence* and *top‑down expectations*:
@@ -74,9 +75,9 @@ First proposed by Stephen Grossberg and Gail Carpenter in the mid‑1970s , ART 
    The most active memory (call it *J*) is tentatively chosen to represent the input.
 
 3. **Vigilance check (resonance test).**
-   The match between the input and memory *J* is compared to a user‑chosen threshold \( ρ\) (the **vigilance parameter**).
-   * If the match ≥ \( ρ\) → **Resonance.** The memory and input are deemed compatible; *J* is updated to incorporate the new information.
-   * If the match < \( ρ\) → **Mismatch‑reset.** Memory *J* is temporarily inhibited, and the next best candidate is tested.
+   The match between the input and memory *J* is compared to a user‑chosen threshold \(ρ\) (the **vigilance parameter**).
+   * If the match ≥ \(ρ\) → **Resonance.** The memory and input are deemed compatible; *J* is updated to incorporate the new information.
+   * If the match < \(ρ\) → **Mismatch‑reset.** Memory *J* is temporarily inhibited, and the next best candidate is tested.
    * If no memory passes the test → a **new category** is created directly from the input.
 
 4. **Output.**
@@ -87,15 +88,15 @@ First proposed by Stephen Grossberg and Gail Carpenter in the mid‑1970s , ART 
 ρ sets an explicit upper bound on how dissimilar two inputs can be while still
 ending up in the *same* category:
 
-| Vigilance \( ρ\)            | Behaviour | Practical effect |
-|-----------------------------|-----------|------------------|
-| \(  ρ ~ 0 \)                | Very low | All inputs merge into a single, broad category |
-| Moderate (\( 0 <  ρ < 1 \)) | Balanced | Finer granularity as \(ρ\) increases |
-| \(  ρ = 1 \)                | Maximum | Every distinct input forms its own category (memorisation) |
+| Vigilance \(ρ\)             | Practical effect |
+|-----------------------------|------------------|
+| \(  ρ = 0 \)                | All inputs merge into a single, broad category |
+| Moderate (\( 0 <  ρ < 1 \)) | Finer granularity as \(ρ\) increases |
+| \(  ρ = 1 \)                | Every distinct input forms its own category (memorisation) |
 
 This single knob lets practitioners trade off *specificity* against *generality* without retraining from scratch.
 
-### ART at a Glance: Notable Variants
+### Notable Variants
 
 | Variant                          | Input type                                | Task                      | Trait                                                                                          |
 |----------------------------------|-------------------------------------------|---------------------------|------------------------------------------------------------------------------------------------|
@@ -104,13 +105,14 @@ This single knob lets practitioners trade off *specificity* against *generality*
 | **ARTMAP**         | Paired inputs \((X, y)\)                  | Supervised classification | Two ART modules linked by an associative map field                                             |
 | **Gaussian ART** | Real‑valued                               | Clustering                | Replace rectangular category fields with Gaussian ones for smoother decision boundaries        |
 | **FALCON**      | Paired inputs \((State, Action, Reward)\) | Reinforcement Learning    | Uses three ART modules to create a dynamic SARSA grid for solving reinforcement learning tasks |
+
 All variants share the same resonance‑test backbone, so you can grasp one and quickly extend to the others.
 
-### Strengths (and Things to Watch)
+### Strengths and Things to Watch
 
 * **Online / incremental learning** – adapts one sample at a time without replay.
 * **Explicit category prototypes** – easy to inspect and interpret.
-* **Built‑in catastrophic‑forgetting control** via \( ρ\).
+* **Built‑in catastrophic‑forgetting control** via \(ρ\).
 * **Parameter sensitivity** – vigilance (and, in many variants, the learning rate \(\beta\)) must be tuned to your data.
 * **Order dependence** – the sequence of inputs can affect category formation; shuffling your training data is recommended for unbiased results.
 <!-- END what is ART -->

@@ -39,7 +39,10 @@ def test_comparison():
 
     X = A.prepare_data(data)
 
-    y_A = A.fit_predict(X, y=target)
-    y_B = B.fit_predict(X, y=target)
+    A = A.fit(X, target)
+    B = B.fit(X, target)
+
+    y_A = A.labels_
+    y_B = B.labels_
 
     assert np.array_equal(y_A, y_B)

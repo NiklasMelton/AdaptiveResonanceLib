@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 from sklearn.datasets import make_blobs
-from artlib.elementary.FuzzyART import FuzzyART
+from artlib.elementary.HypersphereART import HypersphereART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.cpp_optimized.FuzzyARTMAP import FuzzyARTMAP
+from artlib.cpp_optimized.HypersphereARTMAP import HypersphereARTMAP
 
 
 def test_prepare_data():
@@ -14,9 +14,9 @@ def test_prepare_data():
         random_state=0,
         shuffle=False,
     )
-    params = {"rho": 0.8, "alpha": 1e-10, "beta": 1.0}
-    A = SimpleARTMAP(FuzzyART(**params))
-    B = FuzzyARTMAP(**params)
+    params = {"rho": 0.7, "alpha": 1e-10, "beta": 1.0, "r_hat": 0.8}
+    A = SimpleARTMAP(HypersphereART(**params))
+    B = HypersphereARTMAP(**params)
 
     X_A = A.prepare_data(data)
     X_B = B.prepare_data(data)
@@ -33,9 +33,9 @@ def test_consistency():
             shuffle=False,
         )
 
-    params = {"rho":0.8, "alpha":1e-10, "beta":1.0}
-    A = SimpleARTMAP(FuzzyART(**params))
-    B = FuzzyARTMAP(**params)
+    params = {"rho": 0.7, "alpha": 1e-10, "beta": 1.0, "r_hat": 0.8}
+    A = SimpleARTMAP(HypersphereART(**params))
+    B = HypersphereARTMAP(**params)
 
     X = A.prepare_data(data)
 

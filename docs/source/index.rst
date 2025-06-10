@@ -14,6 +14,7 @@ AdaptiveResonanceLib Home
    :maxdepth: 2
    :caption: Main Contents:
 
+   what_is_art
    installation
    available_models
    comparison

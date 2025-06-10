@@ -3,6 +3,119 @@
 
 Welcome to AdaptiveResonanceLib, a comprehensive and modular Python library for Adaptive Resonance Theory (ART) algorithms. Based on scikit-learn, our library offers a wide range of ART models designed for both researchers and practitioners in the field of machine learning and neural networks. Whether you're working on classification, clustering, or pattern recognition, AdaptiveResonanceLib provides the tools you need to implement ART algorithms efficiently and effectively.
 
+[//]: # (# What is ART)
+
+[//]: # (Adaptive Resonance Theory &#40;ART&#41; is a theory of how the brain learns as well as a )
+
+[//]: # (family of algorithms based on the concept of pattern resonance. Originially )
+
+[//]: # (Formulated by Steven Grossburg and Gail Carpenter in the 1970s, ART posits that )
+
+[//]: # (the brain learns to identify patterns using top-down activations and bottom-up )
+
+[//]: # (expectations working cohesively to identify familiar and novel stimuli. )
+
+[//]: # ()
+[//]: # (When presented with a pattern, an ART-like network activates prior memories relative)
+
+[//]: # (to their similarity with the pattern. The most active prior memory is now a )
+
+[//]: # (candidate for assignment, but it must first pass the resonance &#40;vigilance check&#41;. If )
+
+[//]: # (the input pattern is fully familiar &#40;entirely contained in the active memory&#41;, )
+
+[//]: # (nothing else needs to be done. However, if the input patter contains novel )
+
+[//]: # (information, we must check if the prior memory is capable of incorporating the new )
+
+[//]: # (information by performing a vigilance test. In this way, we limit the scope of a single )
+
+[//]: # (prior memory. If the pattern passes the vigilance test for the prior memory, we say )
+
+[//]: # (that the pattern and memory are resonant and we update the prior memory to )
+
+[//]: # (incorporate the new pattern information. If the prior memory fails the vigilance )
+
+[//]: # (test, we suppress that memory and check the next highest activated memory. If no )
+
+[//]: # (prior memories pass the vigilance test, we create a new memory initialized using the )
+
+[//]: # (input pattern. When clustering, the index of the winning memory is assigned as the )
+
+[//]: # (cluster label of the input pattern.)
+
+[//]: # ()
+[//]: # (This process allows ART to solve the stability plasticity dillema with an explicit )
+
+[//]: # (memory limiting &#40;vigilance&#41; parameter $ ρ$. By increasing $ ρ$, a practitioner )
+
+[//]: # (can decrease the allowable size of individual memories, thereby creating more )
+
+[//]: # (categories with more specificity. At the extreme ends, setting $ ρ=1.0$ will force )
+
+[//]: # (ART models to memorize unique data samples, while setting $ ρ=0.0$ will allow ART )
+
+[//]: # (models to group all data samples into a single category.)
+
+<!-- START what is ART -->
+## Adaptive Resonance Theory (ART)
+
+**Adaptive Resonance Theory (ART)** is both
+1. a neuroscientific theory of how the brain balances *plasticity* (learning new information) with *stability* (retaining what it already knows), and
+2. a family of machine‑learning algorithms that operationalise this idea for
+   clustering, classification, continual‑learning, and other tasks.
+
+First proposed by Stephen Grossberg and Gail Carpenter in the mid‑1970s , ART models treat learning as an **interactive search** between *bottom‑up evidence* and *top‑down expectations*:
+
+1. **Activation.**
+   A new input pattern activates stored memories (categories) in proportion to their similarity to the input.
+
+2. **Candidate selection.**
+   The most active memory (call it *J*) is tentatively chosen to represent the input.
+
+3. **Vigilance check (resonance test).**
+   The match between the input and memory *J* is compared to a user‑chosen threshold \( ρ\) (the **vigilance parameter**).
+   * If the match ≥ \( ρ\) → **Resonance.** The memory and input are deemed compatible; *J* is updated to incorporate the new information.
+   * If the match < \( ρ\) → **Mismatch‑reset.** Memory *J* is temporarily inhibited, and the next best candidate is tested.
+   * If no memory passes the test → a **new category** is created directly from the input.
+
+4. **Output.**
+   In clustering mode, the index of the resonant (or newly created) memory is returned as the cluster label.
+
+### Vigilance
+
+ρ sets an explicit upper bound on how dissimilar two inputs can be while still
+ending up in the *same* category:
+
+| Vigilance \( ρ\)            | Behaviour | Practical effect |
+|-----------------------------|-----------|------------------|
+| \(  ρ ~ 0 \)                | Very low | All inputs merge into a single, broad category |
+| Moderate (\( 0 <  ρ < 1 \)) | Balanced | Finer granularity as \(ρ\) increases |
+| \(  ρ = 1 \)                | Maximum | Every distinct input forms its own category (memorisation) |
+
+This single knob lets practitioners trade off *specificity* against *generality* without retraining from scratch.
+
+### ART at a Glance: Notable Variants
+
+| Variant                          | Input type                                | Task                      | Trait                                                                                          |
+|----------------------------------|-------------------------------------------|---------------------------|------------------------------------------------------------------------------------------------|
+| **ART 1**                        | Binary                                    | Unsupervised clustering   | Original model                                                                                 |
+| **Fuzzy ART**                    | Real‑valued \([0,1]\)                     | Unsupervised clustering   | Uses fuzzy AND operator for analog inputs, resulting in rectagular categories                  |
+| **ARTMAP**         | Paired inputs \((X, y)\)                  | Supervised classification | Two ART modules linked by an associative map field                                             |
+| **Gaussian ART** | Real‑valued                               | Clustering                | Replace rectangular category fields with Gaussian ones for smoother decision boundaries        |
+| **FALCON**      | Paired inputs \((State, Action, Reward)\) | Reinforcement Learning    | Uses three ART modules to create a dynamic SARSA grid for solving reinforcement learning tasks |
+All variants share the same resonance‑test backbone, so you can grasp one and quickly extend to the others.
+
+### Strengths (and Things to Watch)
+
+* **Online / incremental learning** – adapts one sample at a time without replay.
+* **Explicit category prototypes** – easy to inspect and interpret.
+* **Built‑in catastrophic‑forgetting control** via \( ρ\).
+* **Parameter sensitivity** – vigilance (and, in many variants, the learning rate \(\beta\)) must be tuned to your data.
+* **Order dependence** – the sequence of inputs can affect category formation; shuffling your training data is recommended for unbiased results.
+<!-- END what is ART -->
+
+
 <!-- START available_models -->
 ## Available Models
 

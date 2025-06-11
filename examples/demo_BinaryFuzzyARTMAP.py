@@ -57,6 +57,7 @@ def cluster_blobs():
     cls = BinaryFuzzyARTMAP(**params)
 
     X = binarize_features_thermometer(data, n_bits=4)
+    print(X.dtype)
     X = cls.prepare_data(X)
     print("Prepared data has shape:", X.shape)
 

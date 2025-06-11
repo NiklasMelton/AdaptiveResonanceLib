@@ -51,6 +51,23 @@ class BinaryFuzzyART(FuzzyART):
         """
         super().__init__(rho, alpha, beta=1.0)
 
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """Prepare data for clustering.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Dataset.
+
+        Returns
+        -------
+        np.ndarray
+            Normalized and complement coded data.
+
+        """
+        cc_data = super().prepare_data(X)
+        return cc_data.astype(np.uint8)  # TODO: convert to bool
+
     @staticmethod
     def validate_params(params: dict):
         """Validate clustering parameters.

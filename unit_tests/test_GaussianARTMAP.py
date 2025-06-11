@@ -19,7 +19,7 @@ def test_prepare_data():
         "alpha": 1e-10,
         "sigma_init": np.array([0.5, 0.5]),
     }
-    A = SimpleARTMAP(HypersphereART(**params))
+    A = SimpleARTMAP(GaussianART(**params))
     B = GaussianARTMAP(**params)
 
     X_A = A.prepare_data(data)

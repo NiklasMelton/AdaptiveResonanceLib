@@ -14,6 +14,8 @@ import operator
 class BaseART(BaseEstimator, ClusterMixin):
     """Generic implementation of Adaptive Resonance Theory (ART)"""
 
+    data_format = "default"
+
     def __init__(self, params: Dict):
         """
         Parameters
@@ -729,6 +731,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         colors: Optional[IndexableOrKeyable] = None,
         n_cluster_estimate: int = 20,
         fps: int = 5,
+        final_hold_secs: float = 0.0,
         **kwargs,
     ):
         """Fit the model to the data and make a gif of the process.
@@ -760,6 +763,8 @@ class BaseART(BaseEstimator, ClusterMixin):
             estimate of number of clusters. Used for coloring plot.
         fps : int, default=5
             gif frames per second
+        final_hold_secs : float, default=0.0
+            seconds to hold the final frame (n_final_frames=ceil(final_hold_secs * fps))
         **kwargs : dict
             see :func: `artlib.common.BaseART.visualize`
 
@@ -813,7 +818,15 @@ class BaseART(BaseEstimator, ClusterMixin):
                     ax.set_ylim(-0.1, 1.1)
                     self.visualize(X, self.labels_, ax, colors=colors, **kwargs)
                     writer.grab_frame()
-            self.post_fit(X)
+                self.post_fit(X)
+
+                n_extra_frames = int(np.ceil(final_hold_secs * fps))
+                for _ in range(n_extra_frames):
+                    ax.clear()
+                    ax.set_xlim(-0.1, 1.1)
+                    ax.set_ylim(-0.1, 1.1)
+                    self.visualize(X, self.labels_, ax, colors=colors, **kwargs)
+                    writer.grab_frame()
             return self
 
     def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:

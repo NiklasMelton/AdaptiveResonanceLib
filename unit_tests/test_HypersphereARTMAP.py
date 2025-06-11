@@ -42,6 +42,8 @@ def test_consistency():
     A = A.fit(X, target)
     B = B.fit(X, target)
 
+    assert np.array_equal(A.module_a.W, B.module_a.W)
+
     y_A = A.labels_
     y_B = B.labels_
 

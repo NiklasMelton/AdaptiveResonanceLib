@@ -13,7 +13,28 @@ ext_modules = [
         include_dirs=[pybind11.get_include()],
         language="c++",
         extra_compile_args=extra_compile_args,
-    )
+    ),
+    Extension(
+        "artlib.cpp_optimized.cppFuzzyARTMAP",
+        [os.path.join("artlib", "cpp_optimized", "cppFuzzyARTMAP.cpp")],
+        include_dirs=[pybind11.get_include()],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
+    Extension(
+        "artlib.cpp_optimized.cppHypersphereARTMAP",
+        [os.path.join("artlib", "cpp_optimized", "cppHypersphereARTMAP.cpp")],
+        include_dirs=[pybind11.get_include()],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
+    Extension(
+        "artlib.cpp_optimized.cppGaussianARTMAP",
+        [os.path.join("artlib", "cpp_optimized", "cppGaussianARTMAP.cpp")],
+        include_dirs=[pybind11.get_include()],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
 ]
 
 setup(

@@ -32,7 +32,7 @@ scikit-learn = ">=1.0"
 matplotlib = ">=3.3.3"
 numba = ">=0.57.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.2"
 pre-commit = "^4.0.0"
 

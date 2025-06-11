@@ -28,6 +28,13 @@ ext_modules = [
         language="c++",
         extra_compile_args=extra_compile_args,
     ),
+    Extension(
+        "artlib.cpp_optimized.cppGaussianARTMAP",
+        [os.path.join("artlib", "cpp_optimized", "cppGaussianARTMAP.cpp")],
+        include_dirs=[pybind11.get_include()],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
 ]
 
 setup(

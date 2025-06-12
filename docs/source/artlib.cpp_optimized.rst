@@ -9,14 +9,6 @@ artlib.cpp_optimized package
 Sub-modules
 -----------
 
-artlib.cpp_optimized.BaseART
-----------------------------
-
-.. automodule:: artlib.cpp_optimized.BaseART
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 artlib.cpp_optimized.BinaryFuzzyARTMAP
 --------------------------------------
 

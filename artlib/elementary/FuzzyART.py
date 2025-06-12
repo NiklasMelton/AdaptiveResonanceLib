@@ -5,15 +5,16 @@
 # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 import numpy as np
+from numba import njit
 from typing import Optional, Iterable, List, Tuple, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import (
     normalize,
-    compliment_code,
+    complement_code,
     l1norm,
     fuzzy_and,
-    de_compliment_code,
+    de_complement_code,
 )
 
 
@@ -51,6 +52,75 @@ def get_bounding_box(
         widths.append(a_max - a_min)
 
     return ref_point, widths
+
+
+@njit
+def _category_choice_numba(i: np.ndarray, w: np.ndarray, alpha: float) -> float:
+    """Compute the category choice (activation) using Numba optimization.
+
+    Parameters
+    ----------
+    i : np.ndarray
+        Data sample.
+    w : np.ndarray
+        Cluster weight or information.
+    alpha : float
+        Choice parameter for the algorithm.
+
+    Returns
+    -------
+    float
+        Computed cluster activation value.
+
+    """
+    return l1norm(fuzzy_and(i, w)) / (alpha + l1norm(w))
+
+
+@njit
+def _match_criterion_numba(i: np.ndarray, w: np.ndarray, dim_original: float) -> float:
+    """Compute the match criterion using Numba optimization.
+
+    Parameters
+    ----------
+    i : np.ndarray
+        Data sample.
+    w : np.ndarray
+        Cluster weight or information.
+    dim_original : float
+        Original number of features before complement coding.
+
+    Returns
+    -------
+    float
+        Computed match criterion.
+
+    """
+    return l1norm(fuzzy_and(i, w)) / dim_original
+
+
+@njit
+def _update_numba(i: np.ndarray, w: np.ndarray, b: Optional[float]) -> np.ndarray:
+    """Compute the updated cluster weight using Numba optimization.
+
+    Parameters
+    ----------
+    i : np.ndarray
+        Data sample.
+    w : np.ndarray
+        Cluster weight or information.
+    b : float, optional
+        Learning rate parameter (beta). If None, only the fuzzy AND operation is
+        applied.
+
+    Returns
+    -------
+    np.ndarray
+        Updated cluster weight.
+
+    """
+    if b is None:
+        return fuzzy_and(i, w)
+    return b * fuzzy_and(i, w) + (1 - b) * w
 
 
 class FuzzyART(BaseART):
@@ -100,11 +170,11 @@ class FuzzyART(BaseART):
         Returns
         -------
         np.ndarray
-            Normalized and compliment coded data.
+            Normalized and complement coded data.
 
         """
         normalized, self.d_max_, self.d_min_ = normalize(X, self.d_max_, self.d_min_)
-        cc_data = compliment_code(normalized)
+        cc_data = complement_code(normalized)
         return cc_data
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
@@ -121,7 +191,7 @@ class FuzzyART(BaseART):
             Restored data.
 
         """
-        out = de_compliment_code(X)
+        out = de_complement_code(X)
         return super(FuzzyART, self).restore_data(out)
 
     @staticmethod
@@ -168,12 +238,12 @@ class FuzzyART(BaseART):
             Dataset.
 
         """
-        assert X.shape[1] % 2 == 0, "Data has not been compliment coded"
+        assert X.shape[1] % 2 == 0, "Data has not been complement coded"
         assert np.all(X >= 0), "Data has not been normalized"
         assert np.all(X <= 1.0), "Data has not been normalized"
         assert np.all(
             abs(np.sum(X, axis=1) - float(X.shape[1] / 2)) <= 0.01
-        ), "Data has not been compliment coded"
+        ), "Data has not been complement coded"
         self.check_dimensions(X)
 
     def category_choice(
@@ -198,7 +268,7 @@ class FuzzyART(BaseART):
             Cache used for later processing.
 
         """
-        return l1norm(fuzzy_and(i, w)) / (params["alpha"] + l1norm(w)), None
+        return _category_choice_numba(i, w, params["alpha"]), None
 
     def match_criterion(
         self,
@@ -228,7 +298,7 @@ class FuzzyART(BaseART):
             Cache used for later processing.
 
         """
-        return l1norm(fuzzy_and(i, w)) / self.dim_original, cache
+        return _match_criterion_numba(i, w, self.dim_original), cache
 
     def update(
         self,
@@ -256,10 +326,7 @@ class FuzzyART(BaseART):
             Updated cluster weight.
 
         """
-        b = params["beta"]
-        if b is None:
-            return fuzzy_and(i, w)
-        return b * fuzzy_and(i, w) + (1 - b) * w
+        return _update_numba(i, w, params.get("beta", None))
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.

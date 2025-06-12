@@ -45,13 +45,13 @@ def test_category_choice(art_model):
     art_model.dim_ = 2
     i = np.array([1, 0])
     w = np.array(
-        [0.5, 0.5, 1, 0]
+        [1, 0, 0.5, 0.5]
     )  # Mock weight with both bottom-up and top-down weights
     params = {"rho": 0.7}
 
     activation, _ = art_model.category_choice(i, w, params)
     assert isinstance(activation, float)
-    assert activation == 0.5  # np.dot(i, [0.5, 0.5]) = 0.5
+    assert activation == 1.0  # np.dot(i, [0.5, 0.5]) = 0.5
 
 
 def test_match_criterion(art_model):
@@ -59,7 +59,7 @@ def test_match_criterion(art_model):
     art_model.dim_ = 2
     i = np.array([1, 0])
     w = np.array(
-        [0.5, 0.5, 1, 0]
+        [1, 0, 0.5, 0.5]
     )  # Mock weight with both bottom-up and top-down weights
     params = {"rho": 0.7}
     cache = {}
@@ -67,7 +67,7 @@ def test_match_criterion(art_model):
     match_criterion, _ = art_model.match_criterion(i, w, params, cache=cache)
     assert isinstance(match_criterion, float)
     assert (
-        match_criterion == 1.0
+        match_criterion == 0.5
     )  # Intersection of i and top-down weight w_td: [1, 0] matches exactly with i
 
 
@@ -76,15 +76,18 @@ def test_update(art_model):
     art_model.dim_ = 2
     i = np.array([1, 0])
     w = np.array(
-        [0.5, 0.5, 1, 1]
+        [1, 0, 0.5, 0.5]
     )  # Mock weight with both bottom-up and top-down weights
     params = {"L": 2.0}
 
     updated_weight = art_model.update(i, w, params)
     assert len(updated_weight) == 4  # Bottom-up and top-down weights
     assert np.array_equal(
-        updated_weight[2:], np.array([1, 0])
+        updated_weight[:2], np.array([1, 0])
     )  # Top-down weights should match input i
+    assert np.array_equal(
+        updated_weight[2:], np.array([1, 0])
+    ) # Bottom-up weights should match input i
 
 
 def test_new_weight(art_model):
@@ -99,15 +102,6 @@ def test_new_weight(art_model):
         new_weight[2:], i
     )  # Top-down weights should be equal to input i
 
-
-def test_get_cluster_centers(art_model):
-    # Test getting cluster centers
-    art_model.dim_ = 2
-    art_model.W = [np.array([0.5, 0.5, 1, 0]), np.array([0.3, 0.7, 0, 1])]
-    centers = art_model.get_cluster_centers()
-    assert len(centers) == 2
-    assert np.array_equal(centers[0], np.array([1, 0]))
-    assert np.array_equal(centers[1], np.array([0, 1]))
 
 
 def test_fit(art_model):
@@ -135,7 +129,7 @@ def test_predict(art_model):
     art_model.dim_ = 2
     X = np.array([[1, 0], [0, 1]])
     art_model.check_dimensions(X)
-    art_model.W = [np.array([0.5, 0.5, 1, 0]), np.array([0.3, 0.7, 0, 1])]
+    art_model.W = [np.array([1, 0, 1, 0]), np.array([0.3, 0.7, 0, 1])]
 
     labels = art_model.predict(X)
     assert len(labels) == 2

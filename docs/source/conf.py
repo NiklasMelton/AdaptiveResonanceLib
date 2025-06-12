@@ -17,7 +17,7 @@ def setup(app):
 project = 'AdaptiveResonanceLib'
 copyright = '2024, Niklas Melton'
 author = 'Niklas Melton'
-release = '0.1.3'
+release = '0.1.4'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -44,6 +44,13 @@ autoapi_dirs = ['../../artlib']  # Adjust this to point to your source code dire
 autoapi_ignore = ['*/experimental', '*/experimental/*']
 # autoapi_python_class_content = 'both'
 # autoclass_content = 'both'
+
+autodoc_mock_imports = [
+    "artlib.cpp_optimized.cppBinaryFuzzyARTMAP",
+    "artlib.cpp_optimized.cppFuzzyARTMAP",
+    "artlib.cpp_optimized.cppGaussianARTMAP",
+    "artlib.cpp_optimized.cppHypersphereARTMAP",
+]
 
 bibtex_bibfiles = ['artlib_citation.bib', '../../references.bib']
 

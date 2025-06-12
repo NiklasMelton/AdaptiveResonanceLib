@@ -44,4 +44,5 @@ repos:
           - --exclude=artlib/cvi/
           - --follow-imports=silent
 
-exclude: ^(unit_tests/|scripts/|artlib/experimental/|examples/|docs/|artlib/cvi/)
+exclude: ^(unit_tests/|scripts/|artlib/experimental/|examples/|docs/|artlib/cvi
+  /|setup.py)

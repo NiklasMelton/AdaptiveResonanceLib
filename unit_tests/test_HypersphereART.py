@@ -65,7 +65,7 @@ def test_update(art_model):
     # Test the update method
     i = np.array([0.2, 0.3])
     w = np.array([0.25, 0.35, 0.5])  # Mock weight (centroid and radius)
-    params = {"beta": 0.1, "r_hat": 1.0}
+    params = {"beta": 0.1, "alpha": 1e-5, "r_hat": 1.0}
     cache = {"max_radius": 0.6, "i_radius": 0.55}
 
     updated_weight = art_model.update(i, w, params, cache=cache)

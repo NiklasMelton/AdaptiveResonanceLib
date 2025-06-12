@@ -23,15 +23,29 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install poetry
-        poetry install --with dev  # Install dependencies from pyproject.toml, including dev dependencies
+        poetry install --with dev --no-root
+
+    - name: Build wheel
+      run: |
+        poetry build
+        ls -l dist  # show the generated wheel
+
+    - name: Install wheel
+      run: |
+        poetry run pip install dist/*.whl
+
+    - name: Debug installed 'artlib'
+      run: |
+        poetry run pip show -f artlib
 
     - name: Run tests
       run: |
-        poetry run pytest unit_tests/ --maxfail=5 --disable-warnings -v --tb=short  # Add verbose and short traceback options
+        poetry run pytest unit_tests/ --maxfail=5 --disable-warnings -v --tb=short --junitxml=./test-results/pytest-report.xml  # Ensure JUnit XML report is generated
 
     - name: Publish test results
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pytest-results
         path: ./test-results/pytest-report.xml
+        compression-level: 6  # Optional: Adjusts compression for artifact storage efficiency

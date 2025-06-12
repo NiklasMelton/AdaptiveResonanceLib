@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock
 from artlib.elementary.FuzzyART import FuzzyART
+from artlib.common.utils import complement_code
 
 # Assuming BaseART is imported and available in the current namespace
 
@@ -148,3 +149,69 @@ def test_clustering(art_model):
     labels = art_model.fit_predict(data)
 
     assert np.all(np.equal(labels, np.array([0, 0, 1, 2, 3])))
+
+
+def test_validate_data(art_model):
+    # Test validate_data with normalized data
+    X = np.array([[-0.1, 0.2], [1.1, 0.4]])
+    art_model.is_fitted_ = False
+    with pytest.raises(AssertionError):
+        art_model.validate_data(X)
+
+def test_validate_data_again(art_model):
+    # Test validate_data with normalized data
+    X = np.array([[0.1, 0.2], [0.3, 0.4]])
+    art_model.is_fitted_ = False
+    X_cc = complement_code(X)
+    art_model.validate_data(X_cc)  # Should pass without assertion error
+
+    # Test validate_data with data out of bounds
+    X_invalid = np.array([[-0.1, 0.2], [1.1, 0.4]])
+    with pytest.raises(AssertionError):
+        art_model.validate_data(X_invalid)
+
+
+def test_set_data_bounds(art_model):
+    # Test set_data_bounds with valid bounds
+    lower_bounds = np.array([0.0, 0.0])
+    upper_bounds = np.array([1.0, 1.0])
+    art_model.is_fitted_ = False
+    art_model.set_data_bounds(lower_bounds, upper_bounds)
+    assert np.all(art_model.d_min_ == lower_bounds)
+    assert np.all(art_model.d_max_ == upper_bounds)
+
+    # Test set_data_bounds after the model is fitted
+    art_model.is_fitted_ = True
+    with pytest.raises(ValueError, match="Cannot change data limits after fit."):
+        art_model.set_data_bounds(lower_bounds, upper_bounds)
+    X = np.array([[0.1, 0.2], [0.3, 0.4]])
+    X_cc = complement_code(X)
+    X_norm = art_model.prepare_data(X)
+    assert np.all(X_norm == X_cc)
+
+
+def test_find_data_bounds(art_model):
+    # Test find_data_bounds with multiple data batches
+    batch_1 = np.array([[0.1, 0.2], [0.3, 0.4]])
+    batch_2 = np.array([[0.0, 0.1], [0.5, 0.6]])
+    lower_bounds, upper_bounds = art_model.find_data_bounds(batch_1, batch_2)
+    np.testing.assert_array_equal(lower_bounds, np.array([0.0, 0.1]))
+    np.testing.assert_array_equal(upper_bounds, np.array([0.5, 0.6]))
+
+
+def test_prepare_data(art_model):
+    # Test prepare_data with valid data
+    X = np.array([[0.0, 0.5], [0.2, 1.0]])
+    X_cc = complement_code(X)
+    art_model.d_min_ = np.array([0.0, 0.0])
+    art_model.d_max_ = np.array([1.0, 1.0])
+    normalized_X = art_model.prepare_data(X)
+    np.testing.assert_array_almost_equal(normalized_X, X_cc)  # Already normalized
+
+    # Test prepare_data with data requiring normalization
+    X = np.array([[1.0, 10.0], [5.0, 20.0]])
+    art_model.d_min_ = np.array([1.0, 10.0])
+    art_model.d_max_ = np.array([5.0, 20.0])
+    normalized_X = art_model.prepare_data(X)
+    expected_normalized_X_cc = np.array([[0.0, 0.0, 1.0, 1.0], [1.0, 1.0, 0.0, 0.0]])
+    np.testing.assert_array_almost_equal(normalized_X, expected_normalized_X_cc)

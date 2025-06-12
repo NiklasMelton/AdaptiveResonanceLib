@@ -433,7 +433,7 @@ class FusionART(BaseART):
                 keep_searching.append(True)
         return all(keep_searching)
 
-    def _set_params(self, new_params: List[Dict]):
+    def _set_params(self, new_params: Dict):
         """Set the parameters for each module in FusionART.
 
         Parameters
@@ -456,6 +456,87 @@ class FusionART(BaseART):
 
         """
         return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
+
+    def step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable] = None,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+    ) -> int:
+        """Fit the model to a single sample.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Data sample.
+        match_reset_func : callable, optional
+            A callable that influences cluster creation.
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+            Method for resetting match criterion.
+        epsilon : float, default=0.0
+            Epsilon value used for adjusting match criterion.
+
+        Returns
+        -------
+        int
+            Cluster label of the input sample.
+
+        """
+        self.sample_counter_ += 1
+        base_params = self._deep_copy_params()
+        mt_operator = self._match_tracking_operator(match_tracking)
+        if len(self.W) == 0:
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            return 0
+        else:
+            if match_tracking in ["MT~"] and match_reset_func is not None:
+                T_values, T_cache = zip(
+                    *[
+                        self.category_choice(x, w, params=self.params)
+                        if match_reset_func(x, w, c_, params=self.params, cache=None)
+                        else (np.nan, None)
+                        for c_, w in enumerate(self.W)
+                    ]
+                )
+            else:
+                T_values, T_cache = zip(
+                    *[self.category_choice(x, w, params=self.params) for w in self.W]
+                )
+            T = np.array(T_values)
+            while any(~np.isnan(T)):
+                c_ = int(np.nanargmax(T))
+                w = self.W[c_]
+                cache = T_cache[c_]
+                m, cache = self.match_criterion_bin(
+                    x, w, params=self.params, cache=cache, op=mt_operator
+                )
+                if match_tracking in ["MT~"] and match_reset_func is not None:
+                    no_match_reset = True
+                else:
+                    no_match_reset = match_reset_func is None or match_reset_func(
+                        x, w, c_, params=self.params, cache=cache
+                    )
+                if m and no_match_reset:
+                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    self._set_params(base_params)
+                    return c_
+                else:
+                    T[c_] = np.nan
+                    if not (m and no_match_reset):
+                        params = {i: self.modules[i].params for i in range(len(cache))}
+                        keep_searching = self._match_tracking(
+                            cache, epsilon, params, match_tracking
+                        )
+                        if not keep_searching:
+                            T[:] = np.nan
+
+            c_new = len(self.W)
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            self._set_params(base_params)
+            return c_new
 
     def partial_fit(
         self,
@@ -528,13 +609,17 @@ class FusionART(BaseART):
         c_ = int(np.argmax(T))
         return c_
 
-    def predict(self, X: np.ndarray, skip_channels: List[int] = []) -> np.ndarray:
+    def predict(
+        self, X: np.ndarray, clip: bool = False, skip_channels: List[int] = []
+    ) -> np.ndarray:
         """Predict labels for the input data.
 
         Parameters
         ----------
         X : np.ndarray
             Input dataset.
+        clip : bool
+            clip the input values to be between the previously seen data limits
         skip_channels : list of int, optional
             Channels to skip (default is []).
 
@@ -545,6 +630,8 @@ class FusionART(BaseART):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.d_min_, self.d_max_)
         self.validate_data(X)
         self.check_dimensions(X)
 
@@ -673,7 +760,7 @@ class FusionART(BaseART):
         return self.modules[channel].get_cluster_centers()
 
     def predict_regression(
-        self, X: np.ndarray, target_channels: List[int] = [-1]
+        self, X: np.ndarray, clip: bool = False, target_channels: List[int] = [-1]
     ) -> Union[np.ndarray, List[np.ndarray]]:
         """Predict regression values for the input data using the target channels.
 
@@ -681,6 +768,8 @@ class FusionART(BaseART):
         ----------
         X : np.ndarray
             Input dataset.
+        clip : bool
+            clip the input values to be between the previously seen data limits
         target_channels : list of int, optional
             List of target channels to use for regression. If negative values are used,
             they are considered as channels counting backward from the last channel.
@@ -695,7 +784,7 @@ class FusionART(BaseART):
 
         """
         target_channels = [self.n + k if k < 0 else k for k in target_channels]
-        C = self.predict(X, skip_channels=target_channels)
+        C = self.predict(X, clip=clip, skip_channels=target_channels)
         centers = [self.get_channel_centers(k) for k in target_channels]
         if len(target_channels) == 1:
             return np.array([centers[0][c] for c in C])

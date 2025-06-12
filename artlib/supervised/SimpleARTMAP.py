@@ -216,6 +216,7 @@ class SimpleARTMAP(BaseARTMAP):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
+        leave_progress_bar: bool = True,
     ):
         """Fit the model to the data.
 
@@ -233,6 +234,9 @@ class SimpleARTMAP(BaseARTMAP):
             Small value to adjust the vigilance.
         verbose : bool, default=False
             If True, displays a progress bar during training.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
 
         Returns
         -------
@@ -253,7 +257,11 @@ class SimpleARTMAP(BaseARTMAP):
             if verbose:
                 from tqdm import tqdm
 
-                x_y_iter = tqdm(enumerate(zip(X, y)), total=int(X.shape[0]))
+                x_y_iter = tqdm(
+                    enumerate(zip(X, y)),
+                    total=int(X.shape[0]),
+                    leave=leave_progress_bar,
+                )
             else:
                 x_y_iter = enumerate(zip(X, y))
             for i, (x, c_b) in x_y_iter:
@@ -266,6 +274,196 @@ class SimpleARTMAP(BaseARTMAP):
                 )
                 self.module_a.labels_[i] = c_a
                 self.module_a.post_step_fit(X)
+        return self
+
+    def fit_predict(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        max_iter=1,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+        verbose: bool = False,
+        leave_progress_bar: bool = True,
+    ):
+        """Fit the model to the data and return the labels. Need to define this or
+        ClusterMixin could cause issues.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        max_iter : int, default=1
+            Number of iterations to fit the model on the same data set.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+        verbose : bool, default=False
+            If True, displays a progress bar during training.
+        leave_progress_bar : bool, default=True
+            If True, leaves thge progress of the fitting process. Only used when
+            verbose=True
+
+        Returns
+        -------
+        np.ndarray
+            The labels (same as y).
+
+        """
+        self.fit(X, y, max_iter, match_tracking, epsilon, verbose, leave_progress_bar)
+        return self.labels_
+
+    def fit_gif(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 1e-10,
+        verbose: bool = False,
+        leave_progress_bar: bool = True,
+        ax: Optional[Axes] = None,
+        filename: Optional[str] = None,
+        fps: int = 5,
+        final_hold_secs: float = 0.0,
+        colors: Optional[IndexableOrKeyable] = None,
+        n_class_estimate: Optional[int] = None,
+        max_iter: int = 1,
+        **kwargs,
+    ):
+        """Fit the model while recording the learning process as an animated GIF.
+
+        The routine iterates over the training data, calling
+        :py:meth:`step_fit` for each sample, and captures intermediate plots by
+        repeatedly invoking :py:meth:`visualize`.  All frames are written to a
+        GIF file (via ``matplotlib.animation.PillowWriter``), allowing an
+        intuitive, frame‑by‑frame view of how clusters form and adjust over
+        time.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Independent‑channel samples (side A), shape ``(n_samples, n_features)``.
+        y : np.ndarray
+            Target labels (side B), shape ``(n_samples,)``.
+        match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
+            Strategy used by the ART module to reset its match criterion.
+        epsilon : float, default=1e‑10
+            Small positive constant added to the vigilance when
+            ``match_tracking`` triggers a reset.
+        verbose : bool, default=False
+            If ``True``, displays a tqdm progress bar for each epoch.
+        leave_progress_bar : bool, default=True
+            If ``True``, leaves the progress bar visible after completion
+            (only relevant when ``verbose`` is ``True``).
+        ax : matplotlib.axes.Axes, optional
+            Existing axes on which to draw frames.  If ``None``, a new figure
+            and axes are created.
+        filename : str, optional
+            Output path for the GIF.  Defaults to
+            ``"fit_gif_supervised_<ClassName>.gif"`` if ``None``.
+        fps : int, default=5
+            Frames per second in the resulting GIF.
+        final_hold_secs : float, default=0.0
+            Extra seconds to hold the final frame (duplicates the last plot
+            ``ceil(final_hold_secs * fps)`` times).
+        colors : array‑like, optional
+            Sequence of colors to use for each class when plotting.  If
+            ``None``, a rainbow colormap is generated.
+        n_class_estimate : int, optional
+            Expected number of distinct classes.  Only used when ``colors`` is
+            ``None`` to size the autogenerated colormap.
+        max_iter : int, default=1
+            Number of complete passes over ``(X, y)``.
+        **kwargs
+            Additional keyword arguments forwarded to
+            :py:meth:`visualize` (e.g., ``marker_size``, ``linewidth``).
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The fitted estimator (identical object, returned for chaining).
+
+        Notes
+        -----
+        * Generates a GIF file as a **side‑effect**.  The estimator itself is
+          updated exactly as in :py:meth:`fit`; only plotting calls and file
+          I/O are added.
+        * For reproducible colors across different runs, supply an explicit
+          ``colors`` array rather than relying on the rainbow colormap.
+
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import PillowWriter
+        from sklearn.utils.multiclass import unique_labels
+
+        if ax is None:
+            fig, ax = plt.subplots()
+            ax.set_xlim(-0.1, 1.1)
+            ax.set_ylim(-0.1, 1.1)
+
+        if filename is None:
+            filename = f"fit_gif_supervised_{self.__class__.__name__}.gif"
+
+        # Determine colors if not provided
+        if colors is None:
+            from matplotlib.pyplot import cm
+
+            class_labels = np.unique(y)
+            if n_class_estimate is None:
+                n_class_estimate = len(class_labels)
+            colormap = cm.rainbow(np.linspace(0, 1, n_class_estimate))
+            colors = colormap  # assumes class indices are 0...n-1
+
+        # Initialize and fit
+        self.validate_data(X, y)
+        self.classes_ = unique_labels(y)
+        self.labels_ = y
+        self.module_a.W = []
+        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
+
+        writer = PillowWriter(fps=fps)
+        with writer.saving(ax.figure, filename, dpi=80):
+            for _ in range(max_iter):
+                if verbose:
+                    from tqdm import tqdm
+
+                    iterator = tqdm(
+                        enumerate(zip(X, y)),
+                        total=len(X),
+                        leave=leave_progress_bar,
+                    )
+                else:
+                    iterator = enumerate(zip(X, y))
+
+                for i, (x, c_b) in iterator:
+                    self.module_a.pre_step_fit(X)
+                    c_a = self.step_fit(
+                        x,
+                        c_b,
+                        match_tracking=match_tracking,
+                        epsilon=epsilon,
+                    )
+                    self.module_a.labels_[i] = c_a
+                    self.module_a.post_step_fit(X)
+
+                    ax.clear()
+                    ax.set_xlim(-0.1, 1.1)
+                    ax.set_ylim(-0.1, 1.1)
+                    self.visualize(X[: i + 1], y[: i + 1], ax, colors=colors, **kwargs)
+                    writer.grab_frame()
+
+            self.module_a.post_fit(X)
+
+            n_extra_frames = int(np.ceil(final_hold_secs * fps))
+            for _ in range(n_extra_frames):
+                ax.clear()
+                ax.set_xlim(-0.1, 1.1)
+                ax.set_ylim(-0.1, 1.1)
+                self.visualize(X, y, ax, colors=colors, **kwargs)
+                writer.grab_frame()
         return self
 
     def partial_fit(
@@ -405,13 +603,15 @@ class SimpleARTMAP(BaseARTMAP):
         c_b = self.map[c_a]
         return c_a, c_b
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict labels for the data.
 
         Parameters
         ----------
         X : np.ndarray
             Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -420,19 +620,27 @@ class SimpleARTMAP(BaseARTMAP):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X)
+        self.module_a.check_dimensions(X)
         y_b = np.zeros((X.shape[0],), dtype=int)
         for i, x in enumerate(X):
             c_a, c_b = self.step_pred(x)
             y_b[i] = c_b
         return y_b
 
-    def predict_ab(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict_ab(
+        self, X: np.ndarray, clip: bool = False
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict labels for the data, both A-side and B-side.
 
         Parameters
         ----------
         X : np.ndarray
             Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
 
         Returns
         -------
@@ -441,6 +649,10 @@ class SimpleARTMAP(BaseARTMAP):
 
         """
         check_is_fitted(self)
+        if clip:
+            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X)
+        self.module_a.check_dimensions(X)
         y_a = np.zeros((X.shape[0],), dtype=int)
         y_b = np.zeros((X.shape[0],), dtype=int)
         for i, x in enumerate(X):
@@ -467,7 +679,7 @@ class SimpleARTMAP(BaseARTMAP):
         colors_a = []
         for k_a in range(self.n_clusters):
             colors_a.append(colors[self.map[k_a]])
-        self.module_a.plot_cluster_bounds(ax, colors_a, linewidth)
+        self.module_a.plot_cluster_bounds(ax=ax, colors=colors_a, linewidth=linewidth)
 
     def visualize(
         self,
@@ -499,7 +711,11 @@ class SimpleARTMAP(BaseARTMAP):
         import matplotlib.pyplot as plt
 
         if ax is None:
-            fig, ax = plt.subplots()
+            if self.module_a.data_format in ["latlon"]:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection="3d")
+            else:
+                fig, ax = plt.subplots()
 
         if colors is None:
             from matplotlib.pyplot import cm
@@ -508,12 +724,13 @@ class SimpleARTMAP(BaseARTMAP):
 
         for k_b, col in enumerate(colors):
             cluster_data = y == k_b
-            plt.scatter(
-                X[cluster_data, 0],
-                X[cluster_data, 1],
-                color=col,
-                marker=".",
-                s=marker_size,
-            )
+            if self.module_a.data_format == "default":
+                plt.scatter(
+                    X[cluster_data, 0],
+                    X[cluster_data, 1],
+                    color=col,
+                    marker=".",
+                    s=marker_size,
+                )
 
-        self.plot_cluster_bounds(ax, colors, linewidth)
+        self.plot_cluster_bounds(ax=ax, colors=colors, linewidth=linewidth)

@@ -1,5 +1,6 @@
 """General utilities used throughout ARTLib."""
 import numpy as np
+from numba import njit
 from typing import Tuple, Optional, Mapping, Sequence, Union, Any
 
 IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
@@ -36,7 +37,13 @@ def normalize(
     if d_max is None:
         d_max = np.max(data, axis=0)
 
-    normalized = (data - d_min) / (d_max - d_min)
+    # Avoid division by zero
+    range_vals = d_max - d_min
+    mask = range_vals == 0  # Identify columns where d_max == d_min
+
+    # Normalize safely
+    normalized = np.zeros_like(data, dtype=np.float64)  # Default all to zero
+    normalized[:, ~mask] = (data[:, ~mask] - d_min[~mask]) / range_vals[~mask]
     return normalized, d_max, d_min
 
 
@@ -61,8 +68,8 @@ def de_normalize(data: np.ndarray, d_max: np.ndarray, d_min: np.ndarray) -> np.n
     return data * (d_max - d_min) + d_min
 
 
-def compliment_code(data: np.ndarray) -> np.ndarray:
-    """Compliment code the data.
+def complement_code(data: np.ndarray) -> np.ndarray:
+    """Complement code the data.
 
     Parameters
     ----------
@@ -72,15 +79,15 @@ def compliment_code(data: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Compliment coded data.
+        complement coded data.
 
     """
     cc_data = np.hstack([data, 1.0 - data])
     return cc_data
 
 
-def de_compliment_code(data: np.ndarray) -> np.ndarray:
-    """Find the centroid of compliment coded data.
+def de_complement_code(data: np.ndarray) -> np.ndarray:
+    """Find the centroid of complement coded data.
 
     Parameters
     ----------
@@ -90,7 +97,7 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        De-compliment coded data.
+        De-complement coded data.
 
     """
     # Get the shape of the array
@@ -112,8 +119,9 @@ def de_compliment_code(data: np.ndarray) -> np.ndarray:
     return mean_array
 
 
+@njit
 def l1norm(x: np.ndarray) -> float:
-    """Get the L1 norm of a vector.
+    """Get the L1 norm of a vector using Numba.
 
     Parameters
     ----------
@@ -126,7 +134,7 @@ def l1norm(x: np.ndarray) -> float:
         L1 norm.
 
     """
-    return float(np.sum(np.absolute(x)))
+    return np.sum(np.abs(x))  # np.absolute is the same as np.abs
 
 
 def l2norm2(data: np.ndarray) -> float:
@@ -146,6 +154,7 @@ def l2norm2(data: np.ndarray) -> float:
     return float(np.matmul(data, data))
 
 
+@njit
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """Get the fuzzy AND operation between two vectors.
 

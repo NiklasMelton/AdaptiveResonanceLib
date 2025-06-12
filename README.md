@@ -132,6 +132,7 @@ AdaptiveResonanceLib includes implementations for the following ART models:
     - [Ellipsoid ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.EllipsoidART)
     - [Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FuzzyART)
     - [Quadratic Neuron ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.QuadraticNeuronART)
+    - [Binary Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.BinaryFuzzyART)
 - #### Metric Informed
     - [CVI ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.CVIART)
     - [iCVI Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.iCVIFuzzyART)
@@ -153,6 +154,12 @@ AdaptiveResonanceLib includes implementations for the following ART models:
     - [TD-FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.TD_FALCON)
 - #### Biclustering
     - [Biclustering ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.biclustering.html#artlib.biclustering.BARTMAP.BARTMAP)
+- #### C++ Accelerated
+    - [Fuzzy ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP)
+    - [Hypersphere ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP)
+    - [Gaussian ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.GaussianARTMAP.GaussianARTMAP)
+    - [Binary Fuzzy ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.BinaryFuzzyARTMAP.BinaryFuzzyARTMAP)
+    -
 
 <!-- END available_models -->
 
@@ -298,6 +305,7 @@ model.fit(train_Xy_prep)
 pred_y = model.predict_regression(test_Xy_prep, target_channels=[1], clip=True)
 ```
 
+
 ### Data Normalization
 
 AdaptiveResonanceLib models require feature data to be normalized between 0.0
@@ -329,6 +337,93 @@ If only the boundaries of your testing data are unknown, you can call
 training. Only use this if you understand what you are doing.
 
 <!-- END quick-start -->
+
+<!-- START cpp_optimized -->
+
+[//]: # (## C++ Optimization)
+
+[//]: # ()
+[//]: # ( While all classes use NumPy and SciPy for mathematical operations to accelerate )
+
+[//]: # ( execution times, Some classes have Numba optimized activation and )
+
+[//]: # ( vigilance functions to further accelerate them. These include:)
+
+[//]: # ()
+[//]: # (- [ART1]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART1&#41;)
+
+[//]: # (- [Fuzzy ART]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FuzzyART&#41;)
+
+[//]: # (- [Binary Fuzzy ART]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.BinaryFuzzyART&#41;)
+
+[//]: # ()
+[//]: # (For classification tasks specifically, several [Simple ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.SimpleARTMAP&#41; variations have been )
+
+[//]: # (fully written in c++ with accompanying Python wrappers. These include:)
+
+[//]: # ()
+[//]: # (- [Fuzzy ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP&#41;)
+
+[//]: # (- [Hypersphere ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP&#41;)
+
+[//]: # (- [Gaussian ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.GaussianARTMAP.GaussianARTMAP&#41;)
+
+[//]: # (- [Binary Fuzzy ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.BinaryFuzzyARTMAP.BinaryFuzzyARTMAP&#41;)
+
+[//]: # ()
+[//]: # (These ARTMAP modules trade modularity for run time by executing all fit and predict )
+
+[//]: # (operations in c++. However these models use their results to populate a their )
+
+[//]: # (equivelant python classes allowing them to otherwise behave as the python-exclusive )
+
+[//]: # (versions in all other ways. )
+
+## C++ Optimizations
+
+Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but several go further:
+
+| Level | Accelerated components | Implementations |
+|-------|------------------------|-----------------|
+| **Python (Numba JIT)** | Activation & vigilance kernels | [ART1][], [Fuzzy ART][], [Binary Fuzzy ART][] |
+| **Native C++ (Pybind11)** | Entire **fit** / **predict** pipelines | [Fuzzy ARTMAP][], [Hypersphere ARTMAP][], [Gaussian ARTMAP][], [Binary Fuzzy ARTMAP][] |
+
+[ART1]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART1
+[Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FuzzyART
+[Binary Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.BinaryFuzzyART
+
+[Fuzzy ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP
+[Hypersphere ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP
+[Gaussian ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.GaussianARTMAP.GaussianARTMAP
+[Binary Fuzzy ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.BinaryFuzzyARTMAP.BinaryFuzzyARTMAP
+
+### How the C++ variants work
+
+1. **End-to-end native execution** – Training and inference run entirely in C++, eliminating Python-level overhead.
+2. **State hand-off** – After fitting, the C++ routine exports cluster weights and metadata back to the corresponding pure-Python class. You can therefore:
+   • inspect attributes (`weights_`, `categories_`, …)
+   • serialize with `pickle`
+   • plug them into any downstream ARTlib or scikit-learn pipeline **exactly as you would with the Python-only models**.
+3. **Trade-off** – The C++ versions sacrifice some modularity (you cannot swap out
+   internal ART components) in exchange for significantly shorter run-times.
+
+### Quick reference
+
+
+| Class                 | Acceleration method       | Primary purpose |
+|-----------------------|---------------------------|-----------------|
+| [ART1]                | Numba JIT kernels         | Clustering      |
+| [Fuzzy ART]           | Numba JIT kernels         | Clustering      |
+| [Binary Fuzzy ART]    | Numba JIT kernels         | Clustering      |
+|                       |                           |                 |
+| [Fuzzy ARTMAP]        | Full C++ implementation   | Classification  |
+| [Hypersphere ARTMAP]  | Full C++ implementation   | Classification  |
+| [Gaussian ARTMAP]     | Full C++ implementation   | Classification  |
+| [Binary Fuzzy ARTMAP] | Full C++ implementation   | Classification  |
+
+
+
+<!-- END cpp_optimized -->
 
 <!-- START documentation -->
 ## Documentation

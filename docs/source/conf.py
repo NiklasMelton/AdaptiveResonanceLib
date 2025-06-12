@@ -17,7 +17,7 @@ def setup(app):
 project = 'AdaptiveResonanceLib'
 copyright = '2024, Niklas Melton'
 author = 'Niklas Melton'
-release = '0.1.4'
+release = '0.1.5'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

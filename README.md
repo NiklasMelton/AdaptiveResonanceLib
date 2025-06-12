@@ -460,8 +460,7 @@ dataset.
 <p align="center">
   <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_fit_times.jpg?raw=true"
        alt="MNIST ART fit times" width="45%" />
-  <img src="https://raw.githubusercontent.
-com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_predict_times.jpg?raw=true"
+  <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_predict_times.jpg?raw=true"
        alt="MNIST ART predict times" width="45%" />
 </p>
 

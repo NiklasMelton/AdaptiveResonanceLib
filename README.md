@@ -422,6 +422,18 @@ Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but s
 | [Binary Fuzzy ARTMAP] | Full C++ implementation   | Classification  |
 
 
+### Timing Comparison
+The below figures demonstrate the acceleration seen by the C++ ARTMAP variants in
+comparison to their baseline python versions for a 1000 sample subset of the MNIST
+dataset.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_fit_times.jpg?raw=true"
+       alt="MNIST ART fit times" width="45%" />
+  <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_predict_times.jpg?raw=true"
+       alt="MNIST ART predict times" width="45%" />
+</p>
+
 
 <!-- END cpp_optimized -->
 

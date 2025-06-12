@@ -7,7 +7,7 @@ license = "MIT"
 homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
 documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
 keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
 
 classifiers = [

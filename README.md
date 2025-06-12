@@ -124,34 +124,34 @@ All variants share the same resonance‑test backbone, so you can grasp one and 
 AdaptiveResonanceLib includes implementations for the following ART models:
 
 - #### Elementary Clustering
-    - [ART1](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.ART1.ART1)
-    - [ART2](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.ART2A.ART2A)
-    - [Bayesian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.BayesianART.BayesianART)
-    - [Gaussian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.GaussianART.GaussianART)
-    - [Hypersphere ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.HypersphereART.HypersphereART)
-    - [Ellipsoid ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.EllipsoidART.EllipsoidART)
-    - [Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.FuzzyART.FuzzyART)
-    - [Quadratic Neuron ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.QuadraticNeuronART.QuadraticNeuronART)
-    - [Binary Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.BinaryFuzzyART.BinaryFuzzyART)
+    - [ART1](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.ART1.ART1)
+    - [ART2](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.ART2A.ART2A)
+    - [Bayesian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.BayesianART.BayesianART)
+    - [Gaussian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.GaussianART.GaussianART)
+    - [Hypersphere ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.HypersphereART.HypersphereART)
+    - [Ellipsoid ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.EllipsoidART.EllipsoidART)
+    - [Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.FuzzyART.FuzzyART)
+    - [Quadratic Neuron ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.QuadraticNeuronART.QuadraticNeuronART)
+    - [Binary Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.BinaryFuzzyART.BinaryFuzzyART)
 - #### Metric Informed
-    - [CVI ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.cvi.CVIART.CVIART)
-    - [iCVI Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.cvi.iCVIFuzzyART.iCVIFuzzyART)
+    - [CVI ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cvi.html#artlib.cvi.CVIART.CVIART)
+    - [iCVI Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cvi.html#artlib.cvi.iCVIFuzzyART.iCVIFuzzyART)
 - #### Topological
-    - [Topo ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.topological.TopoART.TopoART)
-    - [Dual Vigilance ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.topological.DualVigilanceART.DualVigilanceART)
+    - [Topo ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.topological.html#artlib.topological.TopoART.TopoART)
+    - [Dual Vigilance ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.topological.html#artlib.topological.DualVigilanceART.DualVigilanceART)
 - #### Classification
-    - [Simple ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.supervised.SimpleARTMAP.SimpleARTMAP)
+    - [Simple ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.supervised.html#artlib.supervised.SimpleARTMAP.SimpleARTMAP)
 - #### Regression
-    - [ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.supervised.ARTMAP.ARTMAP)
-    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.fusion.FusionART.FusionART)
+    - [ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.supervised.html#artlib.supervised.ARTMAP.ARTMAP)
+    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.fusion.html#artlib.fusion.FusionART.FusionART)
 - #### Hierarchical
-    - [DeepARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.hierarchical.DeepARTMAP.DeepARTMAP)
-    - [SMART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.hierarchical.SMART.SMART)
+    - [DeepARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.hierarchical.html#artlib.hierarchical.DeepARTMAP.DeepARTMAP)
+    - [SMART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.hierarchical.html#artlib.hierarchical.SMART.SMART)
 - #### Data Fusion
-    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.fusion.FusionART.FusionART)
+    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.fusion.html#artlib.fusion.FusionART.FusionART)
 - #### Reinforcement Learning
-    - [FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.reinforcement.FALCON.FALCON)
-    - [TD-FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.reinforcement.TD_FALCON.TD_FALCON)
+    - [FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.reinforcement.html#artlib.reinforcement.FALCON.FALCON)
+    - [TD-FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.reinforcement.html#artlib.reinforcement.TD_FALCON.TD_FALCON)
 - #### Biclustering
     - [Biclustering ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.biclustering.html#artlib.biclustering.BARTMAP.BARTMAP)
 - #### C++ Accelerated
@@ -388,9 +388,9 @@ Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but s
 | **Python (Numba JIT)** | Activation & vigilance kernels | [ART1][], [Fuzzy ART][], [Binary Fuzzy ART][] |
 | **Native C++ (Pybind11)** | Entire **fit** / **predict** pipelines | [Fuzzy ARTMAP][], [Hypersphere ARTMAP][], [Gaussian ARTMAP][], [Binary Fuzzy ARTMAP][] |
 
-[ART1]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.ART1.ART1
-[Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.FuzzyART.FuzzyART
-[Binary Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.elementary.BinaryFuzzyART.BinaryFuzzyART
+[ART1]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.ART1.ART1
+[Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.FuzzyART.FuzzyART
+[Binary Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.BinaryFuzzyART.BinaryFuzzyART
 
 [Fuzzy ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP
 [Hypersphere ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP

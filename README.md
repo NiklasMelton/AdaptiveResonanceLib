@@ -407,7 +407,7 @@ Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but s
 3. **Trade-off** – The C++ versions sacrifice some modularity (you cannot swap out
    internal ART components) in exchange for significantly shorter run-times.
 
-### Quick reference
+### C++ Acceleration Quick reference
 
 
 | Class                 | Acceleration method       | Primary purpose |
@@ -421,20 +421,56 @@ Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but s
 | [Gaussian ARTMAP]     | Full C++ implementation   | Classification  |
 | [Binary Fuzzy ARTMAP] | Full C++ implementation   | Classification  |
 
+### Example Usage
+```python
+from artlib import FuzzyARTMAP
+import numpy as np
+from tensorflow.keras.datasets import mnist
+
+# Load the MNIST dataset
+n_dim = 28*28
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+X_train = X_train.reshape((-1, n_dim)) # flatten images
+X_test = X_test.reshape((-1, n_dim))
+
+# Initialize the Fuzzy ART model
+model = FuzzyARTMAP(rho=0.7, alpha = 0.0, beta=1.0)
+
+# (Optional) Tell the model the data limits for normalization
+lower_bounds = np.array([0.]*n_dim)
+upper_bounds = np.array([255.]*n_dim)
+model.set_data_bounds(lower_bounds, upper_bounds)
+
+# Prepare Data
+train_X_prep = model.prepare_data(X_train)
+test_X_prep = model.prepare_data(X_test)
+
+# Fit the model
+model.fit(train_X_prep, y_train)
+
+# Predict data labels
+predictions = model.predict(test_X_prep)
+```
 
 ### Timing Comparison
 The below figures demonstrate the acceleration seen by the C++ ARTMAP variants in
-comparison to their baseline python versions for a 1000 sample subset of the MNIST
+comparison to their baseline Python versions for a 1000 sample subset of the MNIST
 dataset.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/cpp-readme-section/docs/_static/img/mnist_art_fit_times.jpg?raw=true"
+  <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_fit_times.jpg?raw=true"
        alt="MNIST ART fit times" width="45%" />
   <img src="https://raw.githubusercontent.
-com/NiklasMelton/AdaptiveResonanceLib/cpp-readme-section/docs/_static/img/mnist_art_predict_times.jpg?raw=true"
+com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_predict_times.jpg?raw=true"
        alt="MNIST ART predict times" width="45%" />
 </p>
 
+From the above plots, it becomes apparent that the C++ variants are superior in their
+runtime performance and should be the default choice of practitioners wishing to work
+with these specific compound models.
+
+While the current selection remains limited, future releases will expand the native C++
+implementation as user demand for them increases.
 
 <!-- END cpp_optimized -->
 

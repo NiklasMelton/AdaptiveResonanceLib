@@ -26,11 +26,31 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.x'
+
+    - name: Restore ccache
+      uses: actions/cache@v4
+      with:
+        path: /root/.ccache
+        key:  ccache-${{ runner.os }}-${{ hashFiles('setup.cfg', 'pyproject.toml', '**/*.c', '**/*.cpp', '**/*.h') }}
+        restore-keys: ccache-${{ runner.os }}-
+
+    - name: Restore pip cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key:  pip-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+        restore-keys: pip-${{ runner.os }}-
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install build cibuildwheel
     - name: Build package
+      env:
+        CIBW_ENVIRONMENT: CCACHE_DIR=/root/.ccache
+        CIBW_BEFORE_ALL_LINUX: |
+          yum install -y ccache
+          export CC="ccache gcc" CXX="ccache g++"
       run: |
         python -m cibuildwheel --output-dir dist
         python -m build --sdist -o dist

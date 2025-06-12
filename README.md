@@ -124,35 +124,42 @@ All variants share the same resonance‑test backbone, so you can grasp one and 
 AdaptiveResonanceLib includes implementations for the following ART models:
 
 - #### Elementary Clustering
-    - [ART1](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART1)
-    - [ART2](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART2A)
-    - [Bayesian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.BayesianART)
-    - [Gaussian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.GaussianART)
-    - [Hypersphere ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.HypersphereART)
-    - [Ellipsoid ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.EllipsoidART)
-    - [Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FuzzyART)
-    - [Quadratic Neuron ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.QuadraticNeuronART)
+    - [ART1](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.ART1.ART1)
+    - [ART2](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.ART2A.ART2A)
+    - [Bayesian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.BayesianART.BayesianART)
+    - [Gaussian ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.GaussianART.GaussianART)
+    - [Hypersphere ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.HypersphereART.HypersphereART)
+    - [Ellipsoid ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.EllipsoidART.EllipsoidART)
+    - [Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.FuzzyART.FuzzyART)
+    - [Quadratic Neuron ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.QuadraticNeuronART.QuadraticNeuronART)
+    - [Binary Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.BinaryFuzzyART.BinaryFuzzyART)
 - #### Metric Informed
-    - [CVI ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.CVIART)
-    - [iCVI Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.iCVIFuzzyART)
+    - [CVI ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cvi.html#artlib.cvi.CVIART.CVIART)
+    - [iCVI Fuzzy ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cvi.html#artlib.cvi.iCVIFuzzyART.iCVIFuzzyART)
 - #### Topological
-    - [Topo ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.TopoART)
-    - [Dual Vigilance ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.DualVigilanceART)
+    - [Topo ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.topological.html#artlib.topological.TopoART.TopoART)
+    - [Dual Vigilance ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.topological.html#artlib.topological.DualVigilanceART.DualVigilanceART)
 - #### Classification
-    - [Simple ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.SimpleARTMAP)
+    - [Simple ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.supervised.html#artlib.supervised.SimpleARTMAP.SimpleARTMAP)
 - #### Regression
-    - [ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ARTMAP)
-    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FusionART)
+    - [ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.supervised.html#artlib.supervised.ARTMAP.ARTMAP)
+    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.fusion.html#artlib.fusion.FusionART.FusionART)
 - #### Hierarchical
-    - [DeepARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.DeepARTMAP)
-    - [SMART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.SMART)
+    - [DeepARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.hierarchical.html#artlib.hierarchical.DeepARTMAP.DeepARTMAP)
+    - [SMART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.hierarchical.html#artlib.hierarchical.SMART.SMART)
 - #### Data Fusion
-    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FusionART)
+    - [Fusion ART](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.fusion.html#artlib.fusion.FusionART.FusionART)
 - #### Reinforcement Learning
-    - [FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FALCON)
-    - [TD-FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.TD_FALCON)
+    - [FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.reinforcement.html#artlib.reinforcement.FALCON.FALCON)
+    - [TD-FALCON](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.reinforcement.html#artlib.reinforcement.TD_FALCON.TD_FALCON)
 - #### Biclustering
     - [Biclustering ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.biclustering.html#artlib.biclustering.BARTMAP.BARTMAP)
+- #### C++ Accelerated
+    - [Fuzzy ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP)
+    - [Hypersphere ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP)
+    - [Gaussian ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.GaussianARTMAP.GaussianARTMAP)
+    - [Binary Fuzzy ARTMAP](https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.BinaryFuzzyARTMAP.BinaryFuzzyARTMAP)
+    -
 
 <!-- END available_models -->
 
@@ -298,6 +305,7 @@ model.fit(train_Xy_prep)
 pred_y = model.predict_regression(test_Xy_prep, target_channels=[1], clip=True)
 ```
 
+
 ### Data Normalization
 
 AdaptiveResonanceLib models require feature data to be normalized between 0.0
@@ -329,6 +337,142 @@ If only the boundaries of your testing data are unknown, you can call
 training. Only use this if you understand what you are doing.
 
 <!-- END quick-start -->
+
+<!-- START cpp_optimized -->
+
+[//]: # (## C++ Optimization)
+
+[//]: # ()
+[//]: # ( While all classes use NumPy and SciPy for mathematical operations to accelerate )
+
+[//]: # ( execution times, Some classes have Numba optimized activation and )
+
+[//]: # ( vigilance functions to further accelerate them. These include:)
+
+[//]: # ()
+[//]: # (- [ART1]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.ART1&#41;)
+
+[//]: # (- [Fuzzy ART]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.FuzzyART&#41;)
+
+[//]: # (- [Binary Fuzzy ART]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.BinaryFuzzyART&#41;)
+
+[//]: # ()
+[//]: # (For classification tasks specifically, several [Simple ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.html#artlib.SimpleARTMAP&#41; variations have been )
+
+[//]: # (fully written in c++ with accompanying Python wrappers. These include:)
+
+[//]: # ()
+[//]: # (- [Fuzzy ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP&#41;)
+
+[//]: # (- [Hypersphere ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP&#41;)
+
+[//]: # (- [Gaussian ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.GaussianARTMAP.GaussianARTMAP&#41;)
+
+[//]: # (- [Binary Fuzzy ARTMAP]&#40;https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.BinaryFuzzyARTMAP.BinaryFuzzyARTMAP&#41;)
+
+[//]: # ()
+[//]: # (These ARTMAP modules trade modularity for run time by executing all fit and predict )
+
+[//]: # (operations in c++. However these models use their results to populate a their )
+
+[//]: # (equivelant python classes allowing them to otherwise behave as the python-exclusive )
+
+[//]: # (versions in all other ways. )
+
+## C++ Optimizations
+
+Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but several go further:
+
+| Level | Accelerated components | Implementations |
+|-------|------------------------|-----------------|
+| **Python (Numba JIT)** | Activation & vigilance kernels | [ART1][], [Fuzzy ART][], [Binary Fuzzy ART][] |
+| **Native C++ (Pybind11)** | Entire **fit** / **predict** pipelines | [Fuzzy ARTMAP][], [Hypersphere ARTMAP][], [Gaussian ARTMAP][], [Binary Fuzzy ARTMAP][] |
+
+[ART1]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.ART1.ART1
+[Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.FuzzyART.FuzzyART
+[Binary Fuzzy ART]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.elementary.html#artlib.elementary.BinaryFuzzyART.BinaryFuzzyART
+
+[Fuzzy ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.FuzzyARTMAP.FuzzyARTMAP
+[Hypersphere ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.HypersphereARTMAP.HypersphereARTMAP
+[Gaussian ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.GaussianARTMAP.GaussianARTMAP
+[Binary Fuzzy ARTMAP]: https://adaptiveresonancelib.readthedocs.io/en/latest/artlib.cpp_optimized.html#artlib.cpp_optimized.BinaryFuzzyARTMAP.BinaryFuzzyARTMAP
+
+### How the C++ variants work
+
+1. **End-to-end native execution** – Training and inference run entirely in C++, eliminating Python-level overhead.
+2. **State hand-off** – After fitting, the C++ routine exports cluster weights and metadata back to the corresponding pure-Python class. You can therefore:
+   • inspect attributes (`weights_`, `categories_`, …)
+   • serialize with `pickle`
+   • plug them into any downstream ARTlib or scikit-learn pipeline **exactly as you would with the Python-only models**.
+3. **Trade-off** – The C++ versions sacrifice some modularity (you cannot swap out
+   internal ART components) in exchange for significantly shorter run-times.
+
+### C++ Acceleration Quick reference
+
+
+| Class                 | Acceleration method       | Primary purpose |
+|-----------------------|---------------------------|-----------------|
+| [ART1]                | Numba JIT kernels         | Clustering      |
+| [Fuzzy ART]           | Numba JIT kernels         | Clustering      |
+| [Binary Fuzzy ART]    | Numba JIT kernels         | Clustering      |
+|                       |                           |                 |
+| [Fuzzy ARTMAP]        | Full C++ implementation   | Classification  |
+| [Hypersphere ARTMAP]  | Full C++ implementation   | Classification  |
+| [Gaussian ARTMAP]     | Full C++ implementation   | Classification  |
+| [Binary Fuzzy ARTMAP] | Full C++ implementation   | Classification  |
+
+### Example Usage
+```python
+from artlib import FuzzyARTMAP
+import numpy as np
+from tensorflow.keras.datasets import mnist
+
+# Load the MNIST dataset
+n_dim = 28*28
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+X_train = X_train.reshape((-1, n_dim)) # flatten images
+X_test = X_test.reshape((-1, n_dim))
+
+# Initialize the Fuzzy ART model
+model = FuzzyARTMAP(rho=0.7, alpha = 0.0, beta=1.0)
+
+# (Optional) Tell the model the data limits for normalization
+lower_bounds = np.array([0.]*n_dim)
+upper_bounds = np.array([255.]*n_dim)
+model.set_data_bounds(lower_bounds, upper_bounds)
+
+# Prepare Data
+train_X_prep = model.prepare_data(X_train)
+test_X_prep = model.prepare_data(X_test)
+
+# Fit the model
+model.fit(train_X_prep, y_train)
+
+# Predict data labels
+predictions = model.predict(test_X_prep)
+```
+
+### Timing Comparison
+The below figures demonstrate the acceleration seen by the C++ ARTMAP variants in
+comparison to their baseline Python versions for a 1000 sample subset of the MNIST
+dataset.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_fit_times.jpg?raw=true"
+       alt="MNIST ART fit times" width="45%" />
+  <img src="https://raw.githubusercontent.
+com/NiklasMelton/AdaptiveResonanceLib/main/docs/_static/img/mnist_art_predict_times.jpg?raw=true"
+       alt="MNIST ART predict times" width="45%" />
+</p>
+
+From the above plots, it becomes apparent that the C++ variants are superior in their
+runtime performance and should be the default choice of practitioners wishing to work
+with these specific compound models.
+
+While the current selection remains limited, future releases will expand the native C++
+implementation as user demand for them increases.
+
+<!-- END cpp_optimized -->
 
 <!-- START documentation -->
 ## Documentation

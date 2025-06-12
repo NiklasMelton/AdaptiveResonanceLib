@@ -19,6 +19,7 @@ AdaptiveResonanceLib Home
    available_models
    comparison
    quick_start
+   cpp_optimized
    examples
    contributing
    contact
@@ -34,6 +35,7 @@ AdaptiveResonanceLib Home
    artlib.biclustering
    artlib.common
    artlib.cvi
+   artlib.cpp_optimized
    artlib.elementary
    artlib.fusion
    artlib.hierarchical

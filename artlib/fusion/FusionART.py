@@ -677,7 +677,7 @@ class FusionART(BaseART):
             )
             for k in range(self.n)
         ]
-        return np.vstack(W)
+        return np.array(W, dtype=object)
 
     def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
         """Generate a new cluster weight.
@@ -702,7 +702,7 @@ class FusionART(BaseART):
             )
             for k in range(self.n)
         ]
-        return np.vstack(W)
+        return np.array(W, dtype=object)
 
     def add_weight(self, new_w: np.ndarray):
         """Add a new cluster weight.

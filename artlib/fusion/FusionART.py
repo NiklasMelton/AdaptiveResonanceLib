@@ -677,7 +677,7 @@ class FusionART(BaseART):
             )
             for k in range(self.n)
         ]
-        return np.concatenate(W)
+        return np.vstack(W)
 
     def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
         """Generate a new cluster weight.
@@ -702,7 +702,7 @@ class FusionART(BaseART):
             )
             for k in range(self.n)
         ]
-        return np.concatenate(W)
+        return np.vstack(W)
 
     def add_weight(self, new_w: np.ndarray):
         """Add a new cluster weight.
@@ -712,8 +712,7 @@ class FusionART(BaseART):
 
         """
         for k in range(self.n):
-            new_w_k = new_w[self._channel_indices[k][0] : self._channel_indices[k][1]]
-            self.modules[k].add_weight(new_w_k)
+            self.modules[k].add_weight(new_w[k])
 
     def set_weight(self, idx: int, new_w: np.ndarray):
         """Set the value of a cluster weight.
@@ -724,8 +723,7 @@ class FusionART(BaseART):
 
         """
         for k in range(self.n):
-            new_w_k = new_w[self._channel_indices[k][0] : self._channel_indices[k][1]]
-            self.modules[k].set_weight(idx, new_w_k)
+            self.modules[k].set_weight(idx, new_w[k])
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """Get the center points for each cluster.

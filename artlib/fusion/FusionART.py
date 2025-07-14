@@ -253,7 +253,7 @@ class FusionART(BaseART):
     def category_choice(
         self,
         i: np.ndarray,
-        w: np.ndarray,
+        w: list,
         params: Dict,
         skip_channels: List[int] = [],
     ) -> Tuple[float, Optional[Dict]]:
@@ -280,7 +280,7 @@ class FusionART(BaseART):
             *[
                 self.modules[k].category_choice(
                     i[self._channel_indices[k][0] : self._channel_indices[k][1]],
-                    w[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    w[k],
                     self.modules[k].params,
                 )
                 if k not in skip_channels
@@ -297,7 +297,7 @@ class FusionART(BaseART):
     def match_criterion(
         self,
         i: np.ndarray,
-        w: np.ndarray,
+        w: list,
         params: Dict,
         cache: Optional[Dict] = None,
         skip_channels: List[int] = [],
@@ -329,7 +329,7 @@ class FusionART(BaseART):
             *[
                 self.modules[k].match_criterion(
                     i[self._channel_indices[k][0] : self._channel_indices[k][1]],
-                    w[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    w[k],
                     self.modules[k].params,
                     cache[k],
                 )
@@ -344,7 +344,7 @@ class FusionART(BaseART):
     def match_criterion_bin(
         self,
         i: np.ndarray,
-        w: np.ndarray,
+        w: list,
         params: Dict,
         cache: Optional[Dict] = None,
         op: Callable = operator.ge,
@@ -379,7 +379,7 @@ class FusionART(BaseART):
             *[
                 self.modules[k].match_criterion_bin(
                     i[self._channel_indices[k][0] : self._channel_indices[k][1]],
-                    w[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    w[k],
                     self.modules[k].params,
                     cache[k],
                     op,
@@ -640,7 +640,7 @@ class FusionART(BaseART):
     def update(
         self,
         i: np.ndarray,
-        w: np.ndarray,
+        w: list,
         params: Dict,
         cache: Optional[Dict] = None,
     ) -> list:
@@ -667,7 +667,7 @@ class FusionART(BaseART):
         W = [
             self.modules[k].update(
                 i[self._channel_indices[k][0] : self._channel_indices[k][1]],
-                w[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                w[k],
                 self.modules[k].params,
                 cache[k],
             )

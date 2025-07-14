@@ -130,33 +130,29 @@ class FusionART(BaseART):
 
         Returns
         -------
-        np.ndarray
+        list
             Concatenated weights of all channels from the ART modules.
 
         """
         W = [
-            np.concatenate([self.modules[k].W[i] for k in range(self.n)])
+            [self.modules[k].W[i] for k in range(self.n)]
             for i in range(self.modules[0].n_clusters)
         ]
         return W
 
     @W.setter
-    def W(self, new_W):
-        """Set the weights for each module by splitting the input weights.
+    def W(self, new_W: list):
+        """Set the weights for each module from a list of cluster-wise composite
+        weights.
 
         Parameters
         ----------
-        new_W : np.ndarray
-            New concatenated weights to be set for the modules.
+        new_W : list
+            List of cluster weights. Each element is a list of weights, one per module.
 
         """
         for k in range(self.n):
-            if len(new_W) > 0:
-                self.modules[k].W = new_W[
-                    self._channel_indices[k][0] : self._channel_indices[k][1]
-                ]
-            else:
-                self.modules[k].W = []
+            self.modules[k].W = [new_W[i][k] for i in range(len(new_W))]
 
     @staticmethod
     def validate_params(params: Dict):
@@ -647,7 +643,7 @@ class FusionART(BaseART):
         w: np.ndarray,
         params: Dict,
         cache: Optional[Dict] = None,
-    ) -> np.ndarray:
+    ) -> list:
         """Update the cluster weight.
 
         Parameters
@@ -663,7 +659,7 @@ class FusionART(BaseART):
 
         Returns
         -------
-        np.ndarray
+        list
             Updated cluster weight.
 
         """
@@ -677,9 +673,9 @@ class FusionART(BaseART):
             )
             for k in range(self.n)
         ]
-        return np.array(W, dtype=object)
+        return W
 
-    def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
+    def new_weight(self, i: np.ndarray, params: Dict) -> list:
         """Generate a new cluster weight.
 
         Parameters
@@ -691,7 +687,7 @@ class FusionART(BaseART):
 
         Returns
         -------
-        np.ndarray
+        list
             New cluster weight.
 
         """
@@ -702,9 +698,9 @@ class FusionART(BaseART):
             )
             for k in range(self.n)
         ]
-        return np.array(W, dtype=object)
+        return W
 
-    def add_weight(self, new_w: np.ndarray):
+    def add_weight(self, new_w: list):
         """Add a new cluster weight.
 
         Parameters:
@@ -714,7 +710,7 @@ class FusionART(BaseART):
         for k in range(self.n):
             self.modules[k].add_weight(new_w[k])
 
-    def set_weight(self, idx: int, new_w: np.ndarray):
+    def set_weight(self, idx: int, new_w: list):
         """Set the value of a cluster weight.
 
         Parameters:

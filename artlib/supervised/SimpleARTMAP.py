@@ -725,7 +725,7 @@ class SimpleARTMAP(BaseARTMAP):
         for k_b, col in enumerate(colors):
             cluster_data = y == k_b
             if self.module_a.data_format == "default":
-                plt.scatter(
+                ax.scatter(
                     X[cluster_data, 0],
                     X[cluster_data, 1],
                     color=col,

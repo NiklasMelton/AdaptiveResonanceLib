@@ -159,7 +159,10 @@ class SphericalAlphaART(AlphaART):
             New cluster weight.
 
         """
-        new_w = SphericalAlphaShape(i.reshape((1, -1)), alpha=params["alpha"])
+        new_w = SphericalAlphaShape(
+            i.reshape((1, -1)),
+            alpha=params["alpha"],
+            connectivity="relaxed")
         return new_w
 
 

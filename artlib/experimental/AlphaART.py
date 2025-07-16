@@ -2,8 +2,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from typing import Optional, Iterable, List, Tuple, Dict, Callable
 from warnings import warn
-from pyalphashape import plot_polygon_edges
-from AlphaShape import AlphaShape
+from pyalphashape import plot_polygon_edges, AlphaShape
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
 import operator

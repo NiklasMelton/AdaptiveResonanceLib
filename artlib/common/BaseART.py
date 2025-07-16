@@ -942,7 +942,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         for k, col in enumerate(colors):
             cluster_data = y == k
-            plt.scatter(
+            ax.scatter(
                 X[cluster_data, 0],
                 X[cluster_data, 1],
                 color=col,

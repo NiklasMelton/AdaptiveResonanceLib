@@ -31,6 +31,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.d_min_ = None
         self.d_max_ = None
         self.is_fitted_ = False
+        self.labels_ = np.zeros((0,), dtype=int)
 
     def __getattr__(self, key):
         if key in self.params:
@@ -941,7 +942,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         for k, col in enumerate(colors):
             cluster_data = y == k
-            plt.scatter(
+            ax.scatter(
                 X[cluster_data, 0],
                 X[cluster_data, 1],
                 color=col,

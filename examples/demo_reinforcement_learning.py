@@ -2,10 +2,12 @@ import numpy as np
 from tqdm import tqdm
 from artlib import TD_FALCON, FuzzyART, complement_code
 import gymnasium as gym
-from collections import defaultdict
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
+STATE_MAX = 47
+ACTION_MAX = 3
+REWARD_MAX = 150
 
 # only works with Fuzzy ART based FALCON
 def prune_clusters(cls):
@@ -49,19 +51,12 @@ def update_FALCON(records, cls, shrink_ratio):
     actions_cc = complement_code(actions)
     rewards_cc = complement_code(rewards)
 
-    # states_fit, actions_fit, sarsa_rewards_fit = cls.calculate_SARSA(states_cc, actions_cc, rewards_cc, single_sample_reward=1.0)
-
     # if FALCON has been previously trained
     if hasattr(cls.fusion_art.modules[0], "W"):
         # remove any duplicate clusters
         cls = prune_clusters(cls)
-        # # shrink clusters to account for dynamic programming changes
-        # for m in range(3):
-        #     cls.fusion_art.modules[m] = cls.fusion_art.modules[m].shrink_clusters(shrink_ratio)
 
     # fit FALCON to data
-    # data = cls.fusion_art.join_channel_data([states_fit, actions_fit, sarsa_rewards_fit])
-    # cls.fusion_art = cls.fusion_art.partial_fit(data)
     cls = cls.partial_fit(
         states_cc, actions_cc, rewards_cc, single_sample_reward=1.0
     )
@@ -182,9 +177,6 @@ def demo_cycle(cls, epochs, steps, render_mode=None):
     env = gym.make("CliffWalking-v0", render_mode=render_mode)
     # define some constants
     ACTION_SPACE = np.array([[0], [1.0], [2.0], [3.0]])
-    STATE_MAX = 47
-    ACTION_MAX = 3
-    REWARD_MAX = 150
 
     # track reward history
     reward_history = []
@@ -256,25 +248,9 @@ def train_FALCON():
             "render_mode": None,
         },
         {
-            "name": "explore 33%",
-            "epochs": 500,
-            "shrink_ratio": 0.3,
-            "gamma": 0.2,
-            "explore_rate": 0.333,
-            "render_mode": None,
-        },
-        {
-            "name": "explore 20%",
-            "epochs": 500,
-            "shrink_ratio": 0.3,
-            "gamma": 0.2,
-            "explore_rate": 0.20,
-            "render_mode": None,
-        },
-        {
             "name": "explore 5%",
             "epochs": 1000,
-            "shrink_ratio": 0.3,
+            "shrink_ratio": 0.0,
             "gamma": 0.2,
             "explore_rate": 0.05,
             "render_mode": None,
@@ -287,6 +263,9 @@ def train_FALCON():
     art_state = FuzzyART(rho=0.99, alpha=0.01, beta=1.0)
     art_action = FuzzyART(rho=0.99, alpha=0.01, beta=1.0)
     art_reward = FuzzyART(rho=0.0, alpha=0.01, beta=1.0)
+    art_state.set_data_bounds(np.zeros((1,)), np.ones((1,)))
+    art_action.set_data_bounds(np.zeros((1,)), ACTION_MAX*np.ones((1,)))
+    art_reward.set_data_bounds(np.zeros((1,)), np.ones((1,)))
     # instantiate FALCON
     cls = TD_FALCON(art_state, art_action, art_reward, channel_dims=[2, 2, 2])
     # record rewards for each epoch

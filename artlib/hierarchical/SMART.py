@@ -37,7 +37,7 @@ class SMART(DeepARTMAP):
         base_ART_class: Type,
         rho_values: Union[list[float], np.ndarray],
         base_params: dict,
-        **kwargs
+        **kwargs,
     ):
         """Initialize the SMART model.
 
@@ -249,7 +249,7 @@ class SMART(DeepARTMAP):
 
         for k, col in enumerate(colors):
             cluster_data = y == k
-            plt.scatter(
+            ax.scatter(
                 X[cluster_data, 0],
                 X[cluster_data, 1],
                 color=col,

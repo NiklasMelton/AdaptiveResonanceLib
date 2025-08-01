@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from typing import Optional, Iterable, List, Tuple, Dict, Callable
 from warnings import warn
-from pyalphashape import (AlphaShape, plot_polygon_edges)
+from pyalphashape import plot_polygon_edges, AlphaShape
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
 import operator
@@ -155,7 +155,7 @@ class AlphaART(BaseART):
                 new_w = w
             else:
                 new_w = deepcopy(w)
-                new_w.add_points(i.reshape(1,-1))
+                new_w.add_points(i.reshape(1,-1), perimeter_only=True)
                 # if new_w.is_empty or not new_w.contains_point(i):
                 if new_w.is_empty:
                     M_bin = False
@@ -213,7 +213,7 @@ class AlphaART(BaseART):
             New cluster weight.
 
         """
-        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha"])
+        new_w = AlphaShape(i.reshape((1, -1)), alpha=params["alpha"], connectivity="relaxed")
         return new_w
 
     def get_cluster_centers(self) -> List[np.ndarray]:
@@ -320,6 +320,5 @@ class AlphaART(BaseART):
             self.plot_cluster_bounds(ax, colors, linewidth)
         except NotImplementedError:
             warn(f"{self.__class__.__name__} does not support plotting cluster bounds.")
-
 
 

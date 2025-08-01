@@ -59,8 +59,8 @@ class DualVigilanceART(BaseART):
 
         params = {"rho_lower_bound": rho_lower_bound}
         assert base_module.params["rho"] > params["rho_lower_bound"] >= 0
-        super().__init__(params)
         self.base_module = base_module
+        super().__init__(params)
         self.rho_lower_bound = rho_lower_bound
         self.map: dict[int, int] = dict()
 

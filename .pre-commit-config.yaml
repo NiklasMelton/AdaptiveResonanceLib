@@ -45,4 +45,4 @@ repos:
           - --follow-imports=silent
 
 exclude: ^(unit_tests/|scripts/|artlib/experimental/|examples/|docs/|artlib/cvi
-  /|setup.py)
+  /|setup.py|torch_optimized/)

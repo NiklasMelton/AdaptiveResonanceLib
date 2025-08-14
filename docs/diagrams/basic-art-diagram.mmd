@@ -1,0 +1,34 @@
+flowchart TB
+  A([Start])
+  A --> B[Raw data]
+  B --> C[Normalize to 0..1]
+  C --> D{Optional preprocessing}
+  D -- Yes --> E[Complement coding]
+  D -- No --> F[Use normalized data]
+  E --> G[For each sample]
+
+  F --> G
+  G --> H{Any existing weights}
+  H -- No --> I[Create new weight from sample]
+  I --> N[Next sample]
+  H -- Yes --> J[Compute activations for all weights]
+  J --> K[Sort by activation descending]
+  K --> L[Take next candidate weight]
+
+  R{Candidates left}
+  R -- Yes --> L
+  R -- No --> I
+
+  L --> M{Match/Vigilance check passes}
+  M -- Yes --> U[Update winning weight]
+  M -- No --> Q[Suppress candidate]
+
+  Q --> R
+  U --> N
+
+
+
+
+  N --> O{More samples}
+  O -- Yes --> G
+  O -- No --> P([End])

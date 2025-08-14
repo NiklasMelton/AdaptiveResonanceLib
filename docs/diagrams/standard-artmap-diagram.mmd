@@ -1,0 +1,11 @@
+flowchart TB
+  A([Start])
+  A --> B[Raw data X]
+
+  A --> C[Raw data Y]
+  C --> D[Cluster unsupervised with ART module B]
+  D --> E[Y labels]
+
+  B --> F[Fit with Simple ARTMAP]
+  E --> F
+  F --> P([End])

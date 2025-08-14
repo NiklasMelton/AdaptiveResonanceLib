@@ -1,0 +1,27 @@
+classDiagram
+
+  class DeepARTMAP {
+    +modules: list[BaseART]
+    +layers: list[BaseARTMAP]
+
+    +prepare_data([X, ..]) -> X_norm
+    +restore_data([X, ..]) -> X_orig
+    +fit(X, y, max_iter, match_tracking, epsilon)
+    +partial_fit([X, ..], [y, ..], match_tracking, epsilon)
+    +predict([X, ..], clip) -> y
+  }
+  class SMART {
+    +fit(X, max_iter, match_tracking, epsilon)
+    +partial_fit(X, match_tracking, epsilon)
+    +predict(X, clip) -> y
+    +visualize(X, y)
+  }
+
+
+
+  DeepARTMAP --() BaseEstimator
+  DeepARTMAP --() ClassifierMixin
+  DeepARTMAP --() ClusterMixin
+  SMART <|-- BaseARTMAP
+
+

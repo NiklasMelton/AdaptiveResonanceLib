@@ -1,4 +1,4 @@
-Diagrams
+class diagrams
 ========
 
 .. contents::
@@ -41,7 +41,7 @@ ARTMAP Process Flow
 BaseART Inheritance
 ------------
 
-.. figure:: ../docs/diagrams/system-diagram-base-art.svg
+.. figure:: ../diagrams/system-diagram-base-art.svg
    :name: fig-base-art-class-diagram
    :alt: BaseART class diagram
    :align: center
@@ -52,7 +52,7 @@ BaseART Inheritance
 BaseARTMAP Inheritance
 ------------
 
-.. figure:: ../docs/diagrams/system-diagram-base-artmap.svg
+.. figure:: ../diagrams/system-diagram-base-artmap.svg
    :name: fig-base-artmap-class-diagram
    :alt: BaseARTMAP class diagram
    :align: center
@@ -64,7 +64,7 @@ BaseARTMAP Inheritance
 DeepARTMAP Inheritance
 ------------
 
-.. figure:: ../docs/diagrams/system-diagram-deep-artmap.svg
+.. figure:: ../diagrams/system-diagram-deep-artmap.svg
    :name: fig-deep-artmap-class-diagram
    :alt: DeepARTMAP class diagram
    :align: center

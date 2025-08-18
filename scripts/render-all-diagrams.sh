@@ -21,9 +21,6 @@ for INPUT in "$DIAGRAM_DIR"/*.mmd; do
     mmdc -i "$INPUT" -o "${BASENAME}.svg" \
          --backgroundColor transparent
 
-    # Render PNG
-    mmdc -i "$INPUT" -o "${BASENAME}.png" \
-         --scale 2
 done
 shopt -u nullglob
 

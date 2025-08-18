@@ -1,8 +1,8 @@
 class diagrams
 ==============
 
-This page provides a family-tree of sorts which visualizes the inheritance among /
-related artlib classes. Only classes sharing a relationship to other artlib classes /
+This page provides a family-tree of sorts which visualizes the inheritance among
+related artlib classes. Only classes sharing a relationship to other artlib classes
 are documented on this page.
 
 .. contents::
@@ -18,7 +18,7 @@ BaseART Inheritance
    :align: center
    :width: 100%
 
-   Inheritance flow among BaseART variants. All children of the BaseART class are /
+   Inheritance flow among BaseART variants. All children of the BaseART class are
 interchangeable in the compound ART architectures implemented in artlib.
 
 BaseARTMAP Inheritance
@@ -30,8 +30,8 @@ BaseARTMAP Inheritance
    :align: center
    :width: 100%
 
-   Inheritance flow among BaseARTMAP variants. All children of the BaseART class /
-are compatible with these architectures. For clarity, the c++ optimized ARTMAP /
+   Inheritance flow among BaseARTMAP variants. All children of the BaseART class
+are compatible with these architectures. For clarity, the c++ optimized ARTMAP
 variants were omitted from this diagram -- all of which are children of SimpleARTMAP.
 
 
@@ -44,5 +44,5 @@ DeepARTMAP Inheritance
    :align: center
    :width: 100%
 
-   Inheritance flow among DeepARTMAP variants. All children of the BaseART class /
+   Inheritance flow among DeepARTMAP variants. All children of the BaseART class
 are compatible with these architectures.

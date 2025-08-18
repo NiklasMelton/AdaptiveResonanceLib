@@ -42,3 +42,4 @@ AdaptiveResonanceLib Home
    artlib.reinforcement
    artlib.supervised
    artlib.topological
+   diagrams

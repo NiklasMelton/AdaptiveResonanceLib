@@ -15,6 +15,7 @@ AdaptiveResonanceLib Home
    :caption: Main Contents:
 
    what_is_art
+   art-diagrams
    installation
    available_models
    comparison
@@ -42,3 +43,4 @@ AdaptiveResonanceLib Home
    artlib.reinforcement
    artlib.supervised
    artlib.topological
+   inheritance-diagrams

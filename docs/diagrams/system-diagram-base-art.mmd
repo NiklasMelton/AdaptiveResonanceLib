@@ -1,0 +1,108 @@
+classDiagram
+
+  class BaseART {
+    +params: Dict
+    +test: hello
+    +test: hello
+
+    +is_fitted_: bool
+    +labels_: array
+    +W: List[array]
+    +test(x) -> hello
+    +set_data_bounds(lower, upper)
+    +find_data_bounds(*batches)
+    +prepare_data(X) -> X_norm
+    +restore_data(X) -> X_orig
+    +fit(X, max_iter=1, verbose=False)
+    +partial_fit(X)
+    +predict(X, clip=False) -> y
+    +visualize(X, y)
+  }
+  class FuzzyART {
+    +rho: float
+    +alpha: float
+    +beta: float
+  }
+
+  class BinaryFuzzyART {
+    +rho: float
+    +alpha: float
+  }
+
+  class GaussianART {
+    +rho: float
+    +sigma_init: np.ndarray
+  }
+  class BayesianART {
+    +rho: float
+    +cov_init: np.ndarray
+  }
+  class HypersphereART {
+    +rho: float
+    +alpha: float
+    +beta: float
+    +r_hat: float
+  }
+  class EllipsoidART {
+    +rho: float
+    +alpha: float
+    +beta: float
+    +mu: float
+    +r_hat: float
+  }
+  class ART1{
+    +rho: float
+    +L: float
+  }
+  class ART2A{
+    +rho: float
+    +alpha: float
+    +beta: float
+  }
+  class QuadraticNeuronART {
+    +rho: float
+    +s_init: float
+    +lr_b: float
+    +lr_w: float
+    +lr_s: float
+  }
+
+  class TopoART {
+    +base_module: BaseART
+    +beta_lower: float
+    +tau: int
+    +phi: float
+  }
+  class DualVigilanceART {
+    +base_module: BaseART
+    +rho_lower_bound: float
+  }
+  class FusionART {
+    +modules: list[BaseART]
+    +gamma_values: list[float]
+    +channel_dims: list[int]
+  }
+
+  class CVIART {
+    +base_module: BaseART
+    +validity: int
+  }
+
+  BaseART --() BaseEstimator
+  BaseART --() ClusterMixin
+  ART1 <|-- BaseART
+  ART2A <|-- BaseART
+  FuzzyART <|-- BaseART
+  BinaryFuzzyART <|-- FuzzyART
+  HypersphereART <|-- BaseART
+
+  EllipsoidART <|-- BaseART
+  GaussianART <|-- BaseART
+  BayesianART <|-- BaseART
+  QuadraticNeuronART <|-- BaseART
+
+  TopoART <|-- BaseART
+  FusionART <|-- BaseART
+  DualVigilanceART <|-- BaseART
+  CVIART <|-- BaseART
+

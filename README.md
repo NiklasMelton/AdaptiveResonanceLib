@@ -83,6 +83,7 @@ First proposed by Stephen Grossberg and Gail Carpenter in the mid‑1970s , ART 
 4. **Output.**
    In clustering mode, the index of the resonant (or newly created) memory is returned as the cluster label.
 
+A step-by-step flow chart depicting the generalized ART algorithm can be found [here](https://adaptiveresonancelib.readthedocs.io/en/latest/art-diagrams.html).
 ### Vigilance
 
 ρ sets an explicit upper bound on how dissimilar two inputs can be while still

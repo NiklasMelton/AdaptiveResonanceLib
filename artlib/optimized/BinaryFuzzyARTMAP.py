@@ -1,10 +1,11 @@
-"""Factory for generating optimized FuzzyARTMAP models using various backends."""
+"""Factory for generating optimized BinaryFuzzyARTMAP models using various backends."""
 import warnings
 from typing import Optional
 
 
-class FuzzyARTMAP:
-    """Factory for generating optimized FuzzyARTMAP models using various backends."""
+class BinaryFuzzyARTMAP:
+    """Factory for generating optimized BinaryFuzzyARTMAP models using various
+    backends."""
 
     def __new__(
         cls,

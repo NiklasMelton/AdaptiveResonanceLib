@@ -1,7 +1,7 @@
-# torch_fuzzy_artmap_wrapper.py
+"""Fuzzy ARTMAP :cite:`carpenter1991fuzzy`."""
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union, Literal
+from typing import Optional, Tuple, Union, Literal, cast
 import numpy as np
 import torch
 
@@ -11,7 +11,7 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
 
 
-Tensor = torch.Tensor
+from torch import Tensor
 
 
 # ------------------------------
@@ -27,16 +27,16 @@ def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> T
     raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
-def complement_code(x: Tensor) -> Tensor:
+def _complement_code(x: Tensor) -> Tensor:
     # x ∈ [0,1]^M  →  [x, 1-x]
     return torch.cat([x, 1.0 - x], dim=-1)
 
 
-# ------------------------------
-# Torch GPU backend (augmented)
-# ------------------------------
+# -----------------
+# Torch GPU backend
+# -----------------
 @dataclass
-class TorchFuzzyARTMAPConfig:
+class _TorchFuzzyARTMAPConfig:
     input_dim: int
     alpha: float = 1e-3
     rho: float = 0.75
@@ -50,10 +50,10 @@ class TorchFuzzyARTMAPConfig:
     fallback_to_choice_on_fail: bool = True
 
 
-class TorchFuzzyARTMAP:
+class _TorchFuzzyARTMAP:
     """GPU-accelerated Fuzzy ARTMAP with export hooks for artlib synchronization."""
 
-    def __init__(self, cfg: TorchFuzzyARTMAPConfig):
+    def __init__(self, cfg: _TorchFuzzyARTMAPConfig):
         self.cfg = cfg
         self.device = torch.device(cfg.device)
         self.dtype = cfg.dtype
@@ -81,7 +81,7 @@ class TorchFuzzyARTMAP:
     def _prep_input(self, X: Tensor) -> Tensor:
         if self.cfg.clamp_inputs:
             X = torch.clamp(X, 0.0, 1.0)
-        return complement_code(X) if self.cfg.complement else X
+        return _complement_code(X) if self.cfg.complement else X
 
     def _validate_prepared(self, X: Tensor):
         if X.ndim != 2:
@@ -89,7 +89,8 @@ class TorchFuzzyARTMAP:
         if self.cfg.complement:
             if X.shape[1] != 2 * self.input_dim:
                 raise ValueError(
-                    f"With complement=True, expected D={2*self.input_dim}, got {X.shape[1]}"
+                    f"With complement=True, expected D={2*self.input_dim}, "
+                    f"got {X.shape[1]}"
                 )
             D = self.input_dim
             a, b = X[:, :D], X[:, D:]
@@ -107,7 +108,8 @@ class TorchFuzzyARTMAP:
         else:
             if X.shape[1] != self.input_dim:
                 raise ValueError(
-                    f"With complement=False, expected D={self.input_dim}, got {X.shape[1]}"
+                    f"With complement=False, expected D={self.input_dim}, "
+                    f"got {X.shape[1]}"
                 )
             if not (
                 torch.all(X >= -self._prep_tol) and torch.all(X <= 1.0 + self._prep_tol)
@@ -145,7 +147,7 @@ class TorchFuzzyARTMAP:
         Xn = (X - self._lower_bounds) / (denom + 1e-12)
         Xn = torch.clamp(Xn, 0.0, 1.0)
         use_comp = self.cfg.complement if complement is None else complement
-        return complement_code(Xn) if use_comp else Xn
+        return _complement_code(Xn) if use_comp else Xn
 
     # ---- core ops
     def _choice_and_match(self, I: Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
@@ -210,7 +212,7 @@ class TorchFuzzyARTMAP:
                 self._commit_new_category(Ii, yi)
                 la.append(0)
                 continue
-
+            assert self.map_y is not None and self.W is not None
             T, m, _, _ = self._choice_and_match(Ii)
             order = torch.argsort(T, descending=True, stable=True)
 
@@ -221,6 +223,7 @@ class TorchFuzzyARTMAP:
             for idx in order.tolist():
                 if m[idx].item() < rho_eff:
                     continue
+
                 if int(self.map_y[idx].item()) == yi:
                     # resonance + learn
                     wj = self.W[idx]
@@ -240,9 +243,10 @@ class TorchFuzzyARTMAP:
                 self._commit_new_category(Ii, yi)
                 chosen_idx = self.n_cat - 1
 
-            la.append(int(chosen_idx))
+            la.append(int(cast(int, chosen_idx)))
 
         # export numpy payloads for wrapper synchronization
+        assert self.W is not None and self.map_y is not None
         W_np = [
             self.W[k].detach().to("cpu").numpy().astype(np.float64, copy=True)
             for k in range(self.n_cat)
@@ -260,7 +264,7 @@ class TorchFuzzyARTMAP:
         if self.n_cat == 0:
             raise RuntimeError("Model has no categories. Train first.")
 
-        W = self.W
+        W = cast(Tensor, self.W)
         W_sum = W.sum(dim=1).unsqueeze(0)  # [1, K]
         N = Xp.shape[0]
         block = 2048
@@ -275,16 +279,13 @@ class TorchFuzzyARTMAP:
             T = IandW_sum / (self.cfg.alpha + W_sum)  # [B, K]
             idx = torch.argmax(T, dim=1)  # [B]
             a_idx.append(idx.to("cpu"))
-            b_lab.append(self.map_y[idx].to("cpu"))
+            b_lab.append(cast(Tensor, self.map_y)[idx].to("cpu"))
 
         y_a = torch.cat(a_idx, dim=0).numpy().astype(int)
         y_b = torch.cat(b_lab, dim=0).numpy().astype(int)
         return y_a, y_b
 
 
-# ------------------------------
-# artlib-compatible wrapper
-# ------------------------------
 class FuzzyARTMAP(SimpleARTMAP):
     """FuzzyARTMAP for Classification. optimized with torch.
 
@@ -311,18 +312,26 @@ class FuzzyARTMAP(SimpleARTMAP):
         dtype: torch.dtype = torch.float64,
         complement: bool = True,
     ):
-        # artlib front: behave like SimpleARTMAP(FuzzyART(...))
+        """Initialize the Fuzzy ARTMAP model.
+
+        Parameters
+        ----------
+        rho : float
+            Vigilance parameter.
+        alpha : float
+            Choice parameter.
+
+        """
         module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)
         super().__init__(module_a)
 
-        # torch back-end (defer input_dim until first fit if not provided)
+        # torch back-end
         self._device = device
         self._dtype = dtype
         self._complement = complement
-        self._backend: Optional[TorchFuzzyARTMAP] = None
+        self._backend: Optional[_TorchFuzzyARTMAP] = None
         self._declared_input_dim = input_dim  # raw dimensionality (pre-complement)
 
-    # --- internal sync (python side mirror of your C++ wrapper)
     def _synchronize_torch_results(
         self,
         labels_a_out: np.ndarray,
@@ -364,22 +373,12 @@ class FuzzyARTMAP(SimpleARTMAP):
         if self._backend is not None:
             return
         d_raw = X.shape[1]
-        if self._declared_input_dim is not None and d_raw != (
-            2 * self._declared_input_dim
-            if self._complement
-            else self._declared_input_dim
-        ):
-            # If user provided raw input_dim, X here may already be complement-coded.
-            # Accept either:
-            #  - prepared/complement-coded input with D == 2*input_dim (if complement True)
-            #  - raw input with D == input_dim and prepared later by user/pipe
-            pass
         # Infer raw input dimension if X is already prepared
         if self._complement and d_raw % 2 == 0:
             inferred_raw = d_raw // 2
         else:
             inferred_raw = d_raw
-        cfg = TorchFuzzyARTMAPConfig(
+        cfg = _TorchFuzzyARTMAPConfig(
             input_dim=inferred_raw,
             alpha=self.module_a.params["alpha"],
             rho=self.module_a.params["rho"],
@@ -388,7 +387,7 @@ class FuzzyARTMAP(SimpleARTMAP):
             device=self._device,
             dtype=self._dtype,
         )
-        self._backend = TorchFuzzyARTMAP(cfg)
+        self._backend = _TorchFuzzyARTMAP(cfg)
 
     # --- public API (matches the C++ wrapper)
     def fit(
@@ -401,8 +400,34 @@ class FuzzyARTMAP(SimpleARTMAP):
         verbose: bool = False,
         leave_progress_bar: bool = True,
     ):
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        max_iter : int, default=1
+            Number of iterations to fit the model on the same data set.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+        verbose : bool, default=False
+            non functional. Left for compatibility
+        leave_progress_bar : bool, default=True
+            non functional. Left for compatibility
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The fitted model.
+
+        """
         SimpleARTMAP.validate_data(self, X, y)
         self._ensure_backend(X)
+        assert self._backend is not None
 
         # artlib-style bookkeeping
         self.classes_ = unique_labels(y)
@@ -410,9 +435,7 @@ class FuzzyARTMAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
-        # Expect X already normalized and (if complement=True) complement-coded,
-        # to mirror your C++/artlib contract. If you want the backend to normalize,
-        # call backend.set_data_bounds + backend.prepare_data beforehand.
+        # Expect X already normalized and complement-coded,
         Xp = _to_device(X, self._backend.device, self._backend.dtype)
         la, W, cl = self._backend.partial_fit_and_export(
             Xp, y, epsilon=epsilon, match_tracking=match_tracking
@@ -428,8 +451,28 @@ class FuzzyARTMAP(SimpleARTMAP):
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
     ):
+        """Partial fit the model to the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        y : np.ndarray
+            Data set B.
+        match_tracking : Literal, default="MT+"
+            Method to reset the match.
+        epsilon : float, default=1e-10
+            Small value to adjust the vigilance.
+
+        Returns
+        -------
+        self : SimpleARTMAP
+            The partially fitted model.
+
+        """
         SimpleARTMAP.validate_data(self, X, y)
         self._ensure_backend(X)
+        assert self._backend is not None
 
         if not hasattr(self, "labels_"):
             self.labels_ = y
@@ -447,7 +490,23 @@ class FuzzyARTMAP(SimpleARTMAP):
         return self
 
     def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
+        """Predict labels for the data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
+
+        Returns
+        -------
+        np.ndarray
+            B labels for the data.
+
+        """
         check_is_fitted(self)
+        assert self._backend is not None
         # Optional clipping, mirroring C++ wrapper behavior
         if clip:
             X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
@@ -463,7 +522,23 @@ class FuzzyARTMAP(SimpleARTMAP):
     def predict_ab(
         self, X: np.ndarray, clip: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
+        """Predict labels for the data, both A-side and B-side.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Data set A.
+        clip : bool
+            clip the input values to be between the previously seen data limits
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            A labels for the data, B labels for the data.
+
+        """
         check_is_fitted(self)
+        assert self._backend is not None
         if clip:
             X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
         self.module_a.validate_data(X)

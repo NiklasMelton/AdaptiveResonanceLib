@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import make_blobs
 from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.optimized.backends.cpp import BinaryFuzzyARTMAP
+from artlib.optimized.backends.cpp.BinaryFuzzyARTMAP import BinaryFuzzyARTMAP
 
 def binarize_features_thermometer(data: np.ndarray, n_bits: int) -> np.ndarray:
     """

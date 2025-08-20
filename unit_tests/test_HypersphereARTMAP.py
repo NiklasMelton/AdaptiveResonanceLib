@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import make_blobs
 from artlib.elementary.HypersphereART import HypersphereART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.optimized.backends.cpp import HypersphereARTMAP
+from artlib.optimized.backends.cpp.HypersphereARTMAP import HypersphereARTMAP
 
 
 def test_prepare_data():

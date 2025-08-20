@@ -306,7 +306,6 @@ class FuzzyARTMAP(SimpleARTMAP):
         rho: float,
         alpha: float,
         beta: float,
-        *,
         input_dim: Optional[int] = None,
         device: str = "cuda",
         dtype: torch.dtype = torch.float64,
@@ -320,6 +319,8 @@ class FuzzyARTMAP(SimpleARTMAP):
             Vigilance parameter.
         alpha : float
             Choice parameter.
+        beta : float
+            Learning rate.
 
         """
         module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)

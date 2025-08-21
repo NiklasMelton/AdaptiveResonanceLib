@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 
 
-class GaussianARTMAP:
+class GaussianARTMAPFactory:
     """Factory for generating optimized GaussianARTMAP models using various backends."""
 
     def __new__(

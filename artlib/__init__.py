@@ -52,10 +52,16 @@ from artlib.biclustering.BARTMAP import BARTMAP
 from artlib.topological.TopoART import TopoART
 from artlib.topological.DualVigilanceART import DualVigilanceART
 
-from artlib.optimized.BinaryFuzzyARTMAP import BinaryFuzzyARTMAP
-from artlib.optimized.FuzzyARTMAP import FuzzyARTMAP
-from artlib.optimized.HypersphereARTMAP import HypersphereARTMAP
-from artlib.optimized.GaussianARTMAP import GaussianARTMAP
+from artlib.optimized.BinaryFuzzyARTMAPFactory import (
+    BinaryFuzzyARTMAPFactory as BinaryFuzzyARTMAP,
+)
+from artlib.optimized.FuzzyARTMAPFactory import FuzzyARTMAPFactory as FuzzyARTMAP
+from artlib.optimized.HypersphereARTMAPFactory import (
+    HypersphereARTMAPFactory as HypersphereARTMAP,
+)
+from artlib.optimized.GaussianARTMAPFactory import (
+    GaussianARTMAPFactory as GaussianARTMAP,
+)
 
 __all__ = [
     "BaseART",

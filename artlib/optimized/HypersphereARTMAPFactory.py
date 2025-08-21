@@ -3,7 +3,7 @@ import warnings
 from typing import Optional
 
 
-class HypersphereARTMAP:
+class HypersphereARTMAPFactory:
     """Factory for generating optimized HypersphereARTMAP models using various
     backends."""
 

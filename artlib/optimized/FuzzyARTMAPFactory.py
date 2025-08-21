@@ -3,7 +3,7 @@ import warnings
 from typing import Optional
 
 
-class FuzzyARTMAP:
+class FuzzyARTMAPFactory:
     """Factory for generating optimized FuzzyARTMAP models using various backends."""
 
     def __new__(

@@ -3,7 +3,7 @@ import warnings
 from typing import Optional
 
 
-class BinaryFuzzyARTMAP:
+class BinaryFuzzyARTMAPFactory:
     """Factory for generating optimized BinaryFuzzyARTMAP models using various
     backends."""
 

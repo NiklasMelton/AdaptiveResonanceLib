@@ -61,7 +61,7 @@ def test_fuzzy_artmap_factories(capsys):
     m2 = time_call("fit (torch)",  m2.fit, x2_train, y_train)
     m3 = time_call("fit (c++)",    m3.fit, x3_train, y_train)
 
-    W1, W2, W3 = np.vstack(m1.W), np.vstack(m2.W), np.vstack(m3.W)
+    W1, W2, W3 = np.vstack(m1.module_a.W), np.vstack(m2.module_a.W), np.vstack(m3.module_a.W)
     assert np.all(np.isclose(W1, W2)), "Torch weights dont match python weights."
     assert np.all(np.isclose(W1, W3)), "C++ weights dont match python weights."
 

@@ -50,7 +50,8 @@ def test_fuzzy_artmap_factories(capsys):
         try:
             assert cond, msg
         except AssertionError as e:
-            print(f"[ASSERTION FAILED] {e}")
+            with capsys.disabled():
+                print(msg)
             errors.append(str(e))
 
     # --- Timed prepare_data ---

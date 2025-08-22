@@ -44,31 +44,50 @@ def test_fuzzy_artmap_factories(capsys):
     n_train = X_train.shape[0]
     # === END ===
 
-    x1 = m1.prepare_data(X)
-    x2 = m2.prepare_data(X)
-    x3 = m3.prepare_data(X)
+    errors = []
 
-    assert np.all(np.isclose(x1, x2)), "Torch prepared data doesnt match python prepared data"
-    assert np.all(np.isclose(x1, x3)), "C++ prepared data doesnt match python prepared data"
+    def check(cond, msg):
+        try:
+            assert cond, msg
+        except AssertionError as e:
+            print(f"[ASSERTION FAILED] {e}")
+            errors.append(str(e))
+
+    # --- Timed prepare_data ---
+    x1 = time_call("prepare_data (python)", m1.prepare_data, X)
+    x2 = time_call("prepare_data (torch)", m2.prepare_data, X)
+    x3 = time_call("prepare_data (c++)", m3.prepare_data, X)
+
+    check(np.all(np.isclose(x1, x2)),
+          "Torch prepared data doesnt match python prepared data")
+    check(np.all(np.isclose(x1, x3)),
+          "C++ prepared data doesnt match python prepared data")
 
     x1_train, x1_test = x1[:n_train], x1[n_train:]
     x2_train, x2_test = x2[:n_train], x2[n_train:]
     x3_train, x3_test = x3[:n_train], x3[n_train:]
-    y_train, y_test   = y[:n_train], y[n_train:]
+    y_train, y_test = y[:n_train], y[n_train:]
 
     # --- Timed fits ---
     m1 = time_call("fit (python)", m1.fit, x1_train, y_train)
-    m2 = time_call("fit (torch)",  m2.fit, x2_train, y_train)
-    m3 = time_call("fit (c++)",    m3.fit, x3_train, y_train)
+    m2 = time_call("fit (torch)", m2.fit, x2_train, y_train)
+    m3 = time_call("fit (c++)", m3.fit, x3_train, y_train)
 
-    W1, W2, W3 = np.vstack(m1.module_a.W), np.vstack(m2.module_a.W), np.vstack(m3.module_a.W)
-    assert np.all(np.isclose(W1, W2)), "Torch weights dont match python weights."
-    assert np.all(np.isclose(W1, W3)), "C++ weights dont match python weights."
+    W1 = np.vstack(m1.module_a.W)
+    W2 = np.vstack(m2.module_a.W)
+    W3 = np.vstack(m3.module_a.W)
+
+    check(np.all(np.isclose(W1, W2)), "Torch weights dont match python weights.")
+    check(np.all(np.isclose(W1, W3)), "C++ weights dont match python weights.")
 
     # --- Timed predicts ---
     y1 = time_call("predict (python)", m1.predict, x1_test)
-    y2 = time_call("predict (torch)",  m2.predict, x2_test)
-    y3 = time_call("predict (c++)",    m3.predict, x3_test)
+    y2 = time_call("predict (torch)", m2.predict, x2_test)
+    y3 = time_call("predict (c++)", m3.predict, x3_test)
 
-    assert np.all(y1 == y2), "Torch predictions dont match python predictions."
-    assert np.all(y1 == y3), "C++ predictions dont match python predictions."
+    check(np.all(y1 == y2), "Torch predictions dont match python predictions.")
+    check(np.all(y1 == y3), "C++ predictions dont match python predictions.")
+
+    # --- Final raise if any assertions failed ---
+    if errors:
+        raise AssertionError(" | ".join(errors))

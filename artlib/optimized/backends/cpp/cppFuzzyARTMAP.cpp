@@ -248,6 +248,8 @@ private:
     {
         reset_rho();
 
+        py::print("[cppFuzzyARTMAP::step_fit] sample:", sample, "flush"_a=true);
+
         // first ever cluster?
         if (clusters_.empty()) {
             clusters_.push_back({sample});
@@ -287,8 +289,16 @@ private:
             }
 
             /* commit to cluster 'best' */
-            clusters_[best].weight = update_weight(sample, clusters_[best].weight);
+            auto old_w = clusters_[best].weight;
+
+            // compute and assign the new weights
+            auto new_w = update_weight(sample, clusters_[best].weight);
+            clusters_[best].weight = new_w;
             cluster_map_[best]     = c_b;
+
+            // print old and new
+            py::print("[cppFuzzyARTMAP::step_fit] old weight:", old_w, "flush"_a=true);
+            py::print("[cppFuzzyARTMAP::step_fit] new weight:", new_w, "flush"_a=true);
             return best;
         }
 

@@ -8,6 +8,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+using namespace pybind11::literals;
+
 #include <vector>
 #include <unordered_map>
 #include <algorithm>

@@ -1,9 +1,8 @@
-import pytest
 import numpy as np
 from sklearn.datasets import make_blobs
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.cpp_optimized.FuzzyARTMAP import FuzzyARTMAP
+from artlib.optimized.backends.cpp.FuzzyARTMAP import FuzzyARTMAP
 
 
 def test_prepare_data():

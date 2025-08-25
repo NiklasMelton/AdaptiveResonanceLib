@@ -338,7 +338,7 @@ training. Only use this if you understand what you are doing.
 
 <!-- END quick-start -->
 
-<!-- START cpp_optimized -->
+<!-- START cpp -->
 
 [//]: # (## C++ Optimization)
 
@@ -471,7 +471,7 @@ with these specific compound models.
 While the current selection remains limited, future releases will expand the native C++
 implementation as user demand for them increases.
 
-<!-- END cpp_optimized -->
+<!-- END cpp -->
 
 <!-- START documentation -->
 ## Documentation

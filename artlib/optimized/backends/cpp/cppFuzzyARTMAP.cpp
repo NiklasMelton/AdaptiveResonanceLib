@@ -110,6 +110,7 @@ public:
         for (int i = 0; i < n_samples; ++i) {
             std::vector<double> sample(Xptr + i * n_features,
                                        Xptr + (i + 1) * n_features);
+            py::print("[cppFuzzyARTMAP::fit] sample:", sample, "flush"_a=true);
             labels_a[i] = step_fit(sample, yptr[i]);
         }
 

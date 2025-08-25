@@ -266,6 +266,7 @@ private:
         for (std::size_t k = 0; k < K; ++k) {
             T[k] = category_choice(sample.data(), clusters_[k].weight);
             M[k] = match(sample.data(), clusters_[k].weight);
+            py::print("[cppFuzzyARTMAP::T and M] sample:", T[k], M[k], "flush"_a=true);
         }
 
         auto op = _match_op(MT_);

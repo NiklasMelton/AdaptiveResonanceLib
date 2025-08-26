@@ -89,7 +89,7 @@ class _TorchFuzzyARTMAP:
         if self.cfg.complement:
             if X.shape[1] != 2 * self.input_dim:
                 raise ValueError(
-                    f"With complement=True, expected D={2*self.input_dim}, "
+                    f"With complement=True, expected D={2 * self.input_dim}, "
                     f"got {X.shape[1]}"
                 )
             D = self.input_dim
@@ -115,6 +115,31 @@ class _TorchFuzzyARTMAP:
                 torch.all(X >= -self._prep_tol) and torch.all(X <= 1.0 + self._prep_tol)
             ):
                 raise ValueError("Prepared inputs must be in [0,1].")
+
+    def _free_mem_bytes(self) -> int:
+        if self.device.type == "cuda" and torch.cuda.is_available():
+            try:
+                with torch.cuda.device(self.device):
+                    free_b, _ = torch.cuda.mem_get_info()
+                return int(free_b)
+            except Exception:
+                pass
+        # CPU path
+        try:
+            import psutil  # type: ignore
+
+            return int(psutil.virtual_memory().available)
+        except Exception:
+            # Linux fallback
+            try:
+                with open("/proc/meminfo") as f:
+                    for line in f:
+                        if line.startswith("MemAvailable:"):
+                            return int(line.split()[1]) * 1024
+            except Exception:
+                pass
+        # Last-resort conservative default
+        return 512 * 1024 * 1024
 
     def set_data_bounds(
         self, lower: Union[Tensor, "np.ndarray"], upper: Union[Tensor, "np.ndarray"]
@@ -265,24 +290,58 @@ class _TorchFuzzyARTMAP:
             raise RuntimeError("Model has no categories. Train first.")
 
         W = cast(Tensor, self.W)
-        W_sum = W.sum(dim=1).unsqueeze(0)  # [1, K]
+        K, D = W.shape
         N = Xp.shape[0]
-        block = 2048
-        a_idx = []
-        b_lab = []
+        elem_size = torch.tensor([], dtype=self.dtype).element_size()  # bytes/elem
 
-        for s in range(0, N, block):
-            e = min(N, s + block)
-            I = Xp[s:e]  # [B, D]
-            IandW = torch.minimum(I.unsqueeze(1), W.unsqueeze(0))  # [B, K, D]
-            IandW_sum = IandW.sum(dim=2)  # [B, K]
-            T = IandW_sum / (self.cfg.alpha + W_sum)  # [B, K]
-            idx = torch.argmax(T, dim=1)  # [B]
-            a_idx.append(idx.to("cpu"))
-            b_lab.append(cast(Tensor, self.map_y)[idx].to("cpu"))
+        # Precompute and keep small tensors
+        W_sum = W.sum(dim=1)  # [K]
+        alpha = float(self.cfg.alpha)
 
-        y_a = torch.cat(a_idx, dim=0).numpy().astype(int)
-        y_b = torch.cat(b_lab, dim=0).numpy().astype(int)
+        budget_bytes = max(int(0.25 * self._free_mem_bytes()), 512 * 1024 * 1024)
+
+        def k_chunk_for(B_chunk: int) -> int:
+            # max K_chunk so that B_chunk*K_chunk*D*elem_size <= budget
+            denom = max(1, B_chunk * D * elem_size)
+            return max(1, min(K, budget_bytes // denom))
+
+        # We still chunk batch to keep CPU/GPU caches happy.
+        B_block = 1024  # start point; real cap comes from k_chunk_for()
+        a_idx_parts: list[Tensor] = []
+        b_lab_parts: list[Tensor] = []
+
+        for b0 in range(0, N, B_block):
+            b1 = min(N, b0 + B_block)
+            I = Xp[b0:b1]  # [B_cur, D]
+            B_cur = I.shape[0]
+
+            # Running best T and argmax over K for this batch block
+            best_T = torch.full((B_cur,), -float("inf"), device=I.device, dtype=I.dtype)
+            best_idx = torch.zeros((B_cur,), device="cpu", dtype=torch.long)
+
+            K_block = k_chunk_for(B_cur)
+            for k0 in range(0, K, K_block):
+                k1 = min(K, k0 + K_block)
+                Wc = W[k0:k1]  # [Kc, D]
+                # [B_cur, Kc, D] -> sum over D -> [B_cur, Kc]
+                IandW_sum = torch.minimum(I.unsqueeze(1), Wc.unsqueeze(0)).sum(dim=2)
+                Tc = IandW_sum / (alpha + W_sum[k0:k1].unsqueeze(0))
+
+                # best within this K-chunk
+                Tc_max, Tc_arg = Tc.max(dim=1)  # [B_cur]
+                better = Tc_max > best_T
+                if better.any():
+                    best_T[better] = Tc_max[better]
+                    # store *global* K indices (offset by k0) on CPU to save device RAM
+                    best_idx[better] = (k0 + Tc_arg[better]).to(torch.long).to("cpu")
+
+            a_idx_parts.append(best_idx)
+            # Map to B labels
+            idx_dev = best_idx.to(self.device)
+            b_lab_parts.append(cast(Tensor, self.map_y)[idx_dev].to("cpu"))
+
+        y_a = torch.cat(a_idx_parts, dim=0).numpy().astype(int)
+        y_b = torch.cat(b_lab_parts, dim=0).numpy().astype(int)
         return y_a, y_b
 
 

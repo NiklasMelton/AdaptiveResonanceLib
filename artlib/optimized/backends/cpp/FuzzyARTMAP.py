@@ -272,8 +272,10 @@ class FuzzyARTMAP(SimpleARTMAP):
         self.module_a.validate_data(X_)
         self.module_a.check_dimensions(X_)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
+        )
         y_a, y_b = PredictFuzzyARTMAP(
             X_,
             rho=self.module_a.params["rho"],

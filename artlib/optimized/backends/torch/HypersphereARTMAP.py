@@ -10,7 +10,7 @@ from artlib.elementary.HypersphereART import HypersphereART
 
 from torch import Tensor
 
-from _TorchSimpleARTMAP import _TorchSimpleARTMAP
+from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
 
 
 # ---------

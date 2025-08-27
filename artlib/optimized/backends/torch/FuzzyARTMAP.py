@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from artlib.elementary.FuzzyART import FuzzyART
-from _TorchSimpleARTMAP import _TorchSimpleARTMAP
+from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
 
 
 # ------------------------------

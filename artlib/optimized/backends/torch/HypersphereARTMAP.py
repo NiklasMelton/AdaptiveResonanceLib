@@ -111,24 +111,26 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
             return empty, empty, z, empty
 
         W = cast(Tensor, self.W)
-        centroids = W[:, : self.input_dim]  # [K, D]
-        radii = W[:, self.input_dim]  # [K]
-
-        # Euclidean radius from I to each centroid
-        diff = I.unsqueeze(0) - centroids  # [K, D]
-        I_radius = torch.linalg.norm(diff, ord=2, dim=1)  # [K]
-        max_radius = torch.maximum(radii, I_radius)  # [K]
 
         r_hat = float(self.cfg.r_hat)
         alpha = float(self.cfg.alpha)
 
-        # Choice function (Anagnostopoulos & Georgiopoulos, 2000)
-        T = (r_hat - max_radius) / (r_hat - radii + alpha)  # [K]
+        centroids = W[:, : self.input_dim]  # [K, D]
+        radii = W[:, self.input_dim]  # [K]
 
-        # Match criterion
-        # In the original code: 1 - (max(radius, max_radius)/r_hat).
-        # Since max_radius = max(radius, I_radius), this reduces to:
-        m = 1.0 - (max_radius / r_hat)  # [K]
+        # ||x||^2 (scalar), ||C||^2 per row [K], and dot(C, x) [K]
+        x2 = (I * I).sum()  # scalar
+        c2 = (centroids * centroids).sum(dim=1)  # [K]
+        dots = centroids @ I  # [K]  (same as (I.unsqueeze(0) @ centroids.T).squeeze(0))
+
+        # d^2 = ||x||^2 + ||c||^2 - 2 c·x
+        d2 = x2 + c2 - 2.0 * dots
+        d2.clamp_(min=0.0)
+        I_radius = torch.sqrt(d2)  # [K]
+
+        max_radius = torch.maximum(radii, I_radius)  # [K]
+        T = (r_hat - max_radius) / (r_hat - radii + alpha)
+        m = 1.0 - (max_radius / r_hat)
 
         return T, m, I_radius, max_radius
 
@@ -265,18 +267,19 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
             K_block = k_chunk_for(B_cur)
             for k0 in range(0, K, K_block):
                 k1 = min(K, k0 + K_block)
-                Wc = W[k0:k1]  # [Kc, D+1]
-                centroids = Wc[:, :D]  # [Kc, D]
-                radii_c = Wc[:, D]  # [Kc]
+                Wc = W[k0:k1]
+                centroids = Wc[:, :D].contiguous()
+                radii_c = Wc[:, D].contiguous()
 
-                # Distances: [B_cur, Kc]
-                diff = I.unsqueeze(1) - centroids.unsqueeze(0)  # [B_cur, Kc, D]
-                I_radius = torch.linalg.norm(diff, ord=2, dim=2)  # [B_cur, Kc]
+                X2 = (I * I).sum(dim=1, keepdim=True)  # [B_cur, 1]
+                C2 = (centroids * centroids).sum(dim=1).unsqueeze(0)  # [1, Kc]
+                d2 = X2 + C2  # broadcast add
+                d2.addmm_(I, centroids.T, beta=1.0, alpha=-2.0)  # d2 += -2 * I @ C^T
+                d2.clamp_(min=0.0)
+                I_radius = torch.sqrt(d2)
+
                 max_radius = torch.maximum(I_radius, radii_c.unsqueeze(0))
-
-                Tc = (r_hat - max_radius) / (
-                    r_hat - radii_c.unsqueeze(0) + alpha
-                )  # [B_cur, Kc]
+                Tc = (r_hat - max_radius) / (r_hat - radii_c.unsqueeze(0) + alpha)
 
                 Tc_max, Tc_arg = Tc.max(dim=1)  # [B_cur]
                 better = Tc_max > best_T

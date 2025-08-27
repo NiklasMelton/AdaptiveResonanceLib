@@ -188,9 +188,8 @@ public:
 
             for (std::size_t c = 0; c < clusters_.size(); ++c) {
                 double T = category_choice(row, clusters_[c].w, total_n);
-                double M = match(row, clusters_[c].w);
 
-                if (M >= base_rho_ && T > best_T) {
+                if (T > best_T) {
                     best_T  = T;
                     best_id = static_cast<int>(c);
                 }

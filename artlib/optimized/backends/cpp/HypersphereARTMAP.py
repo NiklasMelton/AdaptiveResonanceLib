@@ -130,15 +130,17 @@ class HypersphereARTMAP(SimpleARTMAP):
             The fitted model.
 
         """
-        SimpleARTMAP.validate_data(self, X, y)
-        self.classes_ = unique_labels(y)
-        self.labels_ = y
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        y_ = np.ascontiguousarray(y, dtype=np.int32)
+        SimpleARTMAP.validate_data(self, X_, y_)
+        self.classes_ = unique_labels(y_)
+        self.labels_ = y_
         self.module_a.W = []
-        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
+        self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
         la, W, cl = FitHypersphereARTMAP(
-            X,
-            y,
+            X_,
+            y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
@@ -178,24 +180,26 @@ class HypersphereARTMAP(SimpleARTMAP):
             The partially fitted model.
 
         """
-        SimpleARTMAP.validate_data(self, X, y)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        y_ = np.ascontiguousarray(y, dtype=np.int32)
+        SimpleARTMAP.validate_data(self, X_, y_)
 
         if not hasattr(self, "labels_"):
-            self.labels_ = y
+            self.labels_ = y_
             existing_W = None
             existing_map = None
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, (0, len(y)))
-            self.labels_[j:] = y
-            existing_W = np.array(self.module_a.W, dtype=float)
-            existing_map = np.array(
+            self.labels_ = np.pad(self.labels_, (0, len(y_)))
+            self.labels_[j:] = y_
+            existing_W = np.ascontiguousarray(self.module_a.W, dtype=float)
+            existing_map = np.ascontiguousarray(
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
         la, W, cl = FitHypersphereARTMAP(
-            X,
-            y,
+            X_,
+            y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
@@ -226,15 +230,18 @@ class HypersphereARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
         if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
+            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X_)
+        self.module_a.check_dimensions(X_)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
+        )
         _, y_b = PredictHypersphereARTMAP(
-            X,
+            X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
@@ -265,15 +272,18 @@ class HypersphereARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
         if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
+            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X_)
+        self.module_a.check_dimensions(X_)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
+        )
         y_a, y_b = PredictHypersphereARTMAP(
-            X,
+            X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],

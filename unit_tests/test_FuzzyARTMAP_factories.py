@@ -82,10 +82,6 @@ def test_fuzzy_artmap_factories(capsys):
     check(np.all(np.isclose(W1, W3)), "C++ weights dont match python weights.")
 
     # --- Timed predicts ---
-    with capsys.disabled():
-        print(x1_test.shape, x1_test.dtype)
-        print(x2_test.shape, x2_test.dtype)
-        print(x3_test.shape, x3_test.dtype)
     y1 = time_call("predict (python)", m1.predict, x1_test)
     y2 = time_call("predict (torch)", m2.predict, x2_test)
     y3 = time_call("predict (c++)", m3.predict, x3_test)

@@ -23,7 +23,7 @@ def _load_mnist_numpy():
     return X_train, y_train, X_test, y_test
 
 
-def test_fuzzy_artmap_factories(capsys):
+def test_hyperpshere_artmap_factories(capsys):
     def time_call(label, fn, *args, **kwargs):
         t0 = perf_counter()
         out = fn(*args, **kwargs)

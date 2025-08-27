@@ -33,10 +33,10 @@ def test_fuzzy_artmap_factories(capsys):
             print(f"[TIMING] {label}: {dt:.3f} s", flush=True)
         return out
 
-    RHO, ALPHA, BETA = 0.8, 1e-10, 1.0
-    m1 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, backend="python")
-    m2 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, backend="torch")
-    m3 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, backend="c++")
+    RHO, ALPHA, BETA, R_HAT = 0.8, 1e-10, 1.0, 28.
+    m1 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend="python")
+    m2 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend="torch")
+    m3 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend="c++")
 
     # === MNIST loading & combine-before-prepare ===
     X_train, y_train, X_test, y_test = _load_mnist_numpy()

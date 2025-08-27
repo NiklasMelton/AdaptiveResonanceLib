@@ -1,46 +1,53 @@
-"""Fuzzy ARTMAP :cite:`carpenter1991fuzzy`."""
+"""Gaussian ARTMAP :cite:`williamson1996gaussian`."""
 import numpy as np
 from typing import Literal, Tuple
-from artlib.cpp_optimized.cppFuzzyARTMAP import (
-    FitFuzzyARTMAP,
-    PredictFuzzyARTMAP,
+from artlib.optimized.backends.cpp.cppGaussianARTMAP import (  # ← new backend
+    FitGaussianARTMAP,
+    PredictGaussianARTMAP,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.elementary.FuzzyART import FuzzyART
+from artlib.elementary.GaussianART import GaussianART
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
 
 
-class FuzzyARTMAP(SimpleARTMAP):
-    """FuzzyARTMAP for Classification. optimized with C++
+class GaussianARTMAP(SimpleARTMAP):
+    """GaussianARTMAP for Classification. optimized with C++
 
-    This module implements FuzzyARTMAP
+    This module implements GaussianARTMAP
 
-    FuzzyARTMAP is a non-modular classification model which has been highly
+    GaussianARTMAP is a non-modular classification model which has been highly
     optimized for run-time performance. Fit and predict functions are implemented in
     c++ for efficient execution. This class acts as a wrapper for the underlying c++
     functions and to provide compatibility with the artlib style and usage.
-    Functionally, FuzzyARTMAP behaves as a special case of
+    Functionally, GaussianARTMAP behaves as a special case of
     :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
-    :class:`~artlib.elementary.FuzzyART.FuzzyART`.
+    :class:`~artlib.elementary.GaussianART.GaussianART`.
 
     """
 
-    def __init__(self, rho: float, alpha: float, beta: float):
-        """Initialize the Fuzzy ARTMAP model.
+    def __init__(self, rho: float, sigma_init: np.ndarray, alpha: float = 1e-10):
+        """Initialize the Gaussian ARTMAP model.
 
         Parameters
         ----------
         rho : float
             Vigilance parameter.
-        alpha : float
-            Choice parameter.
-        beta : float
-            Learning rate.
+        sigma_init : np.ndarray
+            Initial diagonal standard deviations (length = n_features).
+        alpha : float, default=1e-10
+            Small constant to avoid division by zero in likelihood term.
 
         """
-        module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)
+        sigma_init = np.asarray(sigma_init, dtype=float)
+        if sigma_init.ndim != 1 or (sigma_init <= 0).any():
+            raise ValueError("'sigma_init' must be a 1‑D array of positive values.")
+
+        module_a = GaussianART(rho=rho, sigma_init=sigma_init, alpha=alpha)
         super().__init__(module_a)
+
+        # keep a copy for the C++ backend
+        self._sigma_init = sigma_init
 
     def _synchronize_cpp_results(
         self,
@@ -82,7 +89,7 @@ class FuzzyARTMAP(SimpleARTMAP):
         for k, c in enumerate(new_counts):
             self.module_a.weight_sample_counter_[k] += int(c)
 
-        # weights (float64 arrays)
+        # weights
         self.module_a.W = [w for w in weights_arrays]
 
         # A→B mapping
@@ -133,12 +140,12 @@ class FuzzyARTMAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
-        la, W, cl = FitFuzzyARTMAP(
+        la, W, cl = FitGaussianARTMAP(
             X,
             y,
             rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
+            alpha=self.module_a.params["alpha"],  # small‑alpha parameter
+            sigma_init=self._sigma_init,
             MT=match_tracking,
             epsilon=epsilon,
             weights=None,
@@ -189,12 +196,12 @@ class FuzzyARTMAP(SimpleARTMAP):
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitFuzzyARTMAP(
+        la, W, cl = FitGaussianARTMAP(
             X,
             y,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
+            sigma_init=self._sigma_init,
             MT=match_tracking,
             epsilon=epsilon,
             weights=existing_W,
@@ -228,11 +235,11 @@ class FuzzyARTMAP(SimpleARTMAP):
 
         W = np.array(self.module_a.W, dtype=float)
         cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        _, y_b = PredictFuzzyARTMAP(
+        _, y_b = PredictGaussianARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
+            sigma_init=self._sigma_init,
             MT="",
             epsilon=0.0,
             weights=W,
@@ -266,11 +273,11 @@ class FuzzyARTMAP(SimpleARTMAP):
 
         W = np.array(self.module_a.W, dtype=float)
         cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        y_a, y_b = PredictFuzzyARTMAP(
+        y_a, y_b = PredictGaussianARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
+            sigma_init=self._sigma_init,
             MT="",
             epsilon=0.0,
             weights=W,

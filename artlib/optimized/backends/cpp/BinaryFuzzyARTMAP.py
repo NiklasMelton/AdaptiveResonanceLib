@@ -1,54 +1,49 @@
-"""Hypersphere ARTMAP :cite:`anagnostopoulos2000hypersphere`."""
-
+"""Binary Fuzzy ART :cite:`carpenter1991fuzzy`."""
 import numpy as np
-from typing import Literal, Tuple
-from artlib.cpp_optimized.cppHypersphereARTMAP import (
-    FitHypersphereARTMAP,
-    PredictHypersphereARTMAP,
+from typing import Literal
+from artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP import (
+    FitBinaryFuzzyARTMAP,
+    PredictBinaryFuzzyARTMAP,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.elementary.HypersphereART import HypersphereART
+from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
 
 
-class HypersphereARTMAP(SimpleARTMAP):
-    """HypersphereARTMAP for Classification. optimized with C++
+class BinaryFuzzyARTMAP(SimpleARTMAP):
+    """BinaryFuzzyARTMAP for Classification. optimized with C++
 
-    This module implements HypersphereARTMAP
+    This module implements BinaryFuzzyARTMAP
 
-    HypersphereARTMAP is a non-modular classification model which has been highly
+    BinaryFuzzyARTMAP is a non-modular classification model which has been highly
     optimized for run-time performance. Fit and predict functions are implemented in
     c++ for efficient execution. This class acts as a wrapper for the underlying c++
     functions and to provide compatibility with the artlib style and usage.
-    Functionally, HypersphereARTMAP behaves as a special case of
+    Functionally, BinaryFuzzyARTMAP behaves as a special case of
     :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
-    :class:`~artlib.elementary.HypersphereART.HypersphereART`.
+    :class:`~artlib.elementary.BinaryFuzzyART.BinaryFuzzyART`.
 
     """
 
-    def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
-        """
+    def __init__(self, rho: float, alpha: float):
+        """Initialize the Binary Fuzzy ARTMAP model.
+
         Parameters
         ----------
         rho : float
             Vigilance parameter.
         alpha : float
             Choice parameter.
-        beta : float
-            Learning‑rate parameter.
-        r_hat : float
-            Global upper bound on cluster radius (must be > 0).
+
         """
-        module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
+        module_a = BinaryFuzzyART(rho=rho, alpha=alpha)
         super().__init__(module_a)
-        # store r_hat so we can forward it to the C++ layer
-        self._r_hat = float(r_hat)
 
     def _synchronize_cpp_results(
         self,
         labels_a_out: np.ndarray,
-        weights_arrays: list[np.ndarray],
+        weights_arrays: np.ndarray,
         cluster_labels_out: np.ndarray,
         incremental: bool = False,
     ):
@@ -67,39 +62,45 @@ class HypersphereARTMAP(SimpleARTMAP):
 
         """
         if not incremental:
-            self.map: dict[int, int] = {}
+            self.map: dict[int, int] = dict()
             self.module_a.labels_ = np.array((), dtype=int)
             self.module_a.weight_sample_counter_ = []
 
-        # labels
+        # concatenate new module_a labels to the existing labels
         self.module_a.labels_ = np.concatenate(
-            [self.module_a.labels_, labels_a_out.astype(int)]
-        )
+            [self.module_a.labels_, labels_a_out.flatten().astype(int)]
+        ).flatten()
+        # update module_a sample counter
+        new_sample_counts = list(map(int, np.bincount(labels_a_out)))
 
-        # sample counters
-        new_counts = np.bincount(labels_a_out, minlength=len(weights_arrays))
-        if len(self.module_a.weight_sample_counter_) < len(new_counts):
+        if len(self.module_a.weight_sample_counter_) < len(new_sample_counts):
             self.module_a.weight_sample_counter_.extend(
-                [0] * (len(new_counts) - len(self.module_a.weight_sample_counter_))
+                [0]
+                * (len(new_sample_counts) - len(self.module_a.weight_sample_counter_))
             )
-        for k, c in enumerate(new_counts):
-            self.module_a.weight_sample_counter_[k] += int(c)
 
-        # weights
+        for i in range(len(new_sample_counts)):
+            self.module_a.weight_sample_counter_[i] += new_sample_counts[i]
+
+        # update module_a weights
         self.module_a.W = [w for w in weights_arrays]
 
-        # A → B map
+        # update the cluster-label map
         for c_a, c_b in enumerate(cluster_labels_out):
             if c_a in self.map:
-                assert self.map[c_a] == c_b, "Incremental fit changed cluster map."
+                assert self.map[c_a] == c_b, (
+                    "Incremental learning has changed "
+                    "cluster mapping. Something went "
+                    "wrong."
+                )
             else:
-                self.map[c_a] = int(c_b)
+                self.map[c_a] = c_b
 
     def fit(
         self,
         X: np.ndarray,
         y: np.ndarray,
-        max_iter: int = 1,
+        max_iter=1,
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
@@ -130,25 +131,26 @@ class HypersphereARTMAP(SimpleARTMAP):
             The fitted model.
 
         """
+        # Check that X and y have correct shape
         SimpleARTMAP.validate_data(self, X, y)
+        # Store the classes seen during fit
         self.classes_ = unique_labels(y)
         self.labels_ = y
+        # init module A
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
-        la, W, cl = FitHypersphereARTMAP(
+        labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
             X,
             y,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
             MT=match_tracking,
             epsilon=epsilon,
             weights=None,
             cluster_labels=None,
         )
-        self._synchronize_cpp_results(la, W, cl)
+        self._synchronize_cpp_results(labels_a_out, weights_arrays, cluster_labels_out)
         self.module_a.is_fitted_ = True
         return self
 
@@ -179,33 +181,33 @@ class HypersphereARTMAP(SimpleARTMAP):
 
         """
         SimpleARTMAP.validate_data(self, X, y)
-
         if not hasattr(self, "labels_"):
             self.labels_ = y
+            self.module_a.W = []
             existing_W = None
-            existing_map = None
+            existing_cluster_labels = None
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, (0, len(y)))
+            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode="constant")
             self.labels_[j:] = y
-            existing_W = np.array(self.module_a.W, dtype=float)
-            existing_map = np.array(
-                [self.map[c] for c in range(self.module_a.n_clusters)]
+            existing_W = np.array(self.module_a.W)
+            existing_cluster_labels = np.array(
+                [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitHypersphereARTMAP(
+        labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
             X,
             y,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
             MT=match_tracking,
             epsilon=epsilon,
             weights=existing_W,
-            cluster_labels=existing_map,
+            cluster_labels=existing_cluster_labels,
         )
-        self._synchronize_cpp_results(la, W, cl, incremental=True)
+        self._synchronize_cpp_results(
+            labels_a_out, weights_arrays, cluster_labels_out, incremental=True
+        )
         self.module_a.is_fitted_ = True
         return self
 
@@ -231,24 +233,25 @@ class HypersphereARTMAP(SimpleARTMAP):
         self.module_a.validate_data(X)
         self.module_a.check_dimensions(X)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        _, y_b = PredictHypersphereARTMAP(
+        existing_W = np.array(self.module_a.W)
+        existing_cluster_labels = np.array(
+            [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+        )
+
+        _, y_b = PredictBinaryFuzzyARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
             MT="",
-            epsilon=0.0,
-            weights=W,
-            cluster_labels=cl,
+            epsilon=0.0,  # match your training setup
+            weights=existing_W,
+            cluster_labels=existing_cluster_labels,
         )
         return y_b
 
     def predict_ab(
         self, X: np.ndarray, clip: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict labels for the data, both A-side and B-side.
 
         Parameters
@@ -270,17 +273,18 @@ class HypersphereARTMAP(SimpleARTMAP):
         self.module_a.validate_data(X)
         self.module_a.check_dimensions(X)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        y_a, y_b = PredictHypersphereARTMAP(
+        existing_W = np.array(self.module_a.W)
+        existing_cluster_labels = np.array(
+            [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+        )
+
+        y_a, y_b = PredictBinaryFuzzyARTMAP(
             X,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
             MT="",
-            epsilon=0.0,
-            weights=W,
-            cluster_labels=cl,
+            epsilon=0.0,  # match your training setup
+            weights=existing_W,
+            cluster_labels=existing_cluster_labels,
         )
         return y_a, y_b

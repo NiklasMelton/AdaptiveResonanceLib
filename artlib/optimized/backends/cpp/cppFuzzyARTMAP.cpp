@@ -8,6 +8,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
@@ -165,9 +166,8 @@ public:
 
             for (std::size_t c = 0; c < clusters_.size(); ++c) {
                 double T = category_choice(row, clusters_[c].weight);
-                double M = match(row, clusters_[c].weight);
 
-                if (M >= base_rho_ && T > best_T) {
+                if (T > best_T) {
                     best_T  = T;
                     best_id = static_cast<int>(c);
                 }
@@ -287,8 +287,13 @@ private:
             }
 
             /* commit to cluster 'best' */
-            clusters_[best].weight = update_weight(sample, clusters_[best].weight);
+            auto old_w = clusters_[best].weight;
+
+            // compute and assign the new weights
+            auto new_w = update_weight(sample, clusters_[best].weight);
+            clusters_[best].weight = new_w;
             cluster_map_[best]     = c_b;
+
             return best;
         }
 

@@ -2,50 +2,181 @@ name: Run Python Unit Tests
 
 on:
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      # 1) Compute which "areas" changed — one filter per test file
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            # Runs test_FuzzyARTMAP_factories.py when any of these change:
+            fuzzy_factory:
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/FuzzyART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/FuzzyARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppFuzzyARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/FuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/FuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_FuzzyARTMAP_factories.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install poetry
-        poetry install --with dev --no-root
+            # Runs test_HypersphereARTMAP_factories.py when these change:
+            hypersphere_factory:
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/HypersphereART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/HypersphereARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppHypersphereARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/HypersphereARTMAP.py'
+              - 'artlib/optimized/backends/torch/HypersphereARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_HypersphereARTMAP_factories.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
 
-    - name: Build wheel
-      run: |
-        poetry build
-        ls -l dist  # show the generated wheel
+            # Add more test-specific filters here as needed...
+            gaussian_factory:
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/GaussianART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/GaussianARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppGaussianARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/GaussianARTMAP.py'
+              - 'artlib/optimized/backends/torch/GaussianARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_GaussianARTMAP_factories.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
 
-    - name: Install wheel
-      run: |
-        poetry run pip install dist/*.whl
+#          # Add more test-specific filters here as needed...
+#          binary_factory:
+#            - 'artlib/common/BaseART.py'
+#            - 'artlib/common/BaseARTMAP.py'
+#            - 'artlib/elementary/BinaryFuzzyART.py'
+#            - 'artlib/supervised/SimpleARTMAP.py'
+#            - 'artlib/optimized/BinaryFuzzyARTMAPFactory.py'
+#            - 'artlib/optimized/backends/cpp/cppBinaryFuzzyARTMAP.cpp'
+#            - 'artlib/optimized/backends/cpp/BinaryFuzzyARTMAP.py'
+#            - 'artlib/optimized/backends/torch/BinaryFuzzyARTMAP.py'
+#            - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+#            - 'unit_tests/test_BinaryFuzzyARTMAP_factories.py'
+#            - 'pyproject.toml'
+#            - 'poetry.lock'
 
-    - name: Debug installed 'artlib'
-      run: |
-        poetry run pip show -f artlib
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
 
-    - name: Run tests
-      run: |
-        poetry run pytest unit_tests/ --maxfail=5 --disable-warnings -v --tb=short --junitxml=./test-results/pytest-report.xml  # Ensure JUnit XML report is generated
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install --with dev --no-root
 
-    - name: Publish test results
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: pytest-results
-        path: ./test-results/pytest-report.xml
-        compression-level: 6  # Optional: Adjusts compression for artifact storage efficiency
+      - name: Build wheel
+        run: |
+          poetry build
+          ls -l dist
+
+      - name: Install wheel
+        run: |
+          poetry run pip install dist/*.whl
+
+      - name: Debug installed 'artlib'
+        run: |
+          poetry run pip show -f artlib
+
+      # 2) Fast suite (always runs) — exclude the factory tests so they don’t double-run
+      - name: Run fast tests
+        run: |
+          poetry run pytest unit_tests/ \
+            --ignore-glob='unit_tests/test_*ARTMAP_factories.py' \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-fast.xml
+
+      # 3) Each heavy test runs only if its filter matched
+
+      - name: Run Fuzzy factory test
+        if: steps.changes.outputs.fuzzy_factory == 'true'
+        run: |
+          poetry run pytest unit_tests/test_FuzzyARTMAP_factories.py \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-fuzzy-factory.xml
+
+      - name: Run Hypersphere factory test
+        if: steps.changes.outputs.hypersphere_factory == 'true'
+        run: |
+          poetry run pytest unit_tests/test_HypersphereARTMAP_factories.py \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-hypersphere-factory.xml
+
+      - name: Run Gaussian factory test
+        if: steps.changes.outputs.hypersphere_factory == 'true'
+        run: |
+          poetry run pytest unit_tests/test_GaussianARTMAP_factories.py \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-gaussian-factory.xml
+
+
+      # 4) Only upload an artifact for the thing that failed (if any)
+      - name: Publish fast results
+        if: failure() && !(steps.changes.outputs.fuzzy_factory == 'true' || steps.changes.outputs.hypersphere_factory == 'true')
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-fast-results
+          path: ./test-results/pytest-fast.xml
+          compression-level: 6
+
+      - name: Publish fuzzy factory results
+        if: failure() && steps.changes.outputs.fuzzy_factory == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-fuzzy-factory-results
+          path: ./test-results/pytest-fuzzy-factory.xml
+          compression-level: 6
+
+      - name: Publish hypersphere factory results
+        if: failure() && steps.changes.outputs.hypersphere_factory == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-hypersphere-factory-results
+          path: ./test-results/pytest-hypersphere-factory.xml
+          compression-level: 6
+
+      - name: Publish gaussian factory results
+        if: failure() && steps.changes.outputs.gaussian_factory == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-gaussian-factory-results
+          path: ./test-results/pytest-gaussian-factory.xml
+          compression-level: 6

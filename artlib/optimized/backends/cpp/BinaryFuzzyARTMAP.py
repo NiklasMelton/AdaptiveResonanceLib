@@ -1,7 +1,7 @@
 """Binary Fuzzy ART :cite:`carpenter1991fuzzy`."""
 import numpy as np
 from typing import Literal
-from artlib.cpp_optimized.cppBinaryFuzzyARTMAP import (
+from artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP import (
     FitBinaryFuzzyARTMAP,
     PredictBinaryFuzzyARTMAP,
 )

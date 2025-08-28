@@ -51,7 +51,7 @@ jobs:
               - 'poetry.lock'
 
             # Add more test-specific filters here as needed...
-             gaussian_factory:
+            gaussian_factory:
               - 'artlib/common/BaseART.py'
               - 'artlib/common/BaseARTMAP.py'
               - 'artlib/elementary/GaussianART.py'
@@ -64,6 +64,7 @@ jobs:
               - 'unit_tests/test_GaussianARTMAP_factories.py'
               - 'pyproject.toml'
               - 'poetry.lock'
+
 #          # Add more test-specific filters here as needed...
 #          binary_factory:
 #            - 'artlib/common/BaseART.py'

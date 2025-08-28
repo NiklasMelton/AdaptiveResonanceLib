@@ -48,13 +48,13 @@ jobs:
       - name: Run ARTMAP factory tests
         run: |
           poetry run pytest unit_tests/test_*ARTMAP_factories.py \
-            --maxfail=5 --disable-warnings -v --tb=short \
-            --junitxml=./test-results/pytest-heavy.xml
+            -m heavy --maxfail=5 --disable-warnings -v --tb=short \
+            --junitxml=./test-results/pytest-artmap-factories.xml
 
       - name: Publish test results
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-heavy-results
+          name: pytest-artmap-factories-results
           path: ./test-results/pytest-artmap-factories.xml
           compression-level: 6

@@ -1,18 +1,21 @@
-"""Fuzzy ARTMAP :cite:`carpenter1991fuzzy`."""
+"""Hypersphere ARTMAP (Torch-accelerated backend)"""
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union, Literal, cast
 import numpy as np
 import torch
+
+from artlib.supervised.SimpleARTMAP import SimpleARTMAP
+from artlib.elementary.HypersphereART import HypersphereART
+
 from torch import Tensor
 
-from artlib.elementary.FuzzyART import FuzzyART
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
 
 
-# ------------------------------
+# ---------
 # utilities
-# ------------------------------
+# ---------
 def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> Tensor:
     if isinstance(x, torch.Tensor):
         return x.to(device=device, dtype=dtype, non_blocking=True)
@@ -23,43 +26,36 @@ def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> T
     raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
-def _complement_code(x: Tensor) -> Tensor:
-    # x ∈ [0,1]^M  →  [x, 1-x]
-    return torch.cat([x, 1.0 - x], dim=-1)
-
-
 # -----------------
 # Torch GPU backend
 # -----------------
 @dataclass
-class _TorchFuzzyARTMAPConfig:
+class _TorchHypersphereARTMAPConfig:
     input_dim: int
     alpha: float = 1e-3
     rho: float = 0.75
     beta: float = 1.0
-    epsilon: float = 1e-7
-    match_tracking: bool = True
+    r_hat: float = 1.0
     device: str = "cuda"
     dtype: torch.dtype = torch.float64
-    clamp_inputs: bool = True
-    fallback_to_choice_on_fail: bool = True
+    clamp_inputs: bool = False  # optional; Hypersphere doesn’t require [0,1]
 
 
-class _TorchFuzzyARTMAP:
-    """Torch accelerated Fuzzy ARTMAP with export hooks for artlib synchronization."""
+class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
+    """GPU-accelerated Hypersphere ARTMAP with export hooks for artlib
+    synchronization."""
 
-    def __init__(self, cfg: _TorchFuzzyARTMAPConfig):
+    def __init__(self, cfg: _TorchHypersphereARTMAPConfig):
         self.cfg = cfg
         self.device = torch.device(cfg.device)
         self.dtype = cfg.dtype
 
         self.input_dim = int(cfg.input_dim)
-        self.code_dim = self.input_dim * 2
+        # Each weight is [centroid (D), radius (1)]
+        self.weight_dim = self.input_dim + 1
 
-        self.W: Optional[Tensor] = None  # [K, D]
+        self.W: Optional[Tensor] = None  # [K, D+1] (centroid..., radius)
         self.map_y: Optional[Tensor] = None  # [K]
-        self._lower_bounds: Optional[Tensor] = None
-        self._upper_bounds: Optional[Tensor] = None
         self._prep_tol: float = 1e-6
 
     @property
@@ -69,29 +65,20 @@ class _TorchFuzzyARTMAP:
     def _ensure_capacity(self):
         if self.W is None:
             self.W = torch.empty(
-                (0, self.code_dim), device=self.device, dtype=self.dtype
+                (0, self.weight_dim), device=self.device, dtype=self.dtype
             )
             self.map_y = torch.empty((0,), device=self.device, dtype=torch.long)
+
+    def _prep_input(self, X: Tensor) -> Tensor:
+        return torch.clamp(X, 0.0, 1.0) if self.cfg.clamp_inputs else X
 
     def _validate_prepared(self, X: Tensor):
         if X.ndim != 2:
             raise ValueError("X must be 2D [N, D]")
-        if X.shape[1] != 2 * self.input_dim:
+        if X.shape[1] != self.input_dim:
             raise ValueError(
-                f"With complement=True, expected D={2 * self.input_dim}, "
-                f"got {X.shape[1]}"
+                f"Expected raw dimensionality {self.input_dim}, got {X.shape[1]}"
             )
-        D = self.input_dim
-        a, b = X[:, :D], X[:, D:]
-        if not (
-            torch.all(a >= -self._prep_tol)
-            and torch.all(a <= 1.0 + self._prep_tol)
-            and torch.all(b >= -self._prep_tol)
-            and torch.all(b <= 1.0 + self._prep_tol)
-        ):
-            raise ValueError("Prepared inputs must be in [0,1].")
-        if not torch.allclose(b, 1.0 - a, atol=1e-5, rtol=0):
-            raise ValueError("Second half must be 1 - first half (complement coding).")
 
     def _free_mem_bytes(self) -> int:
         if self.device.type == "cuda" and torch.cuda.is_available():
@@ -101,13 +88,11 @@ class _TorchFuzzyARTMAP:
                 return int(free_b)
             except Exception:
                 pass
-        # CPU path
         try:
             import psutil  # type: ignore
 
             return int(psutil.virtual_memory().available)
         except Exception:
-            # Linux fallback
             try:
                 with open("/proc/meminfo") as f:
                     for line in f:
@@ -115,68 +100,47 @@ class _TorchFuzzyARTMAP:
                             return int(line.split()[1]) * 1024
             except Exception:
                 pass
-        # Last-resort conservative default
         return 512 * 1024 * 1024
 
-    def set_data_bounds(
-        self, lower: Union[Tensor, "np.ndarray"], upper: Union[Tensor, "np.ndarray"]
-    ):
-        lb = _to_device(lower, self.device, self.dtype).view(-1)
-        ub = _to_device(upper, self.device, self.dtype).view(-1)
-        if lb.numel() != self.input_dim or ub.numel() != self.input_dim:
-            raise ValueError(f"lower/upper must have length input_dim={self.input_dim}")
-        if not torch.all(ub > lb):
-            raise ValueError(
-                "All upper bounds must be strictly greater than lower bounds."
-            )
-        self._lower_bounds, self._upper_bounds = lb, ub
-
-    def prepare_data(self, X: Union[Tensor, "np.ndarray"]) -> Tensor:
-        if self._lower_bounds is None or self._upper_bounds is None:
-            raise RuntimeError(
-                "Call set_data_bounds(lower, upper) before prepare_data()."
-            )
-        X = _to_device(X, self.device, self.dtype)
-        if X.ndim == 1:
-            X = X.unsqueeze(0)
-        if X.shape[1] != self.input_dim:
-            raise ValueError(
-                f"Expected raw dimensionality {self.input_dim}, got {X.shape[1]}"
-            )
-        denom = self._upper_bounds - self._lower_bounds
-        Xn = (X - self._lower_bounds) / (denom + 1e-12)
-        Xn = torch.clamp(Xn, 0.0, 1.0)
-        return _complement_code(Xn)
-
-    # ---- core ops
+    # ---- core ops (Hypersphere choice/match)
     def _choice_and_match(self, I: Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
-        """Returns (T, m, I_sum, IandW_sum) for a single prepared input I."""
+        """Returns (T, m, I_radius, max_radius) for a single prepared input I."""
         if self.W is None or self.W.shape[0] == 0:
             empty = torch.empty(0, device=self.device, dtype=self.dtype)
-            return (
-                empty,
-                empty,
-                torch.tensor(0.0, device=self.device, dtype=self.dtype),
-                empty,
-            )
-        IandW = torch.minimum(I.unsqueeze(0), self.W)  # [K, D]
-        IandW_sum = IandW.sum(dim=1)  # [K]
-        W_sum = self.W.sum(dim=1)  # [K]
-        I_sum = I.sum()  # scalar
-        T = IandW_sum / (self.cfg.alpha + W_sum)
-        m = IandW_sum / I_sum.clamp_min(1e-12)
-        return T, m, I_sum, IandW_sum
+            z = torch.tensor(0.0, device=self.device, dtype=self.dtype)
+            return empty, empty, z, empty
+
+        W = cast(Tensor, self.W)
+
+        r_hat = float(self.cfg.r_hat)
+        alpha = float(self.cfg.alpha)
+
+        centroids = W[:, : self.input_dim]  # [K, D]
+        radii = W[:, self.input_dim]  # [K]
+
+        # ||x||^2 (scalar), ||C||^2 per row [K], and dot(C, x) [K]
+        x2 = (I * I).sum()  # scalar
+        c2 = (centroids * centroids).sum(dim=1)  # [K]
+        dots = centroids @ I  # [K]  (same as (I.unsqueeze(0) @ centroids.T).squeeze(0))
+
+        # d^2 = ||x||^2 + ||c||^2 - 2 c·x
+        d2 = x2 + c2 - 2.0 * dots
+        d2.clamp_(min=0.0)
+        I_radius = torch.sqrt(d2)  # [K]
+
+        max_radius = torch.maximum(radii, I_radius)  # [K]
+        T = (r_hat - max_radius) / (r_hat - radii + alpha)
+        m = 1.0 - (max_radius / r_hat)
+
+        return T, m, I_radius, max_radius
 
     def _commit_new_category(self, I: Tensor, y: int):
+        """Start a new hypersphere at sample I with radius 0."""
         self._ensure_capacity()
-        if self.cfg.beta < 1.0:
-            w0 = torch.ones((1, self.code_dim), device=self.device, dtype=self.dtype)
-            w_new = (
-                self.cfg.beta * torch.minimum(I.unsqueeze(0), w0)
-                + (1.0 - self.cfg.beta) * w0
-            )
-        else:
-            w_new = I.unsqueeze(0)
+        w_new = torch.cat(
+            [I.view(1, -1), torch.zeros((1, 1), device=self.device, dtype=self.dtype)],
+            dim=1,
+        )
         self.W = torch.cat([self.W, w_new], dim=0)
         self.map_y = torch.cat(
             [self.map_y, torch.tensor([y], device=self.device, dtype=torch.long)], dim=0
@@ -189,19 +153,11 @@ class _TorchFuzzyARTMAP:
         epsilon: float = 1e-10,
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
     ) -> Tuple[np.ndarray, list[np.ndarray], np.ndarray]:
-        """Incremental training on already-prepared inputs.
-
-        Returns:
-        labels_a_out (np.ndarray): per-sample chosen A-side category indices
-        weights_arrays (list[np.ndarray]): per-category weights (float64)
-        cluster_labels_out (np.ndarray): map from A categories to B labels
-
-        """
         Xp = _to_device(X_prepared, self.device, self.dtype)
         y = _to_device(y, self.device, torch.long)
+        Xp = self._prep_input(Xp)
         self._validate_prepared(Xp)
 
-        # training
         la: list[int] = []
         for i in range(Xp.shape[0]):
             Ii = Xp[i]
@@ -211,31 +167,46 @@ class _TorchFuzzyARTMAP:
                 self._commit_new_category(Ii, yi)
                 la.append(0)
                 continue
+
             assert self.map_y is not None and self.W is not None
-            T, m, _, _ = self._choice_and_match(Ii)
+            T, m, I_radius_all, max_radius_all = self._choice_and_match(Ii)
             order = torch.argsort(T, descending=True, stable=True)
 
             rho_eff = float(self.cfg.rho)
             found = False
-            chosen_idx = None
+            chosen_idx: Optional[int] = None
 
             for idx in order.tolist():
                 if m[idx].item() < rho_eff:
                     continue
 
                 if int(self.map_y[idx].item()) == yi:
-                    # resonance + learn
+                    # resonance + learn (Hypersphere update)
                     wj = self.W[idx]
-                    I_and_w = torch.minimum(Ii, wj)
-                    beta = self.cfg.beta
-                    self.W[idx] = beta * I_and_w + (1.0 - beta) * wj
+                    centroid = wj[: self.input_dim]
+                    radius = wj[self.input_dim]
+
+                    i_radius = I_radius_all[idx]
+                    max_radius = max_radius_all[idx]
+                    beta = float(self.cfg.beta)
+                    alpha = float(self.cfg.alpha)
+
+                    # radius update
+                    radius_new = radius + (beta / 2.0) * (max_radius - radius)
+
+                    # centroid update
+                    # term = 1 - min(radius, i_radius) / (i_radius + alpha)
+                    term = 1.0 - (torch.minimum(radius, i_radius) / (i_radius + alpha))
+                    centroid_new = centroid + (beta / 2.0) * (Ii - centroid) * term
+
+                    self.W[idx, : self.input_dim] = centroid_new
+                    self.W[idx, self.input_dim] = radius_new
+
                     found = True
                     chosen_idx = idx
                     break
                 else:
-                    if (
-                        match_tracking != ""
-                    ):  # mimic MT variants simply by enabling/disabling
+                    if match_tracking != "":
                         rho_eff = float(m[idx].item()) + float(epsilon)
 
             if not found:
@@ -244,7 +215,6 @@ class _TorchFuzzyARTMAP:
 
             la.append(int(cast(int, chosen_idx)))
 
-        # export numpy payloads for wrapper synchronization
         assert self.W is not None and self.map_y is not None
         W_np = [
             self.W[k].detach().to("cpu").numpy().astype(np.float64, copy=True)
@@ -259,28 +229,30 @@ class _TorchFuzzyARTMAP:
         self, X_prepared: Union[Tensor, "np.ndarray"]
     ) -> Tuple[np.ndarray, np.ndarray]:
         Xp = _to_device(X_prepared, self.device, self.dtype)
+        Xp = self._prep_input(Xp)
         self._validate_prepared(Xp)
         if self.n_cat == 0:
             raise RuntimeError("Model has no categories. Train first.")
 
         W = cast(Tensor, self.W)
-        K, D = W.shape
+        K, WD = W.shape
+        D = self.input_dim
+        assert WD == D + 1
         N = Xp.shape[0]
         elem_size = torch.tensor([], dtype=self.dtype).element_size()  # bytes/elem
 
-        # Precompute and keep small tensors
-        W_sum = W.sum(dim=1)  # [K]
+        # Precompute small tensors
+        r_hat = float(self.cfg.r_hat)
         alpha = float(self.cfg.alpha)
 
         budget_bytes = max(int(0.25 * self._free_mem_bytes()), 512 * 1024 * 1024)
 
         def k_chunk_for(B_chunk: int) -> int:
-            # max K_chunk so that B_chunk*K_chunk*D*elem_size <= budget
+            # Approximate memory for (B*K*D) intermediates
             denom = max(1, B_chunk * D * elem_size)
             return max(1, min(K, budget_bytes // denom))
 
-        # We still chunk batch to keep CPU/GPU caches happy.
-        B_block = 1024  # start point; real cap comes from k_chunk_for()
+        B_block = 1024
         a_idx_parts: list[Tensor] = []
         b_lab_parts: list[Tensor] = []
 
@@ -289,28 +261,33 @@ class _TorchFuzzyARTMAP:
             I = Xp[b0:b1]  # [B_cur, D]
             B_cur = I.shape[0]
 
-            # Running best T and argmax over K for this batch block
             best_T = torch.full((B_cur,), -float("inf"), device=I.device, dtype=I.dtype)
             best_idx = torch.zeros((B_cur,), device="cpu", dtype=torch.long)
 
             K_block = k_chunk_for(B_cur)
             for k0 in range(0, K, K_block):
                 k1 = min(K, k0 + K_block)
-                Wc = W[k0:k1]  # [Kc, D]
-                # [B_cur, Kc, D] -> sum over D -> [B_cur, Kc]
-                IandW_sum = torch.minimum(I.unsqueeze(1), Wc.unsqueeze(0)).sum(dim=2)
-                Tc = IandW_sum / (alpha + W_sum[k0:k1].unsqueeze(0))
+                Wc = W[k0:k1]
+                centroids = Wc[:, :D].contiguous()
+                radii_c = Wc[:, D].contiguous()
 
-                # best within this K-chunk
+                X2 = (I * I).sum(dim=1, keepdim=True)  # [B_cur, 1]
+                C2 = (centroids * centroids).sum(dim=1).unsqueeze(0)  # [1, Kc]
+                d2 = X2 + C2  # broadcast add
+                d2.addmm_(I, centroids.T, beta=1.0, alpha=-2.0)  # d2 += -2 * I @ C^T
+                d2.clamp_(min=0.0)
+                I_radius = torch.sqrt(d2)
+
+                max_radius = torch.maximum(I_radius, radii_c.unsqueeze(0))
+                Tc = (r_hat - max_radius) / (r_hat - radii_c.unsqueeze(0) + alpha)
+
                 Tc_max, Tc_arg = Tc.max(dim=1)  # [B_cur]
                 better = Tc_max > best_T
                 if better.any():
                     best_T[better] = Tc_max[better]
-                    # store *global* K indices (offset by k0) on CPU to save device RAM
                     best_idx[better] = (k0 + Tc_arg[better]).to(torch.long).to("cpu")
 
             a_idx_parts.append(best_idx)
-            # Map to B labels
             idx_dev = best_idx.to(self.device)
             b_lab_parts.append(cast(Tensor, self.map_y)[idx_dev].to("cpu"))
 
@@ -319,18 +296,18 @@ class _TorchFuzzyARTMAP:
         return y_a, y_b
 
 
-class FuzzyARTMAP(_TorchSimpleARTMAP):
-    """FuzzyARTMAP for Classification. optimized with torch.
+class HypersphereARTMAP(SimpleARTMAP):
+    """HypersphereARTMAP for Classification. optimized with torch.
 
-    This module implements FuzzyARTMAP
+    This module implements HypersphereARTMAP
 
-    FuzzyARTMAP is a non-modular classification model which has been highly
+    HypersphereARTMAP is a non-modular classification model which has been highly
     optimized for run-time performance. Fit and predict functions are implemented in
     torch for efficient execution. This class acts as a wrapper for the underlying torch
     functions and to provide compatibility with the artlib style and usage.
-    Functionally, FuzzyARTMAP behaves as a special case of
+    Functionally, HypersphereARTMAP behaves as a special case of
     :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
-    :class:`~artlib.elementary.FuzzyART.FuzzyART`.
+    :class:`~artlib.elementary.HypersphereART.HypersphereART`.
 
     """
 
@@ -339,44 +316,47 @@ class FuzzyARTMAP(_TorchSimpleARTMAP):
         rho: float,
         alpha: float,
         beta: float,
+        r_hat: float,
         input_dim: Optional[int] = None,
         device: str = "cuda",
         dtype: torch.dtype = torch.float64,
+        clamp_inputs: bool = False,
     ):
-        """Initialize the Fuzzy ARTMAP model.
-
+        """
         Parameters
         ----------
         rho : float
-            Vigilance parameter.
+            Vigilance parameter (used with match criterion m).
         alpha : float
-            Choice parameter.
+            Choice stabilizer (>0 to avoid division by zero).
         beta : float
             Learning rate.
-
+        r_hat : float
+            Maximum permissible category radius.
         """
-        module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)
+        module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
         super().__init__(module_a)
 
-        # torch back-end
         self._device = device
         self._dtype = dtype
-        self._backend: Optional[_TorchFuzzyARTMAP] = None
-        self._declared_input_dim = input_dim  # raw dimensionality (pre-complement)
+        self._clamp = clamp_inputs
+        self._backend: Optional[_TorchHypersphereARTMAP] = None
+        self._declared_input_dim = input_dim  # raw dimensionality D
 
-    # --- helpers
     def _ensure_backend(self, X: np.ndarray):
         if self._backend is not None:
             return
         d_raw = X.shape[1]
-        # Infer raw input dimension
-        inferred_raw = d_raw // 2
-        cfg = _TorchFuzzyARTMAPConfig(
-            input_dim=inferred_raw,
+        cfg = _TorchHypersphereARTMAPConfig(
+            input_dim=d_raw
+            if self._declared_input_dim is None
+            else int(self._declared_input_dim),
             alpha=self.module_a.params["alpha"],
             rho=self.module_a.params["rho"],
             beta=self.module_a.params["beta"],
+            r_hat=self.module_a.params["r_hat"],
             device=self._device,
             dtype=self._dtype,
+            clamp_inputs=self._clamp,
         )
-        self._backend = _TorchFuzzyARTMAP(cfg)
+        self._backend = _TorchHypersphereARTMAP(cfg)

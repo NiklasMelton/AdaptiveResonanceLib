@@ -39,12 +39,30 @@ class HypersphereARTMAPFactory:
         b = backend.lower()
 
         if b == "torch":
-            warnings.warn(
-                "Backend 'torch' is not yet implemented for HypersphereARTMAP."
-                "Falling back to 'c++' backend.",
-                RuntimeWarning,
+            try:
+                # just to check availability
+                import torch  # noqa
+            except ImportError:
+                warnings.warn(
+                    "Backend 'torch' was requested but PyTorch is not installed. "
+                    "Falling back to 'c++' backend.",
+                    RuntimeWarning,
+                )
+                b = "cpp"
+
+        if b == "torch":
+            from artlib.optimized.backends.torch.HypersphereARTMAP import (
+                HypersphereARTMAP as TorchHA,
             )
-            b = "cpp"
+
+            return TorchHA(
+                rho=rho,
+                alpha=alpha,
+                beta=beta,
+                r_hat=r_hat,
+                input_dim=input_dim,
+                device=device,
+            )
 
         if b in ("c++", "cpp"):
             from artlib.optimized.backends.cpp.HypersphereARTMAP import (

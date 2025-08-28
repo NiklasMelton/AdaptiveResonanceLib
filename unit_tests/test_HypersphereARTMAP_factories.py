@@ -1,7 +1,8 @@
-from artlib.optimized.FuzzyARTMAPFactory import FuzzyARTMAPFactory
+from artlib.optimized.HypersphereARTMAPFactory import HypersphereARTMAPFactory
 import numpy as np
 from sklearn.datasets import fetch_openml
 from time import perf_counter
+
 
 def _load_mnist_numpy():
     """
@@ -18,11 +19,11 @@ def _load_mnist_numpy():
 
     # Standard MNIST split: first 60k train, last 10k test
     X_train, y_train = X_all[:10000], y_all[:10000]
-    X_test, y_test   = X_all[60000:], y_all[60000:]
+    X_test, y_test = X_all[60000:], y_all[60000:]
     return X_train, y_train, X_test, y_test
 
 
-def test_fuzzy_artmap_factories(capsys):
+def test_hyperpshere_artmap_factories(capsys):
     def time_call(label, fn, *args, **kwargs):
         t0 = perf_counter()
         out = fn(*args, **kwargs)
@@ -32,15 +33,15 @@ def test_fuzzy_artmap_factories(capsys):
             print(f"[TIMING] {label}: {dt:.3f} s", flush=True)
         return out
 
-    RHO, ALPHA, BETA = 0.8, 1e-10, 1.0
-    # m1 = FuzzyARTMAPFactory(RHO, ALPHA, BETA, backend="python")
-    m2 = FuzzyARTMAPFactory(RHO, ALPHA, BETA, backend="torch")
-    m3 = FuzzyARTMAPFactory(RHO, ALPHA, BETA, backend="c++")
+    RHO, ALPHA, BETA, R_HAT = 0.8, 1e-10, 1.0, 28.
+    # m1 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend="python")
+    m2 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend="torch")
+    m3 = HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend="c++")
 
     # === MNIST loading & combine-before-prepare ===
     X_train, y_train, X_test, y_test = _load_mnist_numpy()
-    X = np.vstack([X_train, X_test])          # (70000, 784)
-    y = np.concatenate([y_train, y_test])     # (70000,)
+    X = np.vstack([X_train, X_test])  # (70000, 784)
+    y = np.concatenate([y_train, y_test])  # (70000,)
     n_train = X_train.shape[0]
     # === END ===
 

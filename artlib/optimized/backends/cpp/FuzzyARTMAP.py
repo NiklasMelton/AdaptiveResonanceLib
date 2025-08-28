@@ -188,8 +188,8 @@ class FuzzyARTMAP(SimpleARTMAP):
             j = len(self.labels_)
             self.labels_ = np.pad(self.labels_, (0, len(y_)))
             self.labels_[j:] = y_
-            existing_W = np.array(self.module_a.W, dtype=float)
-            existing_map = np.array(
+            existing_W = np.ascontiguousarray(self.module_a.W, dtype=float)
+            existing_map = np.ascontiguousarray(
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 

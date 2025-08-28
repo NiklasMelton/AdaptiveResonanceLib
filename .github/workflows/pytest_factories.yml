@@ -15,7 +15,7 @@ on:
       - "poetry.lock"
 
 jobs:
-  heavy-tests:
+  factory-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -36,12 +36,29 @@ class GaussianARTMAPFactory:
         b = backend.lower()
 
         if b == "torch":
-            warnings.warn(
-                "Backend 'torch' is not yet implemented for GaussianARTMAP."
-                "Falling back to 'c++' backend.",
-                RuntimeWarning,
+            try:
+                # just to check availability
+                import torch  # noqa
+            except ImportError:
+                warnings.warn(
+                    "Backend 'torch' was requested but PyTorch is not installed. "
+                    "Falling back to 'c++' backend.",
+                    RuntimeWarning,
+                )
+                b = "cpp"
+
+        if b == "torch":
+            from artlib.optimized.backends.torch.GaussianARTMAP import (
+                GaussianARTMAP as TorchGA,
             )
-            b = "cpp"
+
+            return TorchGA(
+                rho=rho,
+                alpha=alpha,
+                sigma_init=sigma_init,
+                input_dim=input_dim,
+                device=device,
+            )
 
         if b in ("c++", "cpp"):
             from artlib.optimized.backends.cpp.GaussianARTMAP import (

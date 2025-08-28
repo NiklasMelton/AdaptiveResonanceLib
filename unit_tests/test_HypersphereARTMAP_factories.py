@@ -3,9 +3,6 @@ import numpy as np
 from sklearn.datasets import fetch_openml
 from time import perf_counter
 
-import pytest
-pytestmark = pytest.mark.heavy
-
 def _load_mnist_numpy():
     """
     Load MNIST from OpenML using scikit-learn.

@@ -50,20 +50,21 @@ jobs:
               - 'pyproject.toml'
               - 'poetry.lock'
 
-#            # Add more test-specific filters here as needed...
-#             gaussian_factory:
-#              - 'artlib/common/BaseART.py'
-#              - 'artlib/common/BaseARTMAP.py'
-#              - 'artlib/elementary/GaussianART.py'
-#              - 'artlib/supervised/SimpleARTMAP.py'
-#              - 'artlib/optimized/GaussianARTMAPFactory.py'
-#              - 'artlib/optimized/backends/cpp/cppGaussianARTMAP.cpp'
-#              - 'artlib/optimized/backends/cpp/GaussianARTMAP.py'
-#              - 'artlib/optimized/backends/torch/GaussianARTMAP.py'
-#              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
-#              - 'unit_tests/test_GaussianARTMAP_factories.py'
-#              - 'pyproject.toml'
-#              - 'poetry.lock'
+            # Add more test-specific filters here as needed...
+            gaussian_factory:
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/GaussianART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/GaussianARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppGaussianARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/GaussianARTMAP.py'
+              - 'artlib/optimized/backends/torch/GaussianARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_GaussianARTMAP_factories.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
 #          # Add more test-specific filters here as needed...
 #          binary_factory:
 #            - 'artlib/common/BaseART.py'
@@ -136,6 +137,16 @@ jobs:
             --tb=short \
             --junitxml=./test-results/pytest-hypersphere-factory.xml
 
+      - name: Run Gaussian factory test
+        if: steps.changes.outputs.hypersphere_factory == 'true'
+        run: |
+          poetry run pytest unit_tests/test_GaussianARTMAP_factories.py \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-gaussian-factory.xml
+
 
       # 4) Only upload an artifact for the thing that failed (if any)
       - name: Publish fast results
@@ -160,4 +171,12 @@ jobs:
         with:
           name: pytest-hypersphere-factory-results
           path: ./test-results/pytest-hypersphere-factory.xml
+          compression-level: 6
+
+      - name: Publish gaussian factory results
+        if: failure() && steps.changes.outputs.gaussian_factory == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-gaussian-factory-results
+          path: ./test-results/pytest-gaussian-factory.xml
           compression-level: 6

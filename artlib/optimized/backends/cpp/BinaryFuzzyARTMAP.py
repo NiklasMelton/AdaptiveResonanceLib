@@ -132,7 +132,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
         """
         # Check that X and y have correct shape
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         y_ = np.ascontiguousarray(y, dtype=np.int32)
         SimpleARTMAP.validate_data(self, X_, y_)
         # Store the classes seen during fit
@@ -182,7 +182,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             The partially fitted model.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         y_ = np.ascontiguousarray(y, dtype=np.int32)
         SimpleARTMAP.validate_data(self, X_, y_)
         if not hasattr(self, "labels_"):
@@ -231,7 +231,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             B labels for the data.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         check_is_fitted(self)
         if clip:
             X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
@@ -272,7 +272,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             A labels for the data, B labels for the data.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         check_is_fitted(self)
         if clip:
             X_ = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)

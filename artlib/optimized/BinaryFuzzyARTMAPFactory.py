@@ -35,14 +35,25 @@ class BinaryFuzzyARTMAPFactory:
         b = backend.lower()
 
         if b == "torch":
-            warnings.warn(
-                "Backend 'torch' is not yet implemented for BinaryFuzzyARTMAP."
-                "Falling back to 'c++' backend.",
-                RuntimeWarning,
-            )
-            b = "cpp"
+            try:
+                # just to check availability
+                import torch  # noqa
+            except ImportError:
+                warnings.warn(
+                    "Backend 'torch' was requested but PyTorch is not installed. "
+                    "Falling back to 'c++' backend.",
+                    RuntimeWarning,
+                )
+                b = "cpp"
 
-        if b in ("c++", "cpp"):
+        if b == "torch":
+            from artlib.optimized.backends.torch.BinaryFuzzyARTMAP import (
+                BinaryFuzzyARTMAP as TorchBFA,
+            )
+
+            return TorchBFA(rho=rho, alpha=alpha, input_dim=input_dim, device=device)
+
+        elif b in ("c++", "cpp"):
             from artlib.optimized.backends.cpp.BinaryFuzzyARTMAP import (
                 BinaryFuzzyARTMAP as CppBFA,
             )

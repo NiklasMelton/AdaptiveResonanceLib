@@ -65,20 +65,20 @@ jobs:
               - 'pyproject.toml'
               - 'poetry.lock'
 
-#          # Add more test-specific filters here as needed...
-#          binary_factory:
-#            - 'artlib/common/BaseART.py'
-#            - 'artlib/common/BaseARTMAP.py'
-#            - 'artlib/elementary/BinaryFuzzyART.py'
-#            - 'artlib/supervised/SimpleARTMAP.py'
-#            - 'artlib/optimized/BinaryFuzzyARTMAPFactory.py'
-#            - 'artlib/optimized/backends/cpp/cppBinaryFuzzyARTMAP.cpp'
-#            - 'artlib/optimized/backends/cpp/BinaryFuzzyARTMAP.py'
-#            - 'artlib/optimized/backends/torch/BinaryFuzzyARTMAP.py'
-#            - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
-#            - 'unit_tests/test_BinaryFuzzyARTMAP_factories.py'
-#            - 'pyproject.toml'
-#            - 'poetry.lock'
+            # Add more test-specific filters here as needed...
+            binary_factory:
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/BinaryFuzzyART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/BinaryFuzzyARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppBinaryFuzzyARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/BinaryFuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/BinaryFuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_BinaryFuzzyARTMAP_factories.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -115,6 +115,14 @@ jobs:
             --tb=short \
             --junitxml=./test-results/pytest-fast.xml
 
+      - name: Upload fast results (on failure)
+        if: ${{ failure() && steps.run_fast.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-fast-results
+          path: ./test-results/pytest-fast.xml
+          compression-level: 6
+
       # 3) Each heavy test runs only if its filter matched
 
       - name: Run Fuzzy factory test
@@ -127,6 +135,15 @@ jobs:
             --tb=short \
             --junitxml=./test-results/pytest-fuzzy-factory.xml
 
+      - name: Upload Fuzzy factory results (on failure)
+        if: ${{ failure() && steps.run_fuzzy.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-fuzzy-factory-results
+          path: ./test-results/pytest-fuzzy-factory.xml
+          compression-level: 6
+
+
       - name: Run Hypersphere factory test
         if: steps.changes.outputs.hypersphere_factory == 'true'
         run: |
@@ -136,6 +153,15 @@ jobs:
             -v \
             --tb=short \
             --junitxml=./test-results/pytest-hypersphere-factory.xml
+
+      - name: Upload Hypersphere factory results (on failure)
+        if: ${{ failure() && steps.run_hypersphere.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-hypersphere-factory-results
+          path: ./test-results/pytest-hypersphere-factory.xml
+          compression-level: 6
+
 
       - name: Run Gaussian factory test
         if: steps.changes.outputs.hypersphere_factory == 'true'
@@ -147,36 +173,29 @@ jobs:
             --tb=short \
             --junitxml=./test-results/pytest-gaussian-factory.xml
 
-
-      # 4) Only upload an artifact for the thing that failed (if any)
-      - name: Publish fast results
-        if: failure() && !(steps.changes.outputs.fuzzy_factory == 'true' || steps.changes.outputs.hypersphere_factory == 'true')
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-fast-results
-          path: ./test-results/pytest-fast.xml
-          compression-level: 6
-
-      - name: Publish fuzzy factory results
-        if: failure() && steps.changes.outputs.fuzzy_factory == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-fuzzy-factory-results
-          path: ./test-results/pytest-fuzzy-factory.xml
-          compression-level: 6
-
-      - name: Publish hypersphere factory results
-        if: failure() && steps.changes.outputs.hypersphere_factory == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-hypersphere-factory-results
-          path: ./test-results/pytest-hypersphere-factory.xml
-          compression-level: 6
-
-      - name: Publish gaussian factory results
-        if: failure() && steps.changes.outputs.gaussian_factory == 'true'
+      - name: Upload Gaussian factory results (on failure)
+        if: ${{ failure() && steps.run_gaussian.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-gaussian-factory-results
           path: ./test-results/pytest-gaussian-factory.xml
+          compression-level: 6
+
+
+      - name: Run Binary Fuzzy factory test
+        if: steps.changes.outputs.binary_factory == 'true'
+        run: |
+          poetry run pytest unit_tests/test_BinaryFuzzyARTMAP_factories.py \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-binary-factory.xml
+
+      - name: Upload Binary Fuzzy factory results (on failure)
+        if: ${{ failure() && steps.run_binary.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-binary-factory-results
+          path: ./test-results/pytest-binary-factory.xml
           compression-level: 6

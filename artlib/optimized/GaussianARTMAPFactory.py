@@ -60,7 +60,7 @@ class GaussianARTMAPFactory:
                 device=device,
             )
 
-        if b in ("c++", "cpp"):
+        elif b in ("c++", "cpp"):
             from artlib.optimized.backends.cpp.GaussianARTMAP import (
                 GaussianARTMAP as CppGA,
             )

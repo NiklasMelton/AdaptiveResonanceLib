@@ -13,7 +13,7 @@ def _load_mnist_numpy():
         y_test  (10000,) int
     """
     mnist = fetch_openml("mnist_784", version=1, as_frame=False)
-    X_all = (mnist["data"].astype(np.float32) > 128).astype(np.int32)
+    X_all = (mnist["data"].astype(np.float32) > 128).astype(np.int16)
     y_all = mnist["target"].astype(int)
 
     # Standard MNIST split: first 60k train, last 10k test

@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# -------- locate this launcher & the python script ----------
+# Absolute path to the directory that contains THIS launcher
+# Works with sourced, symlinked, or directly executed scripts.
+SCRIPT_DIR="$(
+  cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1
+  pwd -P
+)"
+script="${SCRIPT_DIR}/compare_factories.py"
+# -----------------------------------------------------------
+
 # -------- child job config ----------
 PARTITION="general"
 CONSTRAINT="intel&skylake&40CPU"   # choose one: amd&64CPU | amd&128CPU | intel&skylake&40CPU
@@ -8,7 +18,7 @@ TIME_LIMIT="0-12:00:00"
 MEM_PER_JOB="16G"
 CPUS_PER_TASK=8
 SEED=0
-OUT_DIR="results"
+OUT_DIR="results"                  # outputs relative to *current* working dir
 LOAD_ENV_CMD="module load python/3.12.1"   # or: source /path/to/venv/bin/activate
 DRY_RUN=0
 # ------------------------------------
@@ -26,22 +36,22 @@ submit_one() {
   local jobname="art-${method}-${bn}"
 
   # Build python command safely (single line, no embedded newlines)
-  local script="compare_factories.py"
   local -a py_args
   py_args+=( --method "$method" )
   py_args+=( --backend "$backend" )
   py_args+=( --out-dir "$OUT_DIR" )
   py_args+=( --seed "$SEED" )
 
-  # Join into one shell-escaped command
   local child_cmd="python3 $script"
   for a in "${py_args[@]}"; do
     child_cmd+=" $(printf '%q' "$a")"
   done
+
   if [[ -n "$LOAD_ENV_CMD" ]]; then
     child_cmd="$LOAD_ENV_CMD; $child_cmd"
   fi
-  # Run under bash -lc so environment modules/venv activation work
+
+  # Run under bash -lc so 'module' / venv activation works
   local wrap_cmd="bash -lc $(printf '%q' "$child_cmd")"
 
   # sbatch args for the child job

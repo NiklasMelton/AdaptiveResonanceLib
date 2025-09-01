@@ -22,7 +22,8 @@ mkdir -p logs "$OUT_DIR"
 
 submit_one() {
   local method="$1" backend="$2"
-  local bn="${backend/c++/cpp}" jobname="art-${method}-${bn}"
+  local bn="${backend/c++/cpp}"
+  local jobname="art-${method}-${bn}"
 
   local run_line=""
   if [[ -n "$LOAD_ENV_CMD" ]]; then run_line+="$LOAD_ENV_CMD; "; fi

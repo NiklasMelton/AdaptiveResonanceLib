@@ -27,7 +27,7 @@ submit_one() {
 
   local run_line=""
   if [[ -n "$LOAD_ENV_CMD" ]]; then run_line+="$LOAD_ENV_CMD; "; fi
-  run_line+="python compare_factories.py --method '$method' --backend '$backend'
+  run_line+="python3 compare_factories.py --method '$method' --backend '$backend'
   --out-dir '$OUT_DIR' --seed '$SEED'"
 
   local args=(

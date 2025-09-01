@@ -40,6 +40,8 @@ submit_one() {
     --error="logs/%x-%j.err"
     --export=ALL
     --parsable
+    --mail-type=BEGIN,END,FAIL,REQUEUE
+    --mail-user=nmmz76@umsystem.edu
   )
   [[ -n "$CONSTRAINT" ]] && args+=( --constraint="$CONSTRAINT" )
 

@@ -24,7 +24,7 @@ OUT_DIR="${SCRIPT_DIR}/results"
 CHDIR="${SCRIPT_DIR}"
 
 # Load Python (module or venv). If empty, nothing is loaded.
-LOAD_ENV_CMD="module load python/3.12.1; source/venv2/bin/activate"
+LOAD_ENV_CMD="module load python/3.12.1; source venv2/bin/activate"
 
 # Dry run = print sbatch lines but don’t submit (0|1)
 DRY_RUN=0

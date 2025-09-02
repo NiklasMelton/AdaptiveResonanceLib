@@ -353,6 +353,10 @@ class FuzzyARTMAP(_TorchSimpleARTMAP):
             Choice parameter.
         beta : float
             Learning rate.
+        input_dim: Optional[int]
+            number of features
+        device: str
+            "cuda" or "cpu". Only applied when backend=torch. Defaults to "cpu".
 
         """
         module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)

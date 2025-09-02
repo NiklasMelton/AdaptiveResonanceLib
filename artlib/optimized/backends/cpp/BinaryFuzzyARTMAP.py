@@ -132,17 +132,19 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
         """
         # Check that X and y have correct shape
-        SimpleARTMAP.validate_data(self, X, y)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        y_ = np.ascontiguousarray(y, dtype=np.int32)
+        SimpleARTMAP.validate_data(self, X_, y_)
         # Store the classes seen during fit
-        self.classes_ = unique_labels(y)
-        self.labels_ = y
+        self.classes_ = unique_labels(y_)
+        self.labels_ = y_
         # init module A
         self.module_a.W = []
-        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
+        self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
         labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
-            X,
-            y,
+            X_,
+            y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             MT=match_tracking,
@@ -180,24 +182,26 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             The partially fitted model.
 
         """
-        SimpleARTMAP.validate_data(self, X, y)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        y_ = np.ascontiguousarray(y, dtype=np.int32)
+        SimpleARTMAP.validate_data(self, X_, y_)
         if not hasattr(self, "labels_"):
-            self.labels_ = y
+            self.labels_ = y_
             self.module_a.W = []
             existing_W = None
             existing_cluster_labels = None
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, [(0, X.shape[0])], mode="constant")
-            self.labels_[j:] = y
-            existing_W = np.array(self.module_a.W)
-            existing_cluster_labels = np.array(
+            self.labels_ = np.pad(self.labels_, [(0, X_.shape[0])], mode="constant")
+            self.labels_[j:] = y_
+            existing_W = np.ascontiguousarray(self.module_a.W)
+            existing_cluster_labels = np.ascontiguousarray(
                 [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
             )
 
         labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
-            X,
-            y,
+            X_,
+            y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             MT=match_tracking,
@@ -227,19 +231,20 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             B labels for the data.
 
         """
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         check_is_fitted(self)
         if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
+            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X_)
+        self.module_a.check_dimensions(X_)
 
-        existing_W = np.array(self.module_a.W)
-        existing_cluster_labels = np.array(
+        existing_W = np.ascontiguousarray(self.module_a.W)
+        existing_cluster_labels = np.ascontiguousarray(
             [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
         )
 
         _, y_b = PredictBinaryFuzzyARTMAP(
-            X,
+            X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             MT="",
@@ -267,19 +272,20 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             A labels for the data, B labels for the data.
 
         """
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         check_is_fitted(self)
         if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
+            X_ = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X_)
+        self.module_a.check_dimensions(X_)
 
-        existing_W = np.array(self.module_a.W)
-        existing_cluster_labels = np.array(
+        existing_W = np.ascontiguousarray(self.module_a.W)
+        existing_cluster_labels = np.ascontiguousarray(
             [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
         )
 
         y_a, y_b = PredictBinaryFuzzyARTMAP(
-            X,
+            X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             MT="",

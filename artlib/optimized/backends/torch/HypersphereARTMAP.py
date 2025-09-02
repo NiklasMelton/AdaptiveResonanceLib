@@ -333,6 +333,12 @@ class HypersphereARTMAP(SimpleARTMAP):
             Learning rate.
         r_hat : float
             Maximum permissible category radius.
+        input_dim : Optional[int]
+            Raw input dimensionality (if known a priori).
+        device : str
+            Torch device string (e.g., 'cuda', 'cpu', 'mps').
+        dtype : torch.dtype
+            Torch dtype; default float64 for numerical stability.
         """
         module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
         super().__init__(module_a)

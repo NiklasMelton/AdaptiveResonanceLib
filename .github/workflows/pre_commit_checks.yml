@@ -3,56 +3,44 @@ name: Pre-commit checks
 on:
   pull_request:
   push:
-    branches:
-      - develop
-      - main
+    branches: [develop, main]
 
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
         with:
-          python-version: '3.9'
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: |
-          poetry install --with dev
+        run: poetry install --with dev
 
-      - name: Install pre-commit
-        run: |
-          poetry run pip install pre-commit
-
-      # Fetch the base branch for pull request or push event
-      - name: Set base branch
-        id: base_branch
+      - name: Determine diff range
+        id: range
+        shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "Base branch is: ${{ github.event.pull_request.base.ref }}"
-            echo "BASE_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "push" ]]; then
-            # For push events, assume the current branch is the base (e.g., main or develop)
-            echo "BASE_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-            echo "Base branch is: ${GITHUB_REF#refs/heads/}"
+            FROM="${{ github.event.pull_request.base.sha }}"
+            TO="${{ github.event.pull_request.head.sha }}"
+          else
+            FROM="${{ github.event.before }}"
+            TO="${{ github.sha }}"
           fi
+          echo "from=$FROM" >> "$GITHUB_OUTPUT"
+          echo "to=$TO"     >> "$GITHUB_OUTPUT"
+          git fetch --no-tags origin "$FROM":"$FROM" || true
 
-      - name: Check out the base branch (if necessary)
-        run: |
-          git checkout $BASE_BRANCH || echo "Already on the base branch."
-
-      - name: Fetch the base branch
-        run: |
-          git fetch origin $BASE_BRANCH
-
-      - name: Run pre-commit on changed files
-        run: |
-          poetry run pre-commit run --from-ref origin/${BASE_BRANCH} --to-ref HEAD
+      - uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --from-ref ${{ steps.range.outputs.from }} --to-ref ${{ steps.range.outputs.to }}

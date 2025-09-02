@@ -167,9 +167,11 @@ class _TorchBinaryFuzzyARTMAP:
     # ---------- core ops ----------
     def _choice_and_match(self, I: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """For a single prepared binary input I (bool), return:
+
         T: [K] choice values
         m: [K] match values
         w_sum: [K] |w| (as float64)
+
         """
         if self.W is None or self.W.shape[0] == 0:
             empty = torch.empty(0, device=self.device, dtype=torch.float64)

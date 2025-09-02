@@ -1,94 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ── locate this launcher & the python script (works no matter where you call it) ──
-SCRIPT_DIR="$(
-  cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1
-  pwd -P
-)"
-SCRIPT_PY="${SCRIPT_DIR}/compare_factories.py"
+# Where the template lives (assume same dir as this script)
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
+TPL="${SCRIPT_DIR}/run_template.slurm"
 
-# -------- child job config ----------
+# Slurm options common to all submissions
 PARTITION="general"
-CONSTRAINT="intel&skylake&40CPU"   # choose: amd&64CPU | amd&128CPU | intel&skylake&40CPU
-TIME_LIMIT="0-12:00:00"
-MEM_PER_JOB="16G"
-CPUS_PER_TASK=8
+CONSTRAINT=""                 # e.g., "intel&skylake&40CPU" or "amd&64CPU"; leave empty to skip
 SEED=0
-
-# Put logs/results next to this launcher (absolute paths avoid missing-log issues)
-LOG_DIR="${SCRIPT_DIR}/logs"
-OUT_DIR="${SCRIPT_DIR}/results"
-
-# Where child jobs should start (project root)
-CHDIR="${SCRIPT_DIR}"
-
-# Load Python (module or venv). If empty, nothing is loaded.
-LOAD_ENV_CMD="module load python/3.12.1; source venv2/bin/activate"
-
-# Dry run = print sbatch lines but don’t submit (0|1)
-DRY_RUN=0
-# ------------------------------------
 
 METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
 BACKENDS=( python torch "c++" )
 
-mkdir -p "${LOG_DIR}" "${OUT_DIR}"
+mkdir -p logs
 
-submit_one() {
-  local method="$1"
-  local backend="$2"
+for method in "${METHODS[@]}"; do
+  for backend in "${BACKENDS[@]}"; do
+    # Sanitize job name (no '+')
+    bn="${backend/c++/cpp}"
+    jobname="ART-${method}-${bn}"
 
-  local bn="${backend/c++/cpp}"
-  local jobname="art-${method}-${bn}"
+    echo "[SUBMIT] ${method} / ${backend}"
 
-  # Build python command safely (single line, shell-escaped)
-  local -a py_args
-  py_args+=( --method "$method" )
-  py_args+=( --backend "$backend" )
-  py_args+=( --out-dir "$OUT_DIR" )
-  py_args+=( --seed "$SEED" )
+    # Build sbatch args (override job name & logs; export vars the template uses)
+    args=(
+      --job-name="${jobname}"
+      --partition="${PARTITION}"
+      --output="logs/%x-%j.out"
+      --error="logs/%x-%j.err"
+      --export=ALL,METHOD="${method}",BACKEND="${backend}",SEED="${SEED}"
+    )
+    [[ -n "${CONSTRAINT}" ]] && args+=( --constraint="${CONSTRAINT}" )
 
-  local child_cmd="python3 ${SCRIPT_PY}"
-  for a in "${py_args[@]}"; do
-    child_cmd+=" $(printf '%q' "$a")"
-  done
-
-  # Compose what runs on the worker. Use a *login* Bash (-l) so environment modules exist.
-  # Add tracing so failures show up in logs.
-  local preface="set -euxo pipefail; echo '[NODE]' \"\$(hostname)\"; echo '[PWD]' \"\$(pwd)\";"
-  if [[ -n "$LOAD_ENV_CMD" ]]; then
-    preface+=" ${LOAD_ENV_CMD}; which python3; python3 --version;"
-  fi
-  local wrap_cmd="bash -l -c $(printf '%q' "${preface} ${child_cmd}")"
-
-  # sbatch args for the child job
-  local args=(
-    --job-name="$jobname"
-    --partition="$PARTITION"
-    --time="$TIME_LIMIT"
-    --mem="$MEM_PER_JOB"
-    --cpus-per-task="$CPUS_PER_TASK"
-    --ntasks=1
-    --chdir="$CHDIR"
-    --output="${LOG_DIR}/%x-%j.out"
-    --error="${LOG_DIR}/%x-%j.err"
-    --export=ALL
-    --parsable
-  )
-  [[ -n "$CONSTRAINT" ]] && args+=( --constraint="$CONSTRAINT" )
-  # If your site uses Slurm's user env import, uncomment:
-  # args+=( --get-user-env=L )
-
-  echo "[SUBMIT] $method / $backend"
-  echo "  sbatch ${args[*]} --wrap $wrap_cmd"
-  if [[ "$DRY_RUN" -eq 0 ]]; then
-    sbatch "${args[@]}" --wrap "$wrap_cmd"
-  fi
-}
-
-for m in "${METHODS[@]}"; do
-  for b in "${BACKENDS[@]}"; do
-    submit_one "$m" "$b"
+    sbatch "${args[@]}" "${TPL}"
   done
 done

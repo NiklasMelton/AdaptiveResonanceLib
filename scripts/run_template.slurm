@@ -3,8 +3,8 @@
 #SBATCH --nodes=1
 #SBATCH --partition=general
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem-per-cpu=15G
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
 #SBATCH --time=24:00:00
 #SBATCH --output=logs/%x-%j.out                 # logs/ART-<name>-<jobid>.out
 #SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE

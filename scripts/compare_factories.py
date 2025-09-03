@@ -121,7 +121,7 @@ def time_call(label, fn, *args, **kwargs):
 RHO = 0.8
 G_RHO = 0.01
 ALPHA = 1e-10
-BETA = 0.33 * np.ones((784,), dtype=np.float32)
+BETA = 1.0
 R_HAT = 28.0
 SIGMA_INIT = 0.33 * np.ones((784,), dtype=np.float32)
 

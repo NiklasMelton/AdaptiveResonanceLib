@@ -4,7 +4,7 @@
 #SBATCH --partition=general
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem-per-cpu=4G
+#SBATCH --mem-per-cpu=15G
 #SBATCH --time=24:00:00
 #SBATCH --output=logs/%x-%j.out                 # logs/ART-<name>-<jobid>.out
 #SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE

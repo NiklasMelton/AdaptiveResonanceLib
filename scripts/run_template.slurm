@@ -7,8 +7,6 @@
 #SBATCH --mem=128G
 #SBATCH --time=24:00:00
 #SBATCH --output=logs/%x-%j.out                 # logs/ART-<name>-<jobid>.out
-#SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE
-#SBATCH --mail-user=nmmz76@umsystem.edu
 #SBATCH --constraint=intel&skylake&40CPU
 
 # Fail fast and print commands

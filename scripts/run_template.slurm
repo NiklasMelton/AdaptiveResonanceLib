@@ -9,6 +9,7 @@
 #SBATCH --output=logs/%x-%j.out                 # logs/ART-<name>-<jobid>.out
 #SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE
 #SBATCH --mail-user=nmmz76@umsystem.edu
+#SBATCH --constraint=intel&skylake&40CPU
 
 # Fail fast and print commands
 set -euo pipefail
@@ -19,7 +20,8 @@ cd "$SLURM_SUBMIT_DIR"
 # Environment
 module load python/3.12.1
 source venv2/bin/activate
-# pip install AdaptiveResonanceLib/
+mkdir -p "$SLURM_TMPDIR/torchdata"
+export TORCH_HOME="$SLURM_TMPDIR/torchdata"
 
 # Defaults if not exported by submitter
 METHOD="${METHOD:-BinaryFuzzyARTMAP}"

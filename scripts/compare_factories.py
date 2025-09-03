@@ -25,36 +25,82 @@ import subprocess
 from typing import Dict, Tuple, Any, Optional
 
 import numpy as np
-from sklearn.datasets import fetch_openml
 
-# --- artlib imports (as in your sample) ---
+# --- artlib imports ---
 from artlib.optimized.BinaryFuzzyARTMAPFactory import BinaryFuzzyARTMAPFactory
 from artlib.optimized.FuzzyARTMAPFactory import FuzzyARTMAPFactory
 from artlib.optimized.HypersphereARTMAPFactory import HypersphereARTMAPFactory
 from artlib.optimized.GaussianARTMAPFactory import GaussianARTMAPFactory
 
 
-# ------------------------------
-# dataset loaders (unchanged)
-# ------------------------------
+import torch
+from torchvision.datasets import MNIST
+from torchvision import transforms
+
+def _mnist_root():
+    # Prefer node-local cache if available
+    return os.environ.get("TORCH_HOME", os.environ.get("SLURM_TMPDIR", "/tmp/torchdata"))
+
 def _load_mnist_numpy_binary():
-    mnist = fetch_openml("mnist_784", version=1, as_frame=False)
-    X_all = (mnist["data"].astype(np.float32) > 128).astype(np.int32)
-    y_all = mnist["target"].astype(int)
-    # reduced training set (as in sample)
-    X_train, y_train = X_all[:10000], y_all[:10000]
-    X_test, y_test = X_all[60000:], y_all[60000:]
-    return X_train, y_train, X_test, y_test
+    """
+    Returns:
+        X_train (10000, 784) int32 in {0,1}
+        y_train (10000,) int
+        X_test  (10000, 784) int32 in {0,1}
+        y_test  (10000,) int
+    """
+    root = _mnist_root()
+    # ToTensor -> float32 in [0,1], then we threshold > 0.5
+    tfm = transforms.ToTensor()
+
+    ds_train = MNIST(root=root, train=True, download=True, transform=tfm)
+    ds_test  = MNIST(root=root, train=False, download=True, transform=tfm)
+
+    n_train = 10_000
+    n_test = len(ds_test)  # 10,000
+
+    # Stack efficiently with torch, then convert to numpy
+    Xtr = torch.stack([ds_train[i][0].view(-1) for i in range(n_train)])  # (10000, 784), float32 [0,1]
+    ytr = np.array([int(ds_train[i][1]) for i in range(n_train)], dtype=int)
+
+    Xte = torch.stack([ds_test[i][0].view(-1) for i in range(n_test)])     # (10000, 784), float32 [0,1]
+    yte = np.array([int(ds_test[i][1]) for i in range(n_test)], dtype=int)
+
+    # Binarize
+    X_train = (Xtr.numpy() > 0.5).astype(np.int32)
+    X_test  = (Xte.numpy() > 0.5).astype(np.int32)
+
+    return X_train, ytr, X_test, yte
 
 
 def _load_mnist_numpy():
-    mnist = fetch_openml("mnist_784", version=1, as_frame=False)
-    X_all = mnist["data"].astype(np.float32) / 255.0
-    y_all = mnist["target"].astype(int)
-    # reduced training set (as in sample)
-    X_train, y_train = X_all[:10000], y_all[:10000]
-    X_test, y_test = X_all[60000:], y_all[60000:]
-    return X_train, y_train, X_test, y_test
+    """
+    Returns:
+        X_train (10000, 784) float32 in [0,1]
+        y_train (10000,) int
+        X_test  (10000, 784) float32 in [0,1]
+        y_test  (10000,) int
+    """
+    root = _mnist_root()
+    tfm = transforms.ToTensor()  # yields float32 in [0,1]
+
+    ds_train = MNIST(root=root, train=True, download=True, transform=tfm)
+    ds_test  = MNIST(root=root, train=False, download=True, transform=tfm)
+
+    n_train = 10_000
+    n_test = len(ds_test)
+
+    Xtr = torch.stack([ds_train[i][0].view(-1) for i in range(n_train)])  # (10000, 784), float32 [0,1]
+    ytr = np.array([int(ds_train[i][1]) for i in range(n_train)], dtype=int)
+
+    Xte = torch.stack([ds_test[i][0].view(-1) for i in range(n_test)])     # (10000, 784), float32 [0,1]
+    yte = np.array([int(ds_test[i][1]) for i in range(n_test)], dtype=int)
+
+    X_train = Xtr.numpy().astype(np.float32)
+    X_test  = Xte.numpy().astype(np.float32)
+
+    return X_train, ytr, X_test, yte
+
 
 
 # ------------------------------

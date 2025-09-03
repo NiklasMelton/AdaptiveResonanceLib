@@ -119,6 +119,7 @@ def time_call(label, fn, *args, **kwargs):
 # ------------------------------
 # Hyperparams from your sample
 RHO = 0.8
+G_RHO = 0.01
 ALPHA = 1e-10
 BETA = 0.33 * np.ones((784,), dtype=np.float32)
 R_HAT = 28.0
@@ -135,7 +136,7 @@ def make_factory(method: str, backend: str):
     if method == "HypersphereARTMAP":
         return HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend=backend)
     if method == "GaussianARTMAP":
-        return GaussianARTMAPFactory(RHO, ALPHA, SIGMA_INIT, backend=backend)
+        return GaussianARTMAPFactory(G_RHO, ALPHA, SIGMA_INIT, backend=backend)
     raise ValueError(f"Unknown method: {method}")
 
 def load_data_for_method(method: str):
@@ -218,6 +219,7 @@ class Result:
     n_train: int
     n_test: int
     accuracy: Optional[float]  # we can compute simple accuracy for sanity
+    n_clusters: int
     meta: Dict[str, Any]
 
 def run_single_task(method: str, backend: str, seed: int = 0) -> Result:
@@ -274,6 +276,7 @@ def run_single_task(method: str, backend: str, seed: int = 0) -> Result:
         n_train=int(n_train),
         n_test=int(len(y_test2)),
         accuracy=acc,
+        n_clusters=int(factory.module_a.n_clusters),
         meta=meta,
     )
 
@@ -347,6 +350,7 @@ def main():
         "n_train": res.n_train,
         "n_test": res.n_test,
         "accuracy": res.accuracy,
+        "n_clusters": res.n_clusters,
         "timings": res.timings,
         "host": res.meta.get("hostname", "")
     }, indent=2), flush=True)

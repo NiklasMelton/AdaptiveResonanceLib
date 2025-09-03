@@ -19,8 +19,7 @@ cd "$SLURM_SUBMIT_DIR"
 # Environment
 module load python/3.12.1
 source venv2/bin/activate
-
-cd $SLURM_SUBMIT_DIR
+pip install AdaptiveResonanceLib/
 
 # Defaults if not exported by submitter
 METHOD="${METHOD:-BinaryFuzzyARTMAP}"

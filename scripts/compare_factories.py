@@ -2,19 +2,6 @@
 """
 Driver for distributed, isolated ARTMAP benchmarks (one task per Slurm array index).
 
-USAGE EXAMPLES (no job script needed yet):
-  # Run a single task locally (index 0)
-  python run_artmap_task.py --task-index 0 --out-dir results/
-
-  # With Slurm array (one task per array index):
-  # (Choose partition/constraints so all jobs land on the same node type)
-  sbatch --array=0-11 -p <partition> --constraint="<feature>" \
-         --wrap="python run_artmap_task.py --task-index \$SLURM_ARRAY_TASK_ID --out-dir results/"
-
-  # Optional runtime enforcement of "like machines" (CPU model exact match):
-  python run_artmap_task.py --task-index 0 --out-dir results/ \
-         --require-cpu-model 'AMD EPYC 7H12'
-
 This script:
   • maps each array index to exactly one (method, backend) task
   • loads MNIST (binary or float) once per task

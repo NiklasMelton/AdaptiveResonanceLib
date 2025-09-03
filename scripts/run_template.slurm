@@ -20,8 +20,8 @@ cd "$SLURM_SUBMIT_DIR"
 # Environment
 module load python/3.12.1
 source venv2/bin/activate
-mkdir -p "$SLURM_TMPDIR/torchdata"
-export TORCH_HOME="$SLURM_TMPDIR/torchdata"
+mkdir -p "torchdata/"
+export TORCH_HOME="torchdata/"
 
 # Defaults if not exported by submitter
 METHOD="${METHOD:-BinaryFuzzyARTMAP}"

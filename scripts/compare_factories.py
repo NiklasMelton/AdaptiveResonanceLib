@@ -233,13 +233,17 @@ def run_single_task(method: str, backend: str, seed: int = 0) -> Result:
         pass
 
     # Load data for this method
+    print("Loading Data")
     X_train, y_train, X_test, y_test = load_data_for_method(method)
     X = np.vstack([X_train, X_test])
     y = np.concatenate([y_train, y_test])
     n_train = X_train.shape[0]
+    print("Data Loaded: ", n_train, X.shape[0])
 
     # Build factory for this backend
     factory = make_factory(method, backend)
+    print("Factory loaded")
+    print("Fitting")
 
     # Timed prepare
     x, t_prepare = time_call(f"prepare_data ({backend})", factory.prepare_data, X)

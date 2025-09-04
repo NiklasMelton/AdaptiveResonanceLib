@@ -344,7 +344,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     # Embed array id if present to avoid collisions
     array_id = os.environ.get("SLURM_ARRAY_TASK_ID")
-    suffix = f"{method}-{backend}".lower()
+    suffix = f"{method}-{backend}-{device}".lower()
     if array_id:
         fname = f"{suffix}-array{array_id}.json"
     else:

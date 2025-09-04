@@ -13,7 +13,7 @@ MAKE_LOGS_DIR=1       # create logs/ if missing
 DRY_RUN=0             # 1 = print sbatch lines only, 0 = actually submit
 
 # Leave blank to rely on the #SBATCH lines inside each template.
-PARTITION_CPU="general"
+PARTITION_CPU="gpu"
 CONSTRAINT_CPU="intel&skylake&40CPU"
 PARTITION_GPU="gpu"
 CONSTRAINT_GPU=""

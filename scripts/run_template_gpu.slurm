@@ -29,7 +29,7 @@ DEVICE="${BACKEND:-gpu}"
 SEED="${SEED:-0}"
 
 # Run
-python AdaptiveResonanceLib/scripts/compare_factories_gpu.py \
+python AdaptiveResonanceLib/scripts/compare_factories.py \
   --method "${METHOD}" \
   --backend "${BACKEND}" \
   --device "${DEVICE}" \

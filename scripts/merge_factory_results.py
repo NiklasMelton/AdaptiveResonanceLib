@@ -5,7 +5,7 @@ import pandas as pd
 
 # Where your jobs saved outputs
 RESULTS_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("results")
-OUT_CSV = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("all_results.csv")
+OUT_PQT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("all_results.parquet")
 
 rows = []
 fname_re = re.compile(
@@ -60,5 +60,5 @@ meta_cols = [c for c in ["method", "backend", "device", "seed", "job_id"] if c i
 other_cols = [c for c in df.columns if c not in meta_cols + ["_source"]]
 df = df[meta_cols + other_cols + ["_source"]]
 
-df.to_csv(OUT_CSV, index=False)
-print(f"[OK] Wrote {OUT_CSV} with {len(df)} rows from {RESULTS_DIR}")
+df.to_parquet(OUT_PQT, index=False)
+print(f"[OK] Wrote {OUT_PQT} with {len(df)} rows from {RESULTS_DIR}")

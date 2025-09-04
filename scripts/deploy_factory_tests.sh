@@ -17,7 +17,7 @@ PARTITION_CPU="general"
 CONSTRAINT_CPU="intel&skylake&40CPU"
 PARTITION_GPU="gpu"
 CONSTRAINT_GPU="intel&skylake&40CPU"
-GRES_GPU="gpu:V100:1"
+GRES_GPU="gpu:1"
 # ─────────────────────────
 
 METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )

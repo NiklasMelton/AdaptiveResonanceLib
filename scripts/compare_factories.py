@@ -127,16 +127,17 @@ SIGMA_INIT = 0.33 * np.ones((784,), dtype=np.float32)
 
 METHODS = ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "HypersphereARTMAP", "GaussianARTMAP"]
 BACKENDS = ["python", "torch", "c++"]  # task granularity is method x backend
+DEVICES = ["cpu", "gpu"]
 
-def make_factory(method: str, backend: str):
+def make_factory(method: str, backend: str, device: str):
     if method == "BinaryFuzzyARTMAP":
-        return BinaryFuzzyARTMAPFactory(RHO, ALPHA, backend=backend)
+        return BinaryFuzzyARTMAPFactory(RHO, ALPHA, backend=backend, device=device)
     if method == "FuzzyARTMAP":
-        return FuzzyARTMAPFactory(RHO, ALPHA, BETA, backend=backend)
+        return FuzzyARTMAPFactory(RHO, ALPHA, BETA, backend=backend, device=device)
     if method == "HypersphereARTMAP":
-        return HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend=backend)
+        return HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend=backend, device=device)
     if method == "GaussianARTMAP":
-        return GaussianARTMAPFactory(G_RHO, ALPHA, SIGMA_INIT, backend=backend)
+        return GaussianARTMAPFactory(G_RHO, ALPHA, SIGMA_INIT, backend=backend, device=device)
     raise ValueError(f"Unknown method: {method}")
 
 def load_data_for_method(method: str):
@@ -215,6 +216,7 @@ def _versions() -> Dict[str, str]:
 class Result:
     method: str
     backend: str
+    device: str
     timings: Dict[str, float]
     n_train: int
     n_test: int
@@ -222,7 +224,8 @@ class Result:
     n_clusters: int
     meta: Dict[str, Any]
 
-def run_single_task(method: str, backend: str, seed: int = 0) -> Result:
+def run_single_task(method: str, backend: str, device: str = "cpu", seed: int = 0) -> \
+        Result:
     # Reproducibility where possible
     np.random.seed(seed)
     try:
@@ -241,7 +244,7 @@ def run_single_task(method: str, backend: str, seed: int = 0) -> Result:
     print("Data Loaded: ", n_train, X.shape[0])
 
     # Build factory for this backend
-    factory = make_factory(method, backend)
+    factory = make_factory(method, backend, device)
     print("Factory loaded")
     print("Fitting")
 
@@ -271,6 +274,7 @@ def run_single_task(method: str, backend: str, seed: int = 0) -> Result:
     return Result(
         method=method,
         backend=backend,
+        device=device,
         timings={
             "prepare": t_prepare,
             "fit": t_fit,
@@ -295,6 +299,8 @@ def main():
     parser.add_argument("--method", choices=METHODS, default=None,
                         help="Override: method name (ignores --task-index backend part unless --backend also set).")
     parser.add_argument("--backend", choices=BACKENDS, default=None,
+                        help="Override: backend name.")
+    parser.add_argument("--device", choices=DEVICES, default="cpu",
                         help="Override: backend name.")
     parser.add_argument("--out-dir", type=str, default="results",
                         help="Directory for JSON outputs.")
@@ -326,7 +332,7 @@ def main():
 
     # Run task
     try:
-        res = run_single_task(method, backend, seed=args.seed)
+        res = run_single_task(method, backend, device, seed=args.seed)
     except Exception as e:
         print(f"FATAL: task ({method}, {backend}) failed: {e}", file=sys.stderr)
         sys.exit(1)

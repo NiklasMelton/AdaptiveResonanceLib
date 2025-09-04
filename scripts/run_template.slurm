@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=ART-{{METHOD}}-{{BACKEND}}   # will be overridden by submitter
+#SBATCH --job-name=ART-{{METHOD}}-{{BACKEND}}-{{DEVICE}}   # will be overridden
 #SBATCH --nodes=1
 #SBATCH --partition=general
 #SBATCH --ntasks=1
@@ -24,10 +24,12 @@ export TORCH_HOME="torchdata/"
 # Defaults if not exported by submitter
 METHOD="${METHOD:-BinaryFuzzyARTMAP}"
 BACKEND="${BACKEND:-python}"
+DEVICE="${BACKEND:-cpu}"
 SEED="${SEED:-0}"
 
 # Run
 python AdaptiveResonanceLib/scripts/compare_factories.py \
   --method "${METHOD}" \
   --backend "${BACKEND}" \
+  --device "${DEVICE}" \
   --seed "${SEED}"

@@ -24,7 +24,7 @@ export TORCH_HOME="torchdata/"
 
 # Defaults if not exported by submitter
 METHOD="${METHOD:-BinaryFuzzyARTMAP}"
-BACKEND="${BACKEND:-python}"
+BACKEND="${BACKEND:-torch}"
 DEVICE="${BACKEND:-gpu}"
 SEED="${SEED:-0}"
 

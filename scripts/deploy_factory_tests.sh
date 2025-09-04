@@ -44,22 +44,29 @@ submit_cpu() {
 }
 
 submit_gpu() {
-  local method="$1" backend="$2"   # backend will be 'torch' here
+  local method="$1"                # backend is torch here
   local jobname="ART-${method}-torch-gpu"
+  local LOGDIR="$HOME/logs"
+  mkdir -p "$LOGDIR"
 
   local args=(
-    --job-name="${jobname}"
-    --output="logs/%x-%j.out"
-    --error="logs/%x-%j.err"
-    --export=ALL,METHOD="${method}",BACKEND=torch,DEVICE=gpu,SEED="${SEED}"
+    --job-name="$jobname"
+    --chdir="$HOME"                                         # <- known work dir
+    --output="$LOGDIR/%x-%j.out"                            # <- absolute logs
+    --error="$LOGDIR/%x-%j.err"
+    --partition=gpu
+    --constraint='intel&skylake&40CPU'                      # <- QUOTED
+    --gres=gpu:V100-SXM2-32GB:1
+    --export=ALL,METHOD="$method",BACKEND=torch,DEVICE=gpu,SEED="$SEED"
+    --parsable
   )
-  [[ -n "${PARTITION_GPU}"  ]] && args+=( --partition="${PARTITION_GPU}" )
-  [[ -n "${CONSTRAINT_GPU}" ]] && args+=( --constraint="${CONSTRAINT_GPU}" )
-  [[ -n "${GRES_GPU}"       ]] && args+=( --gres="${GRES_GPU}" )
 
-  echo "[GPU]  sbatch ${args[*]} ${TPL_GPU}"
-  (( DRY_RUN )) || sbatch "${args[@]}" "${TPL_GPU}"
+  echo "[GPU] sbatch ${args[*]} $TPL_GPU"
+  jid=$(sbatch "${args[@]}" "$TPL_GPU") || { echo "ERROR: sbatch failed"; return 1; }
+  echo "[GPU] Submitted JobID=$jid"
+  scontrol show job "$jid" | egrep 'WorkDir|StdOut|StdErr|Partition|Gres|Reason'
 }
+
 
 # ───────── Submit 16 jobs ─────────
 for method in "${METHODS[@]}"; do

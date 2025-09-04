@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ART-{{METHOD}}-{{BACKEND}}-{{DEVICE}}   # will be overridden
 #SBATCH --nodes=1
-#SBATCH --partition=general
+#SBATCH --partition=gpu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G

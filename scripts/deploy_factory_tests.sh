@@ -16,8 +16,8 @@ DRY_RUN=0             # 1 = print sbatch lines only, 0 = actually submit
 PARTITION_CPU="general"
 CONSTRAINT_CPU="intel&skylake&40CPU"
 PARTITION_GPU="gpu"
-CONSTRAINT_GPU="intel&skylake&40CPU"
-GRES_GPU="gpu:1"
+CONSTRAINT_GPU=""
+GRES_GPU="gpu:V100-SXM2-32GB:1"
 # ─────────────────────────
 
 METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )

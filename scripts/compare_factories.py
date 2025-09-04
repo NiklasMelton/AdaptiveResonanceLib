@@ -119,7 +119,7 @@ def time_call(label, fn, *args, **kwargs):
 # ------------------------------
 # Hyperparams from your sample
 RHO = 0.8
-H_RHO = 0.6
+H_RHO = 0.7
 G_RHO = 1e-90
 ALPHA = 1e-10
 BETA = 1.0

@@ -72,7 +72,7 @@ submit_gpu() {
 for method in "${METHODS[@]}"; do
   for backend in "${BACKENDS[@]}"; do
     # CPU job for every (method, backend)
-#    submit_cpu "$method" "$backend"
+    submit_cpu "$method" "$backend"
     # GPU job only for torch
     if [[ "$backend" == "torch" ]]; then
       submit_gpu "$method"

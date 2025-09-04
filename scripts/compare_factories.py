@@ -123,7 +123,7 @@ G_RHO = 0.001
 ALPHA = 1e-10
 BETA = 1.0
 R_HAT = 28.0
-SIGMA_INIT = 0.33 * np.ones((784,), dtype=np.float32)
+SIGMA_INIT = 0.5 * np.ones((784,), dtype=np.float32)
 
 METHODS = ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "HypersphereARTMAP", "GaussianARTMAP"]
 BACKENDS = ["python", "torch", "c++"]  # task granularity is method x backend

@@ -75,7 +75,7 @@ for method in "${METHODS[@]}"; do
     submit_cpu "$method" "$backend"
     # GPU job only for torch
     if [[ "$backend" == "torch" ]]; then
-      submit_gpu "$method" "$backend"
+      submit_gpu "$method"
     fi
   done
 done

@@ -310,6 +310,7 @@ def main():
     args = parser.parse_args()
 
     # Resolve task
+    device = args.device
     if args.method and args.backend:
         method, backend = args.method, args.backend
     elif args.task_index is not None:

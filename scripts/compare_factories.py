@@ -120,7 +120,7 @@ def time_call(label, fn, *args, **kwargs):
 # Hyperparams from your sample
 RHO = 0.8
 H_RHO = 0.5
-G_RHO = 1e-80
+G_RHO = 1e-90
 ALPHA = 1e-10
 BETA = 1.0
 R_HAT = 28.0
@@ -136,7 +136,7 @@ def make_factory(method: str, backend: str, device: str):
     if method == "FuzzyARTMAP":
         return FuzzyARTMAPFactory(RHO, ALPHA, BETA, backend=backend, device=device)
     if method == "HypersphereARTMAP":
-        return HypersphereARTMAPFactory(RHO, ALPHA, BETA, R_HAT, backend=backend, device=device)
+        return HypersphereARTMAPFactory(H_RHO, ALPHA, BETA, R_HAT, backend=backend, device=device)
     if method == "GaussianARTMAP":
         return GaussianARTMAPFactory(G_RHO, ALPHA, SIGMA_INIT, backend=backend, device=device)
     raise ValueError(f"Unknown method: {method}")

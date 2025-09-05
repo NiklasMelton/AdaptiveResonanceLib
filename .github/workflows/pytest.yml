@@ -80,6 +80,22 @@ jobs:
               - 'pyproject.toml'
               - 'poetry.lock'
 
+            hybrid_factory:
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/FuzzyART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/FuzzyARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppFuzzyARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/FuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/FuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'artlib/optimized/backends/hybrid/_HybridSimpleARTMAP.py'
+              - 'artlib/optimized/backends/hybrid/HybridOptimizedARTMAP.py'
+              - 'unit_tests/test_HybridARTMAP_factories.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -198,4 +214,22 @@ jobs:
         with:
           name: pytest-binary-factory-results
           path: ./test-results/pytest-binary-factory.xml
+          compression-level: 6
+
+      - name: Run Hybrid factory test
+        if: steps.changes.outputs.hybrid_factory == 'true'
+        run: |
+          poetry run pytest unit_tests/test_HybridARTMAP_factories.py \
+            --maxfail=5 \
+            --disable-warnings \
+            -v \
+            --tb=short \
+            --junitxml=./test-results/pytest-hybrid-factory.xml
+
+      - name: Upload Hybrid factory results (on failure)
+        if: ${{ failure() && steps.run_hybrid.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-hybrid-factory-results
+          path: ./test-results/pytest-hybrid-factory.xml
           compression-level: 6

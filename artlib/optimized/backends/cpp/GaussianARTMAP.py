@@ -39,15 +39,8 @@ class GaussianARTMAP(SimpleARTMAP):
             Small constant to avoid division by zero in likelihood term.
 
         """
-        sigma_init = np.asarray(sigma_init, dtype=float)
-        if sigma_init.ndim != 1 or (sigma_init <= 0).any():
-            raise ValueError("'sigma_init' must be a 1‑D array of positive values.")
-
         module_a = GaussianART(rho=rho, sigma_init=sigma_init, alpha=alpha)
         super().__init__(module_a)
-
-        # keep a copy for the C++ backend
-        self._sigma_init = sigma_init
 
     def _synchronize_cpp_results(
         self,
@@ -147,7 +140,7 @@ class GaussianARTMAP(SimpleARTMAP):
             y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],  # small‑alpha parameter
-            sigma_init=self._sigma_init,
+            sigma_init=self.module_a.params["sigma_init"],
             MT=match_tracking,
             epsilon=epsilon,
             weights=None,
@@ -205,7 +198,7 @@ class GaussianARTMAP(SimpleARTMAP):
             y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            sigma_init=self._sigma_init,
+            sigma_init=self.module_a.params["sigma_init"],
             MT=match_tracking,
             epsilon=epsilon,
             weights=existing_W,
@@ -246,7 +239,7 @@ class GaussianARTMAP(SimpleARTMAP):
             X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            sigma_init=self._sigma_init,
+            sigma_init=self.module_a.params["sigma_init"],
             MT="",
             epsilon=0.0,
             weights=W,
@@ -287,7 +280,7 @@ class GaussianARTMAP(SimpleARTMAP):
             X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            sigma_init=self._sigma_init,
+            sigma_init=self.module_a.params["sigma_init"],
             MT="",
             epsilon=0.0,
             weights=W,

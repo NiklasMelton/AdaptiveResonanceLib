@@ -4,8 +4,8 @@
 #SBATCH --partition=gpu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=128G
-#SBATCH --time=5:00:00
+#SBATCH --mem=256G
+#SBATCH --time=12:00:00
 #SBATCH --output=logs/%x-%j.out                 # logs/ART-<name>-<jobid>.out
 #SBATCH --constraint=intel&skylake&40CPU
 

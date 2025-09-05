@@ -17,11 +17,13 @@ PARTITION_CPU="gpu"
 CONSTRAINT_CPU="intel&skylake&40CPU"
 PARTITION_GPU="gpu"
 CONSTRAINT_GPU=""
-GRES_GPU="gpu:V100-SXM2-32GB:1"
+GRES_GPU="gpu:V100-PCIE-32GB:1"
 # ─────────────────────────
 
-METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
-BACKENDS=( python torch "c++" )
+METHODS=( GaussianARTMAP )
+#METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
+BACKENDS=( torch )
+#BACKENDS=( python torch "c++" )
 
 (( MAKE_LOGS_DIR )) && mkdir -p "${SCRIPT_DIR}/logs"
 
@@ -74,8 +76,8 @@ for method in "${METHODS[@]}"; do
     # CPU job for every (method, backend)
     submit_cpu "$method" "$backend"
     # GPU job only for torch
-    if [[ "$backend" == "torch" ]]; then
-      submit_gpu "$method"
+#    if [[ "$backend" == "torch" ]]; then
+#      submit_gpu "$method"
     fi
   done
 done

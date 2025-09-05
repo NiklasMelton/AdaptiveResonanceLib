@@ -56,7 +56,7 @@ def _load_mnist_numpy_binary():
     ds_train = MNIST(root=root, train=True, download=True, transform=tfm)
     ds_test  = MNIST(root=root, train=False, download=True, transform=tfm)
 
-    n_train = 10_000
+    n_train = 60_000
     n_test = len(ds_test)  # 10,000
 
     # Stack efficiently with torch, then convert to numpy
@@ -87,7 +87,7 @@ def _load_mnist_numpy():
     ds_train = MNIST(root=root, train=True, download=True, transform=tfm)
     ds_test  = MNIST(root=root, train=False, download=True, transform=tfm)
 
-    n_train = 10_000
+    n_train = 60_000
     n_test = len(ds_test)
 
     Xtr = torch.stack([ds_train[i][0].view(-1) for i in range(n_train)])  # (10000, 784), float32 [0,1]
@@ -119,8 +119,8 @@ def time_call(label, fn, *args, **kwargs):
 # ------------------------------
 # Hyperparams from your sample
 RHO = 0.8
-H_RHO = 0.78
-G_RHO = 1e-90
+H_RHO = 0.77
+G_RHO = 1e-100
 ALPHA = 1e-10
 BETA = 1.0
 R_HAT = 28.0

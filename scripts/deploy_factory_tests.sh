@@ -17,7 +17,7 @@ PARTITION_CPU="gpu"
 CONSTRAINT_CPU="intel&skylake&40CPU"
 PARTITION_GPU="gpu"
 CONSTRAINT_GPU=""
-GRES_GPU="gpu:V100-PCIE-32GB:1"
+GRES_GPU="gpu:V100-SXM2-32GB:1"
 # ─────────────────────────
 
 METHODS=( GaussianARTMAP )

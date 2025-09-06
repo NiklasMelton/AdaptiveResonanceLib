@@ -78,6 +78,6 @@ for method in "${METHODS[@]}"; do
     # GPU job only for torch
 #    if [[ "$backend" == "torch" ]]; then
 #      submit_gpu "$method"
-    fi
+#    fi
   done
 done

@@ -20,10 +20,8 @@ CONSTRAINT_GPU=""
 GRES_GPU="gpu:V100-SXM2-32GB:1"
 # ─────────────────────────
 
-METHODS=( GaussianARTMAP )
-#METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
-BACKENDS=( torch )
-#BACKENDS=( python torch "c++" )
+METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
+BACKENDS=( python torch "c++" )
 
 (( MAKE_LOGS_DIR )) && mkdir -p "${SCRIPT_DIR}/logs"
 
@@ -76,8 +74,8 @@ for method in "${METHODS[@]}"; do
     # CPU job for every (method, backend)
     submit_cpu "$method" "$backend"
     # GPU job only for torch
-#    if [[ "$backend" == "torch" ]]; then
-#      submit_gpu "$method"
-#    fi
+    if [[ "$backend" == "torch" ]]; then
+      submit_gpu "$method"
+    fi
   done
 done

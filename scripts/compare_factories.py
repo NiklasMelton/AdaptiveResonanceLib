@@ -119,14 +119,15 @@ def time_call(label, fn, *args, **kwargs):
 # ------------------------------
 # Hyperparams from your sample
 RHO = 0.8
-H_RHO = 0.77
+H_RHO = 0.78
 G_RHO = 1e-100
 ALPHA = 1e-10
 BETA = 1.0
 R_HAT = 28.0
 SIGMA_INIT = 0.5 * np.ones((784,), dtype=np.float32)
 
-METHODS = ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "HypersphereARTMAP", "GaussianARTMAP"]
+# METHODS = ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "HypersphereARTMAP", "GaussianARTMAP"]
+METHODS = ["HyperpshereARTMAP"]
 BACKENDS = ["python", "torch", "c++"]  # task granularity is method x backend
 DEVICES = ["cpu", "gpu"]
 

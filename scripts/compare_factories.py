@@ -127,7 +127,7 @@ R_HAT = 28.0
 SIGMA_INIT = 0.5 * np.ones((784,), dtype=np.float32)
 
 # METHODS = ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "HypersphereARTMAP", "GaussianARTMAP"]
-METHODS = ["HyperpshereARTMAP"]
+METHODS = ["HypersphereARTMAP"]
 BACKENDS = ["python", "torch", "c++"]  # task granularity is method x backend
 DEVICES = ["cpu", "gpu"]
 

@@ -20,7 +20,8 @@ CONSTRAINT_GPU=""
 GRES_GPU="gpu:V100-SXM2-32GB:1"
 # ─────────────────────────
 
-METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
+#METHODS=( BinaryFuzzyARTMAP FuzzyARTMAP HypersphereARTMAP GaussianARTMAP )
+METHODS=( HypersphereARTMAP )
 BACKENDS=( python torch "c++" )
 
 (( MAKE_LOGS_DIR )) && mkdir -p "${SCRIPT_DIR}/logs"

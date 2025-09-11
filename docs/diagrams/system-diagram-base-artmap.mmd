@@ -1,0 +1,33 @@
+classDiagram
+
+  class BaseARTMAP {
+    +map: dict[int, int]
+
+    +fit(X, y, max_iter, match_tracking, epsilon)
+    +partial_fit(X, y, match_tracking, epsilon)
+    +predict(X, clip) -> y
+    +visualize(X, y)
+  }
+  class SimpleARTMAP {
+    +module_a: BaseART
+
+    +prepare_data(X) -> X_norm
+    +restore_data(X) -> X_orig
+  }
+
+  class ARTMAP {
+    +module_a: BaseART
+    +module_b: BaseART
+
+    +predict_regression(X, clip) -> y
+  }
+
+
+
+  BaseARTMAP --() BaseEstimator
+  BaseARTMAP --() ClassifierMixin
+  BaseARTMAP --() ClusterMixin
+  SimpleARTMAP <|-- BaseARTMAP
+  ARTMAP <|-- SimpleARTMAP
+
+

@@ -15,7 +15,7 @@ def setup(app):
     app.connect("autodoc-skip-member", skip)
 
 project = 'AdaptiveResonanceLib'
-copyright = '2024, Niklas Melton'
+copyright = '2025, Niklas Melton'
 author = 'Niklas Melton'
 release = '0.1.6'
 

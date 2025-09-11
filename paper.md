@@ -19,7 +19,7 @@ authors:
     orcid: 0000-0002-9726-9051
     affiliation: 1
 affiliations:
- - name: Missouri University of Science and Technology, USA
+ - name: Missouri University of Science and Technology, Rolla, Missouri, United States of America
    index: 1
    ror: 00scwqd12
 date: 18 August 2025

@@ -19,7 +19,7 @@ authors:
     orcid: 0000-0002-9726-9051
     affiliation: 1
 affiliations:
- - name: Missouri University of Science and Technology, USA
+ - name: Missouri University of Science and Technology, Rolla, Missouri, United States of America
    index: 1
    ror: 00scwqd12
 date: 18 August 2025
@@ -48,7 +48,7 @@ novel machine learning techniques.
 
 In addition to the diverse set of ART models, **artlib** offers implementations of
 visualization methods for various cluster geometries, along with pre-processing
-techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
+techniques such as Visual Assessment of Tendency [VAT\; @bezdek2002vat], data
 normalization, and complement coding.
 
 
@@ -90,8 +90,8 @@ Currently, no comprehensive Python library implements a variety of ART models in
 open-source, modular, and extensible manner. **artlib** fills this gap by offering a
 range of ART implementations that integrate seamlessly with machine learning workflows,
 including scikit-learn's `Pipeline` and `GridSearchCV` [@scikit-learn]. The library is
-designed for ease of use and high performance, leveraging Python's scientific stack
-(NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn])
+designed for ease of use and high performance, leveraging Python's scientific stack, i.e.
+NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn],
 for fast numerical computation.
 
 The modular design of **artlib** enables users to create novel compound ART models,
@@ -121,7 +121,7 @@ instance, MATLAB-based ART toolboxes [@mathworks_art1s; @mathworks_fuzzyart_fuzz
 @mathworks_topoart; @mathworks_art_fuzzyart_artmap] provide implementations of
 Fuzzy ART, TopoART, ART1, and ARTMAP models, but they lack the flexibility and
 modularity required for broader experimentation. The most significant existing ART
-implementation exists in julia and provides just five models
+implementation exists in Julia and provides just five models
 [@Petrenko_AdaptiveResonance_jl_A_Julia_2022] but, like the previously listed
 MATLAB-based toolboxes, it is not easily accessible to Python-based work flows and
 lacks a modular design.

@@ -90,7 +90,7 @@ Currently, no comprehensive Python library implements a variety of ART models in
 open-source, modular, and extensible manner. **artlib** fills this gap by offering a
 range of ART implementations that integrate seamlessly with machine learning workflows,
 including scikit-learn's `Pipeline` and `GridSearchCV` [@scikit-learn]. The library is
-designed for ease of use and high performance, leveraging Python's scientific stack, i.e. 
+designed for ease of use and high performance, leveraging Python's scientific stack, i.e.
 NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn],
 for fast numerical computation.
 

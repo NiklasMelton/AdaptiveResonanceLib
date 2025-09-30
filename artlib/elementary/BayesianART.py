@@ -201,54 +201,6 @@ class BayesianART(BaseART):
 
         return M_bin, cache
 
-    def _match_tracking(
-        self,
-        cache: Union[List[Dict], Dict],
-        epsilon: float,
-        params: Union[List[Dict], Dict],
-        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
-    ) -> bool:
-        """Adjust match tracking based on the method and epsilon value.
-
-        Parameters
-        ----------
-        cache : dict
-            Cache containing intermediate results, including the match criterion.
-        epsilon : float
-            Adjustment factor for the match criterion.
-        params : dict
-            Dictionary containing algorithm parameters.
-        method : {"MT+", "MT-", "MT0", "MT1", "MT~"}
-            Match tracking method to use.
-
-        Returns
-        -------
-        bool
-            True if match tracking continues, False otherwise.
-
-        """
-        assert isinstance(cache, dict)
-        assert isinstance(params, dict)
-        M = cache["match_criterion"]
-        # we have to reverse some signs because bayesianART has an inverted
-        # vigilence check
-        if method == "MT+":
-            self.params["rho"] = M - epsilon
-            return True
-        elif method == "MT-":
-            self.params["rho"] = M + epsilon
-            return True
-        elif method == "MT0":
-            self.params["rho"] = M
-            return True
-        elif method == "MT1":
-            self.params["rho"] = -np.inf
-            return False
-        elif method == "MT~":
-            return True
-        else:
-            raise ValueError(f"Invalid Match Tracking Method: {method}")
-
     def update(
         self,
         i: np.ndarray,
@@ -341,3 +293,51 @@ class BayesianART(BaseART):
             cov = w[self.dim_ : -1].reshape((self.dim_, self.dim_))
             # sigma = np.sqrt(np.diag(cov))
             plot_gaussian_contours_covariance(ax, mean, cov, col, linewidth=linewidth)
+
+    def _match_tracking(
+        self,
+        cache: Union[List[Dict], Dict],
+        epsilon: float,
+        params: Union[List[Dict], Dict],
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
+        """Adjust match tracking based on the method and epsilon value.
+
+        Parameters
+        ----------
+        cache : dict
+            Cache containing intermediate results, including the match criterion.
+        epsilon : float
+            Adjustment factor for the match criterion.
+        params : dict
+            Dictionary containing algorithm parameters.
+        method : {"MT+", "MT-", "MT0", "MT1", "MT~"}
+            Match tracking method to use.
+
+        Returns
+        -------
+        bool
+            True if match tracking continues, False otherwise.
+
+        """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
+        M = cache["match_criterion"]
+        # we have to reverse some signs because bayesianART has an inverted
+        # vigilence check
+        if method == "MT+":
+            self.params["rho"] = M - epsilon
+            return True
+        elif method == "MT-":
+            self.params["rho"] = M + epsilon
+            return True
+        elif method == "MT0":
+            self.params["rho"] = M
+            return True
+        elif method == "MT1":
+            self.params["rho"] = -np.inf
+            return False
+        elif method == "MT~":
+            return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")

@@ -22,7 +22,7 @@ affiliations:
  - name: Missouri University of Science and Technology, Rolla, Missouri, United States of America
    index: 1
    ror: 00scwqd12
-date: 18 August 2025
+date: 7 October 2025
 bibliography: references.bib
 ---
 
@@ -90,9 +90,10 @@ Currently, no comprehensive Python library implements a variety of ART models in
 open-source, modular, and extensible manner. **artlib** fills this gap by offering a
 range of ART implementations that integrate seamlessly with machine learning workflows,
 including scikit-learn's `Pipeline` and `GridSearchCV` [@scikit-learn]. The library is
-designed for ease of use and high performance, leveraging Python's scientific stack, i.e.
-NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn],
-for fast numerical computation.
+designed for ease of use and high performance, with all modules leveraging Python's
+scientific stack: i.e. NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and
+scikit-learn [@scikit-learn], a subset of modules also provide C++ and Torch
+implementations for even faster numerical computation.
 
 The modular design of **artlib** enables users to create novel compound ART models,
 such as Dual Vigilance Fusion ART [@da2019dual; @tan2007intelligence] or
@@ -102,8 +103,8 @@ researchers and practitioners to evaluate models on diverse datasets efficiently
 
 Additionally, the library serves as a valuable educational tool, providing
 well-documented code and familiar APIs to support hands-on experimentation with ART
-models. It is ideal for academic courses or personal projects in artificial
-intelligence and machine learning, making **artlib** a versatile resource.
+models. It is ideal for academic courses, personal projects, and research in
+artificial intelligence and machine learning, making **artlib** a versatile resource.
 
 **artlib** is actively maintained and designed for future extension, allowing users
 to create new ART models, adjust parameters for specific applications, and explore ART's

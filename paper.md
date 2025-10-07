@@ -30,21 +30,21 @@ bibliography: references.bib
 
 The Adaptive Resonance Theory Library (**artlib**) is a Python library that
 implements a wide range of Adaptive Resonance Theory (ART) algorithms. **artlib**
-currently supports eight elementary ART models and 11 compound ART models, including
+currently supports eight elementary ART models and 12 compound ART models, including
 Fuzzy ART [@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere],
 Ellipsoid ART [@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
 [@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron ART
 [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
 [@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified
-ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART
-[@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],
-BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],
-FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. These
-models can be applied to tasks such as unsupervised clustering, supervised
-classification, regression, and reinforcement learning [@da2019survey]. This library
-provides an extensible and modular framework where users can integrate custom models
-or extend current implementations, allowing for experimentation with existing and
-novel machine learning techniques.
+ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], DeepARTMAP
+[@Melton2025Deep], TopoART [@tscherepanow2010topoart], Dual Vigilance ART
+[@da2019dual], CVIART [@da2022icvi], BARTMAP [@xu2011bartmap; @xu2012biclustering],
+Fusion ART [@tan2007intelligence], FALCON [@tan2004falcon], and TD-FALCON
+[@tan2008integrating]. These models can be applied to tasks such as unsupervised
+clustering, supervised classification, regression, and reinforcement learning
+[@da2019survey]. This library provides an extensible and modular framework where
+users can integrate custom models or extend current implementations, allowing for
+experimentation with existing and novel machine learning techniques.
 
 In addition to the diverse set of ART models, **artlib** offers implementations of
 visualization methods for various cluster geometries, along with pre-processing
@@ -125,7 +125,8 @@ modularity required for broader experimentation. The most significant existing A
 implementation exists in Julia and provides just five models
 [@Petrenko_AdaptiveResonance_jl_A_Julia_2022] but, like the previously listed
 MATLAB-based toolboxes, it is not easily accessible to Python-based work flows and
-lacks a modular design.
+lacks a modular design. Further, no public ART implementations provide configurable
+match-tracking [@10969482].
 
 These existing implementations of ART models may provide standalone versions of
 individual models, but they are often not designed to integrate seamlessly with modern

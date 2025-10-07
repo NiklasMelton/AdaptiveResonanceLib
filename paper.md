@@ -37,7 +37,7 @@ Ellipsoid ART [@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
 [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
 [@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified
 ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], DeepARTMAP
-[@Melton2025Deep], TopoART [@tscherepanow2010topoart], Dual Vigilance ART
+[@melton2025deep], TopoART [@tscherepanow2010topoart], Dual Vigilance ART
 [@da2019dual], CVIART [@da2022icvi], BARTMAP [@xu2011bartmap; @xu2012biclustering],
 Fusion ART [@tan2007intelligence], FALCON [@tan2004falcon], and TD-FALCON
 [@tan2008integrating]. These models can be applied to tasks such as unsupervised

@@ -43,7 +43,7 @@ ext_modules = [
 
 setup(
     name="artlib",
-    version="0.1.6",
+    version="0.1.7",
     packages=find_packages(),  # This ensures artlib, artlib.common, etc. are all included
     ext_modules=ext_modules,
 )

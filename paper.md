@@ -19,10 +19,10 @@ authors:
     orcid: 0000-0002-9726-9051
     affiliation: 1
 affiliations:
- - name: Missouri University of Science and Technology, USA
+ - name: Missouri University of Science and Technology, Rolla, Missouri, United States of America
    index: 1
    ror: 00scwqd12
-date: 18 October 2024
+date: 7 October 2025
 bibliography: references.bib
 ---
 
@@ -30,25 +30,25 @@ bibliography: references.bib
 
 The Adaptive Resonance Theory Library (**artlib**) is a Python library that
 implements a wide range of Adaptive Resonance Theory (ART) algorithms. **artlib**
-currently supports eight elementary ART models and 11 compound ART models, including
+currently supports eight elementary ART models and 12 compound ART models, including
 Fuzzy ART [@carpenter1991fuzzy], Hypersphere ART [@anagnostopoulos2000hypersphere],
 Ellipsoid ART [@anagnostopoulos2001a; @anagnostopoulos2001b], Gaussian ART
 [@williamson1996gaussian], Bayesian ART [@vigdor2007bayesian], Quadratic Neuron ART
 [@su2001application; @su2005new], ART1 [@carpenter1987massively], ART2
 [@carpenter1987art; @carpenter1991art], ARTMAP [@carpenter1991artmap], Simplified
-ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], TopoART
-[@tscherepanow2010topoart], Dual Vigilance ART [@da2019dual], CVIART [@da2022icvi],
-BARTMAP [@xu2011bartmap; @xu2012biclustering], Fusion ART [@tan2007intelligence],
-FALCON [@tan2004falcon], and TD-FALCON [@tan2008integrating]. These
-models can be applied to tasks such as unsupervised clustering, supervised
-classification, regression, and reinforcement learning [@da2019survey]. This library
-provides an extensible and modular framework where users can integrate custom models
-or extend current implementations, allowing for experimentation with existing and
-novel machine learning techniques.
+ARTMAP [@gotarredona1998adaptive], SMART [@bartfai1994hierarchical], DeepARTMAP
+[@melton2025deep], TopoART [@tscherepanow2010topoart], Dual Vigilance ART
+[@da2019dual], CVIART [@da2022icvi], BARTMAP [@xu2011bartmap; @xu2012biclustering],
+Fusion ART [@tan2007intelligence], FALCON [@tan2004falcon], and TD-FALCON
+[@tan2008integrating]. These models can be applied to tasks such as unsupervised
+clustering, supervised classification, regression, and reinforcement learning
+[@da2019survey]. This library provides an extensible and modular framework where
+users can integrate custom models or extend current implementations, allowing for
+experimentation with existing and novel machine learning techniques.
 
 In addition to the diverse set of ART models, **artlib** offers implementations of
 visualization methods for various cluster geometries, along with pre-processing
-techniques such as Visual Assessment of Tendency (VAT) [@bezdek2002vat], data
+techniques such as Visual Assessment of Tendency [VAT\; @bezdek2002vat], data
 normalization, and complement coding.
 
 
@@ -90,9 +90,10 @@ Currently, no comprehensive Python library implements a variety of ART models in
 open-source, modular, and extensible manner. **artlib** fills this gap by offering a
 range of ART implementations that integrate seamlessly with machine learning workflows,
 including scikit-learn's `Pipeline` and `GridSearchCV` [@scikit-learn]. The library is
-designed for ease of use and high performance, leveraging Python's scientific stack
-(NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and scikit-learn [@scikit-learn])
-for fast numerical computation.
+designed for ease of use and high performance, with all modules leveraging Python's
+scientific stack: i.e. NumPy [@harris2020array], SciPy [@2020SciPy-NMeth], and
+scikit-learn [@scikit-learn], a subset of modules also provide C++ and Torch
+implementations for even faster numerical computation.
 
 The modular design of **artlib** enables users to create novel compound ART models,
 such as Dual Vigilance Fusion ART [@da2019dual; @tan2007intelligence] or
@@ -102,8 +103,8 @@ researchers and practitioners to evaluate models on diverse datasets efficiently
 
 Additionally, the library serves as a valuable educational tool, providing
 well-documented code and familiar APIs to support hands-on experimentation with ART
-models. It is ideal for academic courses or personal projects in artificial
-intelligence and machine learning, making **artlib** a versatile resource.
+models. It is ideal for academic courses, personal projects, and research in
+artificial intelligence and machine learning, making **artlib** a versatile resource.
 
 **artlib** is actively maintained and designed for future extension, allowing users
 to create new ART models, adjust parameters for specific applications, and explore ART's
@@ -121,10 +122,11 @@ instance, MATLAB-based ART toolboxes [@mathworks_art1s; @mathworks_fuzzyart_fuzz
 @mathworks_topoart; @mathworks_art_fuzzyart_artmap] provide implementations of
 Fuzzy ART, TopoART, ART1, and ARTMAP models, but they lack the flexibility and
 modularity required for broader experimentation. The most significant existing ART
-implementation exists in julia and provides just five models
+implementation exists in Julia and provides just five models
 [@Petrenko_AdaptiveResonance_jl_A_Julia_2022] but, like the previously listed
 MATLAB-based toolboxes, it is not easily accessible to Python-based work flows and
-lacks a modular design.
+lacks a modular design. Further, no public ART implementations provide configurable
+match-tracking [@10969482].
 
 These existing implementations of ART models may provide standalone versions of
 individual models, but they are often not designed to integrate seamlessly with modern

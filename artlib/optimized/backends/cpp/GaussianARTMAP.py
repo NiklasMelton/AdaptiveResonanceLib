@@ -1,49 +1,53 @@
-"""Hypersphere ARTMAP :cite:`anagnostopoulos2000hypersphere`."""
-
+"""Gaussian ARTMAP :cite:`williamson1996gaussian`."""
 import numpy as np
 from typing import Literal, Tuple
-from artlib.cpp_optimized.cppHypersphereARTMAP import (
-    FitHypersphereARTMAP,
-    PredictHypersphereARTMAP,
+from artlib.optimized.backends.cpp.cppGaussianARTMAP import (  # ← new backend
+    FitGaussianARTMAP,
+    PredictGaussianARTMAP,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.elementary.HypersphereART import HypersphereART
+from artlib.elementary.GaussianART import GaussianART
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
 
 
-class HypersphereARTMAP(SimpleARTMAP):
-    """HypersphereARTMAP for Classification. optimized with C++
+class GaussianARTMAP(SimpleARTMAP):
+    """GaussianARTMAP for Classification. optimized with C++
 
-    This module implements HypersphereARTMAP
+    This module implements GaussianARTMAP
 
-    HypersphereARTMAP is a non-modular classification model which has been highly
+    GaussianARTMAP is a non-modular classification model which has been highly
     optimized for run-time performance. Fit and predict functions are implemented in
     c++ for efficient execution. This class acts as a wrapper for the underlying c++
     functions and to provide compatibility with the artlib style and usage.
-    Functionally, HypersphereARTMAP behaves as a special case of
+    Functionally, GaussianARTMAP behaves as a special case of
     :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
-    :class:`~artlib.elementary.HypersphereART.HypersphereART`.
+    :class:`~artlib.elementary.GaussianART.GaussianART`.
 
     """
 
-    def __init__(self, rho: float, alpha: float, beta: float, r_hat: float):
-        """
+    def __init__(self, rho: float, sigma_init: np.ndarray, alpha: float = 1e-10):
+        """Initialize the Gaussian ARTMAP model.
+
         Parameters
         ----------
         rho : float
             Vigilance parameter.
-        alpha : float
-            Choice parameter.
-        beta : float
-            Learning‑rate parameter.
-        r_hat : float
-            Global upper bound on cluster radius (must be > 0).
+        sigma_init : np.ndarray
+            Initial diagonal standard deviations (length = n_features).
+        alpha : float, default=1e-10
+            Small constant to avoid division by zero in likelihood term.
+
         """
-        module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
+        sigma_init = np.asarray(sigma_init, dtype=float)
+        if sigma_init.ndim != 1 or (sigma_init <= 0).any():
+            raise ValueError("'sigma_init' must be a 1‑D array of positive values.")
+
+        module_a = GaussianART(rho=rho, sigma_init=sigma_init, alpha=alpha)
         super().__init__(module_a)
-        # store r_hat so we can forward it to the C++ layer
-        self._r_hat = float(r_hat)
+
+        # keep a copy for the C++ backend
+        self._sigma_init = sigma_init
 
     def _synchronize_cpp_results(
         self,
@@ -59,7 +63,7 @@ class HypersphereARTMAP(SimpleARTMAP):
         labels_a_out : np.ndarray
             A 1D numpy array containing the a-side labels from fitting
         weights_arrays : np.ndarray
-            A 2D numpy array where rows are the Binary Fuzzy ART weights
+            A 2D numpy array where rows are the Fuzzy ART weights
         cluster_labels_out : np.ndarray
             A 1D numpy array describing the map from a-side to b-side cluster labels
         incremental: bool, default=False
@@ -88,7 +92,7 @@ class HypersphereARTMAP(SimpleARTMAP):
         # weights
         self.module_a.W = [w for w in weights_arrays]
 
-        # A → B map
+        # A→B mapping
         for c_a, c_b in enumerate(cluster_labels_out):
             if c_a in self.map:
                 assert self.map[c_a] == c_b, "Incremental fit changed cluster map."
@@ -130,19 +134,20 @@ class HypersphereARTMAP(SimpleARTMAP):
             The fitted model.
 
         """
-        SimpleARTMAP.validate_data(self, X, y)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        y_ = np.ascontiguousarray(y, dtype=np.int32)
+        SimpleARTMAP.validate_data(self, X_, y_)
         self.classes_ = unique_labels(y)
-        self.labels_ = y
+        self.labels_ = y_
         self.module_a.W = []
-        self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
+        self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W, cl = FitHypersphereARTMAP(
-            X,
-            y,
+        la, W, cl = FitGaussianARTMAP(
+            X_,
+            y_,
             rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            alpha=self.module_a.params["alpha"],  # small‑alpha parameter
+            sigma_init=self._sigma_init,
             MT=match_tracking,
             epsilon=epsilon,
             weights=None,
@@ -178,28 +183,29 @@ class HypersphereARTMAP(SimpleARTMAP):
             The partially fitted model.
 
         """
-        SimpleARTMAP.validate_data(self, X, y)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        y_ = np.ascontiguousarray(y, dtype=np.int32)
+        SimpleARTMAP.validate_data(self, X_, y_)
 
         if not hasattr(self, "labels_"):
-            self.labels_ = y
+            self.labels_ = y_
             existing_W = None
             existing_map = None
         else:
             j = len(self.labels_)
             self.labels_ = np.pad(self.labels_, (0, len(y)))
-            self.labels_[j:] = y
-            existing_W = np.array(self.module_a.W, dtype=float)
-            existing_map = np.array(
+            self.labels_[j:] = y_
+            existing_W = np.ascontiguousarray(self.module_a.W, dtype=float)
+            existing_map = np.ascontiguousarray(
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitHypersphereARTMAP(
-            X,
-            y,
+        la, W, cl = FitGaussianARTMAP(
+            X_,
+            y_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            sigma_init=self._sigma_init,
             MT=match_tracking,
             epsilon=epsilon,
             weights=existing_W,
@@ -226,19 +232,21 @@ class HypersphereARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
         if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
+            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X_)
+        self.module_a.check_dimensions(X_)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        _, y_b = PredictHypersphereARTMAP(
-            X,
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
+        )
+        _, y_b = PredictGaussianARTMAP(
+            X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            sigma_init=self._sigma_init,
             MT="",
             epsilon=0.0,
             weights=W,
@@ -265,19 +273,21 @@ class HypersphereARTMAP(SimpleARTMAP):
 
         """
         check_is_fitted(self)
+        X_ = np.ascontiguousarray(X, dtype=np.float64)
         if clip:
-            X = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
-        self.module_a.validate_data(X)
-        self.module_a.check_dimensions(X)
+            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
+        self.module_a.validate_data(X_)
+        self.module_a.check_dimensions(X_)
 
-        W = np.array(self.module_a.W, dtype=float)
-        cl = np.array([self.map[c] for c in range(self.module_a.n_clusters)])
-        y_a, y_b = PredictHypersphereARTMAP(
-            X,
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
+        )
+        y_a, y_b = PredictGaussianARTMAP(
+            X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            sigma_init=self._sigma_init,
             MT="",
             epsilon=0.0,
             weights=W,

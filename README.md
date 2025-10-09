@@ -83,6 +83,7 @@ First proposed by Stephen Grossberg and Gail Carpenter in the mid‑1970s , ART 
 4. **Output.**
    In clustering mode, the index of the resonant (or newly created) memory is returned as the cluster label.
 
+A step-by-step flow chart depicting the generalized ART algorithm can be found [here](https://adaptiveresonancelib.readthedocs.io/en/latest/art-diagrams.html).
 ### Vigilance
 
 ρ sets an explicit upper bound on how dissimilar two inputs can be while still
@@ -338,7 +339,7 @@ training. Only use this if you understand what you are doing.
 
 <!-- END quick-start -->
 
-<!-- START cpp_optimized -->
+<!-- START cpp -->
 
 [//]: # (## C++ Optimization)
 
@@ -471,7 +472,7 @@ with these specific compound models.
 While the current selection remains limited, future releases will expand the native C++
 implementation as user demand for them increases.
 
-<!-- END cpp_optimized -->
+<!-- END cpp -->
 
 <!-- START documentation -->
 ## Documentation
@@ -511,5 +512,5 @@ Happy Modeling with AdaptiveResonanceLib!
 ## Citing this Repository
 If you use this project in your research, please cite it as:
 
-Melton, N. (2024). AdaptiveResonanceLib (Version 0.1.6)
+Melton, N. (2025). AdaptiveResonanceLib (Version 0.1.7)
 <!-- END citation -->

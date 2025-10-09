@@ -15,9 +15,9 @@ def setup(app):
     app.connect("autodoc-skip-member", skip)
 
 project = 'AdaptiveResonanceLib'
-copyright = '2024, Niklas Melton'
+copyright = '2025, Niklas Melton'
 author = 'Niklas Melton'
-release = '0.1.6'
+release = '0.1.7'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -46,10 +46,10 @@ autoapi_ignore = ['*/experimental', '*/experimental/*']
 # autoclass_content = 'both'
 
 autodoc_mock_imports = [
-    "artlib.cpp_optimized.cppBinaryFuzzyARTMAP",
-    "artlib.cpp_optimized.cppFuzzyARTMAP",
-    "artlib.cpp_optimized.cppGaussianARTMAP",
-    "artlib.cpp_optimized.cppHypersphereARTMAP",
+    "artlib.cpp.cppBinaryFuzzyARTMAP",
+    "artlib.cpp.cppFuzzyARTMAP",
+    "artlib.cpp.cppGaussianARTMAP",
+    "artlib.cpp.cppHypersphereARTMAP",
 ]
 
 bibtex_bibfiles = ['artlib_citation.bib', '../../references.bib']

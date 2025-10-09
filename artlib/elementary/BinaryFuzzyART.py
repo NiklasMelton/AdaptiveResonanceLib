@@ -66,7 +66,7 @@ class BinaryFuzzyART(FuzzyART):
 
         """
         cc_data = super().prepare_data(X)
-        return cc_data.astype(np.uint8)  # TODO: convert to bool
+        return cc_data.astype(np.bool)  # TODO: convert to bool
 
     @staticmethod
     def validate_params(params: dict):

@@ -114,7 +114,7 @@ ensures its adaptability to current machine learning challenges.
 # Comparison to Existing Implementations
 
 While there are several open-source repositories that provide
-python implementations of specific ART models [@birkjohann2023artpython;
+Python implementations of specific ART models [@birkjohann2023artpython;
 @aiopenlab2023art; @dilekman2022artificial; @artpy2022; @dixit2020adaptive;
 @inyoot2021art; @valixandra2021adaptive; @wan2022art2; @ray2023artpy], they lack
 modularity and are limited in scope, often implementing just one or two models. For
@@ -140,7 +140,7 @@ interoperability with popular Python tools, enabling users to easily integrate A
 models into machine learning workflows, optimize models using scikit-learn's
 `GridSearchCV`, and preprocess data using standard libraries. Further, **artlib**
 provides users the flexibility to construct their own compound ART modules (those
-art modules deriving properties from other, elementary modules) which
+ART modules deriving properties from other, elementary modules) which
 may or may not exist in published literature. **artlib** also provides a template
 in the source code to encourage users to develop and experiment with their own custom
 ART algorithms. This flexibility and integration make **artlib** a powerful resource

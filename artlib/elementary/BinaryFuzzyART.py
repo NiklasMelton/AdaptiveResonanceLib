@@ -9,6 +9,7 @@ from typing import Optional, Callable, Literal, Tuple, Dict
 import warnings
 import numpy as np
 from numba import njit
+import heapq
 
 
 @njit
@@ -209,8 +210,11 @@ class BinaryFuzzyART(FuzzyART):
                     *[self.category_choice(x, w, params=self.params) for w in self.W]
                 )
             T = np.array(T_values)
-            while any(~np.isnan(T)):
-                c_ = int(np.nanargmax(T))
+            heap = [(-t, i) for i, t in enumerate(T) if not np.isnan(t)]
+            heapq.heapify(heap)
+
+            while heap:
+                c_ = heapq.heappop(heap)[1]
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(
@@ -227,13 +231,12 @@ class BinaryFuzzyART(FuzzyART):
                     self._set_params(base_params)
                     return c_
                 else:
-                    T[c_] = np.nan
                     if m and not no_match_reset:
                         keep_searching = self._match_tracking(
                             cache, epsilon, self.params, match_tracking
                         )
                         if not keep_searching:
-                            T[:] = np.nan
+                            break
                         else:
                             self.params["rho_w1"] = int(
                                 self.params["rho"] * self.dim_original

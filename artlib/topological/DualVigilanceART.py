@@ -318,8 +318,19 @@ class DualVigilanceART(BaseART):
                 ]
             )
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.nanargmax(T))
+
+            # Candidates are those with positive T (and not NaN)
+            valid = ~np.isnan(T)
+            if np.any(valid):
+                idx = np.arange(T.shape[0])[valid]
+                T_valid = T[valid]
+                order = idx[
+                    np.lexsort((idx, -T_valid))
+                ]  # primary: -T (desc), secondary: idx (asc)
+            else:
+                order = np.array([], dtype=int)
+
+            for c_ in order:
                 w = self.base_module.W[c_]
                 cache = T_cache[c_]
                 m1, cache = self.base_module.match_criterion_bin(
@@ -347,8 +358,7 @@ class DualVigilanceART(BaseART):
                         return self.map[c_]
                     else:
                         lb_params = dict(
-                            self.base_module.params,
-                            **{"rho": self.rho_lower_bound},
+                            self.base_module.params, **{"rho": self.rho_lower_bound}
                         )
                         m2, _ = self.base_module.match_criterion_bin(
                             x, w, params=lb_params, cache=cache, op=mt_operator
@@ -367,8 +377,7 @@ class DualVigilanceART(BaseART):
                         cache, epsilon, self.params, match_tracking
                     )
                     if not keep_searching:
-                        T[:] = np.nan
-                T[c_] = np.nan
+                        break
 
             c_new = len(self.base_module.W)
             w_new = self.base_module.new_weight(x, self.base_module.params)

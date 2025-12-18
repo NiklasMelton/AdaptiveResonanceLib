@@ -9,6 +9,7 @@ from copy import deepcopy
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
+import heapq
 
 
 class DualVigilanceART(BaseART):
@@ -318,8 +319,11 @@ class DualVigilanceART(BaseART):
                 ]
             )
             T = np.array(T_values)
-            while any(T > 0):
-                c_ = int(np.nanargmax(T))
+            heap = [(-t, i) for i, t in enumerate(T) if not np.isnan(t)]
+            heapq.heapify(heap)
+
+            while heap:
+                c_ = heapq.heappop(heap)[1]
                 w = self.base_module.W[c_]
                 cache = T_cache[c_]
                 m1, cache = self.base_module.match_criterion_bin(
@@ -367,8 +371,7 @@ class DualVigilanceART(BaseART):
                         cache, epsilon, self.params, match_tracking
                     )
                     if not keep_searching:
-                        T[:] = np.nan
-                T[c_] = np.nan
+                        break
 
             c_new = len(self.base_module.W)
             w_new = self.base_module.new_weight(x, self.base_module.params)

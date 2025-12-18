@@ -18,6 +18,9 @@
 #include <limits>
 #include <stdexcept>
 #include <cstring>
+#include <queue>
+#include <utility>
+
 
 namespace py = pybind11;
 
@@ -257,32 +260,31 @@ private:
 
         const std::size_t K = clusters_.size();
         std::vector<double> T(K), M(K);
-        std::vector<char>   valid(K, 1);
 
         for (std::size_t k = 0; k < K; ++k) {
             T[k] = category_choice(sample.data(), clusters_[k].weight);
             M[k] = match(sample.data(), clusters_[k].weight);
         }
 
+        // max-heap by T
+        std::priority_queue<std::pair<double,int>> pq;
+        for (std::size_t k = 0; k < K; ++k) {
+            pq.emplace(T[k], static_cast<int>(k));
+        }
+
         auto op = _match_op(MT_);
 
-        while (true) {
-            int best = -1; double bestT = -1.0;
-            for (std::size_t k = 0; k < K; ++k)
-                if (valid[k] && T[k] > bestT) {
-                    bestT = T[k]; best = static_cast<int>(k);
-                }
-            if (best < 0) break;                   // none valid → new cluster
+        while (!pq.empty()) {
+            int best = pq.top().second;
+            pq.pop();
 
             if (!op(M[best], rho_)) {              // fails vigilance
-                valid[best] = 0;                   // discard and continue
-                continue;
+                continue;                          // discard and continue
             }
 
             if (cluster_map_.count(best) && cluster_map_[best] != c_b) {
-                // hypothesis violated → match‑tracking
+                // hypothesis violated → match-tracking
                 if (!_match_tracking(M[best])) break;
-                valid[best] = 0;
                 continue;
             }
 
@@ -303,6 +305,7 @@ private:
         cluster_map_[new_id] = c_b;
         return new_id;
     }
+
 
     /* ── match tracking helpers ── */
     bool _match_tracking(double M)

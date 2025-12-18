@@ -9,6 +9,8 @@
 #include <functional>
 #include <stdexcept>
 #include <cstring>
+#include <queue>
+#include <utility>
 
 namespace py = pybind11;
 
@@ -282,49 +284,43 @@ private:
         auto match_op = _match_tracking_operator(MT_);
 
         // 4) Repeatedly pick argmax until we find a cluster or run out of T
-        while (true) {
-            // find argmax of T_values
-            int best_idx = -1;
-            double best_val = -1.0;
-            for (size_t i = 0; i < n_clusters; ++i) {
-                double tv = T_values[i];
-                if (!std::isnan(tv) && tv > best_val) {
-                    best_val = tv;
-                    best_idx = static_cast<int>(i);
-                }
+        // Build a max-heap of (T, idx), skipping NaNs.
+        std::priority_queue<std::pair<double,int>> pq;
+        for (size_t i = 0; i < n_clusters; ++i) {
+            double tv = T_values[i];
+            if (!std::isnan(tv)) {
+                pq.emplace(tv, static_cast<int>(i));
             }
+        }
 
-            // If best_idx == -1 => all T are NaN => break => we create new cluster
-            if (best_idx < 0) {
-                break;
-            }
+        while (!pq.empty()) {
+            int best_idx = pq.top().second;
+            pq.pop();
 
             // Check vigilance
             int w1  = w1_values[best_idx];
             double vig_value = static_cast<double>(w1) / dim_original_;
             bool pass_vigilance = match_op(vig_value, rho_);
+
             if (pass_vigilance) {
                 // Check hypothesis
                 if (validate_hypothesis(best_idx, c_b)) {
-                    // update cluster
                     clusters_[best_idx].weight = update(sample, clusters_[best_idx].weight);
                     cluster_map_[best_idx]     = c_b;
-                    return best_idx; // done
+                    return best_idx;
                 } else {
                     // Fails hypothesis => do match_tracking
                     bool keep_searching = _match_tracking(w1);
                     if (!keep_searching) {
-                        // we stop => break => new cluster
-                        break;
+                        break; // stop => new cluster
                     }
-                    // else continue searching => mark T[best_idx] = NaN so we skip this cluster
-                    T_values[best_idx] = std::nan("");
+                    // else continue searching: we simply don't reinsert best_idx
                 }
             } else {
-                // fails vigilance => skip this cluster
-                T_values[best_idx] = std::nan("");
+                // fails vigilance => skip this cluster: simply don't reinsert best_idx
             }
         }
+
 
         // 5) If we reach here => no existing cluster chosen => create new cluster
         int new_cluster_id = static_cast<int>(clusters_.size());

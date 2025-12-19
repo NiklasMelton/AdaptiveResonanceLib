@@ -19,4 +19,7 @@ BinaryFuzzyARTMAP:
     c++
     python
 
+
+Additionally, a c++ implementation of a rational fraction sorting algorithm
+"fracsort" is provided.
 """

@@ -486,17 +486,21 @@ class TopoART(BaseART):
             )
             T = np.array(T_values)
 
-            # Sort candidates once:
-            # primary = -T (descending T), secondary = index (ascending)
+            # Precompute a single pass order:
+            # primary = -T (descending), secondary = index (ascending)
             valid = ~np.isnan(T)
             if np.any(valid):
                 idx = np.arange(T.shape[0])[valid]
                 T_valid = T[valid]
-                order = idx[np.lexsort((idx, -T_valid))]  # last key is primary
+                order = idx[np.lexsort((idx, -T_valid))]  # lexsort last key is primary
             else:
                 order = np.array([], dtype=int)
 
             for c_ in order:
+                # If we previously "invalidated" this category, skip it.
+                if np.isnan(T[c_]):
+                    continue
+
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(
@@ -509,6 +513,7 @@ class TopoART(BaseART):
                 no_match_reset = match_reset_func is None or match_reset_func(
                     x, w, c_, params=self.base_module.params, cache=cache
                 )
+
                 if m and no_match_reset:
                     if resonant_c < 0:
                         params = self.base_module.params
@@ -517,6 +522,7 @@ class TopoART(BaseART):
                             self.base_module.params,
                             **{"beta": self.params["beta_lower"]},
                         )
+
                     # TODO: make compatible with DualVigilanceART
                     new_w = self.update(
                         x,
@@ -528,12 +534,15 @@ class TopoART(BaseART):
                         ),
                     )
                     self.set_weight(c_, new_w)
+
                     if resonant_c < 0:
                         resonant_c = c_
+                        T[c_] = np.nan  # exclude this one and keep scanning
                         continue
                     else:
                         self._set_params(base_params)
                         return resonant_c
+
                 else:
                     T[c_] = np.nan
                     if not no_match_reset:
@@ -541,7 +550,7 @@ class TopoART(BaseART):
                             cache, epsilon, self.params, match_tracking
                         )
                         if not keep_searching:
-                            break
+                            break  # equivalent to T[:] = np.nan in the original loop
 
             self._set_params(base_params)
             if resonant_c < 0:

@@ -2,6 +2,8 @@
 import numpy as np
 from numba import njit
 from typing import Tuple, Optional, Mapping, Sequence, Union, Any
+from numpy.typing import ArrayLike, NDArray
+from artlib.optimized.backends.cpp.fracsort import fracsort as _fracsort
 
 IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
@@ -172,3 +174,31 @@ def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
     """
     return np.minimum(x, y)
+
+
+def fracsort(num: ArrayLike, den: ArrayLike) -> NDArray[np.intp]:
+    """Get argsort indices for elementwise fractions ``num[i] / den[i]`` without
+    division.
+
+    This function returns an index array that sorts the rational values exactly using
+    cross-multiplication in a compiled C++ backend (no division is performed). Ties
+    are broken by the lowest original index.
+
+    Parameters
+    ----------
+    num : ArrayLike
+        1D array-like of nonnegative numerators. Must be convertible to a contiguous
+        NumPy array with dtype ``np.uint32`` or ``np.uint64``.
+    den : ArrayLike
+        1D array-like of denominators with ``den[i] >= 1``. Must be convertible to a
+        contiguous NumPy array with dtype ``np.uint32`` or ``np.uint64`` and have the
+        same shape and dtype as ``num``.
+
+    Returns
+    -------
+    NDArray[np.intp]
+        Indices that sort ``num[i] / den[i]`` in ascending order, with ties broken by
+        the lowest index.
+
+    """
+    return _fracsort(num, den)

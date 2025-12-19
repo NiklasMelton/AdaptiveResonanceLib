@@ -485,8 +485,18 @@ class TopoART(BaseART):
                 ]
             )
             T = np.array(T_values)
-            while any(~np.isnan(T)):
-                c_ = int(np.nanargmax(T))
+
+            # Sort candidates once:
+            # primary = -T (descending T), secondary = index (ascending)
+            valid = ~np.isnan(T)
+            if np.any(valid):
+                idx = np.arange(T.shape[0])[valid]
+                T_valid = T[valid]
+                order = idx[np.lexsort((idx, -T_valid))]  # last key is primary
+            else:
+                order = np.array([], dtype=int)
+
+            for c_ in order:
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(
@@ -520,7 +530,7 @@ class TopoART(BaseART):
                     self.set_weight(c_, new_w)
                     if resonant_c < 0:
                         resonant_c = c_
-                        T[c_] = np.nan
+                        continue
                     else:
                         self._set_params(base_params)
                         return resonant_c
@@ -531,7 +541,7 @@ class TopoART(BaseART):
                             cache, epsilon, self.params, match_tracking
                         )
                         if not keep_searching:
-                            T[:] = np.nan
+                            break
 
             self._set_params(base_params)
             if resonant_c < 0:

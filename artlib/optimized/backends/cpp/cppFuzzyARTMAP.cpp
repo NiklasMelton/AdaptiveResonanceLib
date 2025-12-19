@@ -257,7 +257,6 @@ private:
 
         const std::size_t K = clusters_.size();
         std::vector<double> T(K), M(K);
-        std::vector<char>   valid(K, 1);
 
         for (std::size_t k = 0; k < K; ++k) {
             T[k] = category_choice(sample.data(), clusters_[k].weight);
@@ -266,30 +265,38 @@ private:
 
         auto op = _match_op(MT_);
 
-        while (true) {
-            int best = -1; double bestT = -1.0;
-            for (std::size_t k = 0; k < K; ++k)
-                if (valid[k] && T[k] > bestT) {
-                    bestT = T[k]; best = static_cast<int>(k);
-                }
-            if (best < 0) break;                   // none valid → new cluster
+        // Build candidate order once:
+        // primary = descending T, secondary = ascending index
+        std::vector<int> order;
+        order.reserve(K);
+        for (std::size_t k = 0; k < K; ++k) {
+            order.push_back(static_cast<int>(k));
+        }
 
-            if (!op(M[best], rho_)) {              // fails vigilance
-                valid[best] = 0;                   // discard and continue
-                continue;
+        std::sort(order.begin(), order.end(),
+                  [&](int a, int b) {
+                      const double Ta = T[a];
+                      const double Tb = T[b];
+                      if (Ta != Tb) return Ta > Tb;   // descending T
+                      return a < b;                   // ascending index
+                  });
+
+        for (int best : order) {
+            if (!op(M[best], rho_)) {
+                continue; // fails vigilance -> discard and continue
             }
 
             if (cluster_map_.count(best) && cluster_map_[best] != c_b) {
-                // hypothesis violated → match‑tracking
-                if (!_match_tracking(M[best])) break;
-                valid[best] = 0;
-                continue;
+                // hypothesis violated -> match-tracking
+                if (!_match_tracking(M[best])) {
+                    break; // stop searching -> new cluster
+                }
+                continue; // keep searching
             }
 
             /* commit to cluster 'best' */
             auto old_w = clusters_[best].weight;
 
-            // compute and assign the new weights
             auto new_w = update_weight(sample, clusters_[best].weight);
             clusters_[best].weight = new_w;
             cluster_map_[best]     = c_b;
@@ -303,6 +310,7 @@ private:
         cluster_map_[new_id] = c_b;
         return new_id;
     }
+
 
     /* ── match tracking helpers ── */
     bool _match_tracking(double M)

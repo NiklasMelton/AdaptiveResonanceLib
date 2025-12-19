@@ -209,31 +209,42 @@ class BinaryFuzzyART(FuzzyART):
                     *[self.category_choice(x, w, params=self.params) for w in self.W]
                 )
             T = np.array(T_values)
-            while any(~np.isnan(T)):
-                c_ = int(np.nanargmax(T))
+
+            # Sort candidates once:
+            # primary = -T (descending T), secondary = index (ascending)
+            valid = ~np.isnan(T)
+            if np.any(valid):
+                idx = np.arange(T.shape[0])[valid]
+                T_valid = T[valid]
+                order = idx[np.lexsort((idx, -T_valid))]  # last key is primary
+            else:
+                order = np.array([], dtype=int)
+
+            for c_ in order:
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(
                     x, w, params=self.params, cache=cache, op=mt_operator
                 )
+
                 if match_tracking in ["MT~"] and match_reset_func is not None:
                     no_match_reset = True
                 else:
                     no_match_reset = match_reset_func is None or match_reset_func(
                         x, w, c_, params=self.params, cache=cache
                     )
+
                 if m and no_match_reset:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
                     self._set_params(base_params)
                     return c_
                 else:
-                    T[c_] = np.nan
                     if m and not no_match_reset:
                         keep_searching = self._match_tracking(
                             cache, epsilon, self.params, match_tracking
                         )
                         if not keep_searching:
-                            T[:] = np.nan
+                            break
                         else:
                             self.params["rho_w1"] = int(
                                 self.params["rho"] * self.dim_original

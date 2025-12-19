@@ -260,70 +260,62 @@ private:
         }
 
         // 3) Compute T-values for each cluster
-        //    We'll store them in a vector of doubles, one per cluster.
-        //    We'll also store w1 in a parallel vector so we can do vigilance checks.
         size_t n_clusters = clusters_.size();
         std::vector<double> T_values(n_clusters, std::nan(""));
         std::vector<int>    w1_values(n_clusters, 0);
 
-        // For each cluster i, compute T. If T=NaN, that means we skip it outright
         for (size_t i = 0; i < n_clusters; ++i) {
             int w1;
             double T = category_choice(sample, clusters_[i].weight, w1, MT_);
-            if (!std::isnan(T)) {
-                T_values[i]  = T;
-                w1_values[i] = w1;
-            } else {
-                T_values[i]  = std::nan("");
-                w1_values[i] = w1; // w1 might be meaningless here
-            }
+            T_values[i]  = T;   // may be NaN
+            w1_values[i] = w1;  // may be meaningless if T is NaN
         }
 
         auto match_op = _match_tracking_operator(MT_);
 
-        // 4) Repeatedly pick argmax until we find a cluster or run out of T
-        while (true) {
-            // find argmax of T_values
-            int best_idx = -1;
-            double best_val = -1.0;
-            for (size_t i = 0; i < n_clusters; ++i) {
-                double tv = T_values[i];
-                if (!std::isnan(tv) && tv > best_val) {
-                    best_val = tv;
-                    best_idx = static_cast<int>(i);
-                }
+        // Build a list of candidate indices (non-NaN T), then sort:
+        //  - primary: descending T
+        //  - secondary: ascending index
+        std::vector<int> order;
+        order.reserve(n_clusters);
+        for (size_t i = 0; i < n_clusters; ++i) {
+            if (!std::isnan(T_values[i])) {
+                order.push_back(static_cast<int>(i));
             }
+        }
 
-            // If best_idx == -1 => all T are NaN => break => we create new cluster
-            if (best_idx < 0) {
-                break;
-            }
+        std::sort(order.begin(), order.end(),
+                  [&](int a, int b) {
+                      const double Ta = T_values[a];
+                      const double Tb = T_values[b];
+                      if (Ta != Tb) return Ta > Tb;   // descending T
+                      return a < b;                   // ascending index
+                  });
 
+        // 4) Scan candidates in sorted order (replaces repeated argmax)
+        for (int idx : order) {
             // Check vigilance
-            int w1  = w1_values[best_idx];
+            int w1  = w1_values[idx];
             double vig_value = static_cast<double>(w1) / dim_original_;
             bool pass_vigilance = match_op(vig_value, rho_);
-            if (pass_vigilance) {
-                // Check hypothesis
-                if (validate_hypothesis(best_idx, c_b)) {
-                    // update cluster
-                    clusters_[best_idx].weight = update(sample, clusters_[best_idx].weight);
-                    cluster_map_[best_idx]     = c_b;
-                    return best_idx; // done
-                } else {
-                    // Fails hypothesis => do match_tracking
-                    bool keep_searching = _match_tracking(w1);
-                    if (!keep_searching) {
-                        // we stop => break => new cluster
-                        break;
-                    }
-                    // else continue searching => mark T[best_idx] = NaN so we skip this cluster
-                    T_values[best_idx] = std::nan("");
-                }
-            } else {
-                // fails vigilance => skip this cluster
-                T_values[best_idx] = std::nan("");
+            if (!pass_vigilance) {
+                continue; // skip this cluster
             }
+
+            // Check hypothesis
+            if (validate_hypothesis(idx, c_b)) {
+                // update cluster
+                clusters_[idx].weight = update(sample, clusters_[idx].weight);
+                cluster_map_[idx]     = c_b;
+                return idx;
+            }
+
+            // Fails hypothesis => do match_tracking
+            bool keep_searching = _match_tracking(w1);
+            if (!keep_searching) {
+                break; // stop searching => create new cluster
+            }
+            // else keep searching: just continue to next candidate
         }
 
         // 5) If we reach here => no existing cluster chosen => create new cluster

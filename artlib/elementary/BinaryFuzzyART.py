@@ -6,7 +6,7 @@
 
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.utils import fracsort
-from typing import Optional, Callable, Literal, Tuple, Dict, Union, List
+from typing import Optional, Callable, Literal, Tuple, Dict, List
 import warnings
 import numpy as np
 from numba import njit
@@ -198,58 +198,6 @@ class BinaryFuzzyART(FuzzyART):
         self.w_count_cache.append(np.count_nonzero(new_w))
         self.W.append(new_w)
 
-    def _match_tracking(
-        self,
-        cache: Union[List[Dict], Dict],
-        epsilon: float,
-        params: Union[List[Dict], Dict],
-        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
-    ) -> bool:
-        """Perform match tracking using the specified method.
-
-        Parameters
-        ----------
-        cache : dict
-            Cached match criterion value.
-        epsilon : float
-            Small adjustment factor for match tracking.
-        params : dict
-            Parameters
-        method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"]
-            Match tracking method to apply.
-
-        Returns
-        -------
-        bool
-            Whether to continue searching for a match.
-
-        """
-        assert isinstance(cache, dict)
-        assert isinstance(params, dict)
-        M = cache["match_criterion"]
-        if method == "MT+":
-            self.params["rho_int"] = M + epsilon
-            # return True
-        elif method == "MT-":
-            self.params["rho_int"] = M - epsilon
-            # return True
-        elif method == "MT0":
-            self.params["rho_int"] = M
-            # return True
-        elif method == "MT1":
-            self.params["rho_int"] = self.dim_original + 1
-            # return False
-        elif method == "MT~":
-            pass
-            # return True
-        else:
-            raise ValueError(f"Invalid Match Tracking Method: {method}")
-
-        if method == "MT1" or self.params["rho_int"] > self.dim_original:
-            return False
-        else:
-            return True
-
     def step_pred(self, x) -> int:
         """Predict the label for a single sample.
 
@@ -333,8 +281,8 @@ class BinaryFuzzyART(FuzzyART):
             T_den = np.ascontiguousarray(T_den)
             order = fracsort(T_num, T_den)
 
-            for t_idx_ in order:
-                c_ = T_idx[t_idx_]
+            for t_ in order:
+                c_ = T_idx[t_]
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(
@@ -361,7 +309,7 @@ class BinaryFuzzyART(FuzzyART):
                             break
                         else:
                             self.params["rho_int"] = int(
-                                self.params["rho"] * self.dim_original
+                                np.ceil(self.params["rho"] * self.dim_original)
                             )
 
             c_new = len(self.W)

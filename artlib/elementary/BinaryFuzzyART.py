@@ -5,28 +5,31 @@
 # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 from artlib.elementary.FuzzyART import FuzzyART
-from typing import Optional, Callable, Literal, Tuple, Dict
+from artlib.common.utils import fracsort
+from typing import Optional, Callable, Literal, Tuple, Dict, Union, List
 import warnings
 import numpy as np
 from numba import njit
+import operator
 
 
 @njit
 def _category_choice_binary(
-    i: np.ndarray, w: np.ndarray, alpha: float, pre_MT: bool, rho_w1: int
-) -> Tuple[float, int]:
+    i: np.ndarray, w: np.ndarray, pre_MT: bool, rho_int: int
+) -> Tuple[np.ndarray, int, bool]:
     """Optimized category choice for binary data using count_nonzero."""
-    w1 = np.count_nonzero(i & w)
-    if not pre_MT or w1 >= rho_w1:
-        return w1 / (alpha + np.count_nonzero(w)), w1
+    iw = i & w
+    iw_count = np.count_nonzero(iw)
+    if not pre_MT or iw_count >= rho_int:
+        return iw, iw_count, True
     else:
-        return np.nan, w1
+        return iw, iw_count, False
 
 
 @njit
-def _match_criterion_binary(i: np.ndarray, w: np.ndarray, dim_original: float) -> float:
+def _match_criterion_binary(i: np.ndarray, w: np.ndarray) -> float:
     """Optimized match criterion for binary data using count_nonzero."""
-    return np.count_nonzero(i & w) / dim_original
+    return np.count_nonzero(i & w)
 
 
 @njit
@@ -38,18 +41,17 @@ def _update_binary(i: np.ndarray, w: np.ndarray) -> np.ndarray:
 class BinaryFuzzyART(FuzzyART):
     """Fuzzy ART optimized for binary input data."""
 
-    def __init__(self, rho: float, alpha: float):
+    def __init__(self, rho: float):
         """Initialize the Binary Fuzzy ART model.
 
         Parameters
         ----------
         rho : float
             Vigilance parameter.
-        alpha : float
-            Choice parameter.
 
         """
-        super().__init__(rho, alpha, beta=1.0)
+        super().__init__(rho, alpha=0.0, beta=1.0)
+        self.w_count_cache: List[int] = []
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """Prepare data for clustering.
@@ -79,11 +81,8 @@ class BinaryFuzzyART(FuzzyART):
 
         """
         assert "rho" in params
-        assert "alpha" in params
         assert 1.0 >= params["rho"] >= 0.0
-        assert params["alpha"] >= 0.0
         assert isinstance(params["rho"], float)
-        assert isinstance(params["alpha"], float)
 
     def validate_data(self, X: np.ndarray):
         """Validate the data prior to clustering.
@@ -106,11 +105,13 @@ class BinaryFuzzyART(FuzzyART):
 
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
-    ) -> tuple[float, Optional[dict]]:
+    ) -> tuple[int, Optional[dict]]:
         """Get the activation of the cluster using optimized binary operations."""
         pre_MT = params["MT"] not in [None, "MT-"]
-        T, w1 = _category_choice_binary(i, w, params["alpha"], pre_MT, params["rho_w1"])
-        return T, {"w1": w1}
+        iw, iw_count, mt_status = _category_choice_binary(
+            i, w, pre_MT, params["rho_int"]
+        )
+        return iw_count, {"iw": iw, "iw_count": iw_count, "mt_status": mt_status}
 
     def match_criterion(
         self,
@@ -124,9 +125,65 @@ class BinaryFuzzyART(FuzzyART):
             warnings.warn(
                 "Cache is None during Match Criterion. This will reduce performance"
             )
-            w1 = np.count_nonzero(i & w)
-            cache = {"w1": w1}
-        return cache["w1"] / self.dim_original, cache
+            iw = i & w
+            iw_count = np.count_nonzero(iw)
+            cache = {"iw": iw, "iw_count": iw_count}
+        return cache["iw_count"], cache
+
+    def match_criterion_bin(
+        self,
+        i: np.ndarray,
+        w: np.ndarray,
+        params: Dict,
+        cache: Optional[Dict] = None,
+        op: Callable = operator.ge,
+    ) -> Tuple[bool, Dict]:
+        """Get the binary match criterion of the cluster.
+
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        w : np.ndarray
+            Cluster weight or information.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+        cache : dict, optional
+            Cache containing values from previous calculations.
+
+        Returns
+        -------
+        tuple
+            Binary match criterion and cache used for later processing.
+
+        """
+        M, cache = self.match_criterion(i, w, params=params, cache=cache)
+        M_bin = op(M, params["rho_int"])
+        if cache is None:
+            cache = dict()
+        cache["match_criterion"] = M
+        cache["match_criterion_bin"] = M_bin
+        return M_bin, cache
+
+    def set_weight(self, idx: int, new_w: np.ndarray, cache: Optional[dict] = None):
+        """Set the value of a cluster weight.
+
+        Parameters
+        ----------
+        idx : int
+            Index of cluster to update.
+        new_w : np.ndarray
+            New cluster weight.
+        cache : Optional[dict]
+            cache of values created during training step
+
+        """
+        self.weight_sample_counter_[idx] += 1
+        self.W[idx] = new_w
+        if cache is None:
+            self.w_count_cache[idx] = np.count_nonzero(new_w)
+        else:
+            self.w_count_cache[idx] = cache["iw_count"]
 
     def update(
         self,
@@ -136,11 +193,74 @@ class BinaryFuzzyART(FuzzyART):
         cache: Optional[dict] = None,
     ) -> np.ndarray:
         """Get the updated cluster weight using optimized binary operations."""
-        return _update_binary(i, w)
+        if cache is None:
+            return i & w
+        return cache["iw"]
 
-    def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
-        """Generate a new cluster weight."""
-        return i
+    def add_weight(self, new_w: np.ndarray):
+        """Add a new cluster weight.
+
+        Parameters
+        ----------
+        new_w : np.ndarray
+            New cluster weight to add.
+
+        """
+        self.weight_sample_counter_.append(1)
+        self.w_count_cache.append(np.count_nonzero(new_w))
+        self.W.append(new_w)
+
+    def _match_tracking(
+        self,
+        cache: Union[List[Dict], Dict],
+        epsilon: float,
+        params: Union[List[Dict], Dict],
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
+        """Perform match tracking using the specified method.
+
+        Parameters
+        ----------
+        cache : dict
+            Cached match criterion value.
+        epsilon : float
+            Small adjustment factor for match tracking.
+        params : dict
+            Parameters
+        method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"]
+            Match tracking method to apply.
+
+        Returns
+        -------
+        bool
+            Whether to continue searching for a match.
+
+        """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
+        M = cache["match_criterion"]
+        if method == "MT+":
+            self.params["rho_int"] = M + epsilon
+            # return True
+        elif method == "MT-":
+            self.params["rho_int"] = M - epsilon
+            # return True
+        elif method == "MT0":
+            self.params["rho_int"] = M
+            # return True
+        elif method == "MT1":
+            self.params["rho_int"] = self.dim_original + 1
+            # return False
+        elif method == "MT~":
+            pass
+            # return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+        if method == "MT1" or self.params["rho_int"] > self.dim_original:
+            return False
+        else:
+            return True
 
     def step_pred(self, x) -> int:
         """Predict the label for a single sample.
@@ -177,7 +297,7 @@ class BinaryFuzzyART(FuzzyART):
         match_tracking : {"MT+", "MT-", "MT0", "MT1", "MT~"}, default="MT+"
             Method for resetting match criterion.
         epsilon : float, default=0.0
-            Epsilon value used for adjusting match criterion.
+            Epsilon value used for adjusting match criterion. Rounded up to nearest int
 
         Returns
         -------
@@ -188,7 +308,8 @@ class BinaryFuzzyART(FuzzyART):
         self.sample_counter_ += 1
         base_params = self._deep_copy_params()
         self.params["MT"] = match_tracking
-        self.params["rho_w1"] = int(self.params["rho"] * self.dim_original)
+        self.params["rho_int"] = int(np.ceil(self.params["rho"] * self.dim_original))
+        epsilon_int = int(np.ceil(epsilon))
         mt_operator = self._match_tracking_operator(match_tracking)
         if len(self.W) == 0:
             w_new = self.new_weight(x, self.params)
@@ -196,31 +317,36 @@ class BinaryFuzzyART(FuzzyART):
             return 0
         else:
             if match_tracking in ["MT~"] and match_reset_func is not None:
-                T_values, T_cache = zip(
+                T_num, T_den, T_cache, T_idx = zip(
                     *[
-                        self.category_choice(x, w, params=self.params)
-                        if match_reset_func(x, w, c_, params=self.params, cache=None)
-                        else (np.nan, None)
-                        for c_, w in enumerate(self.W)
+                        (t[0], w_count, t[1], c_)
+                        for c_, (w, w_count) in enumerate(
+                            zip(self.W, self.w_count_cache)
+                        )
+                        if (t := self.category_choice(x, w, params=self.params))[1]
+                        is not None
+                        and t[1].get("mt_status", True)
+                        and match_reset_func(x, w, c_, params=self.params, cache=None)
                     ]
                 )
             else:
-                T_values, T_cache = zip(
-                    *[self.category_choice(x, w, params=self.params) for w in self.W]
+                T_num, T_den, T_cache, T_idx = zip(
+                    *[
+                        (t[0], w_count, t[1], c_)
+                        for c_, (w, w_count) in enumerate(
+                            zip(self.W, self.w_count_cache)
+                        )
+                        if (t := self.category_choice(x, w, params=self.params))[1]
+                        is not None
+                        and t[1].get("mt_status", True)
+                    ]
                 )
-            T = np.array(T_values)
+            T_num = np.ascontiguousarray(T_num)
+            T_den = np.ascontiguousarray(T_den)
+            order = fracsort(T_num, T_den)
 
-            # Sort candidates once:
-            # primary = -T (descending T), secondary = index (ascending)
-            valid = ~np.isnan(T)
-            if np.any(valid):
-                idx = np.arange(T.shape[0])[valid]
-                T_valid = T[valid]
-                order = idx[np.lexsort((idx, -T_valid))]  # last key is primary
-            else:
-                order = np.array([], dtype=int)
-
-            for c_ in order:
+            for t_idx_ in order:
+                c_ = T_idx[t_idx_]
                 w = self.W[c_]
                 cache = T_cache[c_]
                 m, cache = self.match_criterion_bin(
@@ -241,12 +367,12 @@ class BinaryFuzzyART(FuzzyART):
                 else:
                     if m and not no_match_reset:
                         keep_searching = self._match_tracking(
-                            cache, epsilon, self.params, match_tracking
+                            cache, epsilon_int, self.params, match_tracking
                         )
                         if not keep_searching:
                             break
                         else:
-                            self.params["rho_w1"] = int(
+                            self.params["rho_int"] = int(
                                 self.params["rho"] * self.dim_original
                             )
 

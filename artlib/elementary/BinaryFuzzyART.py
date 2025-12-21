@@ -26,18 +26,6 @@ def _category_choice_binary(
         return iw, iw_count, False
 
 
-@njit
-def _match_criterion_binary(i: np.ndarray, w: np.ndarray) -> float:
-    """Optimized match criterion for binary data using count_nonzero."""
-    return np.count_nonzero(i & w)
-
-
-@njit
-def _update_binary(i: np.ndarray, w: np.ndarray) -> np.ndarray:
-    """Optimized update rule for binary data."""
-    return i & w  # Using bitwise AND for binary updates
-
-
 class BinaryFuzzyART(FuzzyART):
     """Fuzzy ART optimized for binary input data."""
 
@@ -107,7 +95,7 @@ class BinaryFuzzyART(FuzzyART):
         self, i: np.ndarray, w: np.ndarray, params: dict
     ) -> tuple[int, Optional[dict]]:
         """Get the activation of the cluster using optimized binary operations."""
-        pre_MT = params["MT"] not in [None, "MT-"]
+        pre_MT = params["MT"] not in ["MT-"]
         iw, iw_count, mt_status = _category_choice_binary(
             i, w, pre_MT, params["rho_int"]
         )

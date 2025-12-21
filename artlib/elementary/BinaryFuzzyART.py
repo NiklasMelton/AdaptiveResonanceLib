@@ -319,7 +319,7 @@ class BinaryFuzzyART(FuzzyART):
             if match_tracking in ["MT~"] and match_reset_func is not None:
                 T_num, T_den, T_cache, T_idx = zip(
                     *[
-                        (t[0], w_count, t[1], c_)
+                        (t[0], max(1, w_count), t[1], c_)
                         for c_, (w, w_count) in enumerate(
                             zip(self.W, self.w_count_cache)
                         )
@@ -332,7 +332,7 @@ class BinaryFuzzyART(FuzzyART):
             else:
                 T_num, T_den, T_cache, T_idx = zip(
                     *[
-                        (t[0], w_count, t[1], c_)
+                        (t[0], max(1, w_count), t[1], c_)
                         for c_, (w, w_count) in enumerate(
                             zip(self.W, self.w_count_cache)
                         )

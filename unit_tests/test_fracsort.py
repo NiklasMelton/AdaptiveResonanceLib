@@ -17,7 +17,7 @@ def test_fracsort_matches_numpy_division_argsort() -> None:
 
     """
     rng = np.random.default_rng(0)
-    n = 10
+    n = 10000
 
     den = rng.integers(1, n+1, size=n, dtype=np.uint32)
     num = rng.integers(0, den + 1, size=n, dtype=np.uint32)

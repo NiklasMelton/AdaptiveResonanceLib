@@ -36,19 +36,24 @@ static py::array_t<py::ssize_t> fracsort_impl(py::array num_in, py::array den_in
         }
     }
 
-    std::vector<size_t> idx(n);
-    std::iota(idx.begin(), idx.end(), size_t{0});
+    std::vector<fracsort::Item<T>> items;
+    items.resize(n);
+    for (size_t i = 0; i < n; ++i) {
+        items[i] = fracsort::Item<T>{num[i], den[i], i};
+    }
 
     {
         py::gil_scoped_release release;
-        fracsort::argsort_inplace<T>(num, den, n, idx.data());
+        fracsort::argsort_items_inplace<T>(items.data(), n);
     }
+
 
     py::array_t<py::ssize_t> out(static_cast<py::ssize_t>(n));
     auto outbuf = out.mutable_unchecked<1>();
     for (size_t k = 0; k < n; ++k) {
-        outbuf(static_cast<py::ssize_t>(k)) = static_cast<py::ssize_t>(idx[k]);
+        outbuf(static_cast<py::ssize_t>(k)) = static_cast<py::ssize_t>(items[k].idx);
     }
+
     return out;
 }
 

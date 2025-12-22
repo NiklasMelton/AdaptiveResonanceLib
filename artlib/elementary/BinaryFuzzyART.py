@@ -280,7 +280,7 @@ class BinaryFuzzyART(FuzzyART):
             for t_ in order:
                 c_ = T_idx[t_]
                 w = self.W[c_]
-                cache = T_cache[c_]
+                cache = T_cache[t_]
                 m, cache = self.match_criterion_bin(
                     x, w, params=self.params, cache=cache, op=mt_operator
                 )

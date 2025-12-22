@@ -253,33 +253,29 @@ class BinaryFuzzyART(FuzzyART):
             return 0
         else:
             if match_tracking in ["MT~"] and match_reset_func is not None:
-                T_num, T_den, T_cache, T_idx = zip(
-                    *[
-                        (t[0], max(1, w_count), t[1], c_)
-                        for c_, (w, w_count) in enumerate(
-                            zip(self.W, self.w_count_cache)
-                        )
-                        if (t := self.category_choice(x, w, params=self.params))[1]
-                        is not None
-                        and t[1].get("mt_status", True)
-                        and match_reset_func(x, w, c_, params=self.params, cache=None)
-                    ]
-                )
+                rows = [
+                    (t[0], max(1, w_count), t[1], c_)
+                    for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache))
+                    if (t := self.category_choice(x, w, params=self.params))[1]
+                    is not None
+                    and t[1].get("mt_status", True)
+                    and match_reset_func(x, w, c_, params=self.params, cache=None)
+                ]
             else:
-                T_num, T_den, T_cache, T_idx = zip(
-                    *[
-                        (t[0], max(1, w_count), t[1], c_)
-                        for c_, (w, w_count) in enumerate(
-                            zip(self.W, self.w_count_cache)
-                        )
-                        if (t := self.category_choice(x, w, params=self.params))[1]
-                        is not None
-                        and t[1].get("mt_status", True)
-                    ]
-                )
-            T_num = np.ascontiguousarray(T_num)
-            T_den = np.ascontiguousarray(T_den)
-            order = fracsort(T_num, T_den)
+                rows = [
+                    (t[0], max(1, w_count), t[1], c_)
+                    for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache))
+                    if (t := self.category_choice(x, w, params=self.params))[1]
+                    is not None
+                    and t[1].get("mt_status", True)
+                ]
+            if rows:
+                T_num, T_den, T_cache, T_idx = map(tuple, zip(*rows))
+                T_num = np.ascontiguousarray(T_num)
+                T_den = np.ascontiguousarray(T_den)
+                order = fracsort(T_num, T_den)
+            else:
+                T_cache = T_idx = order = ()
 
             for t_ in order:
                 c_ = T_idx[t_]

@@ -29,6 +29,6 @@ def test_fracsort_matches_numpy_division_argsort() -> None:
     idx_cpp = fracsort(num, den)
 
     ratio = num.astype(np.float64) / den.astype(np.float64)
-    idx_np = np.argsort(ratio, kind="stable")
+    idx_np = np.argsort(ratio, kind="stable")[::-1]
 
     assert np.array_equal(idx_cpp, idx_np)

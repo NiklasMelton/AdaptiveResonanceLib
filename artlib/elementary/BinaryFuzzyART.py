@@ -6,7 +6,7 @@
 
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.utils import fracsort
-from typing import Optional, Callable, Literal, Tuple, Dict, List
+from typing import Optional, Callable, Literal, Tuple, Dict, List, Union
 import warnings
 import numpy as np
 from numba import njit
@@ -215,6 +215,58 @@ class BinaryFuzzyART(FuzzyART):
         self.params["MT"] = None
         return super().step_pred(x)
 
+    def _match_tracking_integer(
+        self,
+        cache: Union[List[Dict], Dict],
+        epsilon: int,
+        params: Union[List[Dict], Dict],
+        method: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+    ) -> bool:
+        """Perform match tracking using the specified method.
+
+        Parameters
+        ----------
+        cache : dict
+            Cached match criterion value.
+        epsilon : float
+            Small adjustment factor for match tracking.
+        params : dict
+            Parameters
+        method : Literal["MT+", "MT-", "MT0", "MT1", "MT~"]
+            Match tracking method to apply.
+
+        Returns
+        -------
+        bool
+            Whether to continue searching for a match.
+
+        """
+        assert isinstance(cache, dict)
+        assert isinstance(params, dict)
+        M = cache["match_criterion"]
+        if method == "MT+":
+            self.params["rho_int"] = M + epsilon
+            # return True
+        elif method == "MT-":
+            self.params["rho_int"] = M - epsilon
+            # return True
+        elif method == "MT0":
+            self.params["rho_int"] = M
+            # return True
+        elif method == "MT1":
+            self.params["rho_int"] = np.inf
+            # return False
+        elif method == "MT~":
+            pass
+            # return True
+        else:
+            raise ValueError(f"Invalid Match Tracking Method: {method}")
+
+        if method == "MT1" or self.params["rho_int"] > self.dim_original:
+            return False
+        else:
+            return True
+
     def step_fit(
         self,
         x: np.ndarray,
@@ -298,15 +350,11 @@ class BinaryFuzzyART(FuzzyART):
                     return c_
                 else:
                     if m and not no_match_reset:
-                        keep_searching = self._match_tracking(
+                        keep_searching = self._match_tracking_integer(
                             cache, epsilon_int, self.params, match_tracking
                         )
                         if not keep_searching:
                             break
-                        else:
-                            self.params["rho_int"] = int(
-                                np.ceil(self.params["rho"] * self.dim_original)
-                            )
 
             c_new = len(self.W)
             w_new = self.new_weight(x, self.params)

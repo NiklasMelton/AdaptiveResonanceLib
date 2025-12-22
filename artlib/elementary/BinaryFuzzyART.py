@@ -272,7 +272,7 @@ class BinaryFuzzyART(FuzzyART):
             if rows:
                 T_num, T_den, T_cache, T_idx = map(tuple, zip(*rows))
                 T_num = np.ascontiguousarray(T_num, dtype=np.uint32)
-                T_den = np.ascontiguousarray(T_den, dtypie=np.uint32)
+                T_den = np.ascontiguousarray(T_den, dtype=np.uint32)
                 order = fracsort(T_num, T_den)
             else:
                 T_cache = T_idx = order = ()

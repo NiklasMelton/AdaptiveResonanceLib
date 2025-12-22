@@ -32,12 +32,13 @@ template <typename T>
 static inline bool frac_less_idx(const T* num, const T* den, size_t i, size_t j) {
     using W = typename WideMul<T>::wide_t;
 
-    // Compare num[i]/den[i] < num[j]/den[j]  <=>  num[i]*den[j] < num[j]*den[i]
+    // Compare num[i]/den[i] > num[j]/den[j]  <=>  num[i]*den[j] > num[j]*den[i]
     const W left  = WideMul<T>::mul(num[i], den[j]);
     const W right = WideMul<T>::mul(num[j], den[i]);
 
-    if (left < right) return true;
-    if (left > right) return false;
+    // ascending order
+    if (left > right) return true;
+    if (left < right) return false;
     return i < j; // tie-break by index => strict total order
 }
 

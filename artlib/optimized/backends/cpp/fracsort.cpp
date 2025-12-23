@@ -78,6 +78,6 @@ static py::array_t<py::ssize_t> fracsort_dispatch(py::array num_in, py::array de
 PYBIND11_MODULE(fracsort, m) {
     m.doc() = "Division-free fraction argsort via cross-multiplication (uint32 fast path; uint64 supported).";
     m.def("fracsort", &fracsort_dispatch, py::arg("num"), py::arg("den"),
-          "Return indices that sort by num[i]/den[i] ascending (no division), ties by lowest index.\n"
+          "Return indices that sort by num[i]/den[i] descending (no division), ties by lowest index.\n"
           "Requires: num, den are 1D C-contiguous arrays with dtype uint32 or uint64; den[i] >= 1.");
 }

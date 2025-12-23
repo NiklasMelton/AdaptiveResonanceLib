@@ -45,7 +45,10 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
         return a.idx < b.idx;                     // exact tie => lowest index first
     }
     if (a.num == b.num) {
-        // same num: larger fraction has smaller denominator
+        // If num == 0, all fractions are exactly 0 regardless of denominator.
+        if (a.num == 0) return a.idx < b.idx;
+
+        // Otherwise, same positive num: larger fraction has smaller denominator.
         if (a.den != b.den) return a.den < b.den;
         return a.idx < b.idx;
     }

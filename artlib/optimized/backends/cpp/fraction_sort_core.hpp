@@ -70,5 +70,23 @@ inline void argsort_items_inplace(Item<T>* items, size_t n) {
     });
 }
 
+template <typename T>
+inline size_t fracargmax_items(const Item<T>* items, size_t n) {
+    // Returns the original index (items[k].idx) of the maximum fraction.
+    // Uses the same ordering as frac_greater_item:
+    //   - larger num/den
+    //   - tie: larger den
+    //   - tie: lower original index
+    if (n == 0) return 0; // caller should ensure n>0; keeps function total.
+
+    size_t best = 0;
+    for (size_t i = 1; i < n; ++i) {
+        if (frac_greater_item<T>(items[i], items[best])) {
+            best = i;
+        }
+    }
+    return items[best].idx;
+}
+
 
 } // namespace fracsort

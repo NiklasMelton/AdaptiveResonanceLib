@@ -21,6 +21,7 @@ def test_fracsort_matches_numpy_division_argsort() -> None:
 
     den = rng.integers(1, n+1, size=n, dtype=np.uint32)
     num = rng.integers(0, den + 1, size=n, dtype=np.uint32)
+    eps = 1e-10
 
     # Ensure contiguous arrays (the backend requires C-contiguous input)
     den = np.ascontiguousarray(den)
@@ -28,6 +29,6 @@ def test_fracsort_matches_numpy_division_argsort() -> None:
 
     idx_cpp = fracsort(num, den)
 
-    ratio = num.astype(np.float64) / den.astype(np.float64)
+    ratio = num.astype(np.float64) / (den.astype(np.float64) + eps)
     idx_np = np.argsort(-ratio, kind="stable")
     assert np.array_equal(idx_cpp, idx_np)

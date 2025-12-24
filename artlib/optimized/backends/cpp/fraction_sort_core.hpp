@@ -59,7 +59,8 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
 
     if (left > right) return true;   // descending
     if (left < right) return false;
-    return a.idx < b.idx;            // ties => lowest original index first
+    if (a.den != b.den) return a.den > b.den; // ties => lowest original index first
+    return a.idx < b.idx;
 }
 
 template <typename T>

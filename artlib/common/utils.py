@@ -4,6 +4,7 @@ from numba import njit
 from typing import Tuple, Optional, Mapping, Sequence, Union, Any
 from numpy.typing import ArrayLike, NDArray
 from artlib.optimized.backends.cpp.fracsort import fracsort as _fracsort
+from artlib.optimized.backends.cpp.fracsort import fracargmax as _fracargmax
 
 IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
@@ -202,3 +203,31 @@ def fracsort(num: ArrayLike, den: ArrayLike) -> NDArray[np.intp]:
 
     """
     return _fracsort(num, den)
+
+
+def fracargmax(num: ArrayLike, den: ArrayLike) -> np.intp:
+    """Get the index that maximizes the elementwise fractions ``num[i] / den[i]``
+    without division.
+
+    This function returns the index of the maximum rational value exactly using
+    cross-multiplication in a compiled C++ backend (no division is performed). Ties
+    are broken first by the larger denominator, then by the lowest original index.
+
+    Parameters
+    ----------
+    num : ArrayLike
+        1D array-like of nonnegative numerators. Must be convertible to a contiguous
+        NumPy array with dtype ``np.uint32`` or ``np.uint64``.
+    den : ArrayLike
+        1D array-like of denominators with ``den[i] >= 1``. Must be convertible to a
+        contiguous NumPy array with dtype ``np.uint32`` or ``np.uint64`` and have the
+        same shape and dtype as ``num``.
+
+    Returns
+    -------
+    np.intp
+        Index ``i`` that maximizes ``num[i] / den[i]`` (descending). Ties are broken
+        by larger denominator first, then the lowest index.
+
+    """
+    return _fracargmax(num, den)

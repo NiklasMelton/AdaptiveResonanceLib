@@ -5,7 +5,7 @@
 # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 from artlib.elementary.FuzzyART import FuzzyART
-from artlib.common.utils import fracsort
+from artlib.common.utils import fracsort, fracargmax
 from typing import Optional, Callable, Literal, Tuple, Dict, List, Union
 import warnings
 import numpy as np
@@ -212,8 +212,16 @@ class BinaryFuzzyART(FuzzyART):
             Cluster label of the input sample.
 
         """
+        assert len(self.W) >= 0, "ART module is not fit."
         self.params["MT"] = None
-        return super().step_pred(x)
+        T_num, _ = zip(
+            *[self.category_choice(x, w, params=self.params) for w in self.W]
+        )
+        T_num = np.ascontiguousarray(T_num, dtype=np.uint32)
+        T_den = np.ascontiguousarray(self.w_count_cache, dtype=np.uint32)
+
+        c_ = int(fracargmax(T_num, T_den))
+        return c_
 
     def _match_tracking_integer(
         self,

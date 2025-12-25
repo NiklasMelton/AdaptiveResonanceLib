@@ -26,18 +26,16 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
     """
 
-    def __init__(self, rho: float, alpha: float):
+    def __init__(self, rho: float):
         """Initialize the Binary Fuzzy ARTMAP model.
 
         Parameters
         ----------
         rho : float
             Vigilance parameter.
-        alpha : float
-            Choice parameter.
 
         """
-        module_a = BinaryFuzzyART(rho=rho, alpha=alpha)
+        module_a = BinaryFuzzyART(rho=rho)
         super().__init__(module_a)
 
     def _synchronize_cpp_results(
@@ -146,9 +144,8 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             X_,
             y_,
             rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
             MT=match_tracking,
-            epsilon=epsilon,
+            epsilon=int(np.ceil(epsilon)),
             weights=None,
             cluster_labels=None,
         )
@@ -203,9 +200,8 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             X_,
             y_,
             rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
             MT=match_tracking,
-            epsilon=epsilon,
+            epsilon=int(np.ceil(epsilon)),
             weights=existing_W,
             cluster_labels=existing_cluster_labels,
         )
@@ -246,9 +242,8 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         _, y_b = PredictBinaryFuzzyARTMAP(
             X_,
             rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
             MT="",
-            epsilon=0.0,  # match your training setup
+            epsilon=0,  # match training setup
             weights=existing_W,
             cluster_labels=existing_cluster_labels,
         )
@@ -287,9 +282,8 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         y_a, y_b = PredictBinaryFuzzyARTMAP(
             X_,
             rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
             MT="",
-            epsilon=0.0,  # match your training setup
+            epsilon=0,  # match training setup
             weights=existing_W,
             cluster_labels=existing_cluster_labels,
         )

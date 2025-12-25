@@ -32,10 +32,10 @@ def test_binary_fuzzy_artmap_factories(capsys):
             print(f"[TIMING] {label}: {dt:.3f} s", flush=True)
         return out
 
-    RHO, ALPHA = 0.8, 1e-10
-    m1 = BinaryFuzzyARTMAPFactory(RHO, ALPHA, backend="python")
-    m2 = BinaryFuzzyARTMAPFactory(RHO, ALPHA, backend="torch")
-    m3 = BinaryFuzzyARTMAPFactory(RHO, ALPHA, backend="c++")
+    RHO = 0.8
+    m1 = BinaryFuzzyARTMAPFactory(RHO, backend="python")
+    m2 = BinaryFuzzyARTMAPFactory(RHO, backend="torch")
+    m3 = BinaryFuzzyARTMAPFactory(RHO, backend="c++")
 
     # === MNIST loading & combine-before-prepare ===
     X_train, y_train, X_test, y_test = _load_mnist_numpy()

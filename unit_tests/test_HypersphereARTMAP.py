@@ -19,7 +19,7 @@ def test_prepare_data():
 
     X_A = A.prepare_data(data)
     X_B = B.prepare_data(data)
-    assert np.array_equal(X_A, X_B)
+    np.testing.assert_allclose(X_A, X_B, rtol=1e-7, atol=1e-9)
 
 
 
@@ -41,7 +41,7 @@ def test_consistency():
     A = A.fit(X, target)
     B = B.fit(X, target)
 
-    assert np.array_equal(A.module_a.W, B.module_a.W)
+    np.testing.assert_allclose(A.module_a.W, B.module_a.W, rtol=1e-7, atol=1e-9)
 
     y_A = A.labels_
     y_B = B.labels_

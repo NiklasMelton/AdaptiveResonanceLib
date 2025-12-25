@@ -81,6 +81,7 @@ def test_binary_fuzzy_artmap_factories(capsys):
     W2 = np.vstack(m2.module_a.W)
     W3 = np.vstack(m3.module_a.W)
 
+    check(np.all(np.isclose(W1, W3)), "C++ weights dont match python weights.")
     check(np.all(np.isclose(W1, W2)), "Torch weights dont match python weights.")
     check(np.all(np.isclose(W1, W3)), "C++ weights dont match python weights.")
     check(np.all(np.isclose(W2, W3)), "C++ weights dont match torch weights.")

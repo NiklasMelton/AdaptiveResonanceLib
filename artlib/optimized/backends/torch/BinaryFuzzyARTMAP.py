@@ -36,7 +36,7 @@ def _complement_code_any(x: Tensor) -> Tensor:
 @dataclass
 class _TorchBinaryFuzzyARTMAPConfig:
     input_dim: int  # raw (pre-complement) dimension
-    alpha: float = 1e-3  # choice
+    alpha: float = 1e-10  # choice
     rho: float = 0.75  # vigilance
     epsilon: float = 1e-7  # MT epsilon
     match_tracking: bool = True
@@ -376,7 +376,7 @@ class BinaryFuzzyARTMAP(_TorchSimpleARTMAP):
             "cuda" or "cpu". Only applied when backend=torch. Defaults to "cpu".
 
         """
-        module_a = BinaryFuzzyART(rho=rho, alpha=alpha)
+        module_a = BinaryFuzzyART(rho=rho)
         super().__init__(module_a)
 
         self._device = device

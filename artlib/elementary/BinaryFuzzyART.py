@@ -38,7 +38,7 @@ class BinaryFuzzyART(FuzzyART):
             Vigilance parameter.
 
         """
-        super().__init__(rho, alpha=0.0, beta=1.0)
+        super().__init__(rho, alpha=1e-10, beta=1.0)
         self.w_count_cache: List[int] = []
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:

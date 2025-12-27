@@ -277,7 +277,7 @@ public:
             for (size_t c = 0; c < clusters_.size(); ++c) {
                 const uint32_t iw_count = intersection_count(sample, clusters_[c].weight);
                 const uint32_t den = std::max<uint32_t>(1u, w_count_cache_[c]);
-                items[c] = fracsort::Item<uint32_t>{iw_count, den, c};
+                items[c] = fracsort::Item<uint32_t>{iw_count, den, 0, 1, c};
             }
 
             const size_t best_cluster = fracsort::fracargmax_items<uint32_t>(
@@ -429,7 +429,7 @@ private:
             if (!mt_status) continue;
 
             const uint32_t den = std::max<uint32_t>(1u, w_count_cache_[c]);
-            items.push_back(fracsort::Item<uint32_t>{iw, den, c});
+            items.push_back(fracsort::Item<uint32_t>{iw, den, 0, 1, c});
         }
 
         // Sort candidates by exact fraction ordering using existing core

@@ -100,12 +100,60 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
 }
 
 template <typename T>
-inline void argsort_items_inplace(Item<T>* items, size_t n) {
-    reduce_items_inplace(items, n); // NEW: compute reduced forms once
-    std::sort(items, items + n, [](const Item<T>& a, const Item<T>& b) noexcept {
-        return frac_greater_item<T>(a, b);
-    });
+static inline bool frac_value_greater_item(const Item<T>& a, const Item<T>& b) noexcept {
+    using W = typename WideMul<T>::wide_t;
+
+    // Same reduced value => order by idx only (do NOT involve den here)
+    if (a.rnum == b.rnum && a.rden == b.rden) {
+        return a.idx < b.idx;
+    }
+
+    const W left  = WideMul<T>::mul(a.rnum, b.rden);
+    const W right = WideMul<T>::mul(b.rnum, a.rden);
+
+    if (left > right) return true;
+    if (left < right) return false;
+
+    // Should be unreachable if reduced forms differ, but keep it deterministic
+    return a.idx < b.idx;
 }
+
+template <typename T>
+static inline bool tie_den_desc_idx_asc(const Item<T>& a, const Item<T>& b) noexcept {
+    if (a.den != b.den) return a.den > b.den; // larger denominator first
+    return a.idx < b.idx;                    // then lower index
+}
+
+
+
+template <typename T>
+inline void argsort_items_inplace(Item<T>* items, size_t n) {
+    reduce_items_inplace(items, n);
+
+    // Phase 1: sort by VALUE only (reduced fraction), ignoring denominator tie-break
+    std::sort(items, items + n, [](const Item<T>& a, const Item<T>& b) noexcept {
+        return frac_value_greater_item<T>(a, b);
+    });
+
+    // Phase 2: for each equal-value run, apply tie-break (den desc, then idx asc)
+    size_t i = 0;
+    while (i < n) {
+        size_t j = i + 1;
+        while (j < n && items[j].rnum == items[i].rnum && items[j].rden == items[i].rden) {
+            ++j;
+        }
+
+        // Now [i, j) is an equal-value bucket
+        if (j - i > 1) {
+            std::sort(items + i, items + j, [](const Item<T>& a, const Item<T>& b) noexcept {
+                return tie_den_desc_idx_asc<T>(a, b);
+            });
+        }
+
+        i = j;
+    }
+}
+
 
 
 template <typename T>

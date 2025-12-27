@@ -5,7 +5,8 @@
 # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 from artlib.elementary.FuzzyART import FuzzyART
-from artlib.common.utils import fracsort, fracargmax
+from artlib.common.utils import fracargmax
+from artlib.optimized.backends.cpp import fracsort as frs
 from typing import Optional, Callable, Literal, Tuple, Dict, List, Union
 import warnings
 import numpy as np
@@ -40,6 +41,8 @@ class BinaryFuzzyART(FuzzyART):
         """
         super().__init__(rho, alpha=1e-10, beta=1.0)
         self.w_count_cache: List[int] = []
+        frs.reset_sort_stats()
+        self.stats = dict()
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """Prepare data for clustering.
@@ -333,7 +336,7 @@ class BinaryFuzzyART(FuzzyART):
                 T_num, T_den, T_cache, T_idx = map(tuple, zip(*rows))
                 T_num = np.ascontiguousarray(T_num, dtype=np.uint32)
                 T_den = np.ascontiguousarray(T_den, dtype=np.uint32)
-                order = fracsort(T_num, T_den)
+                order = frs.fracsort(T_num, T_den)
             else:
                 T_cache = T_idx = order = ()
 
@@ -369,3 +372,7 @@ class BinaryFuzzyART(FuzzyART):
             self.add_weight(w_new)
             self._set_params(base_params)
             return c_new
+
+    def post_fit(self, X: np.ndarray):
+        self.stats = frs.get_sort_stats()
+        super(BinaryFuzzyART, self).post_fit()

@@ -150,4 +150,16 @@ PYBIND11_MODULE(fracsort, m) {
           "Return the index i that maximizes num[i]/den[i] (no division).\n"
           "Ties: larger denominator first, then lower index.\n"
           "Requires: num, den are 1D C-contiguous arrays with dtype uint32 or uint64; den[i] >= 1.");
+
+    m.def("reset_sort_stats", &fracsort::reset_stats);
+
+    m.def("get_sort_stats", []() {
+        auto snap = fracsort::get_stats_snapshot();
+        py::dict d;
+        d["cmp_calls"]      = snap.cmp_calls.load(std::memory_order_relaxed);
+        d["left_eq_right"]  = snap.left_eq_right.load(std::memory_order_relaxed);
+        d["num_eq_num"]     = snap.num_eq_num.load(std::memory_order_relaxed);
+        d["num_is_zero"]    = snap.num_is_zero.load(std::memory_order_relaxed);
+        return d;
+    });
 }

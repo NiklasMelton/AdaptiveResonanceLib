@@ -39,7 +39,7 @@ static py::array_t<py::ssize_t> fracsort_impl(py::array num_in, py::array den_in
     std::vector<fracsort::Item<T>> items;
     items.resize(n);
     for (size_t i = 0; i < n; ++i) {
-        items[i] = fracsort::Item<T>{num[i], den[i], i};
+        items[i] = fracsort::Item<T>{num[i], den[i], 0, 1, i};
     }
 
     {
@@ -90,7 +90,7 @@ static py::ssize_t fracargmax_impl(py::array num_in, py::array den_in) {
     std::vector<fracsort::Item<T>> items;
     items.resize(n);
     for (size_t i = 0; i < n; ++i) {
-        items[i] = fracsort::Item<T>{num[i], den[i], i};
+        items[i] = fracsort::Item<T>{num[i], den[i], 0, 1, i};
     }
 
     size_t best_idx = 0;

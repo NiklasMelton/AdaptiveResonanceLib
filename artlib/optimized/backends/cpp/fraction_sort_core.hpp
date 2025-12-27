@@ -90,8 +90,6 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
     const W left  = WideMul<T>::mul(a.rnum, b.rden);
     const W right = WideMul<T>::mul(b.rnum, a.rden);
 
-    if (left == right) st.left_eq_right.fetch_add(1, std::memory_order_relaxed);
-
     if (left > right) return true;   // descending
     if (left < right) return false;
 

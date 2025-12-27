@@ -314,23 +314,24 @@ class BinaryFuzzyART(FuzzyART):
             return 0
         else:
             rows = []
+            pre_MT = self.params["MT"] not in ["MT-"]
+            rho_int = self.params["rho_int"]
+
             if match_tracking in ["MT~"] and match_reset_func is not None:
                 for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
-                    t_num, cache = self.category_choice(x, w, params=self.params)
-                    assert cache is not None
-                    if (not cache["mt_status"]) or (
-                        not match_reset_func(x, w, c_, params=self.params, cache=cache)
+                    t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
+                    if (not mt_status) or (
+                        not match_reset_func(x, w, c_, params=self.params, cache=None)
                     ):
                         continue
-
+                    cache = {"iw_count": t_num}
                     rows.append((t_num, w_count, cache, c_))
             else:
                 for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
-                    t_num, cache = self.category_choice(x, w, params=self.params)
-                    assert cache is not None
-                    if not cache["mt_status"]:
+                    t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
+                    if not mt_status:
                         continue
-
+                    cache = {"iw_count": t_num}
                     rows.append((t_num, w_count, cache, c_))
             if rows:
                 T_num_list, T_den_list, T_cache, T_idx = zip(*rows)

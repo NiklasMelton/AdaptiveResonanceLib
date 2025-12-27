@@ -14,19 +14,11 @@ import operator
 
 
 @njit
-def _and_popcount_bool(i, w):
-    s = 0
-    for j in range(i.size):
-        s += 1 if (i[j] and w[j]) else 0
-    return s
-
-
-@njit
 def _category_choice_binary(
     i: np.ndarray, w: np.ndarray, pre_MT: bool, rho_int: int
 ) -> Tuple[int, bool]:
     """Optimized category choice for binary data using count_nonzero."""
-    iw_count = _and_popcount_bool(i, w)
+    iw_count = np.count_nonzero(i & w)
     if (not pre_MT) or (iw_count >= rho_int):
         return iw_count, True
     else:

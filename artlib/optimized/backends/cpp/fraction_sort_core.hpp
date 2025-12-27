@@ -130,29 +130,25 @@ template <typename T>
 inline void argsort_items_inplace(Item<T>* items, size_t n) {
     reduce_items_inplace(items, n);
 
-    // Phase 1: sort by VALUE only (reduced fraction), ignoring denominator tie-break
+    // 1) Pre-sort by tie-break keys (den desc, then idx asc)
     std::sort(items, items + n, [](const Item<T>& a, const Item<T>& b) noexcept {
-        return frac_value_greater_item<T>(a, b);
+        if (a.den != b.den) return a.den > b.den;
+        return a.idx < b.idx;
     });
 
-    // Phase 2: for each equal-value run, apply tie-break (den desc, then idx asc)
-    size_t i = 0;
-    while (i < n) {
-        size_t j = i + 1;
-        while (j < n && items[j].rnum == items[i].rnum && items[j].rden == items[i].rden) {
-            ++j;
-        }
+    // 2) Stable sort by primary key (value) only.
+    //    Stability preserves the den/idx order within equal-value groups.
+    std::stable_sort(items, items + n, [](const Item<T>& a, const Item<T>& b) noexcept {
+        using W = typename WideMul<T>::wide_t;
 
-        // Now [i, j) is an equal-value bucket
-        if (j - i > 1) {
-            std::sort(items + i, items + j, [](const Item<T>& a, const Item<T>& b) noexcept {
-                return tie_den_desc_idx_asc<T>(a, b);
-            });
-        }
+        // Compare reduced values (descending)
+        const W left  = WideMul<T>::mul(a.rnum, b.rden);
+        const W right = WideMul<T>::mul(b.rnum, a.rden);
 
-        i = j;
-    }
+        return left > right;
+    });
 }
+
 
 
 

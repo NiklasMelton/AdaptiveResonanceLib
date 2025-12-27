@@ -160,6 +160,7 @@ PYBIND11_MODULE(fracsort, m) {
         d["left_eq_right"]  = snap.left_eq_right;
         d["num_eq_num"]     = snap.num_eq_num;
         d["num_is_zero"]    = snap.num_is_zero;
+        d["left_eq_right_den_diff"]    = snap.left_eq_right_den_diff;
         return d;
     });
 

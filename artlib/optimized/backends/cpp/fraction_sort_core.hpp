@@ -15,6 +15,8 @@ struct SortStats {
     std::atomic<uint64_t> left_eq_right{0};
     std::atomic<uint64_t> num_eq_num{0};
     std::atomic<uint64_t> num_is_zero{0};
+    std::atomic<uint64_t> left_eq_right_den_diff{0};
+
 };
 
 inline SortStats& stats() {
@@ -28,6 +30,7 @@ inline void reset_stats() {
     s.left_eq_right.store(0, std::memory_order_relaxed);
     s.num_eq_num.store(0, std::memory_order_relaxed);
     s.num_is_zero.store(0, std::memory_order_relaxed);
+    s.left_eq_right_den_diff.store(0, std::memory_order_relaxed);
 }
 
 struct SortStatsSnapshot {
@@ -35,6 +38,7 @@ struct SortStatsSnapshot {
     uint64_t left_eq_right;
     uint64_t num_eq_num;
     uint64_t num_is_zero;
+    uint64_t left_eq_right_den_diff;
 };
 
 inline SortStatsSnapshot get_stats_snapshot() {
@@ -44,6 +48,7 @@ inline SortStatsSnapshot get_stats_snapshot() {
         s.left_eq_right.load(std::memory_order_relaxed),
         s.num_eq_num.load(std::memory_order_relaxed),
         s.num_is_zero.load(std::memory_order_relaxed),
+        s.left_eq_right_den_diff.load(std::memory_order_relaxed),
     };
 }
 
@@ -106,7 +111,11 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
     const W left  = WideMul<T>::mul(a.num, b.den);
     const W right = WideMul<T>::mul(b.num, a.den);
 
-    if (left == right) st.left_eq_right.fetch_add(1, std::memory_order_relaxed);
+    if (left == right) {
+        st.left_eq_right.fetch_add(1, std::memory_order_relaxed);
+        if (a.den != b.den) st.left_eq_right_den_diff.fetch_add(1, std::memory_order_relaxed);
+    }
+
 
     if (left > right) return true;   // descending
     if (left < right) return false;

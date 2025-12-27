@@ -5,54 +5,8 @@
 #include <cstdint>
 #include <numeric>
 #include <vector>
-#include <atomic>
-
 
 namespace fracsort {
-
-struct SortStats {
-    std::atomic<uint64_t> cmp_calls{0};
-    std::atomic<uint64_t> left_eq_right{0};
-    std::atomic<uint64_t> num_eq_num{0};
-    std::atomic<uint64_t> num_is_zero{0};
-    std::atomic<uint64_t> left_eq_right_den_diff{0};
-
-};
-
-inline SortStats& stats() {
-    static SortStats s;
-    return s;
-}
-
-inline void reset_stats() {
-    auto& s = stats();
-    s.cmp_calls.store(0, std::memory_order_relaxed);
-    s.left_eq_right.store(0, std::memory_order_relaxed);
-    s.num_eq_num.store(0, std::memory_order_relaxed);
-    s.num_is_zero.store(0, std::memory_order_relaxed);
-    s.left_eq_right_den_diff.store(0, std::memory_order_relaxed);
-}
-
-struct SortStatsSnapshot {
-    uint64_t cmp_calls;
-    uint64_t left_eq_right;
-    uint64_t num_eq_num;
-    uint64_t num_is_zero;
-    uint64_t left_eq_right_den_diff;
-};
-
-inline SortStatsSnapshot get_stats_snapshot() {
-    auto& s = stats();
-    return SortStatsSnapshot{
-        s.cmp_calls.load(std::memory_order_relaxed),
-        s.left_eq_right.load(std::memory_order_relaxed),
-        s.num_eq_num.load(std::memory_order_relaxed),
-        s.num_is_zero.load(std::memory_order_relaxed),
-        s.left_eq_right_den_diff.load(std::memory_order_relaxed),
-    };
-}
-
-
 
 // Wide multiplication type: uint32 -> uint64 (exact), uint64 -> __int128 (exact)
 template <typename T>
@@ -85,14 +39,6 @@ template <typename T>
 static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcept {
     using W = typename WideMul<T>::wide_t;
 
-    // instrumentation
-    auto& st = stats();
-    st.cmp_calls.fetch_add(1, std::memory_order_relaxed);
-
-    if (a.num == b.num) st.num_eq_num.fetch_add(1, std::memory_order_relaxed);
-    if (a.num == 0 || b.num == 0) st.num_is_zero.fetch_add(1, std::memory_order_relaxed);
-
-
     // Optional fast paths (always correct)
     if (a.den == b.den) {
         if (a.num != b.num) return a.num > b.num; // same den => compare num
@@ -110,12 +56,6 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
     // Exact comparison: a.num/a.den > b.num/b.den  <=>  a.num*b.den > b.num*a.den
     const W left  = WideMul<T>::mul(a.num, b.den);
     const W right = WideMul<T>::mul(b.num, a.den);
-
-    if (left == right) {
-        st.left_eq_right.fetch_add(1, std::memory_order_relaxed);
-        if (a.den != b.den) st.left_eq_right_den_diff.fetch_add(1, std::memory_order_relaxed);
-    }
-
 
     if (left > right) return true;   // descending
     if (left < right) return false;

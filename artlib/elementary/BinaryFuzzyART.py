@@ -16,14 +16,13 @@ import operator
 @njit
 def _category_choice_binary(
     i: np.ndarray, w: np.ndarray, pre_MT: bool, rho_int: int
-) -> Tuple[np.ndarray, int, bool]:
+) -> Tuple[int, bool]:
     """Optimized category choice for binary data using count_nonzero."""
-    iw = i & w
-    iw_count = np.count_nonzero(iw)
-    if not pre_MT or iw_count >= rho_int:
-        return iw, iw_count, True
+    iw_count = np.count_nonzero(i & w)
+    if (not pre_MT) or (iw_count >= rho_int):
+        return iw_count, True
     else:
-        return iw, iw_count, False
+        return iw_count, False
 
 
 class BinaryFuzzyART(FuzzyART):
@@ -96,10 +95,12 @@ class BinaryFuzzyART(FuzzyART):
     ) -> tuple[int, Optional[dict]]:
         """Get the activation of the cluster using optimized binary operations."""
         pre_MT = params["MT"] not in ["MT-"]
-        iw, iw_count, mt_status = _category_choice_binary(
-            i, w, pre_MT, params["rho_int"]
-        )
-        return iw_count, {"iw": iw, "iw_count": iw_count, "mt_status": mt_status}
+        iw_count, mt_status = _category_choice_binary(i, w, pre_MT, params["rho_int"])
+        cache = {
+            "iw_count": iw_count,  # scalar
+            "mt_status": mt_status,  # bool
+        }
+        return iw_count, cache
 
     def match_criterion(
         self,
@@ -115,7 +116,7 @@ class BinaryFuzzyART(FuzzyART):
             )
             iw = i & w
             iw_count = np.count_nonzero(iw)
-            cache = {"iw": iw, "iw_count": iw_count}
+            cache = {"iw_count": iw_count}
         return cache["iw_count"], cache
 
     def match_criterion_bin(
@@ -148,7 +149,7 @@ class BinaryFuzzyART(FuzzyART):
         M, cache = self.match_criterion(i, w, params=params, cache=cache)
         M_bin = op(M, params["rho_int"])
         if cache is None:
-            cache = dict()
+            cache = {"iw_count": M}
         cache["match_criterion"] = M
         cache["match_criterion_bin"] = M_bin
         return M_bin, cache
@@ -169,9 +170,10 @@ class BinaryFuzzyART(FuzzyART):
         self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
         if cache is None:
-            self.w_count_cache[idx] = np.count_nonzero(new_w)
+            wc = np.count_nonzero(new_w)
         else:
-            self.w_count_cache[idx] = cache["iw_count"]
+            wc = cache["iw_count"]
+        self.w_count_cache[idx] = wc if wc > 0 else 1
 
     def update(
         self,
@@ -181,9 +183,7 @@ class BinaryFuzzyART(FuzzyART):
         cache: Optional[dict] = None,
     ) -> np.ndarray:
         """Get the updated cluster weight using optimized binary operations."""
-        if cache is None:
-            return i & w
-        return cache["iw"]
+        return i & w
 
     def add_weight(self, new_w: np.ndarray):
         """Add a new cluster weight.
@@ -195,7 +195,8 @@ class BinaryFuzzyART(FuzzyART):
 
         """
         self.weight_sample_counter_.append(1)
-        self.w_count_cache.append(np.count_nonzero(new_w))
+        wc = np.count_nonzero(new_w)
+        self.w_count_cache.append(wc if wc > 0 else 1)
         self.W.append(new_w)
 
     def step_pred(self, x) -> int:
@@ -312,30 +313,32 @@ class BinaryFuzzyART(FuzzyART):
             self.add_weight(w_new)
             return 0
         else:
+            rows = []
             if match_tracking in ["MT~"] and match_reset_func is not None:
-                rows = [
-                    (t[0], max(1, w_count), t[1], c_)
-                    for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache))
-                    if (t := self.category_choice(x, w, params=self.params))[1]
-                    is not None
-                    and t[1].get("mt_status", True)
-                    and match_reset_func(x, w, c_, params=self.params, cache=None)
-                ]
+                for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
+                    t_num, cache = self.category_choice(x, w, params=self.params)
+                    assert cache is not None
+                    if (not cache["mt_status"]) or (
+                        not match_reset_func(x, w, c_, params=self.params, cache=cache)
+                    ):
+                        continue
+
+                    rows.append((t_num, w_count, cache, c_))
             else:
-                rows = [
-                    (t[0], max(1, w_count), t[1], c_)
-                    for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache))
-                    if (t := self.category_choice(x, w, params=self.params))[1]
-                    is not None
-                    and t[1].get("mt_status", True)
-                ]
+                for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
+                    t_num, cache = self.category_choice(x, w, params=self.params)
+                    assert cache is not None
+                    if not cache["mt_status"]:
+                        continue
+
+                    rows.append((t_num, w_count, cache, c_))
             if rows:
-                T_num, T_den, T_cache, T_idx = map(tuple, zip(*rows))
-                T_num = np.ascontiguousarray(T_num, dtype=np.uint32)
-                T_den = np.ascontiguousarray(T_den, dtype=np.uint32)
+                T_num_list, T_den_list, T_cache, T_idx = zip(*rows)
+                T_num = np.ascontiguousarray(T_num_list, dtype=np.uint32)
+                T_den = np.ascontiguousarray(T_den_list, dtype=np.uint32)
                 order = fracsort(T_num, T_den)
             else:
-                T_cache = T_idx = order = ()
+                order = ()
 
             for t_ in order:
                 c_ = T_idx[t_]

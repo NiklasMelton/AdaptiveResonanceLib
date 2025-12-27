@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <numeric>
 #include <vector>
+#include <atomic>
+
 
 namespace fracsort {
 
@@ -28,15 +30,24 @@ inline void reset_stats() {
     s.num_is_zero.store(0, std::memory_order_relaxed);
 }
 
-inline SortStats get_stats_snapshot() {
-    SortStats snap;
+struct SortStatsSnapshot {
+    uint64_t cmp_calls;
+    uint64_t left_eq_right;
+    uint64_t num_eq_num;
+    uint64_t num_is_zero;
+};
+
+inline SortStatsSnapshot get_stats_snapshot() {
     auto& s = stats();
-    snap.cmp_calls.store(s.cmp_calls.load(std::memory_order_relaxed), std::memory_order_relaxed);
-    snap.left_eq_right.store(s.left_eq_right.load(std::memory_order_relaxed), std::memory_order_relaxed);
-    snap.num_eq_num.store(s.num_eq_num.load(std::memory_order_relaxed), std::memory_order_relaxed);
-    snap.num_is_zero.store(s.num_is_zero.load(std::memory_order_relaxed), std::memory_order_relaxed);
-    return snap;
+    return SortStatsSnapshot{
+        s.cmp_calls.load(std::memory_order_relaxed),
+        s.left_eq_right.load(std::memory_order_relaxed),
+        s.num_eq_num.load(std::memory_order_relaxed),
+        s.num_is_zero.load(std::memory_order_relaxed),
+    };
 }
+
+
 
 // Wide multiplication type: uint32 -> uint64 (exact), uint64 -> __int128 (exact)
 template <typename T>
@@ -74,7 +85,8 @@ static inline bool frac_greater_item(const Item<T>& a, const Item<T>& b) noexcep
     st.cmp_calls.fetch_add(1, std::memory_order_relaxed);
 
     if (a.num == b.num) st.num_eq_num.fetch_add(1, std::memory_order_relaxed);
-    if (a.num == 0)     st.num_is_zero.fetch_add(1, std::memory_order_relaxed);
+    if (a.num == 0 || b.num == 0) st.num_is_zero.fetch_add(1, std::memory_order_relaxed);
+
 
     // Optional fast paths (always correct)
     if (a.den == b.den) {

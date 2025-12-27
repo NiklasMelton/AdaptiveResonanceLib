@@ -156,10 +156,11 @@ PYBIND11_MODULE(fracsort, m) {
     m.def("get_sort_stats", []() {
         auto snap = fracsort::get_stats_snapshot();
         py::dict d;
-        d["cmp_calls"]      = snap.cmp_calls.load(std::memory_order_relaxed);
-        d["left_eq_right"]  = snap.left_eq_right.load(std::memory_order_relaxed);
-        d["num_eq_num"]     = snap.num_eq_num.load(std::memory_order_relaxed);
-        d["num_is_zero"]    = snap.num_is_zero.load(std::memory_order_relaxed);
+        d["cmp_calls"]      = snap.cmp_calls;
+        d["left_eq_right"]  = snap.left_eq_right;
+        d["num_eq_num"]     = snap.num_eq_num;
+        d["num_is_zero"]    = snap.num_is_zero;
         return d;
     });
+
 }

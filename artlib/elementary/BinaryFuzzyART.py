@@ -9,6 +9,7 @@ from artlib.common.utils import fracsort, fracargmax
 from typing import Optional, Callable, Literal, Tuple, Dict, List, Union
 import warnings
 import numpy as np
+from numpy.typing import NDArray
 from numba import njit
 import operator
 
@@ -321,30 +322,40 @@ class BinaryFuzzyART(FuzzyART):
             self.add_weight(w_new)
             return 0
         else:
-            rows = []
+            n = len(self.W)
+            T_num: NDArray[np.uint32] = np.empty(n, dtype=np.uint32)
+            T_den: NDArray[np.uint32] = np.empty(n, dtype=np.uint32)
+            T_idx: NDArray[np.int32] = np.empty(n, dtype=np.int32)
+            k = 0
             pre_MT = self.params["MT"] not in ["MT-"]
             rho_int = self.params["rho_int"]
 
             if match_tracking in ["MT~"] and match_reset_func is not None:
-                for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
+                for c_ in range(len(self.W)):
+                    w = self.W[c_]
                     t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
                     if (not mt_status) or (
                         not match_reset_func(x, w, c_, params=self.params, cache=None)
                     ):
                         continue
-                    # cache = {"iw_count": t_num}
-                    rows.append((t_num, w_count, c_))
+                    T_num[k] = t_num
+                    T_den[k] = self.w_count_cache[c_]
+                    T_idx[k] = c_
+                    k += 1
             else:
-                for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
+                for c_ in range(len(self.W)):
+                    w = self.W[c_]
                     t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
                     if not mt_status:
                         continue
-                    # cache = {"iw_count": t_num}
-                    rows.append((t_num, w_count, c_))
-            if rows:
-                T_num_list, T_den_list, T_idx = zip(*rows)
-                T_num = np.ascontiguousarray(T_num_list, dtype=np.uint32)
-                T_den = np.ascontiguousarray(T_den_list, dtype=np.uint32)
+                    T_num[k] = t_num
+                    T_den[k] = self.w_count_cache[c_]
+                    T_idx[k] = c_
+                    k += 1
+            if k:
+                T_num = T_num[:k]
+                T_den = T_den[:k]
+                T_idx = T_idx[:k]
                 order = fracsort(T_num, T_den)
             else:
                 order = ()
@@ -352,7 +363,7 @@ class BinaryFuzzyART(FuzzyART):
             for t_ in order:
                 c_ = T_idx[t_]
                 w = self.W[c_]
-                cache = {"iw_count": int(T_num_list[t_])}
+                cache = {"iw_count": int(T_num[t_])}
                 m, cache = self.match_criterion_bin(
                     x, w, params=self.params, cache=cache, op=mt_operator
                 )

@@ -324,17 +324,17 @@ class BinaryFuzzyART(FuzzyART):
                         not match_reset_func(x, w, c_, params=self.params, cache=None)
                     ):
                         continue
-                    cache = {"iw_count": t_num}
-                    rows.append((t_num, w_count, cache, c_))
+                    # cache = {"iw_count": t_num}
+                    rows.append((t_num, w_count, c_))
             else:
                 for c_, (w, w_count) in enumerate(zip(self.W, self.w_count_cache)):
                     t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
                     if not mt_status:
                         continue
-                    cache = {"iw_count": t_num}
-                    rows.append((t_num, w_count, cache, c_))
+                    # cache = {"iw_count": t_num}
+                    rows.append((t_num, w_count, c_))
             if rows:
-                T_num_list, T_den_list, T_cache, T_idx = zip(*rows)
+                T_num_list, T_den_list, T_idx = zip(*rows)
                 T_num = np.ascontiguousarray(T_num_list, dtype=np.uint32)
                 T_den = np.ascontiguousarray(T_den_list, dtype=np.uint32)
                 order = fracsort(T_num, T_den)
@@ -344,7 +344,7 @@ class BinaryFuzzyART(FuzzyART):
             for t_ in order:
                 c_ = T_idx[t_]
                 w = self.W[c_]
-                cache = T_cache[t_]
+                cache = {"iw_count": int(T_num_list[t_])}
                 m, cache = self.match_criterion_bin(
                     x, w, params=self.params, cache=cache, op=mt_operator
                 )

@@ -50,7 +50,7 @@ def test_prepare_data():
         random_state=0,
         shuffle=False,
     )
-    params = {"rho": 0.9, "alpha": 1e-10}
+    params = {"rho": 0.9}
     A = SimpleARTMAP(BinaryFuzzyART(**params))
     B = BinaryFuzzyARTMAP(**params)
 
@@ -71,7 +71,7 @@ def test_consistency():
             shuffle=False,
         )
 
-    params = {"rho": 0.9, "alpha": 1e-10}
+    params = {"rho": 0.9}
     A = SimpleARTMAP(BinaryFuzzyART(**params))
     B = BinaryFuzzyARTMAP(**params)
 

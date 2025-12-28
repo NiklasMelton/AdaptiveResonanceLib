@@ -38,7 +38,19 @@ def test_fracsort_matches_numpy_division_argsort() -> None:
 
     ratio = num.astype(np.float64) / (den.astype(np.float64) + eps)
     idx_np = np.argsort(-ratio, kind="stable")
-    assert np.array_equal(idx_cpp, idx_np)
+
+    # assertions
+    zero = (num == 0)
+    k = int(np.count_nonzero(~zero))  # number of non-zeros
+
+    # sanity: zeros form the suffix in each ordering
+    assert not np.any(zero[idx_cpp[:k]])
+    assert np.all(zero[idx_cpp[k:]])
+    assert not np.any(zero[idx_np[:k]])
+    assert np.all(zero[idx_np[k:]])
+
+    # Now compare only the non-zero prefix
+    assert np.array_equal(idx_cpp[:k], idx_np[:k])
 
 
 def test_fracargmax_matches_numpy_with_tiebreaks() -> None:

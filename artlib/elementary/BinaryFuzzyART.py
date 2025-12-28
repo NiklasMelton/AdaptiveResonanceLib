@@ -14,11 +14,20 @@ import operator
 
 
 @njit
+def _and_popcount(i, w):
+    s = 0
+    for j in range(i.size):
+        # bool & bool -> bool, adding a bool increments by 1 when True
+        s += i[j] & w[j]
+    return s
+
+
+@njit
 def _category_choice_binary(
     i: np.ndarray, w: np.ndarray, pre_MT: bool, rho_int: int
 ) -> Tuple[int, bool]:
     """Optimized category choice for binary data using count_nonzero."""
-    iw_count = np.count_nonzero(i & w)
+    iw_count = _and_popcount(i, w)
     if (not pre_MT) or (iw_count >= rho_int):
         return iw_count, True
     else:
@@ -114,8 +123,7 @@ class BinaryFuzzyART(FuzzyART):
             warnings.warn(
                 "Cache is None during Match Criterion. This will reduce performance"
             )
-            iw = i & w
-            iw_count = np.count_nonzero(iw)
+            iw_count = _and_popcount(i, w)
             cache = {"iw_count": iw_count}
         return cache["iw_count"], cache
 

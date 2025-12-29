@@ -44,11 +44,18 @@ ext_modules = [
         language="c++",
         extra_compile_args=extra_compile_args,
     ),
+    Extension(
+        "artlib.optimized.backends.cpp.cppFuzzyART",
+        [os.path.join(cpp_dir, "cppFuzzyART.cpp")],
+        include_dirs=[pybind11.get_include(), cpp_dir],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
 ]
 
 setup(
     name="artlib",
     version="0.1.7",
-    packages=find_packages(),  # This ensures artlib, artlib.common, etc. are all included
+    packages=find_packages(),  # This all are included
     ext_modules=ext_modules,
 )

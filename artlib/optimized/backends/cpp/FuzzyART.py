@@ -106,9 +106,9 @@ class FuzzyART(pyFuzzyART):
 
         la, W, cl = FitFuzzyART(
             X_,
-            rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
+            rho=self.params["rho"],
+            alpha=self.params["alpha"],
+            beta=self.params["beta"],
             weights=None,
         )
         self._synchronize_cpp_results(la, W)
@@ -150,9 +150,9 @@ class FuzzyART(pyFuzzyART):
 
         la, W = FitFuzzyART(
             X_,
-            rho=self.module_a.params["rho"],
-            alpha=self.module_a.params["alpha"],
-            beta=self.module_a.params["beta"],
+            rho=self.params["rho"],
+            alpha=self.params["alpha"],
+            beta=self.params["beta"],
             weights=existing_W,
         )
         self._synchronize_cpp_results(la, W, incremental=True)
@@ -178,10 +178,10 @@ class FuzzyART(pyFuzzyART):
         check_is_fitted(self)
         X_ = np.ascontiguousarray(X, dtype=np.float64)
         if clip:
-            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
+            X_ = np.clip(X_, self.d_min_, self.d_max_)
         self.validate_data(X_)
 
-        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        W = np.ascontiguousarray(self.W, dtype=float)
 
         y_a = PredictFuzzyART(
             X_,

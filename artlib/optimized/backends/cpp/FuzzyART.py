@@ -104,7 +104,7 @@ class FuzzyART(pyFuzzyART):
         self.W = []
         self.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W, cl = FitFuzzyART(
+        la, W = FitFuzzyART(
             X_,
             rho=self.params["rho"],
             alpha=self.params["alpha"],

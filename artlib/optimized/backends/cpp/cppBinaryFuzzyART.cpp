@@ -3,15 +3,10 @@
 #include <pybind11/stl.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <functional>
-#include <limits>
 #include <stdexcept>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 // Reuse existing fraction ordering core (do NOT re-implement)
@@ -27,8 +22,8 @@ public:
 
     cppBinaryFuzzyART(
         double rho,
-        py::object weights = py::none(),
-        : rho_(rho),
+        py::object weights = py::none())
+        : rho_(rho)
     {
         dim_original_ = 0;
         rho_int_ = 0;
@@ -38,22 +33,10 @@ public:
         if (!have_weights) return;
 
         py::list w_list = weights.cast<py::list>();
-        py::array_t<int> c_array = cluster_labels.cast<py::array_t<int>>();
-        py::buffer_info c_info = c_array.request();
 
-        if (c_info.ndim != 1) {
-            throw std::runtime_error("cluster_labels must be a 1D array.");
-        }
 
         const py::ssize_t n_clusters = w_list.size();
-        if (c_info.shape[0] != n_clusters) {
-            throw std::runtime_error(
-                "Inconsistent sizes: weights has " + std::to_string(n_clusters) +
-                " clusters, but cluster_labels has length " +
-                std::to_string(c_info.shape[0]) + ".");
-        }
 
-        const int* c_ptr = static_cast<const int*>(c_info.ptr);
 
         clusters_.clear();
         clusters_.resize(static_cast<size_t>(n_clusters));
@@ -115,7 +98,6 @@ public:
         py::buffer_info x_buf = X.request();
 
         if (x_buf.ndim != 2) throw std::runtime_error("X must be a 2D array.");
-        if (y_buf.ndim != 1) throw std::runtime_error("y must be a 1D array.");
 
         const py::ssize_t num_samples_ssize = x_buf.shape[0];
         const py::ssize_t num_features_ssize = x_buf.shape[1];
@@ -154,8 +136,7 @@ public:
             for (uint32_t j = 0u; j < num_features; ++j) {
                 sample[static_cast<size_t>(j)] = (row_ptr[j] != 0) ? 1u : 0u;
             }
-
-            const uint32_t chosen = step_fit(sample, c_b);
+            const uint32_t chosen = step_fit(sample);
             labels_out_vec[static_cast<size_t>(i)] = static_cast<int>(chosen);
         }
 
@@ -320,40 +301,25 @@ private:
             const uint32_t iw = intersection_count(sample, clusters_[c].weight);
             iw_counts[c] = iw;
 
-            // Pre-match-tracking filtering (skip only when not MT-)
-            bool mt_status = match_operator(MT_, iw, rho_int_);
 
-            if (!mt_status) continue;
+            if (iw < rho_int_) continue;
 
             const uint32_t den = std::max<uint32_t>(1u, w_count_cache_[c]);
             items.push_back(fracsort::Item<uint32_t>{iw, den, 0, 1, c});
         }
 
-        // Sort candidates by exact fraction ordering using existing core
+        // If we have any candidates, pick the best by fraction without sorting
         if (!items.empty()) {
-            fracsort::argsort_items_inplace<uint32_t>(items.data(), items.size());
-        }
+            const size_t best_pos =
+                fracsort::fracargmax_items<uint32_t>(items.data(), items.size());
+            const uint32_t idx = static_cast<uint32_t>(items[best_pos].idx);
 
-        // Scan candidates in sorted order
-        for (const auto& it : items) {
-            const uint32_t idx = static_cast<uint32_t>(it.idx);
-            const uint32_t iw_count = iw_counts[it.idx];
+            const uint32_t iw_count = iw_counts[idx]; // already computed
+            // (iw_count is guaranteed >= rho_int_ because of prefilter)
 
-            // Check vigilance (integer)
-            if (iw_count < rho_int_) {
-                continue;
-            }
-
-            // Update cluster weight in-place
             update_inplace(clusters_[static_cast<size_t>(idx)].weight, sample);
-
-            // New weight is exactly i&w, so its ones-count equals iw_count
             w_count_cache_[static_cast<size_t>(idx)] = iw_count;
-
-            // Update label mapping
-            cluster_map_[idx] = c_b;
             return idx;
-
         }
 
         // No existing cluster chosen => create new cluster
@@ -379,7 +345,7 @@ FitBinaryFuzzyART(py::array_t<int> X,
 // =======================================================================
 // Free function for predict
 // =======================================================================
-std::tuple<py::array_t<int>>
+py::array_t<int>
 PredictBinaryFuzzyART(py::array_t<int> X,
                          double rho,
                          py::object weights = py::none())
@@ -408,16 +374,16 @@ weights : list of 1D np.ndarray, optional
         .def("fit", &cppBinaryFuzzyART::fit,
              py::arg("X"),
              R"doc(
-Fit the model given data X and labels y.
+Fit the model given data X.
 Returns:
-    (labels_out, weight_arrays, cluster_labels_out)
+    (labels_out, weight_arrays)
 )doc")
         .def("predict", &cppBinaryFuzzyART::predict,
              py::arg("X"),
              R"doc(
 Predict labels for X.
 Returns:
-    (pred_a, pred_b)
+    predictions
 )doc")
         .def("__repr__", [](const cppBinaryFuzzyART&) {
             return "<cppBinaryFuzzyART model>";
@@ -430,9 +396,7 @@ Returns:
           py::arg("weights") = py::none(),
           R"doc(
 Fit cppBinaryFuzzyART in a single function call.
-Optionally re-initialize from existing weights/cluster_labels for partial fits.
-Either provide BOTH 'weights' (a list of 1D arrays) and 'cluster_labels' (1D array)
-or leave both as None.
+Optionally re-initialize from existing weights for partial fits.
 )doc");
 
     m.def("PredictBinaryFuzzyART",
@@ -449,18 +413,11 @@ X : np.ndarray
     Data set (2D array).
 rho : float
     Vigilance parameter (0.0 <= rho <= 1.0).
-MT : str
-    Match tracking mode.
-epsilon : int
-    Integer epsilon for match tracking adjustments.
 weights : list of 1D np.ndarray, optional
-cluster_labels : np.ndarray, optional
 
 Returns
 -------
 pred_a : np.ndarray
     1D array of predicted cluster indices.
-pred_b : np.ndarray
-    1D array of final mapped labels (the "side-B" labels).
 )doc");
 }

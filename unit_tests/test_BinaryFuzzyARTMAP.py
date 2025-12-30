@@ -18,7 +18,7 @@ def test_prepare_data():
     A = SimpleARTMAP(BinaryFuzzyART(**params))
     B = BinaryFuzzyARTMAP(**params)
 
-    data = binarize_features_thermometer(data, n_bits=4)
+    data = binarize_features_thermometer(data, n_bits=4).astype(np.bool)
 
     X_A = A.prepare_data(data)
     X_B = B.prepare_data(data)
@@ -39,7 +39,7 @@ def test_consistency():
     A = SimpleARTMAP(BinaryFuzzyART(**params))
     B = BinaryFuzzyARTMAP(**params)
 
-    data = binarize_features_thermometer(data, n_bits=4)
+    data = binarize_features_thermometer(data, n_bits=4).astype(np.bool)
     X = A.prepare_data(data)
 
     A = A.fit(X, target)

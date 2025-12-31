@@ -13,7 +13,7 @@ def test_prepare_data():
         random_state=0,
         shuffle=False,
     )
-    data = binarize_features_thermometer(data, 4)
+    data = binarize_features_thermometer(data, 4).astype(np.bool)
     params = {"rho": 0.8}
     A = pyBinaryFuzzyART(**params)
     B = cppBinaryFuzzyART(**params)
@@ -32,7 +32,7 @@ def test_consistency():
             random_state=0,
             shuffle=False,
         )
-    data = binarize_features_thermometer(data, 4)
+    data = binarize_features_thermometer(data, 4).astype(np.bool)
     params = {"rho":0.8}
     A = pyBinaryFuzzyART(**params)
     B = cppBinaryFuzzyART(**params)

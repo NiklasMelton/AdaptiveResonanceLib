@@ -99,7 +99,7 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
             Not used. For compatibility.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         self.validate_data(X_)
         self.W = []
         self.labels_ = np.zeros((X_.shape[0],), dtype=int)
@@ -137,7 +137,7 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
             Not used. For compatibility.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         self.validate_data(X_)
 
         if not hasattr(self, "labels_"):
@@ -172,7 +172,7 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
 
         """
         check_is_fitted(self)
-        X_ = np.ascontiguousarray(X, dtype=np.float64)
+        X_ = np.ascontiguousarray(X, dtype=np.bool)
         if clip:
             X_ = np.clip(X_, self.d_min_, self.d_max_)
         self.validate_data(X_)

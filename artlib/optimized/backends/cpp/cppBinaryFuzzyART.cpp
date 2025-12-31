@@ -24,7 +24,8 @@ require_int_or_bool_and_cast_u8(const py::handle& obj, const char* name) {
 
     // dtype.kind: 'b' boolean, 'i' signed int, 'u' unsigned int, 'f' float, etc.
     py::dtype dt = arr.dtype();
-    const char kind = py::str(dt.attr("kind"))[0].cast<char>();
+    std::string kind_s = py::str(dt.attr("kind"));
+    char kind = kind_s.empty() ? '\0' : kind_s[0];
 
     if (!(kind == 'b' || kind == 'i' || kind == 'u')) {
         throw std::runtime_error(std::string(name) + " must have bool or integer dtype.");

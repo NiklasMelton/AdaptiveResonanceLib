@@ -14,6 +14,9 @@
 
 namespace fracsort {
 
+template <typename T>
+struct WideMul;
+
 // Wide multiplication type: uint32 -> uint64 (exact), uint64 -> __int128 (exact)
 template <>
 struct WideMul<std::uint32_t> {

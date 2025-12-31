@@ -5,25 +5,32 @@
 #include <cstdint>
 #include <numeric>
 #include <vector>
+#include <type_traits>
+
+#if defined(_MSC_VER)
+// MSVC doesn't support __int128
+#  include <boost/multiprecision/cpp_int.hpp>
+#endif
 
 namespace fracsort {
 
 // Wide multiplication type: uint32 -> uint64 (exact), uint64 -> __int128 (exact)
-template <typename T>
-struct WideMul;
-
 template <>
-struct WideMul<uint32_t> {
-    using wide_t = uint64_t;
-    static inline wide_t mul(uint32_t a, uint32_t b) {
+struct WideMul<std::uint32_t> {
+    using wide_t = std::uint64_t;
+    static inline wide_t mul(std::uint32_t a, std::uint32_t b) noexcept {
         return static_cast<wide_t>(a) * static_cast<wide_t>(b);
     }
 };
 
 template <>
-struct WideMul<uint64_t> {
-    using wide_t = __int128;
-    static inline wide_t mul(uint64_t a, uint64_t b) {
+struct WideMul<std::uint64_t> {
+#if defined(_MSC_VER)
+    using wide_t = boost::multiprecision::uint128_t;
+#else
+    using wide_t = unsigned __int128;
+#endif
+    static inline wide_t mul(std::uint64_t a, std::uint64_t b) noexcept {
         return static_cast<wide_t>(a) * static_cast<wide_t>(b);
     }
 };

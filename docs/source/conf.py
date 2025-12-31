@@ -51,6 +51,7 @@ autodoc_mock_imports = [
     "artlib.cpp.cppGaussianARTMAP",
     "artlib.cpp.cppHypersphereARTMAP",
     "artlib.cpp.cppFuzzyART",
+    "artlib.cpp.cppBinaryFuzzyART",
 ]
 
 bibtex_bibfiles = ['artlib_citation.bib', '../../references.bib']

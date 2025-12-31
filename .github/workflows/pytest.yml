@@ -113,6 +113,7 @@ jobs:
             --disable-warnings \
             -v \
             --tb=short \
+            --faulthandler \
             --junitxml=./test-results/pytest-fast.xml
 
       - name: Upload fast results (on failure)

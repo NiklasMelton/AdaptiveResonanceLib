@@ -335,7 +335,14 @@ private:
         if (!items.empty()) {
             const size_t best_pos =
                 fracsort::fracargmax_items<uint32_t>(items.data(), items.size());
+            if (best_pos >= items.size()) {
+                throw std::runtime_error("BUG: best_pos out of range");
+            }
             const uint32_t idx = static_cast<uint32_t>(items[best_pos].idx);
+            if (idx >= n_clusters) {
+                throw std::runtime_error("BUG: idx out of range (corrupt Item.idx?)");
+            }
+
 
             const uint32_t iw_count = iw_counts[idx]; // already computed
             // (iw_count is guaranteed >= rho_int_ because of prefilter)

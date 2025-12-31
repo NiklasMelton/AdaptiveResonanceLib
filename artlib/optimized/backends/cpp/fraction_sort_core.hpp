@@ -7,10 +7,13 @@
 #include <vector>
 #include <type_traits>
 
-#if defined(_MSC_VER)
-// MSVC doesn't support __int128
-#  include <boost/multiprecision/cpp_int.hpp>
+// Enable uint64 fraction support only when we have a real 128-bit integer type.
+#if !defined(_MSC_VER) && defined(__SIZEOF_INT128__)
+  #define FRACSORT_HAS_U64 1
+#else
+  #define FRACSORT_HAS_U64 0
 #endif
+
 
 namespace fracsort {
 
@@ -26,17 +29,15 @@ struct WideMul<std::uint32_t> {
     }
 };
 
+#if FRACSORT_HAS_U64
 template <>
 struct WideMul<std::uint64_t> {
-#if defined(_MSC_VER)
-    using wide_t = boost::multiprecision::uint128_t;
-#else
     using wide_t = unsigned __int128;
-#endif
     static inline wide_t mul(std::uint64_t a, std::uint64_t b) noexcept {
         return static_cast<wide_t>(a) * static_cast<wide_t>(b);
     }
 };
+#endif
 
 template <typename T>
 struct Item {

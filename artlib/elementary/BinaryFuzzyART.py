@@ -5,7 +5,12 @@
 # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 from artlib.elementary.FuzzyART import FuzzyART
-from artlib.common.utils import fracsort, fracargmax
+from artlib.common.utils import (
+    fracsort,
+    fracargmax,
+    complement_code,
+    de_complement_code,
+)
 from typing import Optional, Callable, Literal, Tuple, Dict, List, Union
 import warnings
 import numpy as np
@@ -64,8 +69,27 @@ class BinaryFuzzyART(FuzzyART):
             Normalized and complement coded data.
 
         """
-        cc_data = super().prepare_data(X)
-        return cc_data.astype(np.bool)  # TODO: convert to bool
+        normalized = X
+        self.d_max_ = np.max(X, axis=0)
+        self.d_min_ = np.min(X, axis=0)
+        cc_data = complement_code(normalized)
+        return cc_data.astype(np.bool)
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """Restore data to its state prior to preparation.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Dataset.
+
+        Returns
+        -------
+        np.ndarray
+            Restored data.
+
+        """
+        return de_complement_code(X)
 
     @staticmethod
     def validate_params(params: dict):

@@ -107,13 +107,12 @@ jobs:
       # 2) Fast suite (always runs) — exclude the factory tests so they don’t double-run
       - name: Run fast tests
         run: |
-          poetry run pytest unit_tests/ \
+          poetry run python -X faulthandler -m pytest unit_tests/ \
             --ignore-glob='unit_tests/test_*ARTMAP_factories.py' \
             --maxfail=5 \
             --disable-warnings \
             -v \
             --tb=short \
-            --faulthandler \
             --junitxml=./test-results/pytest-fast.xml
 
       - name: Upload fast results (on failure)

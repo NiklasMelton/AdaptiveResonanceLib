@@ -14,6 +14,27 @@
 
 namespace py = pybind11;
 
+
+static py::array_t<std::uint8_t, py::array::c_style | py::array::forcecast>
+require_int_or_bool_and_cast_u8(const py::handle& obj, const char* name) {
+    py::array arr = py::array::ensure(obj);
+    if (!arr) {
+        throw std::runtime_error(std::string(name) + " must be a numpy array (or array-like).");
+    }
+
+    // dtype.kind: 'b' boolean, 'i' signed int, 'u' unsigned int, 'f' float, etc.
+    py::dtype dt = arr.dtype();
+    const char kind = py::str(dt.attr("kind"))[0].cast<char>();
+
+    if (!(kind == 'b' || kind == 'i' || kind == 'u')) {
+        throw std::runtime_error(std::string(name) + " must have bool or integer dtype.");
+    }
+
+    // Cast to contiguous uint8 (bool/int -> uint8). This may allocate a temporary copy.
+    auto u8 = py::array_t<std::uint8_t, py::array::c_style | py::array::forcecast>(arr);
+    return u8;
+}
+
 class cppBinaryFuzzyART {
 public:
     struct Cluster {
@@ -43,11 +64,11 @@ public:
         w_count_cache_.clear();
         w_count_cache_.resize(static_cast<size_t>(n_clusters), 0u);
 
-        uint32_t inferred_dim = 0;
+        size_t   inferred_dim = 0;
 
         for (py::ssize_t i = 0; i < n_clusters; ++i) {
-            py::array_t<int> w_array = w_list[i].cast<py::array_t<int>>();
-            py::buffer_info w_info = w_array.request();
+            auto w_u8 = require_int_or_bool_and_cast_u8(w_list[i], "weights[i]");
+            py::buffer_info w_info = w_u8.request();
 
             if (w_info.ndim != 1) {
                 throw std::runtime_error("Each weight array must be 1D.");
@@ -62,20 +83,20 @@ public:
                 throw std::runtime_error("Weight length must be even (2*dim_original).");
             }
 
-            const uint32_t weight_size = static_cast<uint32_t>(weight_size_ssize);
-            const uint32_t dim_here = weight_size / 2u;
+            const size_t weight_size = static_cast<size_t>(weight_size_ssize);
+            const size_t dim_here = weight_size / 2u;
             if (inferred_dim == 0) inferred_dim = dim_here;
             if (dim_here != inferred_dim) {
                 throw std::runtime_error("All weight vectors must have the same length.");
             }
 
             clusters_[static_cast<size_t>(i)].weight.resize(static_cast<size_t>(weight_size));
-            const int* w_ptr = static_cast<const int*>(w_info.ptr);
+            const std::uint8_t* w_ptr = static_cast<const std::uint8_t*>(w_info.ptr);
 
             // Convert to uint32_t 0/1 and compute cached |w|
             uint32_t w_count = 0u;
-            for (uint32_t j = 0u; j < weight_size; ++j) {
-                const int v = w_ptr[j];
+            for (size_t j = 0; j < weight_size; ++j) {
+                const std::uint8_t v = w_ptr[j];
                 // You may tighten this to throw unless (v==0||v==1) if desired.
                 const uint32_t u = (v != 0) ? 1u : 0u;
                 clusters_[static_cast<size_t>(i)].weight[static_cast<size_t>(j)] = u;
@@ -94,7 +115,9 @@ public:
     // FIT
     // ============================================
     std::tuple<py::array_t<int>, std::vector<py::array_t<int>>>
-    fit(py::array_t<int> X) {
+    fit(py::object X_obj) {
+
+        auto X = require_int_or_bool_and_cast_u8(X_obj, "X");
         py::buffer_info x_buf = X.request();
 
         if (x_buf.ndim != 2) throw std::runtime_error("X must be a 2D array.");
@@ -106,38 +129,39 @@ public:
             throw std::runtime_error("Invalid X shape.");
         }
 
-        const uint32_t num_samples = static_cast<uint32_t>(num_samples_ssize);
-        const uint32_t num_features = static_cast<uint32_t>(num_features_ssize);
+        const size_t num_samples = static_cast<size_t>(num_samples_ssize);
+        const size_t num_features = static_cast<size_t>(num_features_ssize);
+
 
         if (num_features % 2u != 0u) {
             throw std::runtime_error("Number of features must be even (2*dim_original).");
         }
 
         // Infer dim_original_ if needed
-        if (dim_original_ == 0u) {
-            dim_original_ = num_features / 2u;
+        if (dim_original_ == 0) {
+            dim_original_ = num_features / 2;
             rho_int_ = static_cast<uint32_t>(std::ceil(rho_ * static_cast<double>(dim_original_)));
         }
 
-        if (num_features != 2u * dim_original_) {
+        if (num_features != 2 * dim_original_) {
             throw std::runtime_error("Number of features do not match existing weights.");
         }
 
-        const int* x_ptr = static_cast<const int*>(x_buf.ptr);
+        const std::uint8_t* x_ptr = static_cast<const std::uint8_t*>(x_buf.ptr);
 
         std::vector<int> labels_out_vec;
-        labels_out_vec.resize(static_cast<size_t>(num_samples));
+        labels_out_vec.resize(num_samples);
 
-        for (uint32_t i = 0u; i < num_samples; ++i) {
-            const int* row_ptr = x_ptr + static_cast<size_t>(i) * static_cast<size_t>(num_features);
+        std::vector<uint32_t> sample(num_features);
 
-            std::vector<uint32_t> sample;
-            sample.resize(static_cast<size_t>(num_features));
-            for (uint32_t j = 0u; j < num_features; ++j) {
-                sample[static_cast<size_t>(j)] = (row_ptr[j] != 0) ? 1u : 0u;
+        for (size_t i = 0u; i < num_samples; ++i) {
+            const std::uint8_t* row_ptr = x_ptr + i * num_features;
+
+            for (size_t j = 0u; j < num_features; ++j) {
+                sample[j] = (row_ptr[j] != 0) ? 1u : 0u;
             }
             const uint32_t chosen = step_fit(sample);
-            labels_out_vec[static_cast<size_t>(i)] = static_cast<int>(chosen);
+            labels_out_vec[i] = static_cast<int>(chosen);
         }
 
         py::array_t<int> labels_py(labels_out_vec.size());
@@ -165,12 +189,14 @@ public:
     // PREDICT
     // ============================================
     py::array_t<int>
-    predict(py::array_t<int> X) {
+    predict(py::object X_obj) {
+
         if (clusters_.empty()) {
             throw std::runtime_error(
                 "Cannot call predict() because the model has no clusters. "
                 "Call fit() or provide existing weights.");
         }
+        auto X = require_int_or_bool_and_cast_u8(X_obj, "X");
 
         py::buffer_info x_buf = X.request();
         if (x_buf.ndim != 2) throw std::runtime_error("X must be a 2D array.");
@@ -178,42 +204,39 @@ public:
         const py::ssize_t num_samples_ssize = x_buf.shape[0];
         const py::ssize_t num_features_ssize = x_buf.shape[1];
 
-        if (num_samples_ssize < 0 || num_features_ssize <= 0) {
-            throw std::runtime_error("Invalid X shape.");
-        }
+        const size_t num_samples = static_cast<size_t>(num_samples_ssize);
+        const size_t num_features = static_cast<size_t>(num_features_ssize);
 
-        const uint32_t num_samples = static_cast<uint32_t>(num_samples_ssize);
-        const uint32_t num_features = static_cast<uint32_t>(num_features_ssize);
 
         if (num_features % 2u != 0u) {
             throw std::runtime_error("Number of features must be even (2*dim_original).");
         }
 
-        if (dim_original_ == 0u) {
-            dim_original_ = num_features / 2u;
+        if (dim_original_ == 0) {
+            dim_original_ = num_features / 2;
             rho_int_ = static_cast<uint32_t>(std::ceil(rho_ * static_cast<double>(dim_original_)));
         }
 
-        if (num_features != 2u * dim_original_) {
+        if (num_features != 2 * dim_original_) {
             throw std::runtime_error("Number of features do not match existing weights.");
         }
 
-        const int* x_ptr = static_cast<const int*>(x_buf.ptr);
+        const std::uint8_t* x_ptr = static_cast<const std::uint8_t*>(x_buf.ptr);
 
         std::vector<int> pred_a_vec;
-        pred_a_vec.resize(static_cast<size_t>(num_samples));
+        pred_a_vec.resize(num_samples);
 
         // Pre-allocate items buffer (size = n_clusters)
         std::vector<fracsort::Item<uint32_t>> items;
         items.resize(clusters_.size());
 
-        for (uint32_t i = 0u; i < num_samples; ++i) {
-            const int* row_ptr = x_ptr + static_cast<size_t>(i) * static_cast<size_t>(num_features);
+        std::vector<uint32_t> sample(num_features);
 
-            std::vector<uint32_t> sample;
-            sample.resize(static_cast<size_t>(num_features));
-            for (uint32_t j = 0u; j < num_features; ++j) {
-                sample[static_cast<size_t>(j)] = (row_ptr[j] != 0) ? 1u : 0u;
+        for (size_t i = 0u; i < num_samples; ++i) {
+            const std::uint8_t* row_ptr = x_ptr + i * num_features;
+
+            for (size_t j = 0u; j < num_features; ++j) {
+                sample[j] = (row_ptr[j] != 0) ? 1u : 0u;
             }
 
             // Build fraction items: num = |i & w|, den = max(1, |w|)
@@ -226,7 +249,7 @@ public:
             const size_t best_cluster = fracsort::fracargmax_items<uint32_t>(
                 items.data(), items.size());
 
-            pred_a_vec[static_cast<size_t>(i)] = static_cast<int>(best_cluster);
+            pred_a_vec[i] = static_cast<int>(best_cluster);
 
         }
 
@@ -244,7 +267,7 @@ private:
     double rho_;           // float input (converted to int thresholds when dim known)
 
     // Derived/internals
-    uint32_t dim_original_;     // original dimension (half of input length)
+    size_t   dim_original_;     // original dimension (half of input length)
     uint32_t rho_int_;          // vigilance threshold (integer)
 
     std::vector<Cluster> clusters_;
@@ -334,24 +357,24 @@ private:
 // Free function for fit
 // =======================================================================
 std::tuple<py::array_t<int>, std::vector<py::array_t<int>>>
-FitBinaryFuzzyART(py::array_t<int> X,
+FitBinaryFuzzyART(py::object X_obj,
                      double rho,
                      py::object weights = py::none())
 {
     cppBinaryFuzzyART model(rho, weights);
-    return model.fit(X);
+    return model.fit(X_obj);
 }
 
 // =======================================================================
 // Free function for predict
 // =======================================================================
 py::array_t<int>
-PredictBinaryFuzzyART(py::array_t<int> X,
+PredictBinaryFuzzyART(py::object X_obj,
                          double rho,
                          py::object weights = py::none())
 {
     cppBinaryFuzzyART model(rho, weights);
-    return model.predict(X);
+    return model.predict(X_obj);
 }
 
 // =======================================================================

@@ -5,28 +5,39 @@
 #include <cstdint>
 #include <numeric>
 #include <vector>
+#include <type_traits>
+
+// Enable uint64 fraction support only when we have a real 128-bit integer type.
+#if !defined(_MSC_VER) && defined(__SIZEOF_INT128__)
+  #define FRACSORT_HAS_U64 1
+#else
+  #define FRACSORT_HAS_U64 0
+#endif
+
 
 namespace fracsort {
 
-// Wide multiplication type: uint32 -> uint64 (exact), uint64 -> __int128 (exact)
 template <typename T>
 struct WideMul;
 
+// Wide multiplication type: uint32 -> uint64 (exact), uint64 -> __int128 (exact)
 template <>
-struct WideMul<uint32_t> {
-    using wide_t = uint64_t;
-    static inline wide_t mul(uint32_t a, uint32_t b) {
+struct WideMul<std::uint32_t> {
+    using wide_t = std::uint64_t;
+    static inline wide_t mul(std::uint32_t a, std::uint32_t b) noexcept {
         return static_cast<wide_t>(a) * static_cast<wide_t>(b);
     }
 };
 
+#if FRACSORT_HAS_U64
 template <>
-struct WideMul<uint64_t> {
-    using wide_t = __int128;
-    static inline wide_t mul(uint64_t a, uint64_t b) {
+struct WideMul<std::uint64_t> {
+    using wide_t = unsigned __int128;
+    static inline wide_t mul(std::uint64_t a, std::uint64_t b) noexcept {
         return static_cast<wide_t>(a) * static_cast<wide_t>(b);
     }
 };
+#endif
 
 template <typename T>
 struct Item {

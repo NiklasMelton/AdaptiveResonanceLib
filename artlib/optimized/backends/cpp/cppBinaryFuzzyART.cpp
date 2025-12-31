@@ -334,23 +334,21 @@ private:
 
         // If we have any candidates, pick the best by fraction without sorting
         if (!items.empty()) {
-            const size_t best_pos =
-                fracsort::fracargmax_items<uint32_t>(items.data(), items.size());
-            if (best_pos >= items.size()) {
-                throw std::runtime_error("BUG: best_pos out of range");
-            }
-            const uint32_t idx = static_cast<uint32_t>(items[best_pos].idx);
-            if (idx >= n_clusters) {
-                throw std::runtime_error("BUG: idx out of range (corrupt Item.idx?)");
-            }
+             // fracargmax_items returns the best *cluster id* (Item.idx)
+            const uint32_t idx = static_cast<uint32_t>(
+                fracsort::fracargmax_items<uint32_t>(items.data(), items.size())
+            );
 
+            if (idx >= n_clusters) {
+                throw std::runtime_error("BUG: idx out of range from fracargmax_items");
+            }
 
             const uint32_t iw_count = iw_counts[idx]; // already computed
-            // (iw_count is guaranteed >= rho_int_ because of prefilter)
 
             update_inplace(clusters_[static_cast<size_t>(idx)].weight, sample);
             w_count_cache_[static_cast<size_t>(idx)] = iw_count;
             return idx;
+
         }
 
         // No existing cluster chosen => create new cluster

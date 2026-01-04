@@ -58,6 +58,13 @@ ext_modules = [
         language="c++",
         extra_compile_args=extra_compile_args,
     ),
+    Extension(
+        "artlib.optimized.backends.cpp.cppART1",
+        [os.path.join(cpp_dir, "cppART1.cpp")],
+        include_dirs=[pybind11.get_include(), cpp_dir],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
 ]
 
 setup(

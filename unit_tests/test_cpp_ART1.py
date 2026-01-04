@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import make_blobs
 from artlib.elementary.ART1 import ART1 as pyART1
 from artlib.optimized.backends.cpp.ART1 import ART1 as cppART1
-
+from artlib.common.utils import binarize_features_thermometer
 
 def test_prepare_data():
     data, target = make_blobs(
@@ -12,6 +12,7 @@ def test_prepare_data():
         random_state=0,
         shuffle=False,
     )
+    data = binarize_features_thermometer(data, 4).astype(np.bool)
     params = {"rho": 0.8, "L": 1.0}
     A = pyART1(**params)
     B = cppART1(**params)
@@ -30,7 +31,7 @@ def test_consistency():
             random_state=0,
             shuffle=False,
         )
-
+    data = binarize_features_thermometer(data, 4).astype(np.bool)
     params = {"rho":0.8, "L":1.0}
     A = pyART1(**params)
     B = cppART1(**params)

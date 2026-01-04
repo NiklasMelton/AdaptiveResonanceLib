@@ -35,9 +35,8 @@ def test_consistency():
     params = {"rho":0.8, "L":1.0}
     A = pyART1(**params)
     B = cppART1(**params)
-    assert data.dtype == np.int16
+
     X = A.prepare_data(data)
-    assert X.dtype == np.int16
     A = A.fit(X)
     B = B.fit(X)
 

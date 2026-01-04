@@ -238,7 +238,8 @@ private:
     {
         double s = 0.0;
         for (int j = 0; j < dim_; ++j) {
-            s += static_cast<double>(bit(sample[j])) * w[j]; // w_bu in [0..dim-1]
+            float wf = static_cast<float>(w[j]);     // emulate float32 rounding
+            s += static_cast<double>(bit(sample[j])) * static_cast<double>(wf);
         }
         return s;
     }

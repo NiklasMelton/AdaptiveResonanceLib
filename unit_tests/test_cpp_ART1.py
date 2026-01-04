@@ -12,7 +12,7 @@ def test_prepare_data():
         random_state=0,
         shuffle=False,
     )
-    data = binarize_features_thermometer(data, 4).astype(np.bool)
+    data = binarize_features_thermometer(data, 4).astype(np.int)
     params = {"rho": 0.8, "L": 1.0}
     A = pyART1(**params)
     B = cppART1(**params)
@@ -31,7 +31,7 @@ def test_consistency():
             random_state=0,
             shuffle=False,
         )
-    data = binarize_features_thermometer(data, 4).astype(np.bool)
+    data = binarize_features_thermometer(data, 4).astype(np.int)
     params = {"rho":0.8, "L":1.0}
     A = pyART1(**params)
     B = cppART1(**params)

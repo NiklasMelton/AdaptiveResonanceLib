@@ -38,6 +38,13 @@ ext_modules = [
         extra_compile_args=extra_compile_args,
     ),
     Extension(
+        "artlib.optimized.backends.cpp.cppART1MAP",
+        [os.path.join(cpp_dir, "cppART1MAP.cpp")],
+        include_dirs=[pybind11.get_include()],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
+    Extension(
         "artlib.optimized.backends.cpp.fracsort",
         [os.path.join(cpp_dir, "fracsort.cpp")],
         include_dirs=[pybind11.get_include(), cpp_dir],
@@ -54,6 +61,13 @@ ext_modules = [
     Extension(
         "artlib.optimized.backends.cpp.cppBinaryFuzzyART",
         [os.path.join(cpp_dir, "cppBinaryFuzzyART.cpp")],
+        include_dirs=[pybind11.get_include(), cpp_dir],
+        language="c++",
+        extra_compile_args=extra_compile_args,
+    ),
+    Extension(
+        "artlib.optimized.backends.cpp.cppART1",
+        [os.path.join(cpp_dir, "cppART1.cpp")],
         include_dirs=[pybind11.get_include(), cpp_dir],
         language="c++",
         extra_compile_args=extra_compile_args,

@@ -144,7 +144,7 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
             self.labels_ = np.zeros((X_.shape[0],), dtype=int)
             existing_W = None
         else:
-            existing_W = np.ascontiguousarray(self.W, dtype=float)
+            existing_W = np.ascontiguousarray(self.W, dtype=np.bool)
 
         la, W = FitBinaryFuzzyART(
             X_,
@@ -177,7 +177,7 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
             X_ = np.clip(X_, self.d_min_, self.d_max_)
         self.validate_data(X_)
 
-        W = np.ascontiguousarray(self.W, dtype=float)
+        W = np.ascontiguousarray(self.W, dtype=np.bool)
 
         y_a = PredictBinaryFuzzyART(
             X_,

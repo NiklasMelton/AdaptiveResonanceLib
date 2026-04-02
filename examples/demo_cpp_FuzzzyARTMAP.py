@@ -13,15 +13,16 @@ def cluster_iris():
     data, target = load_iris(return_X_y=True)
     print("Data has shape:", data.shape)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        data, target, test_size=0.33, random_state=0
-    )
 
     params = {"rho": 0.0, "alpha": 0.0, "beta": 1.0}
     cls = FuzzyARTMAP(**params)
 
-    X = cls.prepare_data(data)
-    print("Prepared data has shape:", X.shape)
+    data = cls.prepare_data(data)
+    print("Prepared data has shape:", data.shape)
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+        data, target, test_size=0.33, random_state=0
+    )
 
     cls = cls.fit(X_train, y_train)
 
@@ -66,8 +67,8 @@ def cluster_blobs():
 
 
 def main():
-    # cluster_iris()
-    cluster_blobs()
+    cluster_iris()
+    #cluster_blobs()
 
 
 if __name__ == "__main__":

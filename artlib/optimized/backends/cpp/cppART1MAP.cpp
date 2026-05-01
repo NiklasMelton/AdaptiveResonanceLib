@@ -179,6 +179,37 @@ public:
         std::memcpy(yb_out.mutable_data(), y_b.data(), sizeof(int) * y_b.size());
         return {ya_out, yb_out};
     }
+    // ────────────────────────────────────────────────────────
+    // category choice
+    // ────────────────────────────────────────────────────────
+    py::array_t<double> category_choice(py::array_t<std::int16_t> X)
+    {
+        if (clusters_.empty()) throw std::runtime_error("Model has no clusters");
+
+        auto xb = X.request();
+        if (xb.ndim != 2) throw std::runtime_error("X must be 2-D");
+
+        const int n_samples  = static_cast<int>(xb.shape[0]);
+        const int n_features = static_cast<int>(xb.shape[1]);
+
+        if (dim_ == 0) dim_ = n_features;
+        if (n_features != dim_) throw std::runtime_error("X feature dimension mismatch with model");
+
+        const std::int16_t* Xptr = static_cast<const std::int16_t*>(xb.ptr);
+        const int K = static_cast<int>(clusters_.size());
+
+        py::array_t<double> out({n_samples, K});
+        auto outm = out.mutable_unchecked<2>();
+
+        for (int i = 0; i < n_samples; ++i) {
+            const std::int16_t* row = Xptr + i * dim_;
+            for (int c = 0; c < K; ++c) {
+                outm(i, c) = category_choice(row, clusters_[c].weight); // existing definition
+            }
+        }
+        return out;
+    }
+
 
 private:
     /* ───── hyper-parameters ───── */
@@ -207,7 +238,8 @@ private:
     {
         double s = 0.0;
         for (int j = 0; j < dim_; ++j) {
-            s += static_cast<double>(bit(sample[j])) * w[j]; // w_bu in [0..dim-1]
+            float wf = static_cast<float>(w[j]);     // emulate float32 rounding
+            s += static_cast<double>(bit(sample[j])) * static_cast<double>(wf);
         }
         return s;
     }
@@ -379,6 +411,19 @@ auto PredictART1MAP(py::array_t<std::int16_t> X,
     return model.predict(X);
 }
 
+auto CategoryChoiceART1MAP(py::array_t<std::int16_t> X,
+                           double                    rho,
+                           double                    L,
+                           const std::string&        MT,
+                           double                    epsilon,
+                           py::object                weights = py::none(),
+                           py::object                cluster_labels = py::none())
+{
+    cppART1MAP model(rho, L, MT, epsilon, weights, cluster_labels);
+    return model.category_choice(X);
+}
+
+
 // ────────────────────────────────────────────────────────────
 // pybind11 module
 // ────────────────────────────────────────────────────────────
@@ -406,4 +451,11 @@ PYBIND11_MODULE(cppART1MAP, m) {
           py::arg("MT"),  py::arg("epsilon"),
           py::arg("weights") = py::none(),
           py::arg("cluster_labels") = py::none());
+
+    m.def("CategoryChoiceART1MAP", &CategoryChoiceART1MAP,
+      py::arg("X"),
+      py::arg("rho"), py::arg("L"),
+      py::arg("MT"),  py::arg("epsilon"),
+      py::arg("weights") = py::none(),
+      py::arg("cluster_labels") = py::none());
 }

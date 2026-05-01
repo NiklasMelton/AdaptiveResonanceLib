@@ -1,47 +1,49 @@
-"""Binary Fuzzy ART :cite:`carpenter1991fuzzy`."""
+"""Fuzzy ARTMAP :cite:`carpenter1991fuzzy`."""
 import numpy as np
-from typing import Literal
-from artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP import (
-    FitBinaryFuzzyARTMAP,
-    PredictBinaryFuzzyARTMAP,
+from typing import Literal, Tuple
+from artlib.optimized.backends.cpp.cppART1MAP import (
+    FitART1MAP,
+    PredictART1MAP,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
+from artlib.elementary.ART1 import ART1
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
 
 
-class BinaryFuzzyARTMAP(SimpleARTMAP):
-    """BinaryFuzzyARTMAP for Classification. optimized with C++
+class ART1MAP(SimpleARTMAP):
+    """ART1MAP for Classification. optimized with C++
 
-    This module implements BinaryFuzzyARTMAP
+    This module implements ART1MAP
 
-    BinaryFuzzyARTMAP is a non-modular classification model which has been highly
+    ART1MAP is a non-modular classification model which has been highly
     optimized for run-time performance. Fit and predict functions are implemented in
     c++ for efficient execution. This class acts as a wrapper for the underlying c++
     functions and to provide compatibility with the artlib style and usage.
-    Functionally, BinaryFuzzyARTMAP behaves as a special case of
+    Functionally, ART1MAP behaves as a special case of
     :class:`~artlib.supervised.SimpleARTMAP.SimpleARTMAP` instantiated with
-    :class:`~artlib.elementary.BinaryFuzzyART.BinaryFuzzyART`.
+    :class:`~artlib.elementary.ART1.ART1`.
 
     """
 
-    def __init__(self, rho: float):
-        """Initialize the Binary Fuzzy ARTMAP model.
+    def __init__(self, rho: float, L: float):
+        """Initialize the Fuzzy ARTMAP model.
 
         Parameters
         ----------
         rho : float
             Vigilance parameter.
+        L : float
+            Uncommitted node bias parameter.
 
         """
-        module_a = BinaryFuzzyART(rho=rho)
+        module_a = ART1(rho=rho, L=L)
         super().__init__(module_a)
 
     def _synchronize_cpp_results(
         self,
         labels_a_out: np.ndarray,
-        weights_arrays: np.ndarray,
+        weights_arrays: list[np.ndarray],
         cluster_labels_out: np.ndarray,
         incremental: bool = False,
     ):
@@ -52,7 +54,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         labels_a_out : np.ndarray
             A 1D numpy array containing the a-side labels from fitting
         weights_arrays : np.ndarray
-            A 2D numpy array where rows are the Binary Fuzzy ART weights
+            A 2D numpy array where rows are the Fuzzy ART weights
         cluster_labels_out : np.ndarray
             A 1D numpy array describing the map from a-side to b-side cluster labels
         incremental: bool, default=False
@@ -60,45 +62,39 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
         """
         if not incremental:
-            self.map: dict[int, int] = dict()
+            self.map: dict[int, int] = {}
             self.module_a.labels_ = np.array((), dtype=int)
             self.module_a.weight_sample_counter_ = []
 
-        # concatenate new module_a labels to the existing labels
+        # labels
         self.module_a.labels_ = np.concatenate(
-            [self.module_a.labels_, labels_a_out.flatten().astype(int)]
-        ).flatten()
-        # update module_a sample counter
-        new_sample_counts = list(map(int, np.bincount(labels_a_out)))
+            [self.module_a.labels_, labels_a_out.astype(int)]
+        )
 
-        if len(self.module_a.weight_sample_counter_) < len(new_sample_counts):
+        # sample counters
+        new_counts = np.bincount(labels_a_out, minlength=len(weights_arrays))
+        if len(self.module_a.weight_sample_counter_) < len(new_counts):
             self.module_a.weight_sample_counter_.extend(
-                [0]
-                * (len(new_sample_counts) - len(self.module_a.weight_sample_counter_))
+                [0] * (len(new_counts) - len(self.module_a.weight_sample_counter_))
             )
+        for k, c in enumerate(new_counts):
+            self.module_a.weight_sample_counter_[k] += int(c)
 
-        for i in range(len(new_sample_counts)):
-            self.module_a.weight_sample_counter_[i] += new_sample_counts[i]
-
-        # update module_a weights
+        # weights (float64 arrays)
         self.module_a.W = [w for w in weights_arrays]
 
-        # update the cluster-label map
+        # A→B mapping
         for c_a, c_b in enumerate(cluster_labels_out):
             if c_a in self.map:
-                assert self.map[c_a] == c_b, (
-                    "Incremental learning has changed "
-                    "cluster mapping. Something went "
-                    "wrong."
-                )
+                assert self.map[c_a] == c_b, "Incremental fit changed cluster map."
             else:
-                self.map[c_a] = c_b
+                self.map[c_a] = int(c_b)
 
     def fit(
         self,
         X: np.ndarray,
         y: np.ndarray,
-        max_iter=1,
+        max_iter: int = 1,
         match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
         epsilon: float = 1e-10,
         verbose: bool = False,
@@ -129,27 +125,25 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             The fitted model.
 
         """
-        # Check that X and y have correct shape
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.int16)
         y_ = np.ascontiguousarray(y, dtype=np.int32)
         SimpleARTMAP.validate_data(self, X_, y_)
-        # Store the classes seen during fit
         self.classes_ = unique_labels(y_)
         self.labels_ = y_
-        # init module A
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
+        la, W, cl = FitART1MAP(
             X_,
             y_,
             rho=self.module_a.params["rho"],
+            L=self.module_a.params["L"],
             MT=match_tracking,
-            epsilon=int(np.ceil(epsilon)),
+            epsilon=epsilon,
             weights=None,
             cluster_labels=None,
         )
-        self._synchronize_cpp_results(labels_a_out, weights_arrays, cluster_labels_out)
+        self._synchronize_cpp_results(la, W, cl)
         self.module_a.is_fitted_ = True
         return self
 
@@ -179,35 +173,34 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             The partially fitted model.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.int16)
         y_ = np.ascontiguousarray(y, dtype=np.int32)
         SimpleARTMAP.validate_data(self, X_, y_)
+
         if not hasattr(self, "labels_"):
             self.labels_ = y_
-            self.module_a.W = []
             existing_W = None
-            existing_cluster_labels = None
+            existing_map = None
         else:
             j = len(self.labels_)
-            self.labels_ = np.pad(self.labels_, [(0, X_.shape[0])], mode="constant")
+            self.labels_ = np.pad(self.labels_, (0, len(y_)))
             self.labels_[j:] = y_
-            existing_W = np.ascontiguousarray(self.module_a.W)
-            existing_cluster_labels = np.ascontiguousarray(
-                [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+            existing_W = np.ascontiguousarray(self.module_a.W, dtype=float)
+            existing_map = np.ascontiguousarray(
+                [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
+        la, W, cl = FitART1MAP(
             X_,
             y_,
             rho=self.module_a.params["rho"],
+            L=self.module_a.params["L"],
             MT=match_tracking,
-            epsilon=int(np.ceil(epsilon)),
+            epsilon=epsilon,
             weights=existing_W,
-            cluster_labels=existing_cluster_labels,
+            cluster_labels=existing_map,
         )
-        self._synchronize_cpp_results(
-            labels_a_out, weights_arrays, cluster_labels_out, incremental=True
-        )
+        self._synchronize_cpp_results(la, W, cl, incremental=True)
         self.module_a.is_fitted_ = True
         return self
 
@@ -227,31 +220,31 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             B labels for the data.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
         check_is_fitted(self)
+        X_ = np.ascontiguousarray(X, dtype=np.int16)
         if clip:
             X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
         self.module_a.validate_data(X_)
         self.module_a.check_dimensions(X_)
 
-        existing_W = np.ascontiguousarray(self.module_a.W)
-        existing_cluster_labels = np.ascontiguousarray(
-            [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-
-        _, y_b = PredictBinaryFuzzyARTMAP(
+        _, y_b = PredictART1MAP(
             X_,
             rho=self.module_a.params["rho"],
+            L=self.module_a.params["L"],
             MT="",
-            epsilon=0,  # match training setup
-            weights=existing_W,
-            cluster_labels=existing_cluster_labels,
+            epsilon=0.0,
+            weights=W,
+            cluster_labels=cl,
         )
         return y_b
 
     def predict_ab(
         self, X: np.ndarray, clip: bool = False
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Predict labels for the data, both A-side and B-side.
 
         Parameters
@@ -267,24 +260,24 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             A labels for the data, B labels for the data.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
         check_is_fitted(self)
+        X_ = np.ascontiguousarray(X, dtype=np.int16)
         if clip:
-            X_ = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
+            X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
         self.module_a.validate_data(X_)
         self.module_a.check_dimensions(X_)
 
-        existing_W = np.ascontiguousarray(self.module_a.W)
-        existing_cluster_labels = np.ascontiguousarray(
-            [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
+        W = np.ascontiguousarray(self.module_a.W, dtype=float)
+        cl = np.ascontiguousarray(
+            [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-
-        y_a, y_b = PredictBinaryFuzzyARTMAP(
+        y_a, y_b = PredictART1MAP(
             X_,
             rho=self.module_a.params["rho"],
+            L=self.module_a.params["L"],
             MT="",
-            epsilon=0,  # match training setup
-            weights=existing_W,
-            cluster_labels=existing_cluster_labels,
+            epsilon=0.0,
+            weights=W,
+            cluster_labels=cl,
         )
         return y_a, y_b

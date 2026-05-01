@@ -10,6 +10,7 @@ import numpy as np
 from typing import Optional, List, Tuple, Dict
 from artlib.common.BaseART import BaseART
 from numba import njit
+from artlib.common.utils import complement_code, de_complement_code
 
 
 @njit
@@ -151,6 +152,42 @@ class ART1(BaseART):
         params = {"rho": rho, "L": L}
         super().__init__(params)
 
+    def prepare_data(self, X: np.ndarray) -> np.ndarray:
+        """Prepare data for clustering.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Dataset.
+
+        Returns
+        -------
+        np.ndarray
+            Normalized and complement coded data.
+
+        """
+        normalized = X
+        self.d_max_ = np.max(X, axis=0)
+        self.d_min_ = np.min(X, axis=0)
+        cc_data = complement_code(normalized)
+        return cc_data.astype(np.int16)
+
+    def restore_data(self, X: np.ndarray) -> np.ndarray:
+        """Restore data to its state prior to preparation.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Dataset.
+
+        Returns
+        -------
+        np.ndarray
+            Restored data.
+
+        """
+        return de_complement_code(X)
+
     @staticmethod
     def validate_params(params: dict):
         """Validate clustering parameters.
@@ -179,7 +216,7 @@ class ART1(BaseART):
         """
         assert X.dtype == np.bool_ or np.issubdtype(
             X.dtype, np.integer
-        ), "ART1 only supports binary data"
+        ), f"ART1 only supports binary data, dtype is {X.dtype}"
         assert ((X == 0) | (X == 1)).all(), "ART1 only supports binary data"
         self.check_dimensions(X)
 

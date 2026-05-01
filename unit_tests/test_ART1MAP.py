@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn.datasets import make_blobs
-from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
+from artlib.elementary.ART1 import ART1
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
-from artlib.optimized.backends.cpp.BinaryFuzzyARTMAP import BinaryFuzzyARTMAP
+from artlib.optimized.backends.cpp.ART1MAP import ART1MAP
 from artlib.common.utils import binarize_features_thermometer
 
 
@@ -14,11 +14,11 @@ def test_prepare_data():
         random_state=0,
         shuffle=False,
     )
-    params = {"rho": 0.9}
-    A = SimpleARTMAP(BinaryFuzzyART(**params))
-    B = BinaryFuzzyARTMAP(**params)
+    params = {"rho": 0.9, "L":1.0}
+    A = SimpleARTMAP(ART1(**params))
+    B = ART1MAP(**params)
 
-    data = binarize_features_thermometer(data, n_bits=4).astype(np.bool)
+    data = binarize_features_thermometer(data, n_bits=4).astype(np.int16)
 
     X_A = A.prepare_data(data)
     X_B = B.prepare_data(data)
@@ -35,11 +35,11 @@ def test_consistency():
             shuffle=False,
         )
 
-    params = {"rho": 0.9}
-    A = SimpleARTMAP(BinaryFuzzyART(**params))
-    B = BinaryFuzzyARTMAP(**params)
+    params = {"rho": 0.9, "L":1.0}
+    A = SimpleARTMAP(ART1(**params))
+    B = ART1MAP(**params)
 
-    data = binarize_features_thermometer(data, n_bits=4).astype(np.bool)
+    data = binarize_features_thermometer(data, n_bits=4).astype(np.int16)
     X = A.prepare_data(data)
 
     A = A.fit(X, target)

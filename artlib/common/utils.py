@@ -2,6 +2,9 @@
 import numpy as np
 from numba import njit
 from typing import Tuple, Optional, Mapping, Sequence, Union, Any
+from numpy.typing import ArrayLike, NDArray
+from artlib.optimized.backends.cpp.fracsort import fracsort as _fracsort
+from artlib.optimized.backends.cpp.fracsort import fracargmax as _fracargmax
 
 IndexableOrKeyable = Union[Mapping[Any, Any], Sequence[Any]]
 
@@ -172,3 +175,100 @@ def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
     """
     return np.minimum(x, y)
+
+
+def fracsort(num: ArrayLike, den: ArrayLike) -> NDArray[np.intp]:
+    """Get argsort indices for elementwise fractions ``num[i] / den[i]`` without
+    division.
+
+    This function returns an index array that sorts the rational values exactly using
+    cross-multiplication in a compiled C++ backend (no division is performed). Ties
+    are broken by the lowest original index.
+
+    Parameters
+    ----------
+    num : ArrayLike
+        1D array-like of nonnegative numerators. Must be convertible to a contiguous
+        NumPy array with dtype ``np.uint32`` or ``np.uint64``.
+    den : ArrayLike
+        1D array-like of denominators with ``den[i] >= 1``. Must be convertible to a
+        contiguous NumPy array with dtype ``np.uint32`` or ``np.uint64`` and have the
+        same shape and dtype as ``num``.
+
+    Returns
+    -------
+    NDArray[np.intp]
+        Indices that sort ``num[i] / den[i]`` in ascending order, with ties broken by
+        the lowest index.
+
+    """
+    return _fracsort(num, den)
+
+
+def fracargmax(num: ArrayLike, den: ArrayLike) -> np.intp:
+    """Get the index that maximizes the elementwise fractions ``num[i] / den[i]``
+    without division.
+
+    This function returns the index of the maximum rational value exactly using
+    cross-multiplication in a compiled C++ backend (no division is performed). Ties
+    are broken first by the larger denominator, then by the lowest original index.
+
+    Parameters
+    ----------
+    num : ArrayLike
+        1D array-like of nonnegative numerators. Must be convertible to a contiguous
+        NumPy array with dtype ``np.uint32`` or ``np.uint64``.
+    den : ArrayLike
+        1D array-like of denominators with ``den[i] >= 1``. Must be convertible to a
+        contiguous NumPy array with dtype ``np.uint32`` or ``np.uint64`` and have the
+        same shape and dtype as ``num``.
+
+    Returns
+    -------
+    np.intp
+        Index ``i`` that maximizes ``num[i] / den[i]`` (descending). Ties are broken
+        by larger denominator first, then the lowest index.
+
+    """
+    return _fracargmax(num, den)
+
+
+def binarize_features_thermometer(data: np.ndarray, n_bits: int) -> np.ndarray:
+    """Binarizes each feature in the data using thermometer encoding.
+
+    Parameters:
+        data (np.ndarray): Input array of shape (n, m), where n is the number of
+            samples and m is the number of features.
+        n_bits (int): Number of bits to use for thermometer encoding.
+
+    Returns:
+        np.ndarray: A thermometer-coded representation of the input data with
+            shape (n, m * n_bits).
+
+    """
+    if n_bits <= 0:
+        raise ValueError("n_bits must be a positive integer.")
+
+    n, m = data.shape
+    min_vals = data.min(axis=0)
+    max_vals = data.max(axis=0)
+
+    # Avoid division by zero in case of constant features
+    ranges = np.where(max_vals - min_vals > 0, max_vals - min_vals, 1)
+
+    # Normalize to [0, 1]
+    normalized_data = (data - min_vals) / ranges
+
+    if n_bits == 1:
+        return (normalized_data > 0.5).astype(np.uint8)
+
+    # Quantize into `n_bits` levels (instead of `2^n_bits` levels)
+    quantized_data = np.floor(normalized_data * n_bits).astype(int)
+
+    # Generate thermometer encoding: fill from left to right
+    thermometer_encoded = np.zeros((n, m, n_bits), dtype=np.uint8)
+
+    for i in range(n_bits):
+        thermometer_encoded[:, :, i] = (quantized_data > i).astype(np.uint8)
+
+    return thermometer_encoded.reshape(n, m * n_bits)

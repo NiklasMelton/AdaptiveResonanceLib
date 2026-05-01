@@ -10,7 +10,6 @@ class BinaryFuzzyARTMAPFactory:
     def __new__(
         cls,
         rho: float,
-        alpha: float,
         *,
         input_dim: Optional[int] = None,
         backend: str = "c++",
@@ -22,8 +21,6 @@ class BinaryFuzzyARTMAPFactory:
         ----------
         rho : float
             Vigilance parameter.
-        alpha : float
-            Choice parameter.
         input_dim: Optional[int]
             number of features
         backend: str
@@ -51,19 +48,19 @@ class BinaryFuzzyARTMAPFactory:
                 BinaryFuzzyARTMAP as TorchBFA,
             )
 
-            return TorchBFA(rho=rho, alpha=alpha, input_dim=input_dim, device=device)
+            return TorchBFA(rho=rho, alpha=1e-10, input_dim=input_dim, device=device)
 
         elif b in ("c++", "cpp"):
             from artlib.optimized.backends.cpp.BinaryFuzzyARTMAP import (
                 BinaryFuzzyARTMAP as CppBFA,
             )
 
-            return CppBFA(rho=rho, alpha=alpha)
+            return CppBFA(rho=rho)
 
         elif b == "python":
             from artlib import SimpleARTMAP, BinaryFuzzyART
 
-            return SimpleARTMAP(BinaryFuzzyART(rho=rho, alpha=alpha))
+            return SimpleARTMAP(BinaryFuzzyART(rho=rho))
 
         else:
             warnings.warn(
@@ -74,4 +71,4 @@ class BinaryFuzzyARTMAPFactory:
                 BinaryFuzzyARTMAP as CppBFA,
             )
 
-            return CppBFA(rho=rho, alpha=alpha)
+            return CppBFA(rho=rho)

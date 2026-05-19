@@ -1,4 +1,4 @@
-# .github/workflows/llm-pr-review.yml
+# .github/workflows/chatgpt-pr-review.yml
 name: ChatGPT PR Review
 
 on:
@@ -40,4 +40,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: python scripts/llm_pr_review.py
+        run: python scripts/chatgpt_pr_review.py

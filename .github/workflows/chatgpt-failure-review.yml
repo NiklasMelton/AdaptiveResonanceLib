@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install openai requests
+      - run: pip install "openai>=2,<3" "requests>=2.32,<3"
 
       - name: Review failed logs
         env:

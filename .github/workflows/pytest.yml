@@ -120,7 +120,7 @@ jobs:
             2>&1 | tee pytest-fast.log
 
       - name: Upload fast results (on failure)
-        if: ${{ failure() && steps.run_fast.outcome == 'failure' }}
+        if: ${{ always() && steps.run_fast.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-fast-results
@@ -146,7 +146,7 @@ jobs:
             2>&1 | tee pytest-fuzzy-factory.log
 
       - name: Upload Fuzzy factory results (on failure)
-        if: ${{ failure() && steps.run_fuzzy.outcome == 'failure' }}
+        if: ${{ always() && steps.run_fuzzy.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-fuzzy-factory-results
@@ -171,7 +171,7 @@ jobs:
             2>&1 | tee pytest-hypersphere-factory.log
 
       - name: Upload Hypersphere factory results (on failure)
-        if: ${{ failure() && steps.run_hypersphere.outcome == 'failure' }}
+        if: ${{ always() && steps.run_hypersphere.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-hypersphere-factory-results
@@ -196,7 +196,7 @@ jobs:
             2>&1 | tee pytest-gaussian-factory.log
 
       - name: Upload Gaussian factory results (on failure)
-        if: ${{ failure() && steps.run_gaussian.outcome == 'failure' }}
+        if: ${{ always() && steps.run_gaussian.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-gaussian-factory-results
@@ -221,7 +221,7 @@ jobs:
             2>&1 | tee pytest-binary-factory.log
 
       - name: Upload Binary Fuzzy factory results (on failure)
-        if: ${{ failure() && steps.run_binary.outcome == 'failure' }}
+        if: ${{ always() && steps.run_binary.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: pytest-binary-factory-results

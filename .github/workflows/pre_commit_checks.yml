@@ -41,6 +41,19 @@ jobs:
           echo "to=$TO"     >> "$GITHUB_OUTPUT"
           git fetch --no-tags origin "$FROM":"$FROM" || true
 
-      - uses: pre-commit/action@v3.0.1
+      - name: Run pre-commit
+        shell: bash
+        run: |
+          set -o pipefail
+          poetry run pre-commit run \
+            --from-ref ${{ steps.range.outputs.from }} \
+            --to-ref ${{ steps.range.outputs.to }} \
+            --show-diff-on-failure \
+            2>&1 | tee precommit.log
+
+      - name: Upload pre-commit failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          extra_args: --from-ref ${{ steps.range.outputs.from }} --to-ref ${{ steps.range.outputs.to }}
+          name: precommit-failure-log
+          path: precommit.log

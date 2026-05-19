@@ -42,8 +42,6 @@ class HypersphereARTMAP(SimpleARTMAP):
         """
         module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
         super().__init__(module_a)
-        # store r_hat so we can forward it to the C++ layer
-        self._r_hat = float(r_hat)
 
     def _synchronize_cpp_results(
         self,
@@ -144,7 +142,7 @@ class HypersphereARTMAP(SimpleARTMAP):
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            r_hat=self.module_a.params["r_hat"],
             MT=match_tracking,
             epsilon=epsilon,
             weights=None,
@@ -203,7 +201,7 @@ class HypersphereARTMAP(SimpleARTMAP):
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            r_hat=self.module_a.params["r_hat"],
             MT=match_tracking,
             epsilon=epsilon,
             weights=existing_W,
@@ -245,7 +243,7 @@ class HypersphereARTMAP(SimpleARTMAP):
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            r_hat=self.module_a.params["r_hat"],
             MT="",
             epsilon=0.0,
             weights=W,
@@ -287,7 +285,7 @@ class HypersphereARTMAP(SimpleARTMAP):
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
             beta=self.module_a.params["beta"],
-            r_hat=self._r_hat,
+            r_hat=self.module_a.params["r_hat"],
             MT="",
             epsilon=0.0,
             weights=W,

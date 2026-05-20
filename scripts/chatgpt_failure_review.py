@@ -45,7 +45,7 @@ GITHUB_TOKEN = require_env("GITHUB_TOKEN")
 OPENAI_API_KEY = require_env("OPENAI_API_KEY")
 
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.4-mini")
-REVIEW_LABEL = os.environ.get("REVIEW_LABEL", "chatgpt-failure-review")
+REVIEW_LABEL = os.environ.get("REVIEW_LABEL", "chatgpt-review")
 
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -88,11 +88,11 @@ def redact(text: str) -> str:
 
 
 def artifact_is_allowed(name: str) -> bool:
-    return name.startswith(ALLOWED_ARTIFACT_PREFIXES)
+    return name.lower().startswith(ALLOWED_ARTIFACT_PREFIXES)
 
 
 def entry_is_allowed(name: str) -> bool:
-    return name.endswith(ALLOWED_EXTENSIONS)
+    return name.lower().endswith(ALLOWED_EXTENSIONS)
 
 
 def main() -> None:
@@ -160,7 +160,15 @@ def main() -> None:
                 if entries_processed >= MAX_ENTRIES_PER_ARTIFACT:
                     break
 
-                if not entry_is_allowed(entry_name):
+                normalized_name = entry_name.replace("\\", "/")
+                basename = normalized_name.rsplit("/", 1)[-1]
+
+                if (
+                        ".." in normalized_name.split("/")
+                        or not basename
+                        or len(entry_name) > 200
+                        or not entry_is_allowed(basename)
+                ):
                     continue
 
                 info = archive.getinfo(entry_name)
@@ -168,17 +176,17 @@ def main() -> None:
                     print(f"Skipping oversized artifact entry: {entry_name}")
                     continue
 
-                raw = archive.read(entry_name)
-                entries_processed += 1
+                with archive.open(entry_name) as entry:
+                    raw = entry.read(MAX_ENTRY_BYTES + 1)
 
-                if not entry_is_allowed(entry_name):
+                if len(raw) > MAX_ENTRY_BYTES:
+                    print(f"Skipping oversized artifact entry after read: {entry_name}")
                     continue
 
-                info = archive.getinfo(entry_name)
-                if info.file_size > MAX_ENTRY_BYTES:
+                if b"\x00" in raw:
+                    print(f"Skipping likely binary artifact entry: {entry_name}")
                     continue
 
-                raw = archive.read(entry_name)
                 content = raw.decode("utf-8", errors="replace")
                 content = redact(content)
                 content = "\n".join(content.splitlines()[-250:])
@@ -188,6 +196,8 @@ def main() -> None:
                     f"### File: {entry_name}\n\n"
                     f"```text\n{content}\n```"
                 )
+
+                entries_processed += 1
 
     failure_text = "\n\n".join(logs)
 

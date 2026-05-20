@@ -26,6 +26,9 @@ MAX_ARTIFACTS = 10
 MAX_ENTRY_BYTES = 200_000
 MAX_TOTAL_CHARS = 120_000
 
+MAX_ARTIFACT_ZIP_BYTES = 25_000_000
+MAX_ENTRIES_PER_ARTIFACT = 20
+
 
 def require_env(name: str) -> str:
     value = os.environ.get(name)
@@ -141,8 +144,33 @@ def main() -> None:
         response = requests.get(download_url, headers=HEADERS, timeout=60)
         response.raise_for_status()
 
+        content_length = response.headers.get("Content-Length")
+        if content_length and int(content_length) > MAX_ARTIFACT_ZIP_BYTES:
+            print(f"Skipping oversized artifact zip: {artifact_name}")
+            continue
+
+        if len(response.content) > MAX_ARTIFACT_ZIP_BYTES:
+            print(f"Skipping oversized artifact zip after download: {artifact_name}")
+            continue
+
         with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            entries_processed = 0
+
             for entry_name in archive.namelist():
+                if entries_processed >= MAX_ENTRIES_PER_ARTIFACT:
+                    break
+
+                if not entry_is_allowed(entry_name):
+                    continue
+
+                info = archive.getinfo(entry_name)
+                if info.file_size > MAX_ENTRY_BYTES:
+                    print(f"Skipping oversized artifact entry: {entry_name}")
+                    continue
+
+                raw = archive.read(entry_name)
+                entries_processed += 1
+
                 if not entry_is_allowed(entry_name):
                     continue
 
@@ -188,10 +216,18 @@ def main() -> None:
         ),
     )
 
+    review_text = getattr(response, "output_text", "").strip()
+
+    if not review_text:
+        review_text = (
+            "ChatGPT did not return a usable review for this failure. "
+            "The workflow failed, but no model-generated diagnosis was available."
+        )
+
     comment = (
         "## ChatGPT CI Failure Review\n\n"
         f"Workflow failed: `{WORKFLOW_NAME}`\n\n"
-        f"{response.output_text}"
+        f"{review_text}"
     )
 
     github_post(

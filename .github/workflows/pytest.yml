@@ -109,7 +109,7 @@ jobs:
         id: run_fast
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           poetry run pytest unit_tests/ \
             --ignore-glob='unit_tests/test_*ARTMAP_factories.py' \
             --maxfail=5 \
@@ -136,7 +136,7 @@ jobs:
         if: steps.changes.outputs.fuzzy_factory == 'true'
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           poetry run pytest unit_tests/test_FuzzyARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \

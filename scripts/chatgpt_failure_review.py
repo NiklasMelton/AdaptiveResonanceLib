@@ -145,9 +145,14 @@ def main() -> None:
         response.raise_for_status()
 
         content_length = response.headers.get("Content-Length")
-        if content_length and int(content_length) > MAX_ARTIFACT_ZIP_BYTES:
-            print(f"Skipping oversized artifact zip: {artifact_name}")
-            continue
+        if content_length:
+            try:
+                if int(content_length) > MAX_ARTIFACT_ZIP_BYTES:
+                    print(f"Skipping oversized artifact zip: {artifact_name}")
+                    continue
+            except ValueError:
+                print(
+                    f"Ignoring malformed Content-Length for artifact: {artifact_name}")
 
         if len(response.content) > MAX_ARTIFACT_ZIP_BYTES:
             print(f"Skipping oversized artifact zip after download: {artifact_name}")

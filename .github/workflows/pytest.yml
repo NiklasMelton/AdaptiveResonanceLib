@@ -161,7 +161,7 @@ jobs:
         if: steps.changes.outputs.hypersphere_factory == 'true'
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           poetry run pytest unit_tests/test_HypersphereARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \
@@ -186,7 +186,7 @@ jobs:
         if: steps.changes.outputs.gaussian_factory == 'true'
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           poetry run pytest unit_tests/test_GaussianARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \
@@ -211,7 +211,7 @@ jobs:
         if: steps.changes.outputs.binary_factory == 'true'
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           poetry run pytest unit_tests/test_BinaryFuzzyARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \

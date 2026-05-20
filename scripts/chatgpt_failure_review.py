@@ -154,9 +154,16 @@ def main() -> None:
             continue
 
         with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            entries = archive.infolist()
+
+            if len(entries) > 200:
+                print(f"Skipping artifact with too many zip entries: {artifact_name}")
+                continue
+
             entries_processed = 0
 
-            for entry_name in archive.namelist():
+            for info in entries:
+                entry_name = info.filename
                 if entries_processed >= MAX_ENTRIES_PER_ARTIFACT:
                     break
 
@@ -171,7 +178,6 @@ def main() -> None:
                 ):
                     continue
 
-                info = archive.getinfo(entry_name)
                 if info.file_size > MAX_ENTRY_BYTES:
                     print(f"Skipping oversized artifact entry: {entry_name}")
                     continue

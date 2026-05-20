@@ -128,6 +128,7 @@ jobs:
             pytest-fast.log
             ./test-results/pytest-fast.xml
           compression-level: 6
+          if-no-files-found: ignore
 
       # 3) Each heavy test runs only if its filter matched
 
@@ -154,6 +155,7 @@ jobs:
             pytest-fuzzy-factory.log
             ./test-results/pytest-fuzzy-factory.xml
           compression-level: 6
+          if-no-files-found: ignore
 
 
       - name: Run Hypersphere factory test
@@ -179,6 +181,7 @@ jobs:
             pytest-hypersphere-factory.log
             ./test-results/pytest-hypersphere-factory.xml
           compression-level: 6
+          if-no-files-found: ignore
 
 
       - name: Run Gaussian factory test
@@ -204,6 +207,7 @@ jobs:
             pytest-gaussian-factory.log
             ./test-results/pytest-gaussian-factory.xml
           compression-level: 6
+          if-no-files-found: ignore
 
 
       - name: Run Binary Fuzzy factory test
@@ -229,3 +233,4 @@ jobs:
             pytest-binary-factory.log
             ./test-results/pytest-binary-factory.xml
           compression-level: 6
+          if-no-files-found: ignore

@@ -59,3 +59,4 @@ jobs:
           name: precommit-failure-log
           path: precommit.log
           compression-level: 6
+          if-no-files-found: ignore

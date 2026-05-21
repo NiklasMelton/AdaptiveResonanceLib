@@ -50,6 +50,14 @@ def github_post(url: str, payload: dict[str, Any]) -> Any:
 def main() -> None:
     pr = github_get(f"{GITHUB_API}/repos/{REPO}/pulls/{PR_NUMBER}")
 
+    if pr.get("author_association") not in {"OWNER", "MEMBER", "COLLABORATOR"}:
+        print("Skipping PR review because author is not a trusted collaborator.")
+        return
+
+    if pr.get("head", {}).get("repo", {}).get("full_name") != REPO:
+        print("Skipping PR review because it is not from the base repository.")
+        return
+
     labels = github_get(
         f"{GITHUB_API}/repos/{REPO}/issues/{PR_NUMBER}/labels?per_page=100"
     )

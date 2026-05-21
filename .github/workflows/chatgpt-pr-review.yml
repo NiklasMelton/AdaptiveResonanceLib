@@ -13,7 +13,12 @@ jobs:
   review:
     if: >
       contains(github.event.pull_request.labels.*.name, 'chatgpt-review') &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        github.event.pull_request.author_association == 'OWNER' ||
+        github.event.pull_request.author_association == 'MEMBER' ||
+        github.event.pull_request.author_association == 'COLLABORATOR'
+      )
     runs-on: ubuntu-latest
 
     steps:

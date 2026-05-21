@@ -108,6 +108,12 @@ def main() -> None:
         print("Workflow run has PR data, but no PR number.")
         return
 
+    pr = github_get(f"{GITHUB_API}/repos/{REPO}/pulls/{pr_number}")
+
+    if pr.get("author_association") not in {"OWNER", "MEMBER", "COLLABORATOR"}:
+        print("Skipping CI failure review because PR author is not a trusted collaborator.")
+        return
+
     labels = github_get(f"{GITHUB_API}/repos/{REPO}/issues/{pr_number}/labels?per_page=100")
     if not isinstance(labels, list):
         print("Unexpected labels response from GitHub.")

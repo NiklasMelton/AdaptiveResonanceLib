@@ -1,4 +1,3 @@
-# .github/workflows/chatgpt-pr-review.yml
 name: ChatGPT PR Review
 
 on:
@@ -7,17 +6,14 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  issues: write
+  pull-requests: read
 
 jobs:
   review:
     if: >
       contains(github.event.pull_request.labels.*.name, 'chatgpt-review') &&
-      (
-        github.event.pull_request.author_association == 'OWNER' ||
-        github.event.pull_request.author_association == 'MEMBER' ||
-        github.event.pull_request.author_association == 'COLLABORATOR'
-      )
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:
@@ -32,12 +28,14 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install openai requests
+        run: pip install "openai>=2,<3" "requests>=2.32,<3"
 
       - name: Run ChatGPT review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.4-mini' }}
+          GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_LABEL: chatgpt-review
         run: python scripts/chatgpt_pr_review.py

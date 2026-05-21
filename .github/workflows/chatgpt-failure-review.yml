@@ -7,6 +7,7 @@ on:
       - Run Python Unit Tests
     types: [completed]
 
+# Uses the Issues comments API to comment on PRs, so issues: write is intentional.
 permissions:
   actions: read
   contents: read
@@ -35,7 +36,7 @@ jobs:
       - name: Review failed logs
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.4-mini' }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.event.workflow_run.id }}

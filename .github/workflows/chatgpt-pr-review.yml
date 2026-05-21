@@ -4,6 +4,7 @@ on:
   pull_request_target:
     types: [labeled, synchronize, reopened]
 
+# Uses the Issues comments API to comment on PRs, so issues: write is intentional.
 permissions:
   contents: read
   issues: write
@@ -47,7 +48,7 @@ jobs:
       - name: Run ChatGPT review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.4-mini' }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}

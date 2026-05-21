@@ -41,11 +41,22 @@ def github_get(url: str) -> Any:
     return response.json()
 
 
-def github_get_all(url: str) -> list[Any]:
+def github_get_all(url: str, max_pages: int = 20) -> list[Any]:
     results: list[Any] = []
     next_url = url
+    seen_urls: set[str] = set()
+    pages = 0
 
     while next_url:
+        if next_url in seen_urls:
+            raise RuntimeError(f"GitHub pagination loop detected: {next_url}")
+
+        seen_urls.add(next_url)
+        pages += 1
+
+        if pages > max_pages:
+            raise RuntimeError(f"GitHub pagination exceeded {max_pages} pages")
+
         response = requests.get(next_url, headers=HEADERS, timeout=60)
         response.raise_for_status()
 
@@ -83,7 +94,11 @@ def main() -> None:
         print("Unexpected labels response from GitHub.")
         return
 
-    label_names = {label.get("name") for label in labels if isinstance(label, dict)}
+    label_names = {
+        label["name"]
+        for label in labels
+        if isinstance(label, dict) and label.get("name")
+    }
     if REVIEW_LABEL not in label_names:
         print(f"PR does not have required label: {REVIEW_LABEL}")
         return

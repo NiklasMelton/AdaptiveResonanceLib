@@ -41,6 +41,24 @@ def github_get(url: str) -> Any:
     return response.json()
 
 
+def github_get_all(url: str) -> list[Any]:
+    results: list[Any] = []
+    next_url = url
+
+    while next_url:
+        response = requests.get(next_url, headers=HEADERS, timeout=60)
+        response.raise_for_status()
+
+        page = response.json()
+        if not isinstance(page, list):
+            raise ValueError(f"Expected list response from GitHub: {next_url}")
+
+        results.extend(page)
+        next_url = response.links.get("next", {}).get("url")
+
+    return results
+
+
 def github_post(url: str, payload: dict[str, Any]) -> Any:
     response = requests.post(url, headers=HEADERS, json=payload, timeout=60)
     response.raise_for_status()
@@ -58,7 +76,7 @@ def main() -> None:
         print("Skipping PR review because it is not from the base repository.")
         return
 
-    labels = github_get(
+    labels = github_get_all(
         f"{GITHUB_API}/repos/{REPO}/issues/{PR_NUMBER}/labels?per_page=100"
     )
     if not isinstance(labels, list):
@@ -70,20 +88,21 @@ def main() -> None:
         print(f"PR does not have required label: {REVIEW_LABEL}")
         return
 
-    files = github_get(
+    files = github_get_all(
         f"{GITHUB_API}/repos/{REPO}/pulls/{PR_NUMBER}/files?per_page=100"
     )
-
-    truncation_note = ""
-    if len(files) >= MAX_FILES:
-        truncation_note = (
-            f"\n\nNote: Review input was limited to the first {MAX_FILES} changed files "
-            f"and {MAX_TOTAL_DIFF_CHARS} diff characters."
-        )
 
     if not isinstance(files, list):
         print("Unexpected files response from GitHub.")
         return
+
+    truncation_notes: list[str] = []
+    omitted_patch_count = 0
+
+    if len(files) > MAX_FILES:
+        truncation_notes.append(
+            f"Only the first {MAX_FILES} changed files were included."
+        )
 
     diff_parts: list[str] = []
 
@@ -93,9 +112,14 @@ def main() -> None:
         patch = changed_file.get("patch") or ""
 
         if not patch:
+            omitted_patch_count += 1
             continue
 
-        patch = patch[:MAX_PATCH_CHARS_PER_FILE]
+        if len(patch) > MAX_PATCH_CHARS_PER_FILE:
+            truncation_notes.append(
+                f"{filename} was truncated to {MAX_PATCH_CHARS_PER_FILE} characters."
+            )
+            patch = patch[:MAX_PATCH_CHARS_PER_FILE] + "\n...[truncated]"
 
         diff_parts.append(
             f"### {filename}\n"
@@ -105,6 +129,11 @@ def main() -> None:
 
     diff = "\n\n".join(diff_parts)
 
+    if omitted_patch_count:
+        truncation_notes.append(
+            f"{omitted_patch_count} changed file(s) had no reviewable text patch, likely because they were binary, renamed, or too large."
+        )
+
     if not diff.strip():
         github_post(
             f"{GITHUB_API}/repos/{REPO}/issues/{PR_NUMBER}/comments",
@@ -112,7 +141,19 @@ def main() -> None:
         )
         return
 
-    diff = diff[:MAX_TOTAL_DIFF_CHARS]
+    if len(diff) > MAX_TOTAL_DIFF_CHARS:
+        truncation_notes.append(
+            f"Combined diff was truncated to {MAX_TOTAL_DIFF_CHARS} characters."
+        )
+        diff = diff[:MAX_TOTAL_DIFF_CHARS] + "\n...[truncated]"
+
+    truncation_note = ""
+    if truncation_notes:
+        truncation_note = (
+            "Input limitations:\n"
+            + "\n".join(f"- {note}" for note in truncation_notes)
+            + "\n\n"
+        )
 
     client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -136,7 +177,8 @@ def main() -> None:
             f"Pull request: #{PR_NUMBER}\n"
             f"Title: {pr.get('title', '')}\n"
             f"Author: {pr.get('user', {}).get('login', '')}\n\n"
-            f"Diff:{truncation_note}\n\n{diff}"
+            f"{truncation_note}"
+            f"Diff:\n\n{diff}"
         ),
     )
 

@@ -59,6 +59,24 @@ def github_get(url: str) -> Any:
     return response.json()
 
 
+def github_get_all(url: str) -> list[Any]:
+    results: list[Any] = []
+    next_url = url
+
+    while next_url:
+        response = requests.get(next_url, headers=HEADERS, timeout=60)
+        response.raise_for_status()
+
+        page = response.json()
+        if not isinstance(page, list):
+            raise ValueError(f"Expected list response from GitHub: {next_url}")
+
+        results.extend(page)
+        next_url = response.links.get("next", {}).get("url")
+
+    return results
+
+
 def github_post(url: str, payload: dict[str, Any]) -> Any:
     response = requests.post(url, headers=HEADERS, json=payload, timeout=60)
     response.raise_for_status()
@@ -119,7 +137,7 @@ def main() -> None:
             "Skipping CI failure review because PR author is not a trusted collaborator.")
         return
 
-    labels = github_get(f"{GITHUB_API}/repos/{REPO}/issues/{pr_number}/labels?per_page=100")
+    labels = github_get_all(f"{GITHUB_API}/repos/{REPO}/issues/{pr_number}/labels?per_page=100")
     if not isinstance(labels, list):
         print("Unexpected labels response from GitHub.")
         return

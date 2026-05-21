@@ -70,13 +70,16 @@ def main() -> None:
         print(f"PR does not have required label: {REVIEW_LABEL}")
         return
 
-    if pr.get("head", {}).get("repo", {}).get("full_name") != REPO:
-        print("Skipping PR because it is not from the base repository.")
-        return
-
     files = github_get(
         f"{GITHUB_API}/repos/{REPO}/pulls/{PR_NUMBER}/files?per_page=100"
     )
+
+    truncation_note = ""
+    if len(files) >= MAX_FILES:
+        truncation_note = (
+            f"\n\nNote: Review input was limited to the first {MAX_FILES} changed files "
+            f"and {MAX_TOTAL_DIFF_CHARS} diff characters."
+        )
 
     if not isinstance(files, list):
         print("Unexpected files response from GitHub.")
@@ -103,7 +106,10 @@ def main() -> None:
     diff = "\n\n".join(diff_parts)
 
     if not diff.strip():
-        print("No reviewable diff content found.")
+        github_post(
+            f"{GITHUB_API}/repos/{REPO}/issues/{PR_NUMBER}/comments",
+            {"body": "## ChatGPT PR Review\n\nNo reviewable text diff found."},
+        )
         return
 
     diff = diff[:MAX_TOTAL_DIFF_CHARS]
@@ -130,7 +136,7 @@ def main() -> None:
             f"Pull request: #{PR_NUMBER}\n"
             f"Title: {pr.get('title', '')}\n"
             f"Author: {pr.get('user', {}).get('login', '')}\n\n"
-            f"Diff:\n\n{diff}"
+            f"Diff:{truncation_note}\n\n{diff}"
         ),
     )
 

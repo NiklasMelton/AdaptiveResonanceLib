@@ -110,8 +110,13 @@ def main() -> None:
 
     pr = github_get(f"{GITHUB_API}/repos/{REPO}/pulls/{pr_number}")
 
+    if pr.get("head", {}).get("repo", {}).get("full_name") != REPO:
+        print("Skipping CI failure review because PR is not from the base repository.")
+        return
+
     if pr.get("author_association") not in {"OWNER", "MEMBER", "COLLABORATOR"}:
-        print("Skipping CI failure review because PR author is not a trusted collaborator.")
+        print(
+            "Skipping CI failure review because PR author is not a trusted collaborator.")
         return
 
     labels = github_get(f"{GITHUB_API}/repos/{REPO}/issues/{pr_number}/labels?per_page=100")
@@ -222,7 +227,14 @@ def main() -> None:
         print("No allowed failure log content found.")
         return
 
-    failure_text = failure_text[-MAX_TOTAL_CHARS:]
+    truncation_note = ""
+
+    if len(failure_text) > MAX_TOTAL_CHARS:
+        truncation_note = (
+            f"Note: Failure log input was truncated to the last "
+            f"{MAX_TOTAL_CHARS} characters after artifact/file limits were applied.\n\n"
+        )
+        failure_text = failure_text[-MAX_TOTAL_CHARS:]
 
     client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -244,6 +256,7 @@ def main() -> None:
         input=(
             f"Workflow: {WORKFLOW_NAME}\n"
             f"Pull request: #{pr_number}\n\n"
+            f"{truncation_note}"
             f"Failure logs:\n\n{failure_text}"
         ),
     )

@@ -61,7 +61,6 @@ ext_modules = [
 
 setup(
     name="artlib",
-    version="0.1.9",
     packages=find_packages(),  # This all are included
     include_package_data=True,
     package_data={"artlib.optimized.backends.cpp": ["*.cpp", "*.hpp"]},

@@ -5,9 +5,98 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  package_changes:
+    name: Detect packaging changes
+    runs-on: ubuntu-latest
+    outputs:
+      package_smoke: ${{ steps.filter.outputs.package_smoke }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect packaging paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            package_smoke:
+              - '.github/workflows/pytest.yml'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
+  build_artifacts:
+    name: Build distribution artifacts
+    runs-on: ubuntu-latest
+    needs: [package_changes]
+    if: needs.package_changes.outputs.package_smoke == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build --sdist --wheel --outdir dist
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/*
+
+  install_smoke:
+    name: Install smoke test (${{ matrix.package-format }}, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: [package_changes, build_artifacts]
+    if: needs.package_changes.outputs.package_smoke == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        package-format: ['wheel', 'sdist']
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package from artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.package-format }}" = "wheel" ]; then
+            python -m pip install --no-cache-dir dist/*.whl
+          else
+            python -m pip install --no-cache-dir dist/*.tar.gz
+          fi
+
+      - name: Import smoke test
+        run: |
+          python -c "import artlib; import artlib.elementary.BayesianART; import artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP"
+
   test:
     name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    needs: [package_changes, install_smoke]
+    if: always() && (needs.package_changes.outputs.package_smoke != 'true' || needs.install_smoke.result == 'success')
     strategy:
       fail-fast: false
       matrix:

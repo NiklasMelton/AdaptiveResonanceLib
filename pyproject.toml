@@ -3,7 +3,7 @@ name        = "artlib"
 version     = "0.1.9"
 description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
 readme      = { file = "README.md", "content-type" = "text/markdown" }
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.15"
 dependencies = [
   "numpy>=1.19.4",
   "scipy>=1.5.4",
@@ -15,7 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 torch = [
   "torch>=1.10; python_version < '3.14'",
-  "torch>=2.10; python_version >= '3.14'",
+  "torch>=2.10; python_version >= '3.14' and python_version < '3.15'",
 ]
 
 [tool.poetry]
@@ -51,7 +51,7 @@ markers = ["heavy: slow/expensive tests"]
 testpaths = ["unit_tests"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.15"
 numpy = ">=1.19.4"
 scipy = ">=1.5.4"
 scikit-learn = ">=1.0"
@@ -59,7 +59,7 @@ matplotlib = ">=3.3.3"
 numba = ">=0.57.0"
 torch = [
   { version = ">=1.10", optional = true, markers = "python_version < '3.14'" },
-  { version = ">=2.10", optional = true, markers = "python_version >= '3.14'" },
+  { version = ">=2.10", optional = true, markers = "python_version >= '3.14' and python_version < '3.15'" },
 ]
 
 [tool.poetry.extras]
@@ -70,7 +70,7 @@ pytest = "^6.2.2"
 pre-commit = "^4.0.0"
 torch = [
   { version = ">=1.10", markers = "python_version < '3.14'" },
-  { version = ">=2.10", markers = "python_version >= '3.14'" },
+  { version = ">=2.10", markers = "python_version >= '3.14' and python_version < '3.15'" },
 ]
 pandas = ">=1.1.5"
 

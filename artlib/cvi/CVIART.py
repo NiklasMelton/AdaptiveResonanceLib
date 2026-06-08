@@ -164,9 +164,9 @@ class CVIART(BaseART):
         new_labels[extra["index"]] = c_
         new_VI = valid_func(self.data, new_labels)
         if extra["validity"] != self.DAVIESBOULDIN:
-            return new_VI > old_VI
+            return np.bool_(new_VI > old_VI)
         else:
-            return new_VI < old_VI
+            return np.bool_(new_VI < old_VI)
 
     def _match_tracking(
         self,

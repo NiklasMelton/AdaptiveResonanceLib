@@ -6,7 +6,12 @@ on:
 
 jobs:
   test:
+    name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
 
     steps:
       - name: Checkout
@@ -83,7 +88,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -123,7 +128,7 @@ jobs:
         if: ${{ always() && steps.run_fast.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-fast-results
+          name: pytest-fast-results-py${{ matrix.python-version }}
           path: |
             pytest-fast.log
             ./test-results/pytest-fast.xml
@@ -150,7 +155,7 @@ jobs:
         if: ${{ always() && steps.run_fuzzy.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-fuzzy-factory-results
+          name: pytest-fuzzy-factory-results-py${{ matrix.python-version }}
           path: |
             pytest-fuzzy-factory.log
             ./test-results/pytest-fuzzy-factory.xml
@@ -176,7 +181,7 @@ jobs:
         if: ${{ always() && steps.run_hypersphere.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-hypersphere-factory-results
+          name: pytest-hypersphere-factory-results-py${{ matrix.python-version }}
           path: |
             pytest-hypersphere-factory.log
             ./test-results/pytest-hypersphere-factory.xml
@@ -202,7 +207,7 @@ jobs:
         if: ${{ always() && steps.run_gaussian.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-gaussian-factory-results
+          name: pytest-gaussian-factory-results-py${{ matrix.python-version }}
           path: |
             pytest-gaussian-factory.log
             ./test-results/pytest-gaussian-factory.xml
@@ -228,7 +233,7 @@ jobs:
         if: ${{ always() && steps.run_binary.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-binary-factory-results
+          name: pytest-binary-factory-results-py${{ matrix.python-version }}
           path: |
             pytest-binary-factory.log
             ./test-results/pytest-binary-factory.xml

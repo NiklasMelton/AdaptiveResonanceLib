@@ -17,7 +17,7 @@ def setup(app):
 project = 'AdaptiveResonanceLib'
 copyright = '2025, Niklas Melton'
 author = 'Niklas Melton'
-release = '0.1.8'
+release = '0.1.9'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -70,7 +70,6 @@ suppress_warnings = ['ref.duplicate', 'duplicate.object', 'myst.duplicate_def', 
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['../_static']
-
 
 
 

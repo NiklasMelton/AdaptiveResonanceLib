@@ -14,6 +14,9 @@ fusion, and regression, enabling flexible exploration of complex data structures
 """
 
 
+from artlib._version import __version__
+
+
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
 from artlib.common.utils import (
@@ -64,6 +67,7 @@ from artlib.optimized.GaussianARTMAPFactory import (
 )
 
 __all__ = [
+    "__version__",
     "BaseART",
     "BaseARTMAP",
     "normalize",

@@ -113,7 +113,8 @@ class BayesianART(BaseART):
         det_cov = np.linalg.det(cov)
 
         p_i_cj = exp_dist_cov_dist / np.sqrt((self.pi2**self.dim_) * det_cov)
-        p_cj = n / np.sum(w_[-1] for w_ in self.W)
+        total_samples = sum(w_[-1] for w_ in self.W)
+        p_cj = n / total_samples
 
         activation = p_i_cj * p_cj
 

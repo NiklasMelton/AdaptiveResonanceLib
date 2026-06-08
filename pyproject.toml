@@ -13,7 +13,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=1.10"]
+torch = [
+  "torch>=1.10; python_version < '3.14'",
+  "torch>=2.10; python_version >= '3.14'",
+]
 
 [tool.poetry]
 name = "artlib"
@@ -54,7 +57,10 @@ scipy = ">=1.5.4"
 scikit-learn = ">=1.0"
 matplotlib = ">=3.3.3"
 numba = ">=0.57.0"
-torch = { version = ">=1.10", optional = true }
+torch = [
+  { version = ">=1.10", optional = true, markers = "python_version < '3.14'" },
+  { version = ">=2.10", optional = true, markers = "python_version >= '3.14'" },
+]
 
 [tool.poetry.extras]
 torch = ["torch"]
@@ -62,7 +68,10 @@ torch = ["torch"]
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.2"
 pre-commit = "^4.0.0"
-torch = ">=1.10"
+torch = [
+  { version = ">=1.10", markers = "python_version < '3.14'" },
+  { version = ">=2.10", markers = "python_version >= '3.14'" },
+]
 pandas = ">=1.1.5"
 
 [tool.poetry.group.docs.dependencies]

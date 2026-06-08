@@ -6,7 +6,12 @@ on:
 
 jobs:
   test:
+    name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
 
     steps:
       - name: Checkout
@@ -83,7 +88,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -106,96 +111,131 @@ jobs:
 
       # 2) Fast suite (always runs) — exclude the factory tests so they don’t double-run
       - name: Run fast tests
+        id: run_fast
+        shell: bash
         run: |
+          set -euo pipefail
           poetry run pytest unit_tests/ \
             --ignore-glob='unit_tests/test_*ARTMAP_factories.py' \
             --maxfail=5 \
             --disable-warnings \
             -v \
             --tb=short \
-            --junitxml=./test-results/pytest-fast.xml
+            --junitxml=./test-results/pytest-fast.xml \
+            2>&1 | tee pytest-fast.log
 
       - name: Upload fast results (on failure)
-        if: ${{ failure() && steps.run_fast.outcome == 'failure' }}
+        if: ${{ always() && steps.run_fast.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-fast-results
-          path: ./test-results/pytest-fast.xml
+          name: pytest-fast-results-py${{ matrix.python-version }}
+          path: |
+            pytest-fast.log
+            ./test-results/pytest-fast.xml
           compression-level: 6
+          if-no-files-found: ignore
 
       # 3) Each heavy test runs only if its filter matched
 
       - name: Run Fuzzy factory test
+        id: run_fuzzy
         if: steps.changes.outputs.fuzzy_factory == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
           poetry run pytest unit_tests/test_FuzzyARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \
             -v \
             --tb=short \
-            --junitxml=./test-results/pytest-fuzzy-factory.xml
+            --junitxml=./test-results/pytest-fuzzy-factory.xml \
+            2>&1 | tee pytest-fuzzy-factory.log
 
       - name: Upload Fuzzy factory results (on failure)
-        if: ${{ failure() && steps.run_fuzzy.outcome == 'failure' }}
+        if: ${{ always() && steps.run_fuzzy.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-fuzzy-factory-results
-          path: ./test-results/pytest-fuzzy-factory.xml
+          name: pytest-fuzzy-factory-results-py${{ matrix.python-version }}
+          path: |
+            pytest-fuzzy-factory.log
+            ./test-results/pytest-fuzzy-factory.xml
           compression-level: 6
+          if-no-files-found: ignore
 
 
       - name: Run Hypersphere factory test
+        id: run_hypersphere
         if: steps.changes.outputs.hypersphere_factory == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
           poetry run pytest unit_tests/test_HypersphereARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \
             -v \
             --tb=short \
-            --junitxml=./test-results/pytest-hypersphere-factory.xml
+            --junitxml=./test-results/pytest-hypersphere-factory.xml \
+            2>&1 | tee pytest-hypersphere-factory.log
 
       - name: Upload Hypersphere factory results (on failure)
-        if: ${{ failure() && steps.run_hypersphere.outcome == 'failure' }}
+        if: ${{ always() && steps.run_hypersphere.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-hypersphere-factory-results
-          path: ./test-results/pytest-hypersphere-factory.xml
+          name: pytest-hypersphere-factory-results-py${{ matrix.python-version }}
+          path: |
+            pytest-hypersphere-factory.log
+            ./test-results/pytest-hypersphere-factory.xml
           compression-level: 6
+          if-no-files-found: ignore
 
 
       - name: Run Gaussian factory test
-        if: steps.changes.outputs.hypersphere_factory == 'true'
+        id: run_gaussian
+        if: steps.changes.outputs.gaussian_factory == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
           poetry run pytest unit_tests/test_GaussianARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \
             -v \
             --tb=short \
-            --junitxml=./test-results/pytest-gaussian-factory.xml
+            --junitxml=./test-results/pytest-gaussian-factory.xml \
+            2>&1 | tee pytest-gaussian-factory.log
 
       - name: Upload Gaussian factory results (on failure)
-        if: ${{ failure() && steps.run_gaussian.outcome == 'failure' }}
+        if: ${{ always() && steps.run_gaussian.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-gaussian-factory-results
-          path: ./test-results/pytest-gaussian-factory.xml
+          name: pytest-gaussian-factory-results-py${{ matrix.python-version }}
+          path: |
+            pytest-gaussian-factory.log
+            ./test-results/pytest-gaussian-factory.xml
           compression-level: 6
+          if-no-files-found: ignore
 
 
       - name: Run Binary Fuzzy factory test
+        id: run_binary
         if: steps.changes.outputs.binary_factory == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
           poetry run pytest unit_tests/test_BinaryFuzzyARTMAP_factories.py \
             --maxfail=5 \
             --disable-warnings \
             -v \
             --tb=short \
-            --junitxml=./test-results/pytest-binary-factory.xml
+            --junitxml=./test-results/pytest-binary-factory.xml \
+            2>&1 | tee pytest-binary-factory.log
 
       - name: Upload Binary Fuzzy factory results (on failure)
-        if: ${{ failure() && steps.run_binary.outcome == 'failure' }}
+        if: ${{ always() && steps.run_binary.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-binary-factory-results
-          path: ./test-results/pytest-binary-factory.xml
+          name: pytest-binary-factory-results-py${{ matrix.python-version }}
+          path: |
+            pytest-binary-factory.log
+            ./test-results/pytest-binary-factory.xml
           compression-level: 6
+          if-no-files-found: ignore

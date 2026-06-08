@@ -1,9 +1,9 @@
 [project]
 name        = "artlib"
-version     = "0.1.8"
+version     = "0.1.9"
 description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
 readme      = { file = "README.md", "content-type" = "text/markdown" }
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.15"
 dependencies = [
   "numpy>=1.19.4",
   "scipy>=1.5.4",
@@ -13,11 +13,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=1.10"]
+torch = [
+  "torch>=1.10; python_version < '3.14'",
+  "torch>=2.10; python_version >= '3.14' and python_version < '3.15'",
+]
 
 [tool.poetry]
 name = "artlib"
-version = "0.1.8"
+version = "0.1.9"
 description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
 authors = ["Niklas M. Melton <niklasmelton@gmail.com>"]
 license = "MIT"
@@ -38,6 +41,8 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
@@ -46,21 +51,27 @@ markers = ["heavy: slow/expensive tests"]
 testpaths = ["unit_tests"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.15"
 numpy = ">=1.19.4"
 scipy = ">=1.5.4"
 scikit-learn = ">=1.0"
 matplotlib = ">=3.3.3"
 numba = ">=0.57.0"
-torch = { version = ">=1.10", optional = true }
+torch = [
+  { version = ">=1.10", optional = true, markers = "python_version < '3.14'" },
+  { version = ">=2.10", optional = true, markers = "python_version >= '3.14' and python_version < '3.15'" },
+]
 
 [tool.poetry.extras]
 torch = ["torch"]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^6.2.2"
+pytest = "^8.3.3"
 pre-commit = "^4.0.0"
-torch = ">=1.10"
+torch = [
+  { version = ">=1.10", markers = "python_version < '3.14'" },
+  { version = ">=2.10", markers = "python_version >= '3.14' and python_version < '3.15'" },
+]
 pandas = ">=1.1.5"
 
 [tool.poetry.group.docs.dependencies]
@@ -76,6 +87,6 @@ requires = [
   "poetry-core>=1.0.0",
   "setuptools>=61.0",
   "wheel",
-  "pybind11>=2.6"
+  "pybind11>=3.0"
 ]
 build-backend = "setuptools.build_meta"

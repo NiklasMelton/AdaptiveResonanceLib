@@ -381,6 +381,32 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
+    def _validate_merge_indices(self, target_idx: int, source_idx: int):
+        """Validate indices before calculating or applying a cluster merge."""
+        n_clusters = len(self.W)
+        for idx in (target_idx, source_idx):
+            if not isinstance(idx, (int, np.integer)) or isinstance(
+                idx, (bool, np.bool_)
+            ):
+                raise TypeError("Cluster indices must be integers")
+            if not 0 <= idx < n_clusters:
+                raise IndexError(f"Cluster index {idx} is out of range")
+        if target_idx == source_idx:
+            raise ValueError("Cannot merge a cluster with itself")
+
+    def _apply_merge(self, target_idx: int, source_idx: int, new_w: np.ndarray) -> int:
+        """Replace two categories with one and update their shared bookkeeping."""
+        self.W[target_idx] = new_w
+        self.weight_sample_counter_[target_idx] += self.weight_sample_counter_[
+            source_idx
+        ]
+        del self.W[source_idx]
+        del self.weight_sample_counter_[source_idx]
+
+        self.labels_[self.labels_ == source_idx] = target_idx
+        self.labels_[self.labels_ > source_idx] -= 1
+        return target_idx - (source_idx < target_idx)
+
     def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
         """Generate a new cluster weight.
 

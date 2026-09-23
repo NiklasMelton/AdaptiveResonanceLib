@@ -208,6 +208,26 @@ class HypersphereART(BaseART):
 
         return np.concatenate([centroid_new, [radius_new]])
 
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Replace two stored balls with their smallest enclosing ball."""
+        self._validate_merge_indices(target_idx, source_idx)
+        target = self.W[target_idx]
+        source = self.W[source_idx]
+        c1, r1 = target[:-1], target[-1]
+        c2, r2 = source[:-1], source[-1]
+        delta = c2 - c1
+        distance = np.linalg.norm(delta)
+
+        if r1 >= distance + r2:
+            new_w = target.copy()
+        elif r2 >= distance + r1:
+            new_w = source.copy()
+        else:
+            radius = (distance + r1 + r2) / 2
+            center = c1 + ((radius - r1) / distance) * delta
+            new_w = np.concatenate([center, [radius]])
+        return self._apply_merge(target_idx, source_idx, new_w)
+
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.
 

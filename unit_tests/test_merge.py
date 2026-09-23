@@ -1,13 +1,15 @@
 import numpy as np
 import pytest
 
-from artlib.elementary.ART1 import ART1
+from artlib.elementary.QuadraticNeuronART import QuadraticNeuronART
 from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
 from artlib.elementary.FuzzyART import FuzzyART
 
 
 def test_merge_unimplemented_for_other_art_models():
-    model = ART1(rho=0.5, L=2.0)
+    model = QuadraticNeuronART(
+        rho=0.5, s_init=1.0, lr_b=0.1, lr_w=0.1, lr_s=0.1
+    )
 
     with pytest.raises(NotImplementedError):
         model.merge(0, 1)

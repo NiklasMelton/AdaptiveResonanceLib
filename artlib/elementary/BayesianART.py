@@ -286,14 +286,36 @@ class BayesianART(BaseART):
         n = w[-1]
 
         n_new = n + 1
-        mean_new = (1 - (1 / n_new)) * mean + (1 / n_new) * i
-
-        i_mean_dist = i - mean_new
-        i_mean_dist_2 = i_mean_dist.reshape((-1, 1)) * i_mean_dist.reshape((1, -1))
-
-        cov_new = (n / n_new) * cov + (1 / n_new) * i_mean_dist_2
+        delta = i - mean
+        mean_new = mean + delta / n_new
+        # n * cov = sample scatter + one initial covariance contribution.
+        cov_new = (n * cov + np.outer(delta, i - mean_new)) / n_new
 
         return np.concatenate([mean_new, cov_new.flatten(), [n_new]])
+
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Pool sample moments, retaining one initial covariance contribution."""
+        self._validate_merge_indices(target_idx, source_idx)
+        target = self.W[target_idx]
+        source = self.W[source_idx]
+        n1, n2 = target[-1], source[-1]
+        n = n1 + n2
+        mean1, mean2 = target[: self.dim_], source[: self.dim_]
+        cov1 = target[self.dim_ : -1].reshape((self.dim_, self.dim_))
+        cov2 = source[self.dim_ : -1].reshape((self.dim_, self.dim_))
+        delta = mean2 - mean1
+        mean = mean1 + (n2 / n) * delta
+        cov = (
+            n1 * cov1
+            + n2 * cov2
+            - self.params["cov_init"]
+            + (n1 * n2 / n) * np.outer(delta, delta)
+        ) / n
+        cov = (cov + cov.T) / 2
+        # Choice requires an invertible covariance and a positive determinant.
+        np.linalg.cholesky(cov)
+        new_w = np.concatenate([mean, cov.flatten(), [n]])
+        return self._apply_merge(target_idx, source_idx, new_w)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.

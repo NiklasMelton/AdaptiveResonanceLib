@@ -168,17 +168,38 @@ class GaussianART(BaseART):
         n = w[-1]
 
         n_new = n + 1
-        mean_new = (1 - (1 / n_new)) * mean + (1 / n_new) * i
-        sigma_new = np.sqrt(
-            (1 - (1 / n_new)) * np.multiply(sigma, sigma)
-            + (1 / n_new) * ((mean_new - i) ** 2)
-        )
+        delta = i - mean
+        mean_new = mean + delta / n_new
+        # n * sigma**2 = sample scatter + one initial variance contribution.
+        sigma2 = (n * np.square(sigma) + delta * (i - mean_new)) / n_new
+        sigma_new = np.sqrt(sigma2)
 
-        sigma2 = np.multiply(sigma_new, sigma_new)
         inv_sig = 1 / sigma2
         det_sig = np.sqrt(np.prod(sigma2))
 
         return np.concatenate([mean_new, sigma_new, inv_sig, [det_sig], [n_new]])
+
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Pool sample moments, retaining one initial variance contribution."""
+        self._validate_merge_indices(target_idx, source_idx)
+        target = self.W[target_idx]
+        source = self.W[source_idx]
+        n1, n2 = target[-1], source[-1]
+        n = n1 + n2
+        mean1, mean2 = target[: self.dim_], source[: self.dim_]
+        delta = mean2 - mean1
+        mean = mean1 + (n2 / n) * delta
+        variance = (
+            n1 * np.square(target[self.dim_ : 2 * self.dim_])
+            + n2 * np.square(source[self.dim_ : 2 * self.dim_])
+            - np.square(self.params["sigma_init"])
+            + (n1 * n2 / n) * np.square(delta)
+        ) / n
+        sigma = np.sqrt(variance)
+        new_w = np.concatenate(
+            [mean, sigma, 1 / variance, [np.sqrt(np.prod(variance))], [n]]
+        )
+        return self._apply_merge(target_idx, source_idx, new_w)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.

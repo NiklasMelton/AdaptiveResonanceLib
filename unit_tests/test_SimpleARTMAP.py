@@ -136,3 +136,22 @@ def test_step_pred(simple_artmap_model):
     print(type(c_a), type(c_b))
     assert isinstance(c_a, (int, np.integer))
     assert isinstance(c_b, (int, np.integer))
+
+
+@pytest.mark.parametrize("label", [0, 1, 7])
+def test_visualize_single_b_label(simple_artmap_model, label):
+    import matplotlib.pyplot as plt
+
+    X = np.array([[0.1, 0.2], [0.2, 0.3], [0.7, 0.8]])
+    y = np.full(len(X), label)
+    X_prep = simple_artmap_model.prepare_data(X)
+    simple_artmap_model.fit(X_prep, y)
+
+    fig, ax = plt.subplots()
+    try:
+        simple_artmap_model.visualize(X_prep, y, ax=ax)
+        assert len(ax.collections) == 1
+        assert len(ax.patches) == simple_artmap_model.n_clusters_a
+        assert np.allclose(ax.collections[0].get_offsets(), X_prep[:, :2])
+    finally:
+        plt.close(fig)

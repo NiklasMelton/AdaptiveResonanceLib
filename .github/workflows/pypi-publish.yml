@@ -41,7 +41,10 @@ jobs:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
-          CIBW_TEST_COMMAND: "python -c \"import artlib; import artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP\""
+          CIBW_TEST_COMMAND: >-
+            python -c "import importlib; [importlib.import_module('artlib.optimized.backends.cpp.' + name)
+            for name in ('cppART1', 'cppART1MAP', 'cppBinaryFuzzyART', 'cppBinaryFuzzyARTMAP',
+            'cppFuzzyART', 'cppFuzzyARTMAP', 'cppGaussianARTMAP', 'cppHypersphereARTMAP', 'fracsort')]"
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload wheels

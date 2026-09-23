@@ -186,7 +186,8 @@ Or to install directly from the most recent source:
 pip install git+https://github.com/NiklasMelton/AdaptiveResonanceLib.git@develop
 ```
 
-Ensure you have Python 3.9 or newer installed.
+Ensure you have Python 3.9–3.14 installed.
+Installing from a source checkout or source distribution also requires a C++17 compiler. Published wheels include the compiled extensions and do not require a compiler.
 <!-- END installation -->
 
 <!-- START quick-start -->

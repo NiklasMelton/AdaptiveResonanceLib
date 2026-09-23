@@ -717,7 +717,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.labels_ = np.zeros((X.shape[0],), dtype=int)
         for _ in range(max_iter):
             if verbose:
-                from tqdm import tqdm
+                try:
+                    from tqdm import tqdm
+                except ImportError as exc:
+                    raise ImportError(
+                        "The 'tqdm' package is required for progress bars. "
+                        "Install it with `pip install tqdm`."
+                    ) from exc
 
                 x_iter = tqdm(
                     enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar
@@ -859,7 +865,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         with writer.saving(fig, filename, dpi=80):
             for _ in range(max_iter):
                 if verbose:
-                    from tqdm import tqdm
+                    try:
+                        from tqdm import tqdm
+                    except ImportError as exc:
+                        raise ImportError(
+                            "The 'tqdm' package is required for progress bars. "
+                            "Install it with `pip install tqdm`."
+                        ) from exc
 
                     x_iter = tqdm(
                         enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar

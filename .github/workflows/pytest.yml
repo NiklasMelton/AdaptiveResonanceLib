@@ -25,7 +25,10 @@ jobs:
             package_smoke:
               - '.github/workflows/pytest.yml'
               - 'pyproject.toml'
+              - 'CMakeLists.txt'
+              - '.gitignore'
               - 'poetry.lock'
+              - 'artlib/_version.py'
               - 'artlib/optimized/backends/cpp/**'
 
   cpp_format:
@@ -137,6 +140,9 @@ jobs:
               )
               assert callable(module.fit) and callable(module.predict)
           importlib.import_module('artlib.optimized.backends.cpp.fracsort')
+          from importlib.metadata import version
+          import artlib
+          assert artlib.__version__ == version('artlib')
           PY
 
   install_smoke:
@@ -206,7 +212,21 @@ jobs:
 
       - name: Import smoke test
         run: |
-          python -c "import artlib; import artlib.elementary.BayesianART; import artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP"
+          cd "$RUNNER_TEMP"
+          python - <<'PY'
+          import importlib
+          from importlib.metadata import version
+          import artlib
+          import artlib.elementary.BayesianART
+
+          for name in (
+              'cppART1', 'cppART1MAP', 'cppBinaryFuzzyART',
+              'cppBinaryFuzzyARTMAP', 'cppFuzzyART', 'cppFuzzyARTMAP',
+              'cppGaussianARTMAP', 'cppHypersphereARTMAP', 'fracsort',
+          ):
+              importlib.import_module(f'artlib.optimized.backends.cpp.{name}')
+          assert artlib.__version__ == version('artlib')
+          PY
 
   test:
     name: Test on Python ${{ matrix.python-version }}
@@ -302,7 +322,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install poetry
+          pip install "poetry>=2.2,<3"
           poetry install --with dev --no-root
 
       - name: Build wheel

@@ -7,7 +7,7 @@ on:
 jobs:
   package_changes:
     name: Detect packaging changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       package_smoke: ${{ steps.filter.outputs.package_smoke }}
 
@@ -19,7 +19,7 @@ jobs:
 
       - name: Detect packaging paths
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             package_smoke:
@@ -30,7 +30,7 @@ jobs:
 
   cpp_format:
     name: Check C++ formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [package_changes]
     if: needs.package_changes.outputs.package_smoke == 'true'
 
@@ -47,7 +47,7 @@ jobs:
 
   build_wheels:
     name: Build wheel (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [package_changes]
     if: github.base_ref == 'main' && needs.package_changes.outputs.package_smoke == 'true'
     strategy:
@@ -78,7 +78,7 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [package_changes]
     if: github.base_ref == 'main' && needs.package_changes.outputs.package_smoke == 'true'
 
@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v5
@@ -141,7 +141,7 @@ jobs:
 
   install_smoke:
     name: Install smoke test (${{ matrix.package-format }}, Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [package_changes, build_wheels, build_sdist]
     if: github.base_ref == 'main' && needs.package_changes.outputs.package_smoke == 'true'
     strategy:
@@ -210,7 +210,7 @@ jobs:
 
   test:
     name: Test on Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [package_changes, install_smoke]
     if: always() && (github.base_ref != 'main' || needs.package_changes.outputs.package_smoke != 'true' || needs.install_smoke.result == 'success')
     strategy:
@@ -227,7 +227,7 @@ jobs:
       # 1) Compute which "areas" changed — one filter per test file
       - name: Detect changed paths
         id: changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             # Runs test_FuzzyARTMAP_factories.py when any of these change:

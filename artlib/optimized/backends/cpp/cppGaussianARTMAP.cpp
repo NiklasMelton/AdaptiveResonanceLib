@@ -268,11 +268,10 @@ private:
         std::vector<double> mean_new(dim_), sigma_new(dim_);
 
         for (int j = 0; j < dim_; ++j) {
-            double delta = i[j] - mean[j];
-            mean_new[j] = mean[j] + delta / n_new;
+            mean_new[j] = (1.0 - 1.0 / n_new) * mean[j] + (1.0 / n_new) * i[j];
             double sigma2_old = sigma[j] * sigma[j];
-            double sigma2_new =
-                (n * sigma2_old + delta * (i[j] - mean_new[j])) / n_new;
+            double sigma2_new = (1.0 - 1.0 / n_new) * sigma2_old +
+                                (1.0 / n_new) * std::pow(mean_new[j] - i[j], 2);
             sigma_new[j] = std::sqrt(sigma2_new);
         }
 

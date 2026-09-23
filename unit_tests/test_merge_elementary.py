@@ -15,6 +15,13 @@ def _train_weight(model, samples):
     return weight
 
 
+def _sample_scatter(samples, full_covariance):
+    centered = samples - np.mean(samples, axis=0)
+    if full_covariance:
+        return centered.T @ centered
+    return np.sum(np.square(centered), axis=0)
+
+
 @pytest.mark.parametrize("model_type", [GaussianART, BayesianART])
 def test_gaussian_merges_equal_pooled_sample_statistics(model_type):
     prior = np.array([[0.4, 0.1], [0.1, 0.7]])
@@ -28,6 +35,11 @@ def test_gaussian_merges_equal_pooled_sample_statistics(model_type):
     right = np.array([[4.0, 0.0], [5.0, 2.0]])
     all_samples = np.vstack([left, right])
     model.W = [_train_weight(model, left), _train_weight(model, right)]
+    full_covariance = model_type is BayesianART
+    model._sample_scatter_ = [
+        _sample_scatter(left, full_covariance),
+        _sample_scatter(right, full_covariance),
+    ]
     model.weight_sample_counter_ = [len(left), len(right)]
     model.labels_ = np.array([0, 0, 0, 1, 1])
 
@@ -45,21 +57,45 @@ def test_gaussian_merges_equal_pooled_sample_statistics(model_type):
         np.testing.assert_allclose(weight[-2], np.sqrt(np.prod(np.diag(expected_cov))))
     else:
         np.testing.assert_allclose(weight[2:-1].reshape(2, 2), expected_cov)
+    np.testing.assert_allclose(
+        model._sample_scatter_[0], _sample_scatter(all_samples, full_covariance)
+    )
     assert weight[-1] == len(all_samples)
     assert model.weight_sample_counter_ == [len(all_samples)]
     np.testing.assert_array_equal(model.labels_, np.zeros(len(all_samples), dtype=int))
 
-    # A later update must retain the same pooled-statistics interpretation.
+    # Subsequent fitting still uses the original update while tracking true scatter.
+    model.params["rho"] = 0.0 if model_type is GaussianART else 1000.0
     new_sample = np.array([3.0, 5.0])
-    updated = model.update(new_sample, weight, model.params, cache={})
-    extended = np.vstack([all_samples, new_sample])
-    centered = extended - np.mean(extended, axis=0)
-    expected_cov = (centered.T @ centered + prior) / len(extended)
-    np.testing.assert_allclose(updated[:2], np.mean(extended, axis=0))
+    old_weight = weight.copy()
+    assert model.step_fit(new_sample) == 0
+    np.testing.assert_allclose(
+        model.W[0], model.update(new_sample, old_weight, model.params, cache={})
+    )
+    np.testing.assert_allclose(
+        model._sample_scatter_[0],
+        _sample_scatter(np.vstack([all_samples, new_sample]), full_covariance),
+    )
+
+
+@pytest.mark.parametrize("model_type", [GaussianART, BayesianART])
+def test_gaussian_training_preserves_weights_and_tracks_exact_scatter(model_type):
+    samples = np.array([[0.1, 0.3], [0.2, 0.4], [0.4, 0.2], [0.3, 0.5]])
     if model_type is GaussianART:
-        np.testing.assert_allclose(np.square(updated[2:4]), np.diag(expected_cov))
+        model = GaussianART(rho=0.0, sigma_init=np.array([0.5, 0.8]))
     else:
-        np.testing.assert_allclose(updated[2:-1].reshape(2, 2), expected_cov)
+        model = BayesianART(rho=1000.0, cov_init=np.diag([0.5, 0.8]))
+    expected_weight = _train_weight(model, samples)
+
+    model.fit(samples[:3])
+    model.partial_fit(samples[3:])
+
+    assert len(model.W) == 1
+    np.testing.assert_allclose(model.W[0], expected_weight)
+    np.testing.assert_allclose(
+        model._sample_scatter_[0],
+        _sample_scatter(samples, model_type is BayesianART),
+    )
 
 
 @pytest.mark.parametrize("model_type", [GaussianART, BayesianART])
@@ -73,6 +109,10 @@ def test_repeated_gaussian_merges_keep_one_initial_covariance(model_type):
     samples = np.array([[0.0, 1.0], [2.0, 4.0], [5.0, 3.0]])
     model.dim_ = 2
     model.W = [model.new_weight(x, model.params) for x in samples]
+    model._sample_scatter_ = [
+        np.zeros((2, 2)) if model_type is BayesianART else np.zeros(2)
+        for _ in samples
+    ]
     model.weight_sample_counter_ = [1, 1, 1]
     model.labels_ = np.arange(3)
 
@@ -85,6 +125,21 @@ def test_repeated_gaussian_merges_keep_one_initial_covariance(model_type):
         np.testing.assert_allclose(np.square(model.W[0][2:4]), np.diag(expected_cov))
     else:
         np.testing.assert_allclose(model.W[0][2:-1].reshape(2, 2), expected_cov)
+
+
+@pytest.mark.parametrize("model_type", [GaussianART, BayesianART])
+def test_gaussian_merge_requires_recorded_sample_scatter(model_type):
+    if model_type is GaussianART:
+        model = GaussianART(rho=0.5, sigma_init=np.ones(2))
+    else:
+        model = BayesianART(rho=1.0, cov_init=np.eye(2))
+    model.dim_ = 2
+    model.W = [
+        model.new_weight(np.array([0.0, 0.0]), model.params),
+        model.new_weight(np.array([1.0, 1.0]), model.params),
+    ]
+    with pytest.raises(ValueError, match="refit"):
+        model.merge(0, 1)
 
 
 @pytest.mark.parametrize("target,source,expected_idx", [(0, 2, 0), (2, 0, 1)])

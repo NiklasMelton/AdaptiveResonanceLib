@@ -219,12 +219,15 @@ class _TorchGaussianARTMAP:
         n_j = self.counts[j]  # scalar
 
         n_new = n_j + 1.0
-        delta = I - m_j
-        mean_new = m_j + delta / n_new
+        # mean_new = (1 - 1/n_new) * mean + (1/n_new) * I
+        w1 = 1.0 - (1.0 / n_new)
+        w2 = 1.0 / n_new
+        mean_new = w1 * m_j + w2 * I
 
-        # n * sigma^2 = sample scatter + one initial variance contribution.
+        # sigma_new = sqrt( (1 - 1/n_new)*sigma^2 + (1/n_new)*(mean_new - I)^2 )
         sigma2_old = s_j * s_j
-        sigma2_new = (n_j * sigma2_old + delta * (I - mean_new)) / n_new
+        delta = mean_new - I
+        sigma2_new = w1 * sigma2_old + w2 * (delta * delta)
         sigma_new = torch.sqrt(sigma2_new.clamp_min(1e-30))
 
         inv_var_new = 1.0 / (sigma_new * sigma_new)

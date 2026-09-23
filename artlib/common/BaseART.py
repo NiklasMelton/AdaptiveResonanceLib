@@ -451,6 +451,10 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
 
+    def _post_weight_update(self, i: np.ndarray, old_w: np.ndarray, idx: int):
+        """Allow a module to update auxiliary state after a sample is learned."""
+        pass
+
     def _match_tracking(
         self,
         cache: Union[List[Dict], Dict],
@@ -597,6 +601,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
                 if m and no_match_reset:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    self._post_weight_update(x, w, c_)
                     self._set_params(base_params)
                     return c_
                 else:

@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -39,10 +39,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -53,7 +53,7 @@ jobs:
           python -m build --wheel --outdir dist
 
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheel-py${{ matrix.python-version }}
           path: dist/*.whl
@@ -66,10 +66,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -80,7 +80,7 @@ jobs:
           python -m build --sdist --outdir dist
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sdist-artifact
           path: dist/*.tar.gz
@@ -122,20 +122,20 @@ jobs:
     steps:
       - name: Download wheel artifact
         if: matrix.package-format == 'wheel'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: wheel-py${{ matrix.python-version }}
           path: dist
 
       - name: Download sdist artifact
         if: matrix.package-format == 'sdist'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: sdist-artifact
           path: dist
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -166,7 +166,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -237,7 +237,7 @@ jobs:
               - 'poetry.lock'
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -277,7 +277,7 @@ jobs:
 
       - name: Upload fast results (on failure)
         if: ${{ always() && steps.run_fast.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pytest-fast-results-py${{ matrix.python-version }}
           path: |
@@ -304,7 +304,7 @@ jobs:
 
       - name: Upload Fuzzy factory results (on failure)
         if: ${{ always() && steps.run_fuzzy.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pytest-fuzzy-factory-results-py${{ matrix.python-version }}
           path: |
@@ -330,7 +330,7 @@ jobs:
 
       - name: Upload Hypersphere factory results (on failure)
         if: ${{ always() && steps.run_hypersphere.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pytest-hypersphere-factory-results-py${{ matrix.python-version }}
           path: |
@@ -356,7 +356,7 @@ jobs:
 
       - name: Upload Gaussian factory results (on failure)
         if: ${{ always() && steps.run_gaussian.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pytest-gaussian-factory-results-py${{ matrix.python-version }}
           path: |
@@ -382,7 +382,7 @@ jobs:
 
       - name: Upload Binary Fuzzy factory results (on failure)
         if: ${{ always() && steps.run_binary.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pytest-binary-factory-results-py${{ matrix.python-version }}
           path: |

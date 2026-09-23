@@ -59,6 +59,7 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
 
         # weights (float64 arrays)
         self.W = [w for w in weights_arrays]
+        self._rebuild_w_count_cache()
 
     def fit(
         self,

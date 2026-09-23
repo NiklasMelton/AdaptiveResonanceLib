@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal, Tuple
 from artlib.optimized.backends.cpp.cppART1MAP import (
-    FitART1MAP,
-    PredictART1MAP,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.elementary.ART1 import ART1
@@ -133,7 +133,7 @@ class ART1MAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W, cl = FitART1MAP(
+        la, W, cl = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -190,7 +190,7 @@ class ART1MAP(SimpleARTMAP):
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitART1MAP(
+        la, W, cl = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -231,7 +231,7 @@ class ART1MAP(SimpleARTMAP):
         cl = np.ascontiguousarray(
             [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-        _, y_b = PredictART1MAP(
+        _, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             L=self.module_a.params["L"],
@@ -271,7 +271,7 @@ class ART1MAP(SimpleARTMAP):
         cl = np.ascontiguousarray(
             [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-        y_a, y_b = PredictART1MAP(
+        y_a, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             L=self.module_a.params["L"],

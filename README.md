@@ -408,6 +408,14 @@ Most **ARTlib** classes rely on NumPy / SciPy for linear-algebra routines, but s
 3. **Trade-off** – The C++ versions sacrifice some modularity (you cannot swap out
    internal ART components) in exchange for significantly shorter run-times.
 
+The supported Python interfaces are the model classes and `artlib.common.utils`.
+The model-specific extension modules now expose lowercase `fit` and `predict`
+functions for the wrappers. Their former native classes and `Fit*` / `Predict*`
+functions have been removed; code importing those low-level symbols should use the
+corresponding Python model class instead. The `fracsort` extension API is unchanged.
+The refactor also corrects first-call `partial_fit` in the native ART wrappers and
+preserves negative class labels in Binary Fuzzy ARTMAP.
+
 ### C++ Acceleration Quick reference
 
 

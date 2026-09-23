@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal, Tuple
 from artlib.optimized.backends.cpp.cppGaussianARTMAP import (  # ← new backend
-    FitGaussianARTMAP,
-    PredictGaussianARTMAP,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.elementary.GaussianART import GaussianART
@@ -142,7 +142,7 @@ class GaussianARTMAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W, cl = FitGaussianARTMAP(
+        la, W, cl = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -200,7 +200,7 @@ class GaussianARTMAP(SimpleARTMAP):
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitGaussianARTMAP(
+        la, W, cl = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -242,7 +242,7 @@ class GaussianARTMAP(SimpleARTMAP):
         cl = np.ascontiguousarray(
             [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-        _, y_b = PredictGaussianARTMAP(
+        _, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
@@ -283,7 +283,7 @@ class GaussianARTMAP(SimpleARTMAP):
         cl = np.ascontiguousarray(
             [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-        y_a, y_b = PredictGaussianARTMAP(
+        y_a, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],

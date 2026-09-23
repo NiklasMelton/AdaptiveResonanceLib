@@ -26,6 +26,24 @@ jobs:
               - '.github/workflows/pytest.yml'
               - 'pyproject.toml'
               - 'poetry.lock'
+              - 'artlib/optimized/backends/cpp/**'
+
+  cpp_format:
+    name: Check C++ formatting
+    runs-on: ubuntu-latest
+    needs: [package_changes]
+    if: needs.package_changes.outputs.package_smoke == 'true'
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Check clang-format 18.1.8
+        shell: bash
+        run: |
+          python -m pip install clang-format==18.1.8
+          clang-format --dry-run --Werror artlib/optimized/backends/cpp/*.cpp artlib/optimized/backends/cpp/*.hpp
 
   build_wheels:
     name: Build wheel (Python ${{ matrix.python-version }})
@@ -84,6 +102,42 @@ jobs:
         with:
           name: sdist-artifact
           path: dist/*.tar.gz
+
+  native_wheel_smoke:
+    name: Native wheel smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: [package_changes]
+    if: needs.package_changes.outputs.package_smoke == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build and import native extensions
+        shell: bash
+        run: |
+          python -m pip install build
+          python -m build --wheel --outdir dist
+          python -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          python - <<'PY'
+          import importlib
+          names = (
+              'ART1', 'ART1MAP', 'BinaryFuzzyART', 'BinaryFuzzyARTMAP',
+              'FuzzyART', 'FuzzyARTMAP', 'GaussianARTMAP', 'HypersphereARTMAP',
+          )
+          for name in names:
+              module = importlib.import_module(
+                  f'artlib.optimized.backends.cpp.cpp{name}'
+              )
+              assert callable(module.fit) and callable(module.predict)
+          importlib.import_module('artlib.optimized.backends.cpp.fracsort')
+          PY
 
   install_smoke:
     name: Install smoke test (${{ matrix.package-format }}, Python ${{ matrix.python-version }})
@@ -178,6 +232,7 @@ jobs:
           filters: |
             # Runs test_FuzzyARTMAP_factories.py when any of these change:
             fuzzy_factory:
+              - 'artlib/optimized/backends/cpp/*.hpp'
               - 'artlib/common/BaseART.py'
               - 'artlib/common/BaseARTMAP.py'
               - 'artlib/elementary/FuzzyART.py'
@@ -193,6 +248,7 @@ jobs:
 
             # Runs test_HypersphereARTMAP_factories.py when these change:
             hypersphere_factory:
+              - 'artlib/optimized/backends/cpp/*.hpp'
               - 'artlib/common/BaseART.py'
               - 'artlib/common/BaseARTMAP.py'
               - 'artlib/elementary/HypersphereART.py'
@@ -208,6 +264,7 @@ jobs:
 
             # Add more test-specific filters here as needed...
             gaussian_factory:
+              - 'artlib/optimized/backends/cpp/*.hpp'
               - 'artlib/common/BaseART.py'
               - 'artlib/common/BaseARTMAP.py'
               - 'artlib/elementary/GaussianART.py'
@@ -223,6 +280,7 @@ jobs:
 
             # Add more test-specific filters here as needed...
             binary_factory:
+              - 'artlib/optimized/backends/cpp/*.hpp'
               - 'artlib/common/BaseART.py'
               - 'artlib/common/BaseARTMAP.py'
               - 'artlib/elementary/BinaryFuzzyART.py'

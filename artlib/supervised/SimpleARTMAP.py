@@ -286,7 +286,13 @@ class SimpleARTMAP(BaseARTMAP):
 
         for _ in range(max_iter):
             if verbose:
-                from tqdm import tqdm
+                try:
+                    from tqdm import tqdm
+                except ImportError as exc:
+                    raise ImportError(
+                        "The 'tqdm' package is required for progress bars. "
+                        "Install it with `pip install tqdm`."
+                    ) from exc
 
                 x_y_iter = tqdm(
                     enumerate(zip(X, y)),
@@ -459,7 +465,13 @@ class SimpleARTMAP(BaseARTMAP):
         with writer.saving(ax.figure, filename, dpi=80):
             for _ in range(max_iter):
                 if verbose:
-                    from tqdm import tqdm
+                    try:
+                        from tqdm import tqdm
+                    except ImportError as exc:
+                        raise ImportError(
+                            "The 'tqdm' package is required for progress bars. "
+                            "Install it with `pip install tqdm`."
+                        ) from exc
 
                     iterator = tqdm(
                         enumerate(zip(X, y)),

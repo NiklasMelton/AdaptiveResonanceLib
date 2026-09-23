@@ -513,8 +513,8 @@ and [commit history](https://github.com/NiklasMelton/AdaptiveResonanceLib/commit
 
 We thank **Stephen Grossberg** and **Gail Carpenter** for pioneering Adaptive
 Resonance Theory and for their feedback on this project, and **Donald C. Wunsch II**
-for his research collaboration and support. This work was supported by the National
-Science Foundation under Award No. 2420248.
+and **Leonardo Enzo Brito da Silva** for their research collaboration and support.
+This work was supported by the National Science Foundation under Award No. 2420248.
 
 <!-- START license -->
 ## License

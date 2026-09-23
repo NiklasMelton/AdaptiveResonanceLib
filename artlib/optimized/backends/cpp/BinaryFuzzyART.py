@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal, Optional, Callable
 from artlib.optimized.backends.cpp.cppBinaryFuzzyART import (
-    FitBinaryFuzzyART,
-    PredictBinaryFuzzyART,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART as pyBinaryFuzzyART
 from sklearn.utils.validation import check_is_fitted
@@ -100,12 +100,12 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
             Not used. For compatibility.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         self.validate_data(X_)
         self.W = []
         self.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W = FitBinaryFuzzyART(
+        la, W = native_fit(
             X_,
             rho=self.params["rho"],
             weights=None,
@@ -138,16 +138,16 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
             Not used. For compatibility.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         self.validate_data(X_)
 
-        if not hasattr(self, "labels_"):
-            self.labels_ = np.zeros((X_.shape[0],), dtype=int)
+        if not self.is_fitted_:
+            self.labels_ = np.array((), dtype=int)
             existing_W = None
         else:
-            existing_W = np.ascontiguousarray(self.W, dtype=np.bool)
+            existing_W = np.ascontiguousarray(self.W, dtype=np.bool_)
 
-        la, W = FitBinaryFuzzyART(
+        la, W = native_fit(
             X_,
             rho=self.params["rho"],
             weights=existing_W,
@@ -173,14 +173,14 @@ class BinaryFuzzyART(pyBinaryFuzzyART):
 
         """
         check_is_fitted(self)
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         if clip:
             X_ = np.clip(X_, self.d_min_, self.d_max_)
         self.validate_data(X_)
 
-        W = np.ascontiguousarray(self.W, dtype=np.bool)
+        W = np.ascontiguousarray(self.W, dtype=np.bool_)
 
-        y_a = PredictBinaryFuzzyART(
+        y_a = native_predict(
             X_,
             rho=self.params["rho"],
             weights=W,

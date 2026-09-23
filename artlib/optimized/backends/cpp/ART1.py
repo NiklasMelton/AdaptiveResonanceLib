@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal, Optional, Callable
 from artlib.optimized.backends.cpp.cppART1 import (
-    FitART1,
-    PredictART1,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.elementary.ART1 import ART1 as pyART1
 from sklearn.utils.validation import check_is_fitted
@@ -104,7 +104,7 @@ class ART1(pyART1):
         self.W = []
         self.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W = FitART1(
+        la, W = native_fit(
             X_,
             rho=self.params["rho"],
             L=self.params["L"],
@@ -141,13 +141,13 @@ class ART1(pyART1):
         X_ = np.ascontiguousarray(X, dtype=np.int16)
         self.validate_data(X_)
 
-        if not hasattr(self, "labels_"):
-            self.labels_ = np.zeros((X_.shape[0],), dtype=int)
+        if not self.is_fitted_:
+            self.labels_ = np.array((), dtype=int)
             existing_W = None
         else:
             existing_W = np.ascontiguousarray(self.W, dtype=float)
 
-        la, W = PredictART1(
+        la, W = native_fit(
             X_,
             rho=self.params["rho"],
             L=self.params["L"],
@@ -181,7 +181,7 @@ class ART1(pyART1):
 
         W = np.ascontiguousarray(self.W, dtype=float)
 
-        y_a = PredictART1(
+        y_a = native_predict(
             X_,
             rho=self.params["rho"],
             L=self.params["L"],

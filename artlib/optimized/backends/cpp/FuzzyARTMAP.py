@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal, Tuple
 from artlib.optimized.backends.cpp.cppFuzzyARTMAP import (
-    FitFuzzyARTMAP,
-    PredictFuzzyARTMAP,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.elementary.FuzzyART import FuzzyART
@@ -135,7 +135,7 @@ class FuzzyARTMAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W, cl = FitFuzzyARTMAP(
+        la, W, cl = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -193,7 +193,7 @@ class FuzzyARTMAP(SimpleARTMAP):
                 [self.map[c] for c in range(self.module_a.n_clusters)]
             )
 
-        la, W, cl = FitFuzzyARTMAP(
+        la, W, cl = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -235,7 +235,7 @@ class FuzzyARTMAP(SimpleARTMAP):
         cl = np.ascontiguousarray(
             [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-        _, y_b = PredictFuzzyARTMAP(
+        _, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],
@@ -276,7 +276,7 @@ class FuzzyARTMAP(SimpleARTMAP):
         cl = np.ascontiguousarray(
             [self.map[c] for c in range(self.module_a.n_clusters)]
         )
-        y_a, y_b = PredictFuzzyARTMAP(
+        y_a, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             alpha=self.module_a.params["alpha"],

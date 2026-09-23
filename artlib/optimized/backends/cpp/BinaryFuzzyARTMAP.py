@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal
 from artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP import (
-    FitBinaryFuzzyARTMAP,
-    PredictBinaryFuzzyARTMAP,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
@@ -131,7 +131,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
         """
         # Check that X and y have correct shape
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         y_ = np.ascontiguousarray(y, dtype=np.int32)
         SimpleARTMAP.validate_data(self, X_, y_)
         # Store the classes seen during fit
@@ -141,7 +141,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
         self.module_a.W = []
         self.module_a.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
+        labels_a_out, weights_arrays, cluster_labels_out = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -180,7 +180,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             The partially fitted model.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         y_ = np.ascontiguousarray(y, dtype=np.int32)
         SimpleARTMAP.validate_data(self, X_, y_)
         if not hasattr(self, "labels_"):
@@ -197,7 +197,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
                 [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
             )
 
-        labels_a_out, weights_arrays, cluster_labels_out = FitBinaryFuzzyARTMAP(
+        labels_a_out, weights_arrays, cluster_labels_out = native_fit(
             X_,
             y_,
             rho=self.module_a.params["rho"],
@@ -228,7 +228,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             B labels for the data.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         check_is_fitted(self)
         if clip:
             X_ = np.clip(X_, self.module_a.d_min_, self.module_a.d_max_)
@@ -240,7 +240,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
         )
 
-        _, y_b = PredictBinaryFuzzyARTMAP(
+        _, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             MT="",
@@ -268,7 +268,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             A labels for the data, B labels for the data.
 
         """
-        X_ = np.ascontiguousarray(X, dtype=np.bool)
+        X_ = np.ascontiguousarray(X, dtype=np.bool_)
         check_is_fitted(self)
         if clip:
             X_ = np.clip(X, self.module_a.d_min_, self.module_a.d_max_)
@@ -280,7 +280,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
             [self.map[c_a] for c_a in range(self.module_a.n_clusters)]
         )
 
-        y_a, y_b = PredictBinaryFuzzyARTMAP(
+        y_a, y_b = native_predict(
             X_,
             rho=self.module_a.params["rho"],
             MT="",

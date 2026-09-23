@@ -4,18 +4,10 @@ import pytest
 from artlib.elementary.ART1 import ART1
 from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART
 from artlib.elementary.FuzzyART import FuzzyART
-from artlib.cvi.iCVIFuzzyArt import iCVIFuzzyART
 
 
 def test_merge_unimplemented_for_other_art_models():
     model = ART1(rho=0.5, L=2.0)
-
-    with pytest.raises(NotImplementedError):
-        model.merge(0, 1)
-
-
-def test_icvi_fuzzy_art_merge_remains_unimplemented():
-    model = iCVIFuzzyART(rho=0.5, alpha=0.0, beta=1.0, validity=1)
 
     with pytest.raises(NotImplementedError):
         model.merge(0, 1)

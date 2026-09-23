@@ -113,16 +113,22 @@ def test_noncontiguous_input_matches_contiguous_input():
 )
 def test_malformed_input_raises_instead_of_aborting(code):
     model = "cppFuzzyARTMAP" if "np.array([1])" in code else "cppFuzzyART"
+    native_path = importlib.import_module(
+        f"artlib.optimized.backends.cpp.{model}"
+    ).__file__
     script = (
-        "import numpy as np\n"
-        f"import artlib.optimized.backends.cpp.{model} as m\n"
+        "import importlib.util, numpy as np, sys\n"
+        "spec = importlib.util.spec_from_file_location(sys.argv[1], sys.argv[2])\n"
+        "m = importlib.util.module_from_spec(spec)\n"
+        "spec.loader.exec_module(m)\n"
         "try:\n"
         f"    {code}\n"
         "except ValueError:\n"
         "    print('VALUE_ERROR')\n"
     )
     result = subprocess.run(
-        [sys.executable, "-c", script], capture_output=True, text=True, check=False
+        [sys.executable, "-c", script, model, native_path],
+        capture_output=True, text=True, check=False,
     )
     assert result.returncode == 0, result.stderr
     assert "VALUE_ERROR" in result.stdout

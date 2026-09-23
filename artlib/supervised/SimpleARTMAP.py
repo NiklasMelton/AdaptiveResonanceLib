@@ -3,6 +3,7 @@
 # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 # Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
+from collections.abc import Mapping
 from typing import Optional, Literal, Dict, Union, Tuple
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
@@ -748,20 +749,32 @@ class SimpleARTMAP(BaseARTMAP):
             else:
                 fig, ax = plt.subplots()
 
+        labels_b = sorted(set(self.map.values()))
         if colors is None:
             from matplotlib.pyplot import cm
 
-            colors = cm.rainbow(np.linspace(0, 1, self.n_clusters_b))
+            colors = cm.rainbow(np.linspace(0, 1, len(labels_b)))
 
-        for k_b, col in enumerate(colors):
+        if isinstance(colors, Mapping):
+            label_colors = colors
+        elif all(
+            isinstance(label, (int, np.integer)) and 0 <= label < len(colors)
+            for label in labels_b
+        ):
+            # Preserve indexing by label for palettes that cover every label.
+            label_colors = {label: colors[label] for label in labels_b}
+        else:
+            label_colors = dict(zip(labels_b, colors))
+
+        for k_b in labels_b:
             cluster_data = y == k_b
             if self.module_a.data_format == "default":
                 ax.scatter(
                     X[cluster_data, 0],
                     X[cluster_data, 1],
-                    color=col,
+                    color=label_colors[k_b],
                     marker=".",
                     s=marker_size,
                 )
 
-        self.plot_cluster_bounds(ax=ax, colors=colors, linewidth=linewidth)
+        self.plot_cluster_bounds(ax=ax, colors=label_colors, linewidth=linewidth)

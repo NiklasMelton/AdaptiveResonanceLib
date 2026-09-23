@@ -328,6 +328,17 @@ class FuzzyART(BaseART):
         """
         return _update_numba(i, w, params.get("beta", None))
 
+    @staticmethod
+    def _merge_weights(w1: np.ndarray, w2: np.ndarray) -> np.ndarray:
+        """Return the fuzzy AND of two cluster weights."""
+        return fuzzy_and(w1, w2)
+
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Merge the source into the target and return the target's new index."""
+        self._validate_merge_indices(target_idx, source_idx)
+        new_w = self._merge_weights(self.W[target_idx], self.W[source_idx])
+        return self._apply_merge(target_idx, source_idx, new_w)
+
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.
 

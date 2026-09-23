@@ -1,9 +1,26 @@
 [project]
-name        = "artlib"
+name = "artlib"
+version = "0.1.11"
 description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
-readme      = { file = "README.md", "content-type" = "text/markdown" }
+readme = "README.md"
 requires-python = ">=3.9,<3.15"
-dynamic = ["version"]
+license = "MIT"
+authors = [{ name = "Niklas M. Melton", email = "niklasmelton@gmail.com" }]
+keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: C++",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
   "numpy>=1.19.4",
   "scipy>=1.5.4",
@@ -14,62 +31,20 @@ dependencies = [
   "numba>=0.63.0; python_version >= '3.14' and python_version < '3.15'",
 ]
 
+[project.urls]
+Homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+Repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+Documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
+
 [project.optional-dependencies]
 torch = [
   "torch>=1.10; python_version < '3.14'",
   "torch>=2.10; python_version >= '3.14' and python_version < '3.15'",
 ]
 
-[tool.poetry]
-name = "artlib"
-version = "0.1.10"
-description = "A Python library for Adaptive Resonance Theory (ART) algorithms."
-authors = ["Niklas M. Melton <niklasmelton@gmail.com>"]
-license = "MIT"
-homepage = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
-repository = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
-documentation = "https://github.com/NiklasMelton/AdaptiveResonanceLib"
-readme = "README.md"
-keywords = ["adaptive resonance theory", "ART", "machine learning", "neural networks", "clustering"]
-
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
-
 [tool.pytest.ini_options]
 markers = ["heavy: slow/expensive tests"]
 testpaths = ["unit_tests"]
-
-[tool.poetry.dependencies]
-python = ">=3.9,<3.15"
-numpy = ">=1.19.4"
-scipy = ">=1.5.4"
-scikit-learn = ">=1.0"
-matplotlib = ">=3.3.3"
-numba = [
-  { version = ">=0.57.0", markers = "python_version < '3.13'" },
-  { version = ">=0.61.0", markers = "python_version >= '3.13' and python_version < '3.14'" },
-  { version = ">=0.63.0", markers = "python_version >= '3.14' and python_version < '3.15'" },
-]
-torch = [
-  { version = ">=1.10", optional = true, markers = "python_version < '3.14'" },
-  { version = ">=2.10", optional = true, markers = "python_version >= '3.14' and python_version < '3.15'" },
-]
-
-[tool.poetry.extras]
-torch = ["torch"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
@@ -89,13 +64,20 @@ cffconvert = "^2.0.0"
 sphinxcontrib-bibtex = "^2.0.0"
 
 [build-system]
-requires = [
-  "poetry-core>=1.0.0",
-  "setuptools>=61.0",
-  "wheel",
-  "pybind11>=3.0"
-]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=1.0,<2", "pybind11>=3.0,<4"]
+build-backend = "scikit_build_core.build"
 
-[tool.setuptools.dynamic]
-version = { attr = "artlib._version.__version__" }
+[tool.scikit-build]
+minimum-version = "1.0"
+wheel.packages = ["artlib"]
+wheel.exclude = ["**/*.cpp", "**/*.hpp", "**/*.ipynb", "**/*.gif", "**/*.csv", "**/.DS_Store", "**/.ipynb_checkpoints/**"]
+sdist.inclusion-mode = "explicit"
+sdist.include = [
+  "pyproject.toml",
+  "CMakeLists.txt",
+  "README.md",
+  "LICENSE",
+  "artlib/**/*.py",
+  "artlib/optimized/backends/cpp/*.cpp",
+  "artlib/optimized/backends/cpp/*.hpp",
+]

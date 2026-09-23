@@ -263,6 +263,17 @@ class ARTMAP(SimpleARTMAP):
         )
         return self
 
+    def merge_B(self, target_idx: int, source_idx: int) -> int:
+        """Merge B clusters and update the map and stored B labels."""
+        merged_idx = self.module_b.merge(target_idx, source_idx)
+        self.map = {
+            idx: merged_idx if label == source_idx else label - (label > source_idx)
+            for idx, label in self.map.items()
+        }
+        self.labels_ = self.module_b.labels_.copy()
+        self.classes_ = np.unique(self.labels_)
+        return merged_idx
+
     def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict the labels for the given data.
 

@@ -24,6 +24,15 @@ Contributions to AdaptiveResonanceLib should be made via GitHub pull requests an
 - [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/)
 - [GitHub Issues](https://guides.github.com/features/issues/)
 
+Install Python 3.9–3.14, Poetry, and a C++17 compiler before working from a source checkout. Install the project dependencies with Poetry, then install the package in editable mode so its native extensions are compiled by the build backend:
+
+```bash
+poetry install --with dev --no-root
+poetry run python -m pip install --no-deps -e .
+```
+
+After changing C++ sources, repeat the editable install to rebuild the extensions. Run tests with `poetry run pytest unit_tests/`. To create the distributions used for releases, run `poetry build`; the build uses scikit-build-core through `pyproject.toml`.
+
 ## How to contribute
 
 If you're ready to contribute, here's how you can do it:

@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             cibw_archs: x86_64
           - os: windows-latest
             cibw_archs: AMD64
@@ -24,10 +24,10 @@ jobs:
             cibw_archs: arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
@@ -39,26 +39,29 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
-          CIBW_SKIP: "pp* *-musllinux*"
+          CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
-          CIBW_TEST_COMMAND: "python -c \"import artlib; import artlib.optimized.backends.cpp.cppBinaryFuzzyARTMAP\""
+          CIBW_TEST_COMMAND: >-
+            python -c "import importlib; [importlib.import_module('artlib.optimized.backends.cpp.' + name)
+            for name in ('cppART1', 'cppART1MAP', 'cppBinaryFuzzyART', 'cppBinaryFuzzyARTMAP',
+            'cppFuzzyART', 'cppFuzzyARTMAP', 'cppGaussianARTMAP', 'cppHypersphereARTMAP', 'fracsort')]"
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.cibw_archs }}
           path: wheelhouse/*.whl
 
   build_sdist:
     name: Build source distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
@@ -71,19 +74,19 @@ jobs:
         run: python -m build --sdist --outdir dist
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sdist
           path: dist/*.tar.gz
 
   publish:
     name: Check and publish package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [build_wheels, build_sdist]
 
     steps:
       - name: Download distributions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true

@@ -186,7 +186,8 @@ Or to install directly from the most recent source:
 pip install git+https://github.com/NiklasMelton/AdaptiveResonanceLib.git@develop
 ```
 
-Ensure you have Python 3.9 or newer installed.
+Ensure you have Python 3.9–3.14 installed.
+Installing from a source checkout or source distribution also requires a C++17 compiler. Published wheels include the compiled extensions and do not require a compiler.
 <!-- END installation -->
 
 <!-- START quick-start -->
@@ -494,6 +495,28 @@ We welcome contributions to AdaptiveResonanceLib! If you have suggestions for im
 You can also join our [Discord server](https://discord.gg/E465HBwEuN) and participate directly in the discussion.
 <!-- END contributing -->
 
+## Contributors and Acknowledgments
+
+### Contributors
+
+Thank you to the people who have contributed code, examples, and documentation to
+AdaptiveResonanceLib:
+
+- **[Niklas Melton](https://github.com/NiklasMelton)** — project creator and maintainer.
+- **[Dustin Tanksley](https://github.com/DustinTanksley)** — contributed the initial CVI ART modules in [pull request #70](https://github.com/NiklasMelton/AdaptiveResonanceLib/pull/70).
+- **[Marcel Stimberg](https://github.com/mstimberg)** — improved the paper and bibliography.
+- **[Iwan Sandjaja](https://github.com/inyoot)** — improved the examples.
+
+See the [GitHub contributors page](https://github.com/NiklasMelton/AdaptiveResonanceLib/graphs/contributors)
+and [commit history](https://github.com/NiklasMelton/AdaptiveResonanceLib/commits/develop/) for their work.
+
+### Acknowledgments
+
+We thank **Stephen Grossberg** and **Gail Carpenter** for pioneering Adaptive
+Resonance Theory and for their feedback on this project, and **Donald C. Wunsch II**
+and **Leonardo Enzo Brito da Silva** for their research collaboration and support.
+This work was supported by the National Science Foundation under Award No. 2420248.
+
 <!-- START license -->
 ## License
 
@@ -512,5 +535,5 @@ Happy Modeling with AdaptiveResonanceLib!
 ## Citing this Repository
 If you use this project in your research, please cite it as:
 
-Melton, N. (2025). AdaptiveResonanceLib (Version 0.1.10)
+Melton, N. (2025). AdaptiveResonanceLib (Version 0.1.11)
 <!-- END citation -->

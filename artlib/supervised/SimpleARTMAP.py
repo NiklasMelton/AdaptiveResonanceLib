@@ -3,6 +3,7 @@
 # Adaptive Resonance Theory Microchips: Circuit Design Techniques.
 # Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
+from collections.abc import Mapping
 from typing import Optional, Literal, Dict, Union, Tuple
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
@@ -208,6 +209,37 @@ class SimpleARTMAP(BaseARTMAP):
             assert self.map[c_a] == c_b
         return c_a
 
+    def merge_A(self, target_idx: int, source_idx: int) -> int:
+        """Merge A clusters that map to the same B label."""
+        if target_idx not in self.map or source_idx not in self.map:
+            raise KeyError("Both A clusters must have a B mapping")
+        if self.map[target_idx] != self.map[source_idx]:
+            raise ValueError("A clusters must map to the same B label to merge")
+
+        merged_idx = self.module_a.merge(target_idx, source_idx)
+        self.map = {
+            idx - (idx > source_idx): label
+            for idx, label in self.map.items()
+            if idx != source_idx
+        }
+        return merged_idx
+
+    def merge_B(self, target_idx: int, source_idx: int) -> int:
+        """Combine two B class labels, keeping the target label."""
+        if target_idx == source_idx:
+            raise ValueError("Cannot merge a B label with itself")
+        if target_idx not in self.map.values() or source_idx not in self.map.values():
+            raise KeyError("Both B labels must be present in the map")
+
+        self.map = {
+            idx: target_idx if label == source_idx else label
+            for idx, label in self.map.items()
+        }
+        labels = np.asarray(getattr(self, "labels_"))
+        self.labels_ = np.where(labels == source_idx, target_idx, labels)
+        self.classes_ = unique_labels(self.labels_)
+        return target_idx
+
     def fit(
         self,
         X: np.ndarray,
@@ -255,7 +287,13 @@ class SimpleARTMAP(BaseARTMAP):
 
         for _ in range(max_iter):
             if verbose:
-                from tqdm import tqdm
+                try:
+                    from tqdm import tqdm
+                except ImportError as exc:
+                    raise ImportError(
+                        "The 'tqdm' package is required for progress bars. "
+                        "Install it with `pip install tqdm`."
+                    ) from exc
 
                 x_y_iter = tqdm(
                     enumerate(zip(X, y)),
@@ -428,7 +466,13 @@ class SimpleARTMAP(BaseARTMAP):
         with writer.saving(ax.figure, filename, dpi=80):
             for _ in range(max_iter):
                 if verbose:
-                    from tqdm import tqdm
+                    try:
+                        from tqdm import tqdm
+                    except ImportError as exc:
+                        raise ImportError(
+                            "The 'tqdm' package is required for progress bars. "
+                            "Install it with `pip install tqdm`."
+                        ) from exc
 
                     iterator = tqdm(
                         enumerate(zip(X, y)),
@@ -717,20 +761,32 @@ class SimpleARTMAP(BaseARTMAP):
             else:
                 fig, ax = plt.subplots()
 
+        labels_b = sorted(set(self.map.values()))
         if colors is None:
             from matplotlib.pyplot import cm
 
-            colors = cm.rainbow(np.linspace(0, 1, self.n_clusters_b))
+            colors = cm.rainbow(np.linspace(0, 1, len(labels_b)))
 
-        for k_b, col in enumerate(colors):
+        if isinstance(colors, Mapping):
+            label_colors = colors
+        elif all(
+            isinstance(label, (int, np.integer)) and 0 <= label < len(colors)
+            for label in labels_b
+        ):
+            # Preserve indexing by label for palettes that cover every label.
+            label_colors = {label: colors[label] for label in labels_b}
+        else:
+            label_colors = dict(zip(labels_b, colors))
+
+        for k_b in labels_b:
             cluster_data = y == k_b
             if self.module_a.data_format == "default":
                 ax.scatter(
                     X[cluster_data, 0],
                     X[cluster_data, 1],
-                    color=col,
+                    color=label_colors[k_b],
                     marker=".",
                     s=marker_size,
                 )
 
-        self.plot_cluster_bounds(ax=ax, colors=colors, linewidth=linewidth)
+        self.plot_cluster_bounds(ax=ax, colors=label_colors, linewidth=linewidth)

@@ -218,6 +218,18 @@ class BinaryFuzzyART(FuzzyART):
         """Get the updated cluster weight using optimized binary operations."""
         return i & w
 
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Merge two clusters and refresh the binary weight count cache."""
+        merged_idx = super().merge(target_idx, source_idx)
+        del self.w_count_cache[source_idx]
+        wc = np.count_nonzero(self.W[merged_idx])
+        self.w_count_cache[merged_idx] = wc if wc > 0 else 1
+        return merged_idx
+
+    def _rebuild_w_count_cache(self):
+        """Rebuild cached weight counts after replacing the complete weight set."""
+        self.w_count_cache = [max(np.count_nonzero(w), 1) for w in self.W]
+
     def add_weight(self, new_w: np.ndarray):
         """Add a new cluster weight.
 

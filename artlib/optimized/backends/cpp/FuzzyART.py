@@ -2,8 +2,8 @@
 import numpy as np
 from typing import Literal, Optional, Callable
 from artlib.optimized.backends.cpp.cppFuzzyART import (
-    FitFuzzyART,
-    PredictFuzzyART,
+    fit as native_fit,
+    predict as native_predict,
 )
 from artlib.elementary.FuzzyART import FuzzyART as pyFuzzyART
 from sklearn.utils.validation import check_is_fitted
@@ -104,7 +104,7 @@ class FuzzyART(pyFuzzyART):
         self.W = []
         self.labels_ = np.zeros((X_.shape[0],), dtype=int)
 
-        la, W = FitFuzzyART(
+        la, W = native_fit(
             X_,
             rho=self.params["rho"],
             alpha=self.params["alpha"],
@@ -142,13 +142,13 @@ class FuzzyART(pyFuzzyART):
         X_ = np.ascontiguousarray(X, dtype=np.float64)
         self.validate_data(X_)
 
-        if not hasattr(self, "labels_"):
-            self.labels_ = np.zeros((X_.shape[0],), dtype=int)
+        if not self.is_fitted_:
+            self.labels_ = np.array((), dtype=int)
             existing_W = None
         else:
             existing_W = np.ascontiguousarray(self.W, dtype=float)
 
-        la, W = FitFuzzyART(
+        la, W = native_fit(
             X_,
             rho=self.params["rho"],
             alpha=self.params["alpha"],
@@ -183,7 +183,7 @@ class FuzzyART(pyFuzzyART):
 
         W = np.ascontiguousarray(self.W, dtype=float)
 
-        y_a = PredictFuzzyART(
+        y_a = native_predict(
             X_,
             rho=self.params["rho"],
             alpha=self.params["alpha"],

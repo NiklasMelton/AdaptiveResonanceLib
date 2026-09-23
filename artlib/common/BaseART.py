@@ -363,6 +363,50 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Merge a source cluster into a target cluster in place.
+
+        Parameters
+        ----------
+        target_idx : int
+            Index of the cluster to keep.
+        source_idx : int
+            Index of the cluster to remove.
+
+        Returns
+        -------
+        int
+            Index of the target cluster after removing the source.
+
+        """
+        raise NotImplementedError
+
+    def _validate_merge_indices(self, target_idx: int, source_idx: int):
+        """Validate indices before calculating or applying a cluster merge."""
+        n_clusters = len(self.W)
+        for idx in (target_idx, source_idx):
+            if not isinstance(idx, (int, np.integer)) or isinstance(
+                idx, (bool, np.bool_)
+            ):
+                raise TypeError("Cluster indices must be integers")
+            if not 0 <= idx < n_clusters:
+                raise IndexError(f"Cluster index {idx} is out of range")
+        if target_idx == source_idx:
+            raise ValueError("Cannot merge a cluster with itself")
+
+    def _apply_merge(self, target_idx: int, source_idx: int, new_w: np.ndarray) -> int:
+        """Replace two categories with one and update their shared bookkeeping."""
+        self.W[target_idx] = new_w
+        self.weight_sample_counter_[target_idx] += self.weight_sample_counter_[
+            source_idx
+        ]
+        del self.W[source_idx]
+        del self.weight_sample_counter_[source_idx]
+
+        self.labels_[self.labels_ == source_idx] = target_idx
+        self.labels_[self.labels_ > source_idx] -= 1
+        return target_idx - (source_idx < target_idx)
+
     def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
         """Generate a new cluster weight.
 
@@ -406,6 +450,10 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
+
+    def _post_weight_update(self, i: np.ndarray, old_w: np.ndarray, idx: int):
+        """Allow a module to update auxiliary state after a sample is learned."""
+        pass
 
     def _match_tracking(
         self,
@@ -553,6 +601,7 @@ class BaseART(BaseEstimator, ClusterMixin):
 
                 if m and no_match_reset:
                     self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                    self._post_weight_update(x, w, c_)
                     self._set_params(base_params)
                     return c_
                 else:
@@ -668,7 +717,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.labels_ = np.zeros((X.shape[0],), dtype=int)
         for _ in range(max_iter):
             if verbose:
-                from tqdm import tqdm
+                try:
+                    from tqdm import tqdm
+                except ImportError as exc:
+                    raise ImportError(
+                        "The 'tqdm' package is required for progress bars. "
+                        "Install it with `pip install tqdm`."
+                    ) from exc
 
                 x_iter = tqdm(
                     enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar
@@ -810,7 +865,13 @@ class BaseART(BaseEstimator, ClusterMixin):
         with writer.saving(fig, filename, dpi=80):
             for _ in range(max_iter):
                 if verbose:
-                    from tqdm import tqdm
+                    try:
+                        from tqdm import tqdm
+                    except ImportError as exc:
+                        raise ImportError(
+                            "The 'tqdm' package is required for progress bars. "
+                            "Install it with `pip install tqdm`."
+                        ) from exc
 
                     x_iter = tqdm(
                         enumerate(X), total=int(X.shape[0]), leave=leave_progress_bar

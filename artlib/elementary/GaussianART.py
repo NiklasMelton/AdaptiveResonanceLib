@@ -44,6 +44,7 @@ class GaussianART(BaseART):
         """
         params = {"rho": rho, "sigma_init": sigma_init, "alpha": alpha}
         super().__init__(params)
+        self._sample_scatter_: List[np.ndarray] = []
 
     @staticmethod
     def validate_params(params: dict):
@@ -179,6 +180,47 @@ class GaussianART(BaseART):
         det_sig = np.sqrt(np.prod(sigma2))
 
         return np.concatenate([mean_new, sigma_new, inv_sig, [det_sig], [n_new]])
+
+    def add_weight(self, new_w: np.ndarray):
+        """Start an exact data-scatter accumulator for a new category."""
+        if not self.W:
+            self._sample_scatter_ = []
+        self._sample_scatter_.append(np.zeros(self.dim_, dtype=float))
+        super().add_weight(new_w)
+
+    def _post_weight_update(self, i: np.ndarray, old_w: np.ndarray, idx: int):
+        mean_old = old_w[: self.dim_]
+        mean_new = self.W[idx][: self.dim_]
+        self._sample_scatter_[idx] += (i - mean_old) * (i - mean_new)
+
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Pool sample moments, retaining one initial variance contribution."""
+        self._validate_merge_indices(target_idx, source_idx)
+        if not hasattr(self, "_sample_scatter_") or len(self._sample_scatter_) != len(
+            self.W
+        ):
+            raise ValueError("Exact sample scatter is unavailable; refit the model")
+        target = self.W[target_idx]
+        source = self.W[source_idx]
+        n1, n2 = target[-1], source[-1]
+        n = n1 + n2
+        mean1, mean2 = target[: self.dim_], source[: self.dim_]
+        delta = mean2 - mean1
+        mean = mean1 + (n2 / n) * delta
+        merged_scatter = (
+            self._sample_scatter_[target_idx]
+            + self._sample_scatter_[source_idx]
+            + (n1 * n2 / n) * np.square(delta)
+        )
+        variance = (merged_scatter + np.square(self.params["sigma_init"])) / n
+        sigma = np.sqrt(variance)
+        new_w = np.concatenate(
+            [mean, sigma, 1 / variance, [np.sqrt(np.prod(variance))], [n]]
+        )
+        merged_idx = self._apply_merge(target_idx, source_idx, new_w)
+        self._sample_scatter_[target_idx] = merged_scatter
+        del self._sample_scatter_[source_idx]
+        return merged_idx
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.

@@ -82,6 +82,7 @@ class BinaryFuzzyARTMAP(SimpleARTMAP):
 
         # update module_a weights
         self.module_a.W = [w for w in weights_arrays]
+        self.module_a._rebuild_w_count_cache()
 
         # update the cluster-label map
         for c_a, c_b in enumerate(cluster_labels_out):

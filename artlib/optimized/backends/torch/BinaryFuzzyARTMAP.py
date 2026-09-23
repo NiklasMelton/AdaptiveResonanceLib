@@ -383,6 +383,21 @@ class BinaryFuzzyARTMAP(_TorchSimpleARTMAP):
         self._backend: Optional[_TorchBinaryFuzzyARTMAP] = None
         self._declared_input_dim = input_dim  # raw D before complement
 
+    def _synchronize_torch_results(
+        self,
+        labels_a_out: np.ndarray,
+        weights_arrays: list[np.ndarray],
+        cluster_labels_out: np.ndarray,
+        incremental: bool = False,
+    ):
+        super()._synchronize_torch_results(
+            labels_a_out,
+            weights_arrays,
+            cluster_labels_out,
+            incremental=incremental,
+        )
+        self.module_a._rebuild_w_count_cache()
+
     def _ensure_backend(self, X: np.ndarray):
         """Initialize backend using prepared X to infer raw dimension when needed."""
         if self._backend is not None:

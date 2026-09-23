@@ -208,6 +208,37 @@ class SimpleARTMAP(BaseARTMAP):
             assert self.map[c_a] == c_b
         return c_a
 
+    def merge_A(self, target_idx: int, source_idx: int) -> int:
+        """Merge A clusters that map to the same B label."""
+        if target_idx not in self.map or source_idx not in self.map:
+            raise KeyError("Both A clusters must have a B mapping")
+        if self.map[target_idx] != self.map[source_idx]:
+            raise ValueError("A clusters must map to the same B label to merge")
+
+        merged_idx = self.module_a.merge(target_idx, source_idx)
+        self.map = {
+            idx - (idx > source_idx): label
+            for idx, label in self.map.items()
+            if idx != source_idx
+        }
+        return merged_idx
+
+    def merge_B(self, target_idx: int, source_idx: int) -> int:
+        """Combine two B class labels, keeping the target label."""
+        if target_idx == source_idx:
+            raise ValueError("Cannot merge a B label with itself")
+        if target_idx not in self.map.values() or source_idx not in self.map.values():
+            raise KeyError("Both B labels must be present in the map")
+
+        self.map = {
+            idx: target_idx if label == source_idx else label
+            for idx, label in self.map.items()
+        }
+        labels = np.asarray(getattr(self, "labels_"))
+        self.labels_ = np.where(labels == source_idx, target_idx, labels)
+        self.classes_ = unique_labels(self.labels_)
+        return target_idx
+
     def fit(
         self,
         X: np.ndarray,

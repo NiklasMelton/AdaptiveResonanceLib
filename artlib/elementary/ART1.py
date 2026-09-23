@@ -315,6 +315,19 @@ class ART1(BaseART):
         # return np.concatenate([w_bu_new, w_td_new])
         return update_numba(i, w, params["L"], self.dim_)
 
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Intersect two binary templates and rebuild their bottom-up weights."""
+        self._validate_merge_indices(target_idx, source_idx)
+        top_down = np.logical_and(
+            self.W[target_idx][self.dim_ :], self.W[source_idx][self.dim_ :]
+        )
+        count = np.count_nonzero(top_down)
+        bottom_up = np.zeros(self.dim_, dtype=float)
+        if count:
+            bottom_up = self.params["L"] / (self.params["L"] - 1 + count) * top_down
+        new_w = np.concatenate([bottom_up, top_down])
+        return self._apply_merge(target_idx, source_idx, new_w)
+
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.
 

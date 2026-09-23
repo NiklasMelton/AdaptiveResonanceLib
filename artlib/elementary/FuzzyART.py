@@ -335,27 +335,9 @@ class FuzzyART(BaseART):
 
     def merge(self, target_idx: int, source_idx: int) -> int:
         """Merge the source into the target and return the target's new index."""
-        n_clusters = len(self.W)
-        for idx in (target_idx, source_idx):
-            if not isinstance(idx, (int, np.integer)) or isinstance(
-                idx, (bool, np.bool_)
-            ):
-                raise TypeError("Cluster indices must be integers")
-            if not 0 <= idx < n_clusters:
-                raise IndexError(f"Cluster index {idx} is out of range")
-        if target_idx == source_idx:
-            raise ValueError("Cannot merge a cluster with itself")
-
-        self.W[target_idx] = self._merge_weights(self.W[target_idx], self.W[source_idx])
-        self.weight_sample_counter_[target_idx] += self.weight_sample_counter_[
-            source_idx
-        ]
-        del self.W[source_idx]
-        del self.weight_sample_counter_[source_idx]
-
-        self.labels_[self.labels_ == source_idx] = target_idx
-        self.labels_[self.labels_ > source_idx] -= 1
-        return target_idx - (source_idx < target_idx)
+        self._validate_merge_indices(target_idx, source_idx)
+        new_w = self._merge_weights(self.W[target_idx], self.W[source_idx])
+        return self._apply_merge(target_idx, source_idx, new_w)
 
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.

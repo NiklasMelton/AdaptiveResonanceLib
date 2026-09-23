@@ -76,6 +76,14 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         u, inv = np.unique(y_a, return_inverse=True)
         return np.array([self.map[x] for x in u], dtype=int)[inv].reshape(y_a.shape)
 
+    def merge_A(self, target_idx: int, source_idx: int) -> int:
+        """Merge two A-side clusters and return the target's new index."""
+        raise NotImplementedError
+
+    def merge_B(self, target_idx: int, source_idx: int) -> int:
+        """Merge two B-side clusters and return the target identifier."""
+        raise NotImplementedError
+
     def validate_data(self, X: np.ndarray, y: np.ndarray):
         """Validate the data prior to clustering.
 

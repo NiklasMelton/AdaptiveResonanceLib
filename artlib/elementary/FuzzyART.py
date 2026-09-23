@@ -328,6 +328,35 @@ class FuzzyART(BaseART):
         """
         return _update_numba(i, w, params.get("beta", None))
 
+    @staticmethod
+    def _merge_weights(w1: np.ndarray, w2: np.ndarray) -> np.ndarray:
+        """Return the fuzzy AND of two cluster weights."""
+        return fuzzy_and(w1, w2)
+
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Merge the source into the target and return the target's new index."""
+        n_clusters = len(self.W)
+        for idx in (target_idx, source_idx):
+            if not isinstance(idx, (int, np.integer)) or isinstance(
+                idx, (bool, np.bool_)
+            ):
+                raise TypeError("Cluster indices must be integers")
+            if not 0 <= idx < n_clusters:
+                raise IndexError(f"Cluster index {idx} is out of range")
+        if target_idx == source_idx:
+            raise ValueError("Cannot merge a cluster with itself")
+
+        self.W[target_idx] = self._merge_weights(self.W[target_idx], self.W[source_idx])
+        self.weight_sample_counter_[target_idx] += self.weight_sample_counter_[
+            source_idx
+        ]
+        del self.W[source_idx]
+        del self.weight_sample_counter_[source_idx]
+
+        self.labels_[self.labels_ == source_idx] = target_idx
+        self.labels_[self.labels_ > source_idx] -= 1
+        return target_idx - (source_idx < target_idx)
+
     def new_weight(self, i: np.ndarray, params: dict) -> np.ndarray:
         """Generate a new cluster weight.
 

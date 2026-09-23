@@ -363,6 +363,24 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         raise NotImplementedError
 
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Merge a source cluster into a target cluster in place.
+
+        Parameters
+        ----------
+        target_idx : int
+            Index of the cluster to keep.
+        source_idx : int
+            Index of the cluster to remove.
+
+        Returns
+        -------
+        int
+            Index of the target cluster after removing the source.
+
+        """
+        raise NotImplementedError
+
     def new_weight(self, i: np.ndarray, params: Dict) -> np.ndarray:
         """Generate a new cluster weight.
 

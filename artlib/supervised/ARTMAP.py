@@ -274,6 +274,21 @@ class ARTMAP(SimpleARTMAP):
         self.classes_ = np.unique(self.labels_)
         return merged_idx
 
+    def _validate_move_A_prototype(
+        self,
+        source_cluster_idx: int,
+        source_prototype_idx: int,
+        target_cluster_idx: int,
+    ):
+        """Require an existing B target and a nonempty source class."""
+        super()._validate_move_A_prototype(
+            source_cluster_idx, source_prototype_idx, target_cluster_idx
+        )
+        if target_cluster_idx >= self.module_b.n_clusters:
+            raise IndexError("Target B cluster index is out of range")
+        if sum(label == source_cluster_idx for label in self.map.values()) < 2:
+            raise ValueError("At least one A prototype must remain in the source")
+
     def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:
         """Predict the labels for the given data.
 

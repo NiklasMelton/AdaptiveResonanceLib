@@ -240,6 +240,75 @@ class SimpleARTMAP(BaseARTMAP):
         self.classes_ = unique_labels(self.labels_)
         return target_idx
 
+    def _validate_move_A_prototype(
+        self,
+        source_cluster_idx: int,
+        source_prototype_idx: int,
+        target_cluster_idx: int,
+    ):
+        """Validate a prototype reassignment before changing the fitted state."""
+        for idx in (source_cluster_idx, source_prototype_idx, target_cluster_idx):
+            if not isinstance(idx, (int, np.integer)) or isinstance(
+                idx, (bool, np.bool_)
+            ):
+                raise TypeError("Cluster and prototype indices must be integers")
+            if idx < 0:
+                raise IndexError("Cluster and prototype indices must be nonnegative")
+
+        if source_prototype_idx >= self.module_a.n_clusters:
+            raise IndexError("Source prototype index is out of range")
+        if source_prototype_idx not in self.map:
+            raise KeyError("Source prototype has no B mapping")
+        if self.map[source_prototype_idx] != source_cluster_idx:
+            raise ValueError("Source prototype is not in the source cluster")
+        if source_cluster_idx == target_cluster_idx:
+            raise ValueError("Source and target clusters must differ")
+
+    def move_A_prototype(
+        self,
+        source_cluster_idx: int,
+        source_prototype_idx: int,
+        target_cluster_idx: int,
+    ) -> int:
+        """Assign one A prototype to an existing or new B class.
+
+        The prototype index refers to ``module_a.W``, not to a position within
+        the source class. SimpleARTMAP class labels may be sparse, so any
+        nonnegative integer is accepted as a target class label.
+
+        Parameters
+        ----------
+        source_cluster_idx : int
+            Current B class label of the prototype.
+        source_prototype_idx : int
+            Index of the A prototype in ``module_a.W``.
+        target_cluster_idx : int
+            B class label to assign to the prototype.
+
+        Returns
+        -------
+        int
+            The target class label.
+
+        """
+        self._validate_move_A_prototype(
+            source_cluster_idx, source_prototype_idx, target_cluster_idx
+        )
+
+        new_map = dict(self.map)
+        new_map[source_prototype_idx] = int(target_cluster_idx)
+        # Build the new arrays before assigning anything, so a bad stored A
+        # label cannot leave the model partially modified.
+        new_labels = np.array(
+            [new_map[int(idx)] for idx in self.module_a.labels_], dtype=int
+        )
+        new_classes = np.unique(np.fromiter(new_map.values(), dtype=int))
+
+        self.map = new_map
+        self.labels_ = new_labels
+        self.classes_ = new_classes
+        return int(target_cluster_idx)
+
     def fit(
         self,
         X: np.ndarray,

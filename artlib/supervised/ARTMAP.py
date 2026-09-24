@@ -257,7 +257,7 @@ class ARTMAP(SimpleARTMAP):
         self.module_b.partial_fit(y, match_tracking=match_tracking, epsilon=epsilon)
         super(ARTMAP, self).partial_fit(
             X,
-            self.labels_b,
+            self.labels_b[-len(X) :],
             match_tracking=match_tracking,
             epsilon=epsilon,
         )

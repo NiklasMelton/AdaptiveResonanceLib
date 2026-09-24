@@ -5,6 +5,7 @@ from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.supervised.ARTMAP import ARTMAP
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import complement_code
 
 
 # Fixture to initialize a DeepARTMAP instance for testing
@@ -127,6 +128,123 @@ def test_labels_deep(deep_artmap_model):
 
     labels_deep = deep_artmap_model.labels_deep_
     assert labels_deep.shape == (10, 3)
+
+
+def prepared_edit_data():
+    return complement_code(np.array([[0.0], [0.2], [0.8], [1.0]]))
+
+
+def fitted_edit_hierarchy(rhos=(0.2, 0.6, 1.0), y=None):
+    X = prepared_edit_data()
+    modules = [FuzzyART(rho=rho, alpha=0.01, beta=1.0) for rho in rhos]
+    model = DeepARTMAP(modules).fit([X] * len(modules), y)
+    return model, X
+
+
+def test_unsupervised_merge_reindexes_child_maps_at_intermediate_level():
+    model, X = fitted_edit_hierarchy(rhos=(0.0, 0.6, 1.0))
+    assert [module.n_clusters for module in model.modules] == [1, 2, 4]
+
+    assert model.merge(1, 0, 1) == 0
+
+    assert [module.n_clusters for module in model.modules] == [1, 1, 4]
+    assert model.layers[0].map == {0: 0}
+    assert set(model.layers[1].map.values()) == {0}
+    np.testing.assert_array_equal(model.labels_deep_[:, 1], [0, 0, 0, 0])
+    np.testing.assert_array_equal(model.predict(X)[1], [0, 0, 0, 0])
+
+    model.partial_fit([X[:1]] * 3)
+    assert model.labels_deep_.shape == (5, 3)
+    assert all(len(layer.labels_) == 5 for layer in model.layers)
+
+
+def test_unsupervised_move_propagates_upward_then_root_merge():
+    model, X = fitted_edit_hierarchy()
+    assert [module.n_clusters for module in model.modules] == [2, 2, 4]
+
+    assert model.move_prototype(2, 0, 1, 1) == 1
+    np.testing.assert_array_equal(model.labels_deep_[1], [1, 1, 1])
+    np.testing.assert_array_equal(model.modules[1].labels_, [0, 0, 1, 1])
+    np.testing.assert_array_equal(model.predict(X)[0], model.labels_)
+
+    assert model.merge(0, 1, 0) == 0
+    assert model.modules[0].n_clusters == 1
+    np.testing.assert_array_equal(model.labels_deep_[:, 0], [0, 0, 0, 0])
+    assert set(model.layers[0].map.values()) == {0}
+
+
+def test_supervised_merge_and_move_existing_external_classes():
+    y = np.array([10, 10, 20, 20])
+    model, X = fitted_edit_hierarchy(rhos=(1.0, 1.0, 1.0), y=y)
+    assert model.merge(0, 0, 1) == 0
+    assert model.modules[0].n_clusters == 3
+    assert model.layers[1].map == {0: 0, 1: 0, 2: 1, 3: 2}
+    np.testing.assert_array_equal(model.labels_deep_[:, 0], y)
+    np.testing.assert_array_equal(model.labels_deep_[:, 1], [0, 0, 1, 2])
+
+    model, X = fitted_edit_hierarchy(rhos=(1.0, 1.0, 1.0), y=y)
+    assert model.move_prototype(0, 10, 0, 20) == 20
+    assert model.move_prototype(0, 10, 1, 20) == 20
+    assert model.modules[0].n_clusters == 4
+    np.testing.assert_array_equal(model.labels_, [20, 20, 20, 20])
+    np.testing.assert_array_equal(model.layers[0].classes_, [20])
+    np.testing.assert_array_equal(model.predict(X)[0], model.labels_)
+
+    model.partial_fit([X[:1]] * 3, np.array([20]))
+    assert model.labels_deep_.shape == (5, 4)
+    np.testing.assert_array_equal(model.labels_deep_[:4, 0], [20, 20, 20, 20])
+
+
+def test_hierarchy_rejects_cross_parent_merge_and_empty_parent_move():
+    model, _ = fitted_edit_hierarchy()
+    old_maps = [layer.map.copy() for layer in model.layers]
+    old_labels = model.labels_deep_.copy()
+
+    with pytest.raises(ValueError, match="same parent"):
+        model.merge(1, 0, 1)
+    with pytest.raises(ValueError, match="At least one"):
+        model.move_prototype(1, 0, 0, 1)
+    with pytest.raises(ValueError, match="no parent"):
+        model.move_prototype(0, 0, 0, 1)
+    with pytest.raises(IndexError, match="Module level"):
+        model.merge(3, 0, 1)
+
+    assert [layer.map for layer in model.layers] == old_maps
+    np.testing.assert_array_equal(model.labels_deep_, old_labels)
+
+
+def test_hierarchy_rejects_module_without_merge_support():
+    class NoMergeFuzzyART(FuzzyART):
+        merge = BaseART.merge
+
+    X = prepared_edit_data()
+    model = DeepARTMAP(
+        [
+            FuzzyART(rho=0.0, alpha=0.01, beta=1.0),
+            NoMergeFuzzyART(rho=1.0, alpha=0.01, beta=1.0),
+        ]
+    ).fit([X, X])
+    old_map = model.layers[0].map.copy()
+    old_labels = model.labels_deep_.copy()
+
+    with pytest.raises(NotImplementedError, match="does not support"):
+        model.merge(1, 0, 1)
+
+    assert model.modules[1].n_clusters == 4
+    assert model.layers[0].map == old_map
+    np.testing.assert_array_equal(model.labels_deep_, old_labels)
+
+
+def test_partial_fit_preserves_supervised_string_labels():
+    X = prepared_edit_data()
+    y = np.array(["left", "left", "right", "right"])
+    modules = [FuzzyART(rho=1.0, alpha=0.01, beta=1.0) for _ in range(2)]
+    model = DeepARTMAP(modules).fit([X, X], y)
+
+    model.partial_fit([X[:1], X[:1]], y[:1])
+
+    np.testing.assert_array_equal(model.labels_, [*y, "left"])
+    assert model.labels_deep_.shape == (5, 3)
 
 
 def test_map_deep(deep_artmap_model):

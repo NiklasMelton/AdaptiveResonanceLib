@@ -193,6 +193,120 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         else:
             return y_b
 
+    def _validate_edit_level(self, level: int):
+        """Check that a module level can be edited on a fitted hierarchy."""
+        if not self.layers or self.is_supervised is None:
+            raise ValueError("The hierarchy must be fitted before editing clusters")
+        if not isinstance(level, (int, np.integer)) or isinstance(
+            level, (bool, np.bool_)
+        ):
+            raise TypeError("Module level must be an integer")
+        if not 0 <= level < self.n_modules:
+            raise IndexError("Module level is out of range")
+
+    def _refresh_layer_labels(self):
+        """Rebuild historical labels from the deepest module through each map."""
+        labels = np.asarray(cast(SimpleARTMAP, self.layers[-1]).labels_a)
+        refreshed = []
+        for layer in reversed(self.layers):
+            labels = np.asarray([layer.map[int(category)] for category in labels])
+            classes = np.unique(np.asarray(list(layer.map.values())))
+            refreshed.append((layer, labels, classes))
+        for layer, labels, classes in refreshed:
+            layer.labels_ = labels
+            layer.classes_ = classes
+
+    def merge(self, level: int, target_idx: int, source_idx: int) -> int:
+        """Merge categories in a module while preserving the hierarchy.
+
+        ``level`` is a zero-based index into ``modules``. Categories above the
+        root may merge only when they map to the same parent category. Return
+        the target category's index after removing the source category.
+
+        """
+        self._validate_edit_level(level)
+        module = self.modules[level]
+        module._validate_merge_indices(target_idx, source_idx)
+        if target_idx >= module.n_clusters or source_idx >= module.n_clusters:
+            raise IndexError("Module category index is out of range")
+        if type(module).merge is BaseART.merge:
+            raise NotImplementedError(
+                f"{type(module).__name__} does not support cluster merging"
+            )
+
+        if self.is_supervised or level > 0:
+            layer_idx = level if self.is_supervised else level - 1
+            layer = self.layers[layer_idx]
+            if target_idx not in layer.map or source_idx not in layer.map:
+                raise KeyError("Both categories must have a parent mapping")
+            if layer.map[target_idx] != layer.map[source_idx]:
+                raise ValueError("Categories must have the same parent to merge")
+            merged_idx = layer.merge_A(target_idx, source_idx)
+        else:
+            layer = self.layers[0]
+            if (
+                target_idx not in layer.map.values()
+                or source_idx not in layer.map.values()
+            ):
+                raise KeyError("Both root categories must have a child mapping")
+            merged_idx = layer.merge_B(target_idx, source_idx)
+
+        # The next layer maps its prototypes to this module's categories.
+        next_layer_idx = level + int(bool(self.is_supervised))
+        if next_layer_idx < self.n_layers and (self.is_supervised or level > 0):
+            next_layer = self.layers[next_layer_idx]
+            next_layer.map = {
+                proto: (
+                    merged_idx
+                    if parent == source_idx
+                    else int(parent - (parent > source_idx))
+                )
+                for proto, parent in next_layer.map.items()
+            }
+
+        self._refresh_layer_labels()
+        return merged_idx
+
+    def move_prototype(
+        self,
+        level: int,
+        source_cluster_idx: int,
+        source_prototype_idx: int,
+        target_cluster_idx: int,
+    ) -> int:
+        """Move a module prototype to an existing parent category.
+
+        ``level`` indexes ``modules`` and ``source_prototype_idx`` is a category
+        ID in that module. The source and target indices identify its parent
+        categories. Return the target parent label.
+
+        Supervised level zero uses external integer class labels as parents.
+        Unsupervised level zero has no parent and cannot be moved.
+
+        """
+        self._validate_edit_level(level)
+        if not self.is_supervised and level == 0:
+            raise ValueError("The unsupervised root module has no parent category")
+
+        layer_idx = level if self.is_supervised else level - 1
+        layer = cast(SimpleARTMAP, self.layers[layer_idx])
+        layer._validate_move_A_prototype(
+            source_cluster_idx, source_prototype_idx, target_cluster_idx
+        )
+        if target_cluster_idx not in layer.map.values():
+            raise IndexError("Target parent category does not exist")
+        if level > 0:
+            if target_cluster_idx >= self.modules[level - 1].n_clusters:
+                raise IndexError("Target parent category is out of range")
+            if sum(parent == source_cluster_idx for parent in layer.map.values()) < 2:
+                raise ValueError("At least one prototype must remain in the source")
+
+        result = layer.move_A_prototype(
+            source_cluster_idx, source_prototype_idx, target_cluster_idx
+        )
+        self._refresh_layer_labels()
+        return result
+
     def validate_data(self, X: list[np.ndarray], y: Optional[np.ndarray] = None):
         """Validate the data before clustering.
 
@@ -408,6 +522,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
                 epsilon=epsilon,
             )
             x_i += 1
+        self._refresh_layer_labels()
         return self
 
     def predict(
@@ -435,6 +550,6 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         pred_a, pred_b = self.layers[-1].predict_ab(x, clip=clip)
         pred = [pred_a, pred_b]
         for layer in self.layers[:-1][::-1]:
-            pred.append(layer.map_a2b(pred[-1]))
+            pred.append(cast(np.ndarray, layer.map_a2b(pred[-1])))
 
         return pred[::-1]

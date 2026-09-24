@@ -95,6 +95,18 @@ def test_partial_fit(artmap_model):
     assert artmap_model.module_b.labels_.shape[0] == y.shape[0]
 
 
+def test_partial_fit_uses_only_current_b_labels_for_later_batches(artmap_model):
+    X = np.array([[0.0], [0.2], [0.8], [1.0]])
+    y = np.array([[0.0], [0.2], [0.8], [1.0]])
+    X_prep, y_prep = artmap_model.prepare_data(X, y)
+
+    artmap_model.partial_fit(X_prep[:2], y_prep[:2])
+    artmap_model.partial_fit(X_prep[2:], y_prep[2:])
+
+    assert len(artmap_model.labels_a) == len(artmap_model.labels_b) == 4
+    assert all(label in artmap_model.map for label in artmap_model.labels_a)
+
+
 def test_predict(artmap_model):
     # Test the predict method
     np.random.seed(42)

@@ -63,6 +63,132 @@ class DualVigilanceART(BaseART):
         super().__init__(params)
         self.rho_lower_bound = rho_lower_bound
         self.map: dict[int, int] = dict()
+        self._prototype_labels_: list[int] = []
+
+    @property
+    def prototype_labels_(self) -> np.ndarray:
+        """Base prototype selected for each sample in ``labels_``."""
+        return np.asarray(self._prototype_labels_, dtype=int)
+
+    def _reset_fit_state(self):
+        """Discard the category mapping and sample history for a fresh fit."""
+        self.map = {}
+        self._prototype_labels_ = []
+        self.base_module.weight_sample_counter_ = []
+        self.sample_counter_ = 0
+
+    def fit(
+        self,
+        X: np.ndarray,
+        y: Optional[np.ndarray] = None,
+        match_reset_func: Optional[Callable] = None,
+        max_iter: int = 1,
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"] = "MT+",
+        epsilon: float = 0.0,
+        verbose: bool = False,
+        leave_progress_bar: bool = True,
+    ):
+        """Fit and retain the final pass's base prototype assignments."""
+        self._reset_fit_state()
+        super().fit(
+            X,
+            y=y,
+            match_reset_func=match_reset_func,
+            max_iter=max_iter,
+            match_tracking=match_tracking,
+            epsilon=epsilon,
+            verbose=verbose,
+            leave_progress_bar=leave_progress_bar,
+        )
+        if len(self.labels_):
+            self._prototype_labels_ = self._prototype_labels_[-len(self.labels_) :]
+        else:
+            self._prototype_labels_ = []
+        return self
+
+    def fit_gif(self, X: np.ndarray, *args, **kwargs):
+        """Fit with animation while retaining final prototype assignments."""
+        self._reset_fit_state()
+        super().fit_gif(X, *args, **kwargs)
+        if len(self.labels_):
+            self._prototype_labels_ = self._prototype_labels_[-len(self.labels_) :]
+        else:
+            self._prototype_labels_ = []
+        return self
+
+    def _validate_abstract_cluster(self, idx: int):
+        if not isinstance(idx, (int, np.integer)) or isinstance(idx, (bool, np.bool_)):
+            raise TypeError("Cluster indices must be integers")
+        if idx not in self.map.values():
+            raise IndexError(f"Abstract cluster index {idx} is out of range")
+
+    def merge(self, target_idx: int, source_idx: int) -> int:
+        """Merge two abstract clusters without changing base prototypes.
+
+        Both indices refer to abstract cluster labels in ``map``. Return the
+        target's index after removing and renumbering the source cluster.
+
+        """
+        self._validate_abstract_cluster(target_idx)
+        self._validate_abstract_cluster(source_idx)
+        if target_idx == source_idx:
+            raise ValueError("Cannot merge a cluster with itself")
+
+        def remap(label: int) -> int:
+            label = target_idx if label == source_idx else label
+            return int(label - (label > source_idx))
+
+        new_map = {proto: remap(label) for proto, label in self.map.items()}
+        new_labels = np.array([remap(label) for label in self.labels_], dtype=int)
+        self.map = new_map
+        self.labels_ = new_labels
+        return remap(target_idx)
+
+    def move_prototype(
+        self,
+        source_cluster_idx: int,
+        source_prototype_idx: int,
+        target_cluster_idx: int,
+    ) -> int:
+        """Assign a base prototype to another existing abstract cluster.
+
+        ``source_prototype_idx`` indexes ``base_module.W``. The source and
+        target cluster indices are abstract labels in ``map``. Return the
+        target's index after any renumbering.
+
+        Stored sample labels are recomputed from their recorded base prototype
+        assignments. If the source becomes empty, later cluster IDs shift down.
+
+        """
+        self._validate_abstract_cluster(source_cluster_idx)
+        self._validate_abstract_cluster(target_cluster_idx)
+        if not isinstance(source_prototype_idx, (int, np.integer)) or isinstance(
+            source_prototype_idx, (bool, np.bool_)
+        ):
+            raise TypeError("Prototype index must be an integer")
+        if not 0 <= source_prototype_idx < self.base_module.n_clusters:
+            raise IndexError("Source prototype index is out of range")
+        if self.map.get(source_prototype_idx) != source_cluster_idx:
+            raise ValueError("Source prototype is not in the source cluster")
+        if source_cluster_idx == target_cluster_idx:
+            raise ValueError("Source and target clusters must differ")
+        history = self.__dict__.get("_prototype_labels_")
+        if history is None or len(history) != len(self.labels_):
+            raise RuntimeError(
+                "Base prototype assignments are unavailable for stored samples"
+            )
+
+        new_map = dict(self.map)
+        new_map[source_prototype_idx] = int(target_cluster_idx)
+        if source_cluster_idx not in new_map.values():
+            new_map = {
+                proto: int(label - (label > source_cluster_idx))
+                for proto, label in new_map.items()
+            }
+        new_labels = np.array([new_map[proto] for proto in history], dtype=int)
+        self.map = new_map
+        self.labels_ = new_labels
+        return new_map[source_prototype_idx]
 
     def prepare_data(self, X: np.ndarray) -> np.ndarray:
         """Prepare data for clustering.
@@ -307,6 +433,7 @@ class DualVigilanceART(BaseART):
             new_w = self.base_module.new_weight(x, self.base_module.params)
             self.base_module.add_weight(new_w)
             self.map[0] = 0
+            self._prototype_labels_.append(0)
             return 0
         else:
             T_values, T_cache = zip(
@@ -355,6 +482,7 @@ class DualVigilanceART(BaseART):
                         )
                         self.base_module.set_weight(c_, new_w)
                         self._set_params(base_params)
+                        self._prototype_labels_.append(int(c_))
                         return self.map[c_]
                     else:
                         lb_params = dict(
@@ -371,6 +499,7 @@ class DualVigilanceART(BaseART):
                             self.base_module.add_weight(w_new)
                             self.map[c_new] = self.map[c_]
                             self._set_params(base_params)
+                            self._prototype_labels_.append(c_new)
                             return self.map[c_new]
                 else:
                     keep_searching = self._match_tracking(
@@ -384,6 +513,7 @@ class DualVigilanceART(BaseART):
             self.base_module.add_weight(w_new)
             self.map[c_new] = max(self.map.values()) + 1
             self._set_params(base_params)
+            self._prototype_labels_.append(c_new)
             return self.map[c_new]
 
     def step_pred(self, x) -> int:

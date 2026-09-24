@@ -3,6 +3,7 @@ import numpy as np
 from artlib.hierarchical.SMART import SMART
 from artlib.elementary.FuzzyART import FuzzyART
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import complement_code
 from matplotlib.axes import Axes
 
 
@@ -53,3 +54,19 @@ def test_partial_fit(smart_model):
     smart_model.partial_fit(X_prep)
 
     assert smart_model.modules[0].labels_.shape[0] == X.shape[0]
+
+
+def test_smart_inherits_layer_aware_merge_and_move():
+    X = complement_code(np.array([[0.0], [0.2], [0.8], [1.0]]))
+    model = SMART(FuzzyART, [0.2, 0.6, 1.0], {"alpha": 0.01, "beta": 1.0}).fit(X)
+
+    assert model.move_prototype(2, 0, 1, 1) == 1
+    np.testing.assert_array_equal(model.labels_deep_[1], [1, 1, 1])
+
+    assert model.merge(0, 0, 1) == 0
+    assert model.modules[0].n_clusters == 1
+    np.testing.assert_array_equal(model.labels_, [0, 0, 0, 0])
+    assert model.predict(X)[0].shape == (4,)
+
+    model.partial_fit(X[:1])
+    assert model.labels_deep_.shape == (5, 3)

@@ -84,6 +84,15 @@ class BaseARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         """Merge two B-side clusters and return the target identifier."""
         raise NotImplementedError
 
+    def move_A_prototype(
+        self,
+        source_cluster_idx: int,
+        source_prototype_idx: int,
+        target_cluster_idx: int,
+    ) -> int:
+        """Move an A-side prototype to a B-side class and return that class."""
+        raise NotImplementedError
+
     def validate_data(self, X: np.ndarray, y: np.ndarray):
         """Validate the data prior to clustering.
 

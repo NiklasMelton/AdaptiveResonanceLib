@@ -51,3 +51,15 @@ def test_consistency():
     y_B = B.labels_
 
     assert np.array_equal(y_A, y_B)
+
+def test_binary_fuzzy_art_prepare_data_and_clone():
+    from sklearn.base import clone
+
+    model = BinaryFuzzyART(rho=0.5)
+    X = model.prepare_data(np.array([[0, 1], [1, 0], [1, 1]]))
+    assert X.dtype == np.bool_
+    model.fit(X)
+    assert model.get_params() == {"rho": 0.5}
+    copy = clone(model)
+    assert isinstance(copy, BinaryFuzzyART)
+    assert copy.params["rho"] == 0.5

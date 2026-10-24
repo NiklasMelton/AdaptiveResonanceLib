@@ -141,6 +141,7 @@ class iCVIFuzzyART(FuzzyART):
         self.is_fitted_ = True
 
         self.W: list[np.ndarray] = []
+        self._reset_sample_counters()
         self.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         self.iCVI = iCVI_CH(X[0])
@@ -180,3 +181,4 @@ class iCVIFuzzyART(FuzzyART):
 
             self.labels_[i] = c
             self.post_step_fit(X)
+        return self

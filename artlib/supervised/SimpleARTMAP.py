@@ -351,7 +351,9 @@ class SimpleARTMAP(BaseARTMAP):
         self.classes_ = unique_labels(y)
         self.labels_ = y
         # init module A
+        self.map = {}
         self.module_a.W = []
+        self.module_a._reset_sample_counters()
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         for _ in range(max_iter):
@@ -528,7 +530,9 @@ class SimpleARTMAP(BaseARTMAP):
         self.validate_data(X, y)
         self.classes_ = unique_labels(y)
         self.labels_ = y
+        self.map = {}
         self.module_a.W = []
+        self.module_a._reset_sample_counters()
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         writer = PillowWriter(fps=fps)

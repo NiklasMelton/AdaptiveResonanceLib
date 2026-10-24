@@ -320,15 +320,6 @@ class TopoART(BaseART):
             The input dataset.
 
         """
-        a = (
-            np.array(self.weight_sample_counter_).reshape(
-                -1,
-            )
-            >= self.phi
-        )
-        b = self._permanent_mask
-        print(a.shape, b.shape)
-
         self._permanent_mask += (
             np.array(self.weight_sample_counter_).reshape(
                 -1,

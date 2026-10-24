@@ -73,7 +73,7 @@ class BinaryFuzzyART(FuzzyART):
         self.d_max_ = np.max(X, axis=0)
         self.d_min_ = np.min(X, axis=0)
         cc_data = complement_code(normalized)
-        return cc_data.astype(np.bool)
+        return cc_data.astype(np.bool_)
 
     def restore_data(self, X: np.ndarray) -> np.ndarray:
         """Restore data to its state prior to preparation.
@@ -90,6 +90,22 @@ class BinaryFuzzyART(FuzzyART):
 
         """
         return de_complement_code(X)
+
+    def get_params(self, deep: bool = True) -> dict:
+        """Get the constructor parameters of this estimator.
+
+        Parameters
+        ----------
+        deep : bool, default=True
+            Unused. Present for scikit-learn compatibility.
+
+        Returns
+        -------
+        dict
+            Parameter names mapped to their values.
+
+        """
+        return {"rho": self.params["rho"]}
 
     @staticmethod
     def validate_params(params: dict):
@@ -258,7 +274,7 @@ class BinaryFuzzyART(FuzzyART):
             Cluster label of the input sample.
 
         """
-        assert len(self.W) >= 0, "ART module is not fit."
+        assert len(self.W) > 0, "ART module is not fit."
         self.params["MT"] = None
         T_num, _ = zip(
             *[self.category_choice(x, w, params=self.params) for w in self.W]

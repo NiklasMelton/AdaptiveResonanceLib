@@ -228,14 +228,19 @@ class EllipsoidART(BaseART):
         if cache is None:
             raise ValueError("No cache provided")
         dist = cache["dist"]
+        if dist == 0.0:
+            # The sample lies on the centroid, so the ellipsoid is unchanged.
+            # Updating would divide by zero and produce NaN weights.
+            return w.copy()
 
         radius_new = radius + (params["beta"] / 2) * (max(radius, dist) - radius)
         centroid_new = centroid + (params["beta"] / 2) * (i - centroid) * (
             1 - (min(radius, dist) / dist)
         )
 
-        if not radius == 0.0:
-            major_axis_new = (i - centroid_new) / np.sqrt(l2norm2((i - centroid_new)))
+        axis_norm = np.sqrt(l2norm2(i - centroid_new))
+        if not radius == 0.0 and axis_norm > 0.0:
+            major_axis_new = (i - centroid_new) / axis_norm
         else:
             major_axis_new = major_axis
 

@@ -131,3 +131,41 @@ def test_predict(art_model):
 
     labels = art_model.predict(X)
     assert len(labels) == 2
+
+
+
+def _reference_choice(model, x, w):
+    # Activation as originally written, summing the counts on every call.
+    dist = w[: model.dim_] - x
+    inv_sig = w[2 * model.dim_ : 3 * model.dim_]
+    p_i_cj = np.exp(-0.5 * np.dot(dist, np.multiply(inv_sig, dist))) / (
+        model.params["alpha"] + w[-2]
+    )
+    return p_i_cj * (w[-1] / sum(w_[-1] for w_ in model.W))
+
+
+def test_cached_total_count_matches_reference(art_model):
+    X = np.random.default_rng(0).random((30, 2))
+
+    def check():
+        for w in art_model.W:
+            got, _ = art_model.category_choice(X[-1], w, art_model.params)
+            assert got == _reference_choice(art_model, X[-1], w)
+
+    art_model.fit(X[:20])
+    check()
+    art_model.partial_fit(X[20:25])
+    check()
+    # Learn a sample on an existing mean: counts change but not the length of W.
+    n_before = len(art_model.W)
+    art_model.step_fit(art_model.W[0][: art_model.dim_].copy())
+    assert len(art_model.W) == n_before
+    check()
+    art_model.add_weight(art_model.new_weight(X[25], art_model.params))
+    check()
+    art_model.merge(0, len(art_model.W) - 1)
+    check()
+    art_model.W.append(art_model.new_weight(X[26], art_model.params))
+    check()
+    art_model.W = list(art_model.W[:-1])
+    check()

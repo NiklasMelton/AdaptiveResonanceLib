@@ -140,3 +140,11 @@ def test_predict(art_model):
 
     labels = art_model.predict(X)
     assert len(labels) == 2
+
+
+def test_update_with_sample_on_centroid(art_model):
+    # A duplicate input lands exactly on the centroid; the update must not
+    # divide by zero and produce NaN weights.
+    X = np.array([[0.1, 0.2], [0.1, 0.2], [0.3, 0.4], [0.3, 0.4]])
+    art_model.fit(X)
+    assert all(np.all(np.isfinite(w)) for w in art_model.W)

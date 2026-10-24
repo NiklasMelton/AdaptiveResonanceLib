@@ -215,3 +215,20 @@ def test_prepare_data(art_model):
     normalized_X = art_model.prepare_data(X)
     expected_normalized_X_cc = np.array([[0.0, 0.0, 1.0, 1.0], [1.0, 1.0, 0.0, 0.0]])
     np.testing.assert_array_almost_equal(normalized_X, expected_normalized_X_cc)
+
+def test_refit_resets_sample_counters():
+    rng = np.random.default_rng(0)
+    X = complement_code(rng.random((60, 2)))
+    model = FuzzyART(rho=0.7, alpha=1e-3, beta=1.0)
+    model.fit(X)
+    model.fit(X)
+    assert len(model.weight_sample_counter_) == model.n_clusters
+    assert sum(model.weight_sample_counter_) == X.shape[0]
+    assert model.sample_counter_ == X.shape[0]
+
+
+def test_step_pred_on_unfitted_model_raises():
+    model = FuzzyART(rho=0.7, alpha=1e-3, beta=1.0)
+    model.W = []
+    with pytest.raises(AssertionError, match="not fit"):
+        model.step_pred(np.array([0.2, 0.8]))

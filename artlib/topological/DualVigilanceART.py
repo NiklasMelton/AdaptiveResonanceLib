@@ -530,7 +530,7 @@ class DualVigilanceART(BaseART):
             Cluster label of the input sample.
 
         """
-        assert len(self.base_module.W) >= 0, "ART module is not fit."
+        assert len(self.base_module.W) > 0, "ART module is not fit."
         T, _ = zip(
             *[
                 self.base_module.category_choice(x, w, params=self.base_module.params)

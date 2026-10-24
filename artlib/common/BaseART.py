@@ -451,6 +451,11 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.weight_sample_counter_[idx] += 1
         self.W[idx] = new_w
 
+    def _reset_sample_counters(self):
+        """Clear the sample counts left over from a previous fit."""
+        self.sample_counter_ = 0
+        self.weight_sample_counter_ = []
+
     def _post_weight_update(self, i: np.ndarray, old_w: np.ndarray, idx: int):
         """Allow a module to update auxiliary state after a sample is learned."""
         pass
@@ -632,7 +637,7 @@ class BaseART(BaseEstimator, ClusterMixin):
             Cluster label of the input sample.
 
         """
-        assert len(self.W) >= 0, "ART module is not fit."
+        assert len(self.W) > 0, "ART module is not fit."
 
         T, _ = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
         c_ = int(np.argmax(T))
@@ -714,6 +719,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.is_fitted_ = True
 
         self.W: List[np.ndarray] = []
+        self._reset_sample_counters()
         self.labels_ = np.zeros((X.shape[0],), dtype=int)
         for _ in range(max_iter):
             if verbose:
@@ -859,6 +865,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self.is_fitted_ = True
 
         self.W = []
+        self._reset_sample_counters()
         self.labels_ = -np.ones((X.shape[0],), dtype=int)
 
         writer = PillowWriter(fps=fps)

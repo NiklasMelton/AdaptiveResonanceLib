@@ -39,7 +39,6 @@ class CVIART(BaseART):
         self.base_module = base_module
         params = dict(base_module.params, **{"validity": validity})
         super().__init__(params)
-        print(self.params)
 
     def validate_params(self, params: dict):
         """Validate clustering parameters.
@@ -253,6 +252,7 @@ class CVIART(BaseART):
         self.is_fitted_ = True
 
         self.W: list[np.ndarray] = []
+        self.base_module._reset_sample_counters()
         self.labels_ = np.zeros((X.shape[0],), dtype=int)
         for _ in range(max_iter):
             for index, x in enumerate(X):
@@ -294,6 +294,7 @@ class CVIART(BaseART):
                 )
                 self.labels_[index] = c
                 self.post_step_fit(X)
+        return self
 
     def pre_step_fit(self, X: np.ndarray):
         """Preprocessing step before fitting each sample.

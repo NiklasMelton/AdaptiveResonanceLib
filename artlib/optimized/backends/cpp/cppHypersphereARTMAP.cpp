@@ -202,11 +202,15 @@ private:
 
         double radius_new = radius + (beta_ / 2.0) * (max_r - radius);
 
+        // With alpha == 0 and the sample on the centroid this ratio is 0/0. Use its
+        // limit as alpha -> 0, which is 0.
+        const double denom = i_radius + alpha_;
+        const double ratio = denom > 0.0 ? std::min(radius, i_radius) / denom : 0.0;
+
         std::vector<double> out(dim_ + 1);
         for (int j = 0; j < dim_; ++j) {
             double centroid = w[j];
-            out[j] = centroid + (beta_ / 2.0) * (i[j] - centroid) *
-                                    (1.0 - (std::min(radius, i_radius) / (i_radius + alpha_)));
+            out[j] = centroid + (beta_ / 2.0) * (i[j] - centroid) * (1.0 - ratio);
         }
         out.back() = radius_new;
         return out;

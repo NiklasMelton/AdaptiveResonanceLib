@@ -91,7 +91,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             Dictionary of parameter names mapped to their values.
 
         """
-        out = self.params
+        out = dict(self.params)
 
         deep_a_items = self.module_a.get_params().items()
         out.update(("module_a" + "__" + k, val) for k, val in deep_a_items)
@@ -399,6 +399,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         # init module A
         self.module_a.W = []
+        self.module_a._reset_sample_counters()
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
 
         for _ in range(max_iter):

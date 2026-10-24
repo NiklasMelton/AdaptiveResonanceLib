@@ -144,3 +144,13 @@ def test_join_channel_data(fusionart_model):
 
     X = fusionart_model.join_channel_data([channel_1, channel_2])
     assert X.shape == (10, 4)
+
+
+def test_get_params_does_not_modify_params():
+    model = FusionART(
+        [FuzzyART(0.5, 1e-3, 1.0), FuzzyART(0.5, 1e-3, 1.0)], [0.5, 0.5], [4, 4]
+    )
+    before = dict(model.params)
+    params = model.get_params()
+    assert "module_0__rho" in params
+    assert model.params == before

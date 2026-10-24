@@ -155,3 +155,24 @@ def test_visualize_single_b_label(simple_artmap_model, label):
         assert np.allclose(ax.collections[0].get_offsets(), X_prep[:, :2])
     finally:
         plt.close(fig)
+
+
+def test_refit_with_new_labels_matches_fresh_fit():
+    rng = np.random.default_rng(0)
+    raw = rng.random((120, 2))
+    y = (raw[:, 0] > 0.5).astype(int)
+    y_new = 1 - y
+
+    model = SimpleARTMAP(FuzzyART(rho=0.6, alpha=1e-3, beta=1.0))
+    X = model.prepare_data(raw)
+    model.fit(X, y)
+    model.fit(X, y_new)
+
+    fresh = SimpleARTMAP(FuzzyART(rho=0.6, alpha=1e-3, beta=1.0))
+    fresh.prepare_data(raw)
+    fresh.fit(X, y_new)
+
+    assert model.map == fresh.map
+    np.testing.assert_array_equal(model.labels_a, fresh.labels_a)
+    np.testing.assert_array_equal(model.predict(X), fresh.predict(X))
+    assert len(model.module_a.weight_sample_counter_) == model.module_a.n_clusters

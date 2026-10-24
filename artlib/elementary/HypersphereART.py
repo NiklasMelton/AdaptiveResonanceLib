@@ -202,9 +202,11 @@ class HypersphereART(BaseART):
         i_radius = cache["i_radius"]
 
         radius_new = radius + (params["beta"] / 2) * (max_radius - radius)
-        centroid_new = centroid + (params["beta"] / 2) * (i - centroid) * (
-            1 - (min(radius, i_radius) / (i_radius + params["alpha"]))
-        )
+        denom = i_radius + params["alpha"]
+        # With alpha == 0 and the sample on the centroid this ratio is 0/0. Use its
+        # limit as alpha -> 0, which is 0.
+        ratio = min(radius, i_radius) / denom if denom > 0 else 0.0
+        centroid_new = centroid + (params["beta"] / 2) * (i - centroid) * (1 - ratio)
 
         return np.concatenate([centroid_new, [radius_new]])
 

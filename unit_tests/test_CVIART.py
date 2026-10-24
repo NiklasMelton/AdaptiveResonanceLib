@@ -97,3 +97,11 @@ def test_cviart_get_cluster_centers(cviart_model):
 
     assert len(centers) == 1
     assert np.allclose(centers[0], np.array([0.3, 0.5]))
+
+
+def test_init_does_not_print_and_fit_returns_self(capsys):
+    rng = np.random.default_rng(0)
+    model = CVIART(FuzzyART(rho=0.5, alpha=1e-3, beta=1.0), CVIART.CALINSKIHARABASZ)
+    assert capsys.readouterr().out == ""
+    X = model.prepare_data(rng.random((30, 2)))
+    assert model.fit(X) is model

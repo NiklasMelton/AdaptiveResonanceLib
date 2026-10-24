@@ -7,12 +7,14 @@
 import numpy as np
 from typing import Optional, Iterable, List, Callable, Literal, Tuple, Union, Dict
 import operator
+import weakref
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import CategoryCountPriorMixin
 from artlib.common.visualization import plot_gaussian_contours_covariance
 
 
-class BayesianART(BaseART):
+class BayesianART(CategoryCountPriorMixin, BaseART):
     """Bayesian ART for Clustering.
 
     This module implements Bayesian ART as first published in:
@@ -108,20 +110,52 @@ class BayesianART(BaseART):
         n = w[-1]
         dist = mean - i
 
-        exp_dist_cov_dist = np.exp(
-            -0.5 * np.matmul(dist.T, np.matmul(np.linalg.inv(cov), dist))
-        )
-        det_cov = np.linalg.det(cov)
+        inv_cov, det_cov = self._cov_inverse_and_det(w)
+
+        exp_dist_cov_dist = np.exp(-0.5 * np.matmul(dist.T, np.matmul(inv_cov, dist)))
 
         p_i_cj = exp_dist_cov_dist / np.sqrt((self.pi2**self.dim_) * det_cov)
-        total_samples = sum(w_[-1] for w_ in self.W)
-        p_cj = n / total_samples
+        p_cj = n / self._total_count()
 
         activation = p_i_cj * p_cj
 
         cache = {"cov": cov, "det_cov": det_cov}
 
         return activation, cache
+
+    def _cov_inverse_and_det(self, w: np.ndarray) -> Tuple[np.ndarray, float]:
+        """Get the inverse and determinant of a category's covariance.
+
+        Results are cached per weight array. ``update`` always returns a new
+        array, so a learned weight never reuses a stale entry, and an entry is
+        dropped once its weight array is garbage collected.
+
+        """
+        cov = w[self.dim_ : -1].reshape((self.dim_, self.dim_))
+        cache = self.__dict__.setdefault("_cov_cache_", {})
+        key = id(w)
+        entry = cache.get(key)
+        if entry is not None and entry[0]() is w:
+            return entry[1], entry[2]
+
+        inv_cov = np.linalg.inv(cov)
+        det_cov = np.linalg.det(cov)
+
+        def _drop(ref, key=key, cache=cache):
+            if cache.get(key, (None,))[0] is ref:
+                del cache[key]
+
+        try:
+            cache[key] = (weakref.ref(w, _drop), inv_cov, det_cov)
+        except TypeError:
+            pass  # weight type does not support weak references; skip caching
+        return inv_cov, det_cov
+
+    def __getstate__(self):
+        """Drop the covariance cache, which holds weak references, when pickling."""
+        state = self.__dict__.copy()
+        state.pop("_cov_cache_", None)
+        return state
 
     def match_criterion(
         self,
@@ -278,6 +312,7 @@ class BayesianART(BaseART):
 
         """
         assert cache is not None
+        self._clear_total_count()
 
         if "new_w" in cache:
             return cache["new_w"]

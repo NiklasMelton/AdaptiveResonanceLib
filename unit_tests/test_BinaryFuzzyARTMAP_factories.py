@@ -12,7 +12,8 @@ def _load_mnist_numpy():
         X_test  (10000, 784) float32 in [0,1]
         y_test  (10000,) int
     """
-    mnist = fetch_openml("mnist_784", version=1, as_frame=False)
+    # The pandas ARFF parser fails on MNIST with pandas 3 (sklearn 1.9).
+    mnist = fetch_openml("mnist_784", version=1, as_frame=False, parser="liac-arff")
     X_all = (mnist["data"].astype(np.float32) > 128).astype(np.int16)
     y_all = mnist["target"].astype(int)
 

@@ -8,10 +8,11 @@ import numpy as np
 from typing import Optional, Iterable, List, Tuple, Dict
 from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
+from artlib.common.utils import CategoryCountPriorMixin
 from artlib.common.visualization import plot_gaussian_contours_fading
 
 
-class GaussianART(BaseART):
+class GaussianART(CategoryCountPriorMixin, BaseART):
     """Gaussian ART for Clustering.
 
     This module implements Gaussian ART as first published in:
@@ -98,8 +99,7 @@ class GaussianART(BaseART):
         cache = {"exp_dist_sig_dist": exp_dist_sig_dist}
         # ignore the (2*pi)^d term as that is constant
         p_i_cj = exp_dist_sig_dist / (params["alpha"] + sqrt_det_sig)
-        total_samples = sum(w_[-1] for w_ in self.W)
-        p_cj = n / total_samples
+        p_cj = n / self._total_count()
 
         activation = p_i_cj * p_cj
 
@@ -164,6 +164,7 @@ class GaussianART(BaseART):
             Updated cluster weight.
 
         """
+        self._clear_total_count()
         mean = w[: self.dim_]
         sigma = w[self.dim_ : 2 * self.dim_]
         n = w[-1]

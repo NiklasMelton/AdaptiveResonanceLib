@@ -244,76 +244,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1) Compute which "areas" changed — one filter per test file
-      - name: Detect changed paths
-        id: changes
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            # Runs test_FuzzyARTMAP_factories.py when any of these change:
-            fuzzy_factory:
-              - 'artlib/optimized/backends/cpp/*.hpp'
-              - 'artlib/common/BaseART.py'
-              - 'artlib/common/BaseARTMAP.py'
-              - 'artlib/elementary/FuzzyART.py'
-              - 'artlib/supervised/SimpleARTMAP.py'
-              - 'artlib/optimized/FuzzyARTMAPFactory.py'
-              - 'artlib/optimized/backends/cpp/cppFuzzyARTMAP.cpp'
-              - 'artlib/optimized/backends/cpp/FuzzyARTMAP.py'
-              - 'artlib/optimized/backends/torch/FuzzyARTMAP.py'
-              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
-              - 'unit_tests/test_FuzzyARTMAP_factories.py'
-              - 'pyproject.toml'
-              - 'poetry.lock'
-
-            # Runs test_HypersphereARTMAP_factories.py when these change:
-            hypersphere_factory:
-              - 'artlib/optimized/backends/cpp/*.hpp'
-              - 'artlib/common/BaseART.py'
-              - 'artlib/common/BaseARTMAP.py'
-              - 'artlib/elementary/HypersphereART.py'
-              - 'artlib/supervised/SimpleARTMAP.py'
-              - 'artlib/optimized/HypersphereARTMAPFactory.py'
-              - 'artlib/optimized/backends/cpp/cppHypersphereARTMAP.cpp'
-              - 'artlib/optimized/backends/cpp/HypersphereARTMAP.py'
-              - 'artlib/optimized/backends/torch/HypersphereARTMAP.py'
-              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
-              - 'unit_tests/test_HypersphereARTMAP_factories.py'
-              - 'pyproject.toml'
-              - 'poetry.lock'
-
-            # Add more test-specific filters here as needed...
-            gaussian_factory:
-              - 'artlib/optimized/backends/cpp/*.hpp'
-              - 'artlib/common/BaseART.py'
-              - 'artlib/common/BaseARTMAP.py'
-              - 'artlib/elementary/GaussianART.py'
-              - 'artlib/supervised/SimpleARTMAP.py'
-              - 'artlib/optimized/GaussianARTMAPFactory.py'
-              - 'artlib/optimized/backends/cpp/cppGaussianARTMAP.cpp'
-              - 'artlib/optimized/backends/cpp/GaussianARTMAP.py'
-              - 'artlib/optimized/backends/torch/GaussianARTMAP.py'
-              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
-              - 'unit_tests/test_GaussianARTMAP_factories.py'
-              - 'pyproject.toml'
-              - 'poetry.lock'
-
-            # Add more test-specific filters here as needed...
-            binary_factory:
-              - 'artlib/optimized/backends/cpp/*.hpp'
-              - 'artlib/common/BaseART.py'
-              - 'artlib/common/BaseARTMAP.py'
-              - 'artlib/elementary/BinaryFuzzyART.py'
-              - 'artlib/supervised/SimpleARTMAP.py'
-              - 'artlib/optimized/BinaryFuzzyARTMAPFactory.py'
-              - 'artlib/optimized/backends/cpp/cppBinaryFuzzyARTMAP.cpp'
-              - 'artlib/optimized/backends/cpp/BinaryFuzzyARTMAP.py'
-              - 'artlib/optimized/backends/torch/BinaryFuzzyARTMAP.py'
-              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
-              - 'unit_tests/test_BinaryFuzzyARTMAP_factories.py'
-              - 'pyproject.toml'
-              - 'poetry.lock'
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -364,107 +294,151 @@ jobs:
           compression-level: 6
           if-no-files-found: ignore
 
-      # 3) Each heavy test runs only if its filter matched
+  # Backend parity on MNIST (torch vs C++, plus python for BinaryFuzzy).
+  # One job per factory so they run in parallel; each is skipped when none of
+  # its paths changed. Parity depends on the algorithm and dependency versions
+  # rather than the interpreter, so we cover the oldest and newest Python only.
+  factory_parity:
+    name: Factory parity (${{ matrix.factory }}, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    needs: [package_changes, install_smoke]
+    if: always() && (github.base_ref != 'main' || needs.package_changes.outputs.package_smoke != 'true' || needs.install_smoke.result == 'success')
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.14']
+        factory: [fuzzy, hypersphere, gaussian, binary]
+        include:
+          - factory: fuzzy
+            test: test_FuzzyARTMAP_factories.py
+          - factory: hypersphere
+            test: test_HypersphereARTMAP_factories.py
+          - factory: gaussian
+            test: test_GaussianARTMAP_factories.py
+          - factory: binary
+            test: test_BinaryFuzzyARTMAP_factories.py
 
-      - name: Run Fuzzy factory test
-        id: run_fuzzy
-        if: steps.changes.outputs.fuzzy_factory == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            fuzzy_factory:
+              - '.github/workflows/pytest.yml'
+              - 'artlib/optimized/backends/cpp/*.hpp'
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/FuzzyART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/FuzzyARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppFuzzyARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/FuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/FuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_FuzzyARTMAP_factories.py'
+              - 'unit_tests/_factory_parity.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
+            hypersphere_factory:
+              - '.github/workflows/pytest.yml'
+              - 'artlib/optimized/backends/cpp/*.hpp'
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/HypersphereART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/HypersphereARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppHypersphereARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/HypersphereARTMAP.py'
+              - 'artlib/optimized/backends/torch/HypersphereARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_HypersphereARTMAP_factories.py'
+              - 'unit_tests/_factory_parity.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
+            gaussian_factory:
+              - '.github/workflows/pytest.yml'
+              - 'artlib/optimized/backends/cpp/*.hpp'
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/GaussianART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/GaussianARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppGaussianARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/GaussianARTMAP.py'
+              - 'artlib/optimized/backends/torch/GaussianARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_GaussianARTMAP_factories.py'
+              - 'unit_tests/_factory_parity.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
+            binary_factory:
+              - 'artlib/optimized/backends/cpp/*.hpp'
+              - 'artlib/common/BaseART.py'
+              - 'artlib/common/BaseARTMAP.py'
+              - 'artlib/elementary/BinaryFuzzyART.py'
+              - 'artlib/supervised/SimpleARTMAP.py'
+              - 'artlib/optimized/BinaryFuzzyARTMAPFactory.py'
+              - 'artlib/optimized/backends/cpp/cppBinaryFuzzyARTMAP.cpp'
+              - 'artlib/optimized/backends/cpp/BinaryFuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/BinaryFuzzyARTMAP.py'
+              - 'artlib/optimized/backends/torch/_TorchSimpleARTMAP.py'
+              - 'unit_tests/test_BinaryFuzzyARTMAP_factories.py'
+              - 'unit_tests/_factory_parity.py'
+              - '.github/workflows/pytest.yml'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+
+      - name: Set up Python
+        if: steps.changes.outputs[format('{0}_factory', matrix.factory)] == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache MNIST
+        if: steps.changes.outputs[format('{0}_factory', matrix.factory)] == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/scikit_learn_data
+          key: openml-mnist_784-v1
+
+      - name: Install dependencies and wheel
+        if: steps.changes.outputs[format('{0}_factory', matrix.factory)] == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install "poetry>=2.2,<3"
+          poetry install --with dev --no-root
+          poetry build
+          poetry run pip install dist/*.whl
+
+      - name: Run parity test
+        id: run_parity
+        if: steps.changes.outputs[format('{0}_factory', matrix.factory)] == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          poetry run pytest unit_tests/test_FuzzyARTMAP_factories.py \
-            --maxfail=5 \
+          poetry run pytest unit_tests/${{ matrix.test }} \
             --disable-warnings \
             -v \
             --tb=short \
-            --junitxml=./test-results/pytest-fuzzy-factory.xml \
-            2>&1 | tee pytest-fuzzy-factory.log
+            --junitxml=./test-results/pytest-${{ matrix.factory }}-factory.xml \
+            2>&1 | tee pytest-${{ matrix.factory }}-factory.log
 
-      - name: Upload Fuzzy factory results (on failure)
-        if: ${{ always() && steps.run_fuzzy.outcome == 'failure' }}
+      - name: Upload results (on failure)
+        if: ${{ always() && steps.run_parity.outcome == 'failure' }}
         uses: actions/upload-artifact@v6
         with:
-          name: pytest-fuzzy-factory-results-py${{ matrix.python-version }}
+          name: pytest-${{ matrix.factory }}-factory-results-py${{ matrix.python-version }}
           path: |
-            pytest-fuzzy-factory.log
-            ./test-results/pytest-fuzzy-factory.xml
-          compression-level: 6
-          if-no-files-found: ignore
-
-
-      - name: Run Hypersphere factory test
-        id: run_hypersphere
-        if: steps.changes.outputs.hypersphere_factory == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          poetry run pytest unit_tests/test_HypersphereARTMAP_factories.py \
-            --maxfail=5 \
-            --disable-warnings \
-            -v \
-            --tb=short \
-            --junitxml=./test-results/pytest-hypersphere-factory.xml \
-            2>&1 | tee pytest-hypersphere-factory.log
-
-      - name: Upload Hypersphere factory results (on failure)
-        if: ${{ always() && steps.run_hypersphere.outcome == 'failure' }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: pytest-hypersphere-factory-results-py${{ matrix.python-version }}
-          path: |
-            pytest-hypersphere-factory.log
-            ./test-results/pytest-hypersphere-factory.xml
-          compression-level: 6
-          if-no-files-found: ignore
-
-
-      - name: Run Gaussian factory test
-        id: run_gaussian
-        if: steps.changes.outputs.gaussian_factory == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          poetry run pytest unit_tests/test_GaussianARTMAP_factories.py \
-            --maxfail=5 \
-            --disable-warnings \
-            -v \
-            --tb=short \
-            --junitxml=./test-results/pytest-gaussian-factory.xml \
-            2>&1 | tee pytest-gaussian-factory.log
-
-      - name: Upload Gaussian factory results (on failure)
-        if: ${{ always() && steps.run_gaussian.outcome == 'failure' }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: pytest-gaussian-factory-results-py${{ matrix.python-version }}
-          path: |
-            pytest-gaussian-factory.log
-            ./test-results/pytest-gaussian-factory.xml
-          compression-level: 6
-          if-no-files-found: ignore
-
-
-      - name: Run Binary Fuzzy factory test
-        id: run_binary
-        if: steps.changes.outputs.binary_factory == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          poetry run pytest unit_tests/test_BinaryFuzzyARTMAP_factories.py \
-            --maxfail=5 \
-            --disable-warnings \
-            -v \
-            --tb=short \
-            --junitxml=./test-results/pytest-binary-factory.xml \
-            2>&1 | tee pytest-binary-factory.log
-
-      - name: Upload Binary Fuzzy factory results (on failure)
-        if: ${{ always() && steps.run_binary.outcome == 'failure' }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: pytest-binary-factory-results-py${{ matrix.python-version }}
-          path: |
-            pytest-binary-factory.log
-            ./test-results/pytest-binary-factory.xml
+            pytest-${{ matrix.factory }}-factory.log
+            ./test-results/pytest-${{ matrix.factory }}-factory.xml
           compression-level: 6
           if-no-files-found: ignore

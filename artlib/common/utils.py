@@ -272,3 +272,44 @@ def binarize_features_thermometer(data: np.ndarray, n_bits: int) -> np.ndarray:
         thermometer_encoded[:, :, i] = (quantized_data > i).astype(np.uint8)
 
     return thermometer_encoded.reshape(n, m * n_bits)
+
+
+class CategoryCountPriorMixin:
+    """Cache the total of the sample counts stored as each weight's last entry.
+
+    Gaussian and Bayesian ART weight each category by the prior ``n_j / sum_k
+    n_k``. The sum is the same for every category, so recomputing it inside each
+    ``category_choice`` call made one sample cost O(K^2). The cached total is
+    cleared whenever a weight is learned, added, set or merged, and is recomputed
+    if ``W`` is replaced or changes length.
+
+    Subclasses must call ``_clear_total_count`` from ``update``.
+
+    """
+
+    W: list
+
+    def _total_count(self) -> float:
+        W = self.W
+        cached = self.__dict__.get("_total_count_cache_")
+        if cached is None or cached[0] is not W or cached[1] != len(W):
+            cached = (W, len(W), sum(w_[-1] for w_ in W))
+            self.__dict__["_total_count_cache_"] = cached
+        return cached[2]
+
+    def _clear_total_count(self):
+        self.__dict__["_total_count_cache_"] = None
+
+    def add_weight(self, new_w: np.ndarray):
+        """Add a new cluster weight and clear the cached total."""
+        self._clear_total_count()
+        super().add_weight(new_w)  # type: ignore[misc]
+
+    def set_weight(self, idx: int, new_w: np.ndarray):
+        """Set a cluster weight and clear the cached total."""
+        self._clear_total_count()
+        super().set_weight(idx, new_w)  # type: ignore[misc]
+
+    def _apply_merge(self, target_idx: int, source_idx: int, new_w: np.ndarray) -> int:
+        self._clear_total_count()
+        return super()._apply_merge(target_idx, source_idx, new_w)  # type: ignore[misc]

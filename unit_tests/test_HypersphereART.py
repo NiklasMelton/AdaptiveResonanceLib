@@ -119,3 +119,10 @@ def test_predict(art_model):
 
     labels = art_model.predict(X)
     assert len(labels) == 2
+
+
+def test_zero_alpha_sample_on_centroid_stays_finite():
+    X = np.array([[0.2, 0.2], [0.2, 0.2], [0.8, 0.8], [0.8, 0.8]])
+    model = HypersphereART(rho=0.5, alpha=0.0, beta=1.0, r_hat=1.0)
+    model.fit(X)
+    assert all(np.isfinite(w).all() for w in model.W)

@@ -103,3 +103,11 @@ def test_fit(bartmap_model):
         bartmap_model.columns_.shape[0]
         == bartmap_model.module_a.n_clusters * bartmap_model.module_b.n_clusters
     )
+
+
+def test_get_params_does_not_modify_params():
+    model = BARTMAP(FuzzyART(0.5, 1e-3, 1.0), FuzzyART(0.5, 1e-3, 1.0), eta=0.0)
+    before = dict(model.params)
+    params = model.get_params()
+    assert "module_a__rho" in params
+    assert model.params == before

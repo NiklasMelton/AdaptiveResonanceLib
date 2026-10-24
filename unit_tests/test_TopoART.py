@@ -118,3 +118,26 @@ def test_prune(topoart_model):
     assert (
         len(topoart_model.W) == 4
     )  # W should have 4 remaining weights after pruning
+
+
+def test_refit_matches_fresh_fit_without_printing(capsys):
+    rng = np.random.default_rng(0)
+    raw = rng.random((200, 2))
+
+    def make():
+        return TopoART(FuzzyART(rho=0.7, alpha=1e-3, beta=1.0), 0.3, 20, 3)
+
+    fresh = make()
+    X = fresh.prepare_data(raw)
+    fresh.fit(X)
+
+    refit = make()
+    refit.prepare_data(raw)
+    refit.fit(X)
+    refit.fit(X)
+
+    np.testing.assert_array_equal(refit.labels_, fresh.labels_)
+    assert len(refit.W) == len(fresh.W)
+    for w_refit, w_fresh in zip(refit.W, fresh.W):
+        np.testing.assert_array_equal(w_refit, w_fresh)
+    assert capsys.readouterr().out == ""

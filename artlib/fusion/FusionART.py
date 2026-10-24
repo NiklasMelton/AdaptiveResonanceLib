@@ -105,7 +105,7 @@ class FusionART(BaseART):
             Parameter names mapped to their values.
 
         """
-        out = self.params
+        out = dict(self.params)
         for i, module in enumerate(self.modules):
             deep_items = module.get_params().items()
             out.update((f"module_{i}" + "__" + k, val) for k, val in deep_items)
@@ -603,7 +603,7 @@ class FusionART(BaseART):
             Predicted cluster label for the input sample.
 
         """
-        assert len(self.W) >= 0, "ART module is not fit."
+        assert len(self.W) > 0, "ART module is not fit."
 
         T, _ = zip(
             *[

@@ -98,3 +98,10 @@ def test_icvi_fuzzyart_fit_with_custom_reset_function(icvi_fuzzyart_model):
 
     assert len(icvi_fuzzyart_model.W) > 0
     assert icvi_fuzzyart_model.labels_.shape[0] == X.shape[0]
+
+
+def test_fit_returns_self():
+    rng = np.random.default_rng(0)
+    model = iCVIFuzzyART(rho=0.5, alpha=1e-3, beta=1.0, validity=1)
+    X = model.prepare_data(rng.random((30, 2)))
+    assert model.fit(X) is model

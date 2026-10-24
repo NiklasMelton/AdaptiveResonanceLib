@@ -139,3 +139,15 @@ def test_predict(art_model):
 
     labels = art_model.predict(X)
     assert len(labels) == 2
+
+
+def test_category_choice_independent_of_other_categories(art_model):
+    # The activation depends only on the category being scored, so adding
+    # other categories must not change it.
+    X = np.random.default_rng(0).random((20, 2))
+    art_model.fit(X)
+    w = art_model.W[0]
+    before, _ = art_model.category_choice(X[0], w, art_model.params)
+    art_model.add_weight(art_model.new_weight(X[1], art_model.params))
+    after, _ = art_model.category_choice(X[0], w, art_model.params)
+    assert before == after

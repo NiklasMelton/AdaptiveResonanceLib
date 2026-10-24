@@ -108,16 +108,14 @@ class BayesianART(BaseART):
         n = w[-1]
         dist = mean - i
 
-        exp_dist_cov_dist = np.exp(
-            -0.5 * np.matmul(dist.T, np.matmul(np.linalg.inv(cov), dist))
-        )
+        exp_dist_cov_dist = np.exp(-0.5 * np.dot(dist, np.linalg.solve(cov, dist)))
         det_cov = np.linalg.det(cov)
 
         p_i_cj = exp_dist_cov_dist / np.sqrt((self.pi2**self.dim_) * det_cov)
-        total_samples = sum(w_[-1] for w_ in self.W)
-        p_cj = n / total_samples
-
-        activation = p_i_cj * p_cj
+        # The prior p(c_j) = n / total_samples is replaced by n: the total is the
+        # same for every category, so it never changes the ranking, and summing
+        # it here made each sample cost O(K^2).
+        activation = p_i_cj * n
 
         cache = {"cov": cov, "det_cov": det_cov}
 

@@ -10,12 +10,13 @@
 # January 28, 2011, issued May 26, 2015.
 
 import numpy as np
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from collections import defaultdict
-from matplotlib.colors import Colormap
 from artlib.common.BaseART import BaseART
 from sklearn.base import BaseEstimator, BiclusterMixin
-from scipy.stats import pearsonr
+
+if TYPE_CHECKING:
+    from matplotlib.colors import Colormap
 
 
 class BARTMAP(BaseEstimator, BiclusterMixin):
@@ -241,15 +242,55 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         Returns
         -------
         float
-            The Pearson correlation between the two vectors `a` and `b`.
+            The Pearson correlation between the two vectors `a` and `b`, or NaN
+            when it is undefined (fewer than two values, or a constant vector).
 
         """
-        r, _ = pearsonr(a, b)
-        return r
+        return float(BARTMAP._pearsonr_rows(np.asarray(a)[None, :], np.asarray(b))[0])
 
-    def _average_pearson_corr(self, X: np.ndarray, k: int, c_b: int) -> float:
-        """Get the average Pearson correlation for a sample across all features in
-        cluster b.
+    @staticmethod
+    def _pearsonr_rows(A: np.ndarray, b: np.ndarray) -> np.ndarray:
+        """Pearson correlation between each row of ``A`` and the vector ``b``.
+
+        Computed the same way as :func:`scipy.stats.pearsonr`, but for all rows at
+        once.
+
+        """
+        A = np.asarray(A, dtype=float)
+        b = np.asarray(b, dtype=float)
+        if b.shape[0] < 2:
+            return np.full(A.shape[0], np.nan)
+        A_c = A - A.mean(axis=1, keepdims=True)
+        b_c = b - b.mean()
+        with np.errstate(divide="ignore", invalid="ignore"):
+            A_n = A_c / np.linalg.norm(A_c, axis=1, keepdims=True)
+            b_n = b_c / np.linalg.norm(b_c)
+            r = A_n @ b_n
+        return np.clip(r, -1.0, 1.0)
+
+    def _row_members(self, k: int, cluster_a: Optional[int]) -> np.ndarray:
+        """Rows that sample ``k`` is compared with.
+
+        These are the rows already assigned to row cluster ``cluster_a``, or every
+        other row when ``cluster_a`` is None.
+
+        """
+        n = self.X.shape[0]
+        if cluster_a is None:
+            members = np.ones(n, dtype=bool)
+        else:
+            members = np.asarray(self.module_a.labels_) == cluster_a
+            seen = self.__dict__.get("_rows_seen_")
+            if seen is not None and len(seen) == n:
+                members &= seen
+        members[k] = False
+        return members
+
+    def _average_pearson_corr(
+        self, X: np.ndarray, k: int, c_b: int, cluster_a: Optional[int] = None
+    ) -> float:
+        """Get the average Pearson correlation between a sample and the rows of a row
+        cluster, over the features in column cluster ``c_b``.
 
         Parameters
         ----------
@@ -259,23 +300,23 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             The sample index.
         c_b : int
             The b-side cluster to check.
+        cluster_a : int, optional
+            The a-side (row) cluster to compare with. If None, sample ``k`` is
+            compared with every other row.
 
         Returns
         -------
         float
-            The average Pearson correlation for the sample at index `k` across all
-            features in cluster `c_b`.
+            The average Pearson correlation, or NaN if there are no rows to compare
+            with or the correlation is undefined.
 
         """
-        X_a = X[self.column_labels_ == c_b, :]
-        if len(X_a) == 0:
-            raise ValueError("X_a has length 0")
-        X_k_cb = self._get_x_cb(X[k, :], c_b)
-        mean_r = np.mean(
-            [self._pearsonr(X_k_cb, self._get_x_cb(x_a_l, c_b)) for x_a_l in X_a]
-        )
-
-        return float(mean_r)
+        members = self._row_members(k, cluster_a)
+        if not members.any():
+            return float("nan")
+        columns = self.column_labels_ == c_b
+        r = self._pearsonr_rows(X[members][:, columns], X[k, columns])
+        return float(np.mean(r))
 
     def validate_data(self, X_a: np.ndarray, X_b: np.ndarray):
         """Validate the data prior to clustering.
@@ -292,7 +333,12 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         self.module_b.validate_data(X_b)
 
     def match_criterion_bin(
-        self, X: np.ndarray, k: int, c_b: int, params: dict
+        self,
+        X: np.ndarray,
+        k: int,
+        c_b: int,
+        params: dict,
+        cluster_a: Optional[int] = None,
     ) -> bool:
         """Get the binary match criterion of the cluster.
 
@@ -306,6 +352,9 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             The b-side cluster to check.
         params : dict
             Dictionary containing parameters for the algorithm.
+        cluster_a : int, optional
+            The a-side (row) cluster to compare with. If None, sample ``k`` is
+            compared with every other row.
 
         Returns
         -------
@@ -313,8 +362,8 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
             Binary value indicating whether the cluster match criterion is met.
 
         """
-        M = self._average_pearson_corr(X, k, c_b)
-        return M >= self.params["eta"]
+        M = self._average_pearson_corr(X, k, c_b, cluster_a)
+        return bool(M >= self.params["eta"])
 
     def match_reset_func(
         self,
@@ -349,8 +398,11 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
 
         """
         k = extra["k"]
+        if not self._row_members(k, cluster_a).any():
+            # No other rows in this cluster yet, so nothing to correlate with.
+            return True
         for cluster_b in range(len(self.module_b.W)):
-            if self.match_criterion_bin(self.X, k, cluster_b, params):
+            if self.match_criterion_bin(self.X, k, cluster_b, params, cluster_a):
                 return True
         return False
 
@@ -401,12 +453,15 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         self.module_a.W = []
         self.module_a._reset_sample_counters()
         self.module_a.labels_ = np.zeros((X.shape[0],), dtype=int)
+        # Rows not yet seen have no row cluster, so they are not compared with.
+        self._rows_seen_ = np.zeros(n, dtype=bool)
 
         for _ in range(max_iter):
             for k in range(n):
                 self.module_a.pre_step_fit(X_a)
                 c_a = self.step_fit(X_a, k)
                 self.module_a.labels_[k] = c_a
+                self._rows_seen_[k] = True
                 self.module_a.post_step_fit(X_a)
 
         self.rows_ = np.vstack(
@@ -425,7 +480,7 @@ class BARTMAP(BaseEstimator, BiclusterMixin):
         )
         return self
 
-    def visualize(self, cmap: Optional[Colormap] = None):
+    def visualize(self, cmap: Optional["Colormap"] = None):
         """Visualize the clustering of the data.
 
         Parameters

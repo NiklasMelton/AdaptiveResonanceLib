@@ -5,12 +5,14 @@ from typing import Optional, Tuple, Union, Literal, cast
 import numpy as np
 import torch
 
-from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.elementary.HypersphereART import HypersphereART
 
 from torch import Tensor
 
-from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
+from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
+    _TorchSimpleARTMAP,
+    _append_rows,
+)
 
 
 # ---------
@@ -24,6 +26,16 @@ def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> T
     if isinstance(x, np.ndarray):
         return torch.from_numpy(x).to(device=device, dtype=dtype, non_blocking=True)
     raise TypeError("Expected torch.Tensor or numpy.ndarray")
+
+
+def _euclidean(X: Tensor, C: Tensor) -> Tensor:
+    """Pairwise distances sqrt(sum((x - c)^2)), shape [len(X), len(C)].
+
+    Sums (x - c)^2 directly, like the C++ backend. The matmul form
+    x^2 + c^2 - 2 c.x is faster on paper but cancels badly when x is close to c.
+
+    """
+    return torch.cdist(X, C, compute_mode="donot_use_mm_for_euclid_dist")
 
 
 # -----------------
@@ -41,7 +53,7 @@ class _TorchHypersphereARTMAPConfig:
     clamp_inputs: bool = False  # optional; Hypersphere doesn’t require [0,1]
 
 
-class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
+class _TorchHypersphereARTMAP:
     """GPU-accelerated Hypersphere ARTMAP with export hooks for artlib
     synchronization."""
 
@@ -56,6 +68,7 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
 
         self.W: Optional[Tensor] = None  # [K, D+1] (centroid..., radius)
         self.map_y: Optional[Tensor] = None  # [K]
+        self._map_list: list[int] = []  # map_y as Python ints, avoids device syncs
         self._prep_tol: float = 1e-6
 
     @property
@@ -118,15 +131,7 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
         centroids = W[:, : self.input_dim]  # [K, D]
         radii = W[:, self.input_dim]  # [K]
 
-        # ||x||^2 (scalar), ||C||^2 per row [K], and dot(C, x) [K]
-        x2 = (I * I).sum()  # scalar
-        c2 = (centroids * centroids).sum(dim=1)  # [K]
-        dots = centroids @ I  # [K]  (same as (I.unsqueeze(0) @ centroids.T).squeeze(0))
-
-        # d^2 = ||x||^2 + ||c||^2 - 2 c·x
-        d2 = x2 + c2 - 2.0 * dots
-        d2.clamp_(min=0.0)
-        I_radius = torch.sqrt(d2)  # [K]
+        I_radius = _euclidean(I.unsqueeze(0), centroids).squeeze(0)  # [K]
 
         max_radius = torch.maximum(radii, I_radius)  # [K]
         T = (r_hat - max_radius) / (r_hat - radii + alpha)
@@ -138,13 +143,15 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
         """Start a new hypersphere at sample I with radius 0."""
         self._ensure_capacity()
         w_new = torch.cat(
-            [I.view(1, -1), torch.zeros((1, 1), device=self.device, dtype=self.dtype)],
-            dim=1,
+            [I.view(-1), torch.zeros((1,), device=self.device, dtype=self.dtype)]
         )
-        self.W = torch.cat([self.W, w_new], dim=0)
-        self.map_y = torch.cat(
-            [self.map_y, torch.tensor([y], device=self.device, dtype=torch.long)], dim=0
+        _append_rows(
+            self,
+            self.n_cat,
+            W=w_new,
+            map_y=torch.tensor(y, device=self.device, dtype=torch.long),
         )
+        self._map_list.append(int(y))
 
     def partial_fit_and_export(
         self,
@@ -159,9 +166,10 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
         self._validate_prepared(Xp)
 
         la: list[int] = []
+        y_list = y.tolist()
         for i in range(Xp.shape[0]):
             Ii = Xp[i]
-            yi = int(y[i].item())
+            yi = int(y_list[i])
 
             if self.n_cat == 0:
                 self._commit_new_category(Ii, yi)
@@ -171,16 +179,18 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
             assert self.map_y is not None and self.W is not None
             T, m, I_radius_all, max_radius_all = self._choice_and_match(Ii)
             order = torch.argsort(T, descending=True, stable=True)
+            # One transfer per sample instead of one .item() per candidate.
+            m_list = m.tolist()
 
             rho_eff = float(self.cfg.rho)
             found = False
             chosen_idx: Optional[int] = None
 
             for idx in order.tolist():
-                if m[idx].item() < rho_eff:
+                if m_list[idx] < rho_eff:
                     continue
 
-                if int(self.map_y[idx].item()) == yi:
+                if self._map_list[idx] == yi:
                     # resonance + learn (Hypersphere update)
                     wj = self.W[idx]
                     centroid = wj[: self.input_dim]
@@ -195,8 +205,16 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
                     radius_new = radius + (beta / 2.0) * (max_radius - radius)
 
                     # centroid update
-                    # term = 1 - min(radius, i_radius) / (i_radius + alpha)
-                    term = 1.0 - (torch.minimum(radius, i_radius) / (i_radius + alpha))
+                    # term = 1 - min(radius, i_radius) / (i_radius + alpha).
+                    # With alpha == 0 and the sample on the centroid the ratio is
+                    # 0/0; use its limit as alpha -> 0, which is 0 (as in C++).
+                    denom = i_radius + alpha
+                    ratio = torch.where(
+                        denom > 0,
+                        torch.minimum(radius, i_radius) / denom,
+                        torch.zeros_like(denom),
+                    )
+                    term = 1.0 - ratio
                     centroid_new = centroid + (beta / 2.0) * (Ii - centroid) * term
 
                     self.W[idx, : self.input_dim] = centroid_new
@@ -207,7 +225,7 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
                     break
                 else:
                     if match_tracking != "":
-                        rho_eff = float(m[idx].item()) + float(epsilon)
+                        rho_eff = float(m_list[idx]) + float(epsilon)
 
             if not found:
                 self._commit_new_category(Ii, yi)
@@ -216,10 +234,8 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
             la.append(int(cast(int, chosen_idx)))
 
         assert self.W is not None and self.map_y is not None
-        W_np = [
-            self.W[k].detach().to("cpu").numpy().astype(np.float64, copy=True)
-            for k in range(self.n_cat)
-        ]
+        W_cpu = self.W.detach().to("cpu").numpy().astype(np.float64, copy=True)
+        W_np = [W_cpu[k] for k in range(self.n_cat)]
         cl_np = self.map_y.detach().to("cpu").numpy().astype(int, copy=True)
         la_np = np.asarray(la, dtype=int)
         return la_np, W_np, cl_np
@@ -271,12 +287,7 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
                 centroids = Wc[:, :D].contiguous()
                 radii_c = Wc[:, D].contiguous()
 
-                X2 = (I * I).sum(dim=1, keepdim=True)  # [B_cur, 1]
-                C2 = (centroids * centroids).sum(dim=1).unsqueeze(0)  # [1, Kc]
-                d2 = X2 + C2  # broadcast add
-                d2.addmm_(I, centroids.T, beta=1.0, alpha=-2.0)  # d2 += -2 * I @ C^T
-                d2.clamp_(min=0.0)
-                I_radius = torch.sqrt(d2)
+                I_radius = _euclidean(I, centroids)  # [B_cur, Kc]
 
                 max_radius = torch.maximum(I_radius, radii_c.unsqueeze(0))
                 Tc = (r_hat - max_radius) / (r_hat - radii_c.unsqueeze(0) + alpha)
@@ -296,7 +307,7 @@ class _TorchHypersphereARTMAP(_TorchSimpleARTMAP):
         return y_a, y_b
 
 
-class HypersphereARTMAP(SimpleARTMAP):
+class HypersphereARTMAP(_TorchSimpleARTMAP):
     """HypersphereARTMAP for Classification. optimized with torch.
 
     This module implements HypersphereARTMAP

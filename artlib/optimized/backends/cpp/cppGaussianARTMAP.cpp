@@ -112,10 +112,8 @@ public:
 
         std::vector<int> labels_a(n_samples);
 
-        for (int i = 0; i < n_samples; ++i) {
-            std::vector<double> sample(Xptr + i * n_features, Xptr + (i + 1) * n_features);
-            labels_a[i] = step_fit(sample, yptr[i]);
-        }
+        for (int i = 0; i < n_samples; ++i)
+            labels_a[i] = step_fit(Xptr + static_cast<std::size_t>(i) * n_features, yptr[i]);
 
         /* -------- pack output -------- */
         auto labels_out = art_bind::output(labels_a);
@@ -185,6 +183,10 @@ private:
     std::vector<Cluster> clusters_;
     std::unordered_map<int, int> cluster_map_;
 
+    /* ───── per-sample scratch, reused between samples ───── */
+    std::vector<double> exp_terms_;
+    art_core::LazySearchScratch<double> scratch_;
+
     /* ─────────────────────────────────────────────────── */
     void reset_rho() { rho_ = base_rho_; }
 
@@ -212,12 +214,7 @@ private:
         return p_i_cj * p_cj;
     }
 
-    double match(const double* sample, const std::vector<double>& w) const {
-        return gaussian_exp(sample, w); // vigilance compares to exp term
-    }
-
-    std::vector<double> update_weight(const std::vector<double>& i,
-                                      const std::vector<double>& w) const {
+    std::vector<double> update_weight(const double* i, const std::vector<double>& w) const {
         /* unpack */
         const double* mean = w.data();
         const double* sigma = w.data() + dim_;
@@ -256,20 +253,25 @@ private:
     }
 
     /* ─────────────────────────────────────────────────── */
-    int step_fit(const std::vector<double>& sample, int c_b) {
+    int step_fit(const double* sample, int c_b) {
         reset_rho();
         const auto mode = art_core::parse_match_tracking(match_tracking_);
         double total_n = 0.0;
         for (const auto& cluster : clusters_)
             total_n += cluster.weight.back();
         auto state = art_core::state_view(clusters_, cluster_map_, dim_);
-        return static_cast<int>(art_core::fit_one(
+        exp_terms_.resize(clusters_.size());
+        return static_cast<int>(art_core::fit_one_lazy(
             state,
             [&](std::size_t c) {
-                return category_choice(sample.data(), clusters_[c].weight, total_n);
+                // The exponential term is both part of the choice and the match.
+                const auto& w = clusters_[c].weight;
+                exp_terms_[c] = gaussian_exp(sample, w);
+                double p_i_cj = exp_terms_[c] / (alpha_ + w[3 * dim_]);
+                double p_cj = w[3 * dim_ + 1] / std::max(total_n, 1e-12);
+                return p_i_cj * p_cj;
             },
-            [&](std::size_t c) { return match(sample.data(), clusters_[c].weight); },
-            [](const auto& scores, const auto&) { return art_core::descending_order(scores); },
+            [&](std::size_t c) { return exp_terms_[c]; },
             [&](double value) { return art_core::passes_match(value, rho_, mode); },
             [&](std::size_t c) {
                 auto found = cluster_map_.find(static_cast<int>(c));
@@ -285,10 +287,11 @@ private:
                 clusters_.push_back({new_weight(sample)});
                 cluster_map_[static_cast<int>(index)] = c_b;
                 return index;
-            }));
+            },
+            scratch_));
     }
 
-    std::vector<double> new_weight(const std::vector<double>& i) const {
+    std::vector<double> new_weight(const double* i) const {
         if (sigma_init_.size() != static_cast<std::size_t>(dim_))
             throw std::invalid_argument("sigma_init dimension mismatch");
 
@@ -303,7 +306,7 @@ private:
 
         std::vector<double> w;
         w.reserve(3 * dim_ + 2);
-        w.insert(w.end(), i.begin(), i.end());                     // mean
+        w.insert(w.end(), i, i + dim_);                            // mean
         w.insert(w.end(), sigma_init_.begin(), sigma_init_.end()); // σ
         w.insert(w.end(), inv_sig.begin(), inv_sig.end());         // inv σ²
         w.push_back(sqrt_det);

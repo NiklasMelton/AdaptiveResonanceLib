@@ -27,6 +27,7 @@ class NativeFuzzyARTMAP {
 public:
     struct Cluster {
         std::vector<double> weight; // 2d components (complement‑coded)
+        double sum = 0.0;           // cached sum of weight, refreshed on every change
     };
 
     NativeFuzzyARTMAP(double rho, double alpha, double beta, const std::string& MT, double epsilon,
@@ -62,6 +63,7 @@ public:
                     throw std::invalid_argument("weight length must be positive and even");
                 clusters_[k].weight.resize(static_cast<std::size_t>(w_b.shape[0]));
                 std::memcpy(clusters_[k].weight.data(), w_b.ptr, sizeof(double) * w_b.shape[0]);
+                clusters_[k].sum = weight_sum(clusters_[k].weight);
                 cluster_map_[static_cast<int>(k)] = cl_ptr[k];
 
                 if (dim_original_ == 0)
@@ -95,10 +97,8 @@ public:
 
         std::vector<int> labels_a(n_samples);
 
-        for (int i = 0; i < n_samples; ++i) {
-            std::vector<double> sample(Xptr + i * n_features, Xptr + (i + 1) * n_features);
-            labels_a[i] = step_fit(sample, yptr[i]);
-        }
+        for (int i = 0; i < n_samples; ++i)
+            labels_a[i] = step_fit(Xptr + static_cast<std::size_t>(i) * n_features, yptr[i]);
 
         /* -------- pack output -------- */
         auto labels_out = art_bind::output(labels_a);
@@ -138,7 +138,7 @@ public:
 
             auto state = art_core::state_view(clusters_, cluster_map_, dim_original_);
             const int best_id = static_cast<int>(art_core::predict_one(
-                state, [&](std::size_t c) { return category_choice(row, clusters_[c].weight); },
+                state, [&](std::size_t c) { return category_choice(row, clusters_[c]); },
                 std::greater<double>{})); // fallback
             y_a[i] = best_id;
             y_b[i] = cluster_map_.at(best_id);
@@ -161,56 +161,52 @@ private:
     std::vector<Cluster> clusters_;
     std::unordered_map<int, int> cluster_map_;
 
+    /* ───── per-sample scratch, reused between samples ───── */
+    std::vector<double> and_sums_;
+    art_core::LazySearchScratch<double> scratch_;
+
     /* ─────────────────────────────────────────────────── */
     void reset_rho() { rho_ = base_rho_; }
 
-    // fuzzy  AND L1
-    static double l1_and(const std::vector<double>& a, const std::vector<double>& b) {
-        double s = 0.0;
-        for (std::size_t j = 0; j < a.size(); ++j)
-            s += std::min(a[j], b[j]);
-        return s;
+    static double weight_sum(const std::vector<double>& w) {
+        return std::accumulate(w.begin(), w.end(), 0.0);
     }
-    static double l1_and(const double* x, const std::vector<double>& w, int len) {
+
+    // fuzzy  AND L1
+    static double l1_and(const double* x, const std::vector<double>& w) {
         double s = 0.0;
-        for (int j = 0; j < len; ++j)
+        for (std::size_t j = 0; j < w.size(); ++j)
             s += std::min(x[j], w[j]);
         return s;
     }
 
     /* ─────────────────────────────────────────────────── */
-    double category_choice(const double* sample, const std::vector<double>& w) const {
-        const int len = static_cast<int>(w.size());
-        double num = l1_and(sample, w, len);
-        double denom = alpha_ + std::accumulate(w.begin(), w.end(), 0.0);
-        return num / denom;
+    double category_choice(const double* sample, const Cluster& cluster) const {
+        return l1_and(sample, cluster.weight) / (alpha_ + cluster.sum);
     }
 
-    double match(const double* sample, const std::vector<double>& w) const {
-        const int len = static_cast<int>(w.size());
-        double num = l1_and(sample, w, len);
-        return num / static_cast<double>(dim_original_);
-    }
-
-    std::vector<double> update_weight(const std::vector<double>& i,
-                                      const std::vector<double>& w) const {
-        std::vector<double> out(w.size());
+    void update_weight(const double* i, Cluster& cluster) const {
+        auto& w = cluster.weight;
         for (std::size_t j = 0; j < w.size(); ++j)
-            out[j] = beta_ * std::min(i[j], w[j]) + (1.0 - beta_) * w[j];
-        return out;
+            w[j] = beta_ * std::min(i[j], w[j]) + (1.0 - beta_) * w[j];
+        cluster.sum = weight_sum(w);
     }
 
     /* ─────────────────────────────────────────────────── */
-    int step_fit(const std::vector<double>& sample, int c_b) {
+    int step_fit(const double* sample, int c_b) {
         reset_rho();
         const auto mode = art_core::parse_match_tracking(match_tracking_);
 
         auto state = art_core::state_view(clusters_, cluster_map_, dim_original_);
-        return static_cast<int>(art_core::fit_one(
+        and_sums_.resize(clusters_.size());
+        return static_cast<int>(art_core::fit_one_lazy(
             state,
-            [&](std::size_t c) { return category_choice(sample.data(), clusters_[c].weight); },
-            [&](std::size_t c) { return match(sample.data(), clusters_[c].weight); },
-            [](const auto& scores, const auto&) { return art_core::descending_order(scores); },
+            [&](std::size_t c) {
+                // The fuzzy AND sum is shared by choice and match.
+                and_sums_[c] = l1_and(sample, clusters_[c].weight);
+                return and_sums_[c] / (alpha_ + clusters_[c].sum);
+            },
+            [&](std::size_t c) { return and_sums_[c] / static_cast<double>(dim_original_); },
             [&](double value) { return art_core::passes_match(value, rho_, mode); },
             [&](std::size_t c) {
                 auto found = cluster_map_.find(static_cast<int>(c));
@@ -218,15 +214,19 @@ private:
             },
             [&](double value) { return art_core::track_match(value, rho_, epsilon_, mode); },
             [&](std::size_t c) {
-                clusters_[c].weight = update_weight(sample, clusters_[c].weight);
+                update_weight(sample, clusters_[c]);
                 cluster_map_[static_cast<int>(c)] = c_b;
             },
             [&]() {
                 const auto index = clusters_.size();
-                clusters_.push_back({sample});
+                Cluster cluster;
+                cluster.weight.assign(sample, sample + 2 * dim_original_);
+                cluster.sum = weight_sum(cluster.weight);
+                clusters_.push_back(std::move(cluster));
                 cluster_map_[static_cast<int>(index)] = c_b;
                 return index;
-            }));
+            },
+            scratch_));
     }
 };
 

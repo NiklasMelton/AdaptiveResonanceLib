@@ -8,6 +8,7 @@
 #include "native_arrays.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring>
@@ -99,10 +100,8 @@ public:
 
         std::vector<int> labels_a(n_samples);
 
-        for (int i = 0; i < n_samples; ++i) {
-            std::vector<double> sample(Xptr + i * n_features, Xptr + (i + 1) * n_features);
-            labels_a[i] = step_fit(sample, yptr[i]);
-        }
+        for (int i = 0; i < n_samples; ++i)
+            labels_a[i] = step_fit(Xptr + static_cast<std::size_t>(i) * n_features, yptr[i]);
 
         /* -------- pack output -------- */
         auto labels_out = art_bind::output(labels_a);
@@ -165,6 +164,10 @@ private:
     std::vector<Cluster> clusters_;
     std::unordered_map<int, int> cluster_map_;
 
+    /* ───── per-sample scratch, reused between samples ───── */
+    std::vector<std::array<double, 2>> caches_; // {input radius, max radius}
+    art_core::LazySearchScratch<double> scratch_;
+
     /* ─────────────────────────────────────────────────── */
     void reset_rho() { rho_ = base_rho_; }
 
@@ -193,8 +196,8 @@ private:
         return 1.0 - (max_r / r_hat_);
     }
 
-    std::vector<double> update_weight(const std::vector<double>& i, const std::vector<double>& w,
-                                      const std::vector<double>& cache) const {
+    std::vector<double> update_weight(const double* i, const std::vector<double>& w,
+                                      const std::array<double, 2>& cache) const {
         // cache = {i_radius, max_radius}
         double i_radius = cache[0];
         double max_r = cache[1];
@@ -217,24 +220,22 @@ private:
     }
 
     /* ─────────────────────────────────────────────────── */
-    int step_fit(const std::vector<double>& sample, int c_b) {
+    int step_fit(const double* sample, int c_b) {
         reset_rho();
         const auto mode = art_core::parse_match_tracking(match_tracking_);
-        std::vector<std::array<double, 2>> caches(clusters_.size());
+        auto& caches = caches_;
+        caches.resize(clusters_.size());
         auto state = art_core::state_view(clusters_, cluster_map_, dim_);
-        return static_cast<int>(art_core::fit_one(
+        return static_cast<int>(art_core::fit_one_lazy(
             state,
             [&](std::size_t c) {
-                return ([&] {
-                    const double radius = clusters_[c].weight.back();
-                    const double input_radius = euclidean(sample.data(), clusters_[c].weight);
-                    const double max_radius = std::max(radius, input_radius);
-                    caches[c] = {input_radius, max_radius};
-                    return (r_hat_ - max_radius) / (r_hat_ - radius + alpha_);
-                }());
+                const double radius = clusters_[c].weight.back();
+                const double input_radius = euclidean(sample, clusters_[c].weight);
+                const double max_radius = std::max(radius, input_radius);
+                caches[c] = {input_radius, max_radius};
+                return (r_hat_ - max_radius) / (r_hat_ - radius + alpha_);
             },
             [&](std::size_t c) { return 1.0 - caches[c][1] / r_hat_; },
-            [](const auto& scores, const auto&) { return art_core::descending_order(scores); },
             [&](double value) { return art_core::passes_match(value, rho_, mode); },
             [&](std::size_t c) {
                 auto found = cluster_map_.find(static_cast<int>(c));
@@ -242,8 +243,7 @@ private:
             },
             [&](double value) { return art_core::track_match(value, rho_, epsilon_, mode); },
             [&](std::size_t c) {
-                clusters_[c].weight =
-                    update_weight(sample, clusters_[c].weight, {caches[c][0], caches[c][1]});
+                clusters_[c].weight = update_weight(sample, clusters_[c].weight, caches[c]);
                 cluster_map_[static_cast<int>(c)] = c_b;
             },
             [&]() {
@@ -251,11 +251,12 @@ private:
                 clusters_.push_back({new_weight(sample)});
                 cluster_map_[static_cast<int>(index)] = c_b;
                 return index;
-            }));
+            },
+            scratch_));
     }
 
-    std::vector<double> new_weight(const std::vector<double>& i) const {
-        std::vector<double> w(i);
+    std::vector<double> new_weight(const double* i) const {
+        std::vector<double> w(i, i + dim_);
         w.push_back(0.0); // initial radius
         return w;
     }

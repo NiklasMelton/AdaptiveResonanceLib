@@ -149,6 +149,59 @@ std::size_t fit_one_cached(State state, Choice choice, Match match, Rank rank, P
     return create();
 }
 
+template <typename Score>
+void descending_order_into(const std::vector<Score>& scores, std::vector<std::size_t>& order) {
+    order.resize(scores.size());
+    std::iota(order.begin(), order.end(), std::size_t{0});
+    std::sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+        if (scores[a] != scores[b])
+            return scores[a] > scores[b];
+        return a < b;
+    });
+}
+
+// Reused between samples so the search does not allocate on every call.
+template <typename Score> struct LazySearchScratch {
+    std::vector<Score> scores;
+    std::vector<std::size_t> order;
+};
+
+// Same search as fit_one with descending_order ranking, but the match is computed
+// only for the candidates actually visited. ``choice`` may cache work (such as the
+// fuzzy AND sum) for ``match`` to reuse, since match(index) always follows
+// choice(index) for the same sample.
+template <typename State, typename Choice, typename Match, typename Pass, typename Accept,
+          typename Track, typename Learn, typename Create>
+std::size_t fit_one_lazy(State state, Choice choice, Match match, Pass pass, Accept accept,
+                         Track track, Learn learn, Create create,
+                         LazySearchScratch<std::invoke_result_t<Choice, std::size_t>>& scratch) {
+    if (state.dimension == 0)
+        throw std::invalid_argument("feature dimension must be positive");
+    const std::size_t count = state.weights.size();
+    if (count == 0)
+        return create();
+
+    auto& scores = scratch.scores;
+    scores.resize(count);
+    for (std::size_t index = 0; index < count; ++index)
+        scores[index] = choice(index);
+    descending_order_into(scores, scratch.order);
+
+    for (std::size_t index : scratch.order) {
+        const auto value = match(index);
+        if (!pass(value))
+            continue;
+        if (!accept(index)) {
+            if (!track(value))
+                break;
+            continue;
+        }
+        learn(index);
+        return index;
+    }
+    return create();
+}
+
 template <typename State, typename Choice, typename Match, typename Rank, typename Pass,
           typename Accept, typename Track, typename Learn, typename Create>
 std::size_t fit_one(State state, Choice choice, Match match, Rank rank, Pass pass, Accept accept,

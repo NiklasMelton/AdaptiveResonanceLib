@@ -1,10 +1,13 @@
 """Collection of visualization utilities."""
 import numpy as np
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 def plot_gaussian_contours_fading(
-    ax: Axes,
+    ax: "Axes",
     mean: np.ndarray,
     std_dev: np.ndarray,
     color: np.ndarray,
@@ -67,7 +70,7 @@ def plot_gaussian_contours_fading(
 
 
 def plot_gaussian_contours_covariance(
-    ax: Axes,
+    ax: "Axes",
     mean: np.ndarray,
     covariance: np.ndarray,
     color: np.ndarray,
@@ -141,7 +144,7 @@ def plot_gaussian_contours_covariance(
 
 
 def plot_weight_matrix_as_ellipse(
-    ax: Axes,
+    ax: "Axes",
     s: float,
     W: np.ndarray,
     mean: np.ndarray,

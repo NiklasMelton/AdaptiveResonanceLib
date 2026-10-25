@@ -5,6 +5,7 @@
 # Neural Networks, 4, 759 – 771. doi:10.1016/0893-6080(91)90056-B.
 
 from artlib.elementary.FuzzyART import FuzzyART
+from artlib.common.BaseART import stacked_weights
 from artlib.common.utils import (
     fracsort,
     fracargmax,
@@ -14,12 +15,11 @@ from artlib.common.utils import (
 from typing import Optional, Callable, Literal, Tuple, Dict, List, Union
 import warnings
 import numpy as np
-from numpy.typing import NDArray
 from numba import njit
 import operator
 
 
-@njit
+@njit(cache=True)
 def _and_popcount(i, w):
     s = 0
     for j in range(i.size):
@@ -28,7 +28,20 @@ def _and_popcount(i, w):
     return s
 
 
-@njit
+@njit(cache=True)
+def _and_popcount_batch(i, W):
+    """Count ``i & w`` for every row ``w`` of ``W``."""
+    n_rows, n_cols = W.shape
+    out = np.empty(n_rows, dtype=np.int64)
+    for k in range(n_rows):
+        s = 0
+        for j in range(n_cols):
+            s += i[j] & W[k, j]
+        out[k] = s
+    return out
+
+
+@njit(cache=True)
 def _category_choice_binary(
     i: np.ndarray, w: np.ndarray, pre_MT: bool, rho_int: int
 ) -> Tuple[int, bool]:
@@ -276,14 +289,24 @@ class BinaryFuzzyART(FuzzyART):
         """
         assert len(self.W) > 0, "ART module is not fit."
         self.params["MT"] = None
-        T_num, _ = zip(
-            *[self.category_choice(x, w, params=self.params) for w in self.W]
-        )
+        T_num = self._intersection_counts(x)
+        if T_num is None:
+            T_num = [_and_popcount(x, w) for w in self.W]
         T_num = np.ascontiguousarray(T_num, dtype=np.uint32)
         T_den = np.ascontiguousarray(self.w_count_cache, dtype=np.uint32)
 
         c_ = int(fracargmax(T_num, T_den))
         return c_
+
+    def _intersection_counts(self, x: np.ndarray) -> Optional[np.ndarray]:
+        """Return ``|x & w|`` for every cluster in one call, or None if the weights are
+        not all boolean."""
+        if x.dtype != np.bool_:
+            return None
+        M, kinds = stacked_weights(self, dtype=np.bool_)
+        if not np.all(kinds == "?"):
+            return None
+        return _and_popcount_batch(x, M)
 
     def _match_tracking_integer(
         self,
@@ -364,7 +387,20 @@ class BinaryFuzzyART(FuzzyART):
 
         """
         self.sample_counter_ += 1
-        base_params = self._deep_copy_params()
+        base_params = self._copy_params()
+        try:
+            return self._step_fit_binary(x, match_reset_func, match_tracking, epsilon)
+        finally:
+            self._set_params(base_params)
+
+    def _step_fit_binary(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable],
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+        epsilon: float,
+    ) -> int:
+        """Body of :meth:`step_fit`; the caller restores params afterwards."""
         self.params["MT"] = match_tracking
         self.params["rho_int"] = int(np.ceil(self.params["rho"] * self.dim_original))
         epsilon_int = int(np.ceil(epsilon))
@@ -373,74 +409,59 @@ class BinaryFuzzyART(FuzzyART):
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
             return 0
+
+        pre_MT = self.params["MT"] not in ["MT-"]
+        rho_int = self.params["rho_int"]
+        reset_first = match_tracking in ["MT~"] and match_reset_func is not None
+
+        counts = self._intersection_counts(x)
+        if counts is None:
+            counts = np.array(
+                [_category_choice_binary(x, w, pre_MT, rho_int)[0] for w in self.W],
+                dtype=np.int64,
+            )
+        keep = counts >= rho_int if pre_MT else np.ones(len(counts), dtype=bool)
+        if reset_first:
+            assert match_reset_func is not None
+            for c_ in np.flatnonzero(keep):
+                if not match_reset_func(
+                    x, self.W[c_], c_, params=self.params, cache=None
+                ):
+                    keep[c_] = False
+        T_idx = np.flatnonzero(keep).astype(np.int32)
+        if T_idx.size:
+            T_num = counts[T_idx].astype(np.uint32)
+            T_den = np.asarray(self.w_count_cache, dtype=np.uint32)[T_idx]
+            order = fracsort(T_num, T_den)
         else:
-            n = len(self.W)
-            T_num: NDArray[np.uint32] = np.empty(n, dtype=np.uint32)
-            T_den: NDArray[np.uint32] = np.empty(n, dtype=np.uint32)
-            T_idx: NDArray[np.int32] = np.empty(n, dtype=np.int32)
-            k = 0
-            pre_MT = self.params["MT"] not in ["MT-"]
-            rho_int = self.params["rho_int"]
+            T_num = np.empty(0, dtype=np.uint32)
+            order = ()
 
-            if match_tracking in ["MT~"] and match_reset_func is not None:
-                for c_ in range(len(self.W)):
-                    w = self.W[c_]
-                    t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
-                    if (not mt_status) or (
-                        not match_reset_func(x, w, c_, params=self.params, cache=None)
-                    ):
-                        continue
-                    T_num[k] = t_num
-                    T_den[k] = self.w_count_cache[c_]
-                    T_idx[k] = c_
-                    k += 1
-            else:
-                for c_ in range(len(self.W)):
-                    w = self.W[c_]
-                    t_num, mt_status = _category_choice_binary(x, w, pre_MT, rho_int)
-                    if not mt_status:
-                        continue
-                    T_num[k] = t_num
-                    T_den[k] = self.w_count_cache[c_]
-                    T_idx[k] = c_
-                    k += 1
-            if k:
-                T_num = T_num[:k]
-                T_den = T_den[:k]
-                T_idx = T_idx[:k]
-                order = fracsort(T_num, T_den)
-            else:
-                order = ()
+        for t_ in order:
+            c_ = T_idx[t_]
+            w = self.W[c_]
+            cache = {"iw_count": int(T_num[t_])}
+            m, cache = self.match_criterion_bin(
+                x, w, params=self.params, cache=cache, op=mt_operator
+            )
+            if not m:
+                # The reset only matters once vigilance passes, so skip the call.
+                continue
+            no_match_reset = (
+                reset_first
+                or match_reset_func is None
+                or match_reset_func(x, w, c_, params=self.params, cache=cache)
+            )
+            if no_match_reset:
+                self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                return c_
+            keep_searching = self._match_tracking_integer(
+                cache, epsilon_int, self.params, match_tracking
+            )
+            if not keep_searching:
+                break
 
-            for t_ in order:
-                c_ = T_idx[t_]
-                w = self.W[c_]
-                cache = {"iw_count": int(T_num[t_])}
-                m, cache = self.match_criterion_bin(
-                    x, w, params=self.params, cache=cache, op=mt_operator
-                )
-
-                if match_tracking in ["MT~"] and match_reset_func is not None:
-                    no_match_reset = True
-                else:
-                    no_match_reset = match_reset_func is None or match_reset_func(
-                        x, w, c_, params=self.params, cache=cache
-                    )
-
-                if m and no_match_reset:
-                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
-                    self._set_params(base_params)
-                    return c_
-                else:
-                    if m and not no_match_reset:
-                        keep_searching = self._match_tracking_integer(
-                            cache, epsilon_int, self.params, match_tracking
-                        )
-                        if not keep_searching:
-                            break
-
-            c_new = len(self.W)
-            w_new = self.new_weight(x, self.params)
-            self.add_weight(w_new)
-            self._set_params(base_params)
-            return c_new
+        c_new = len(self.W)
+        w_new = self.new_weight(x, self.params)
+        self.add_weight(w_new)
+        return c_new

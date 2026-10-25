@@ -182,13 +182,13 @@ class FALCON:
             action_space = self.fusion_art.get_channel_centers(1)
             action_space = np.array(action_space)
         action_space_prepared = self.fusion_art.modules[1].prepare_data(action_space)
-        viable_clusters = []
-        for action in action_space_prepared:
-            data = self.fusion_art.join_channel_data(
-                [state.reshape(1, -1), action.reshape(1, -1)], skip_channels=[2]
-            )
-            c = self.fusion_art.predict(data, skip_channels=[2])
-            viable_clusters.append(c[0])
+        # Score every action in one predict call.
+        n_actions = len(action_space_prepared)
+        states = np.repeat(state.reshape(1, -1), n_actions, axis=0)
+        data = self.fusion_art.join_channel_data(
+            [states, action_space_prepared.reshape(n_actions, -1)], skip_channels=[2]
+        )
+        viable_clusters = self.fusion_art.predict(data, skip_channels=[2])
 
         rewards = [reward_centers[c] for c in viable_clusters]
 

@@ -13,6 +13,20 @@ from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from artlib.supervised.ARTMAP import ARTMAP
 
 
+def _map_labels(mapping: dict, labels: np.ndarray) -> np.ndarray:
+    """Return ``np.asarray([mapping[int(c)] for c in labels])``.
+
+    Each distinct label is looked up once, so this stays fast when ``labels``
+    holds every sample seen so far.
+
+    """
+    labels = np.asarray(labels)
+    if labels.size == 0:
+        return np.asarray([])
+    unique, inverse = np.unique(labels, return_inverse=True)
+    return np.asarray([mapping[int(c)] for c in unique])[inverse.reshape(-1)]
+
+
 class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
     """DeepARTMAP for Hierachical Supervised and Unsupervised Learning.
 
@@ -209,7 +223,7 @@ class DeepARTMAP(BaseEstimator, ClassifierMixin, ClusterMixin):
         labels = np.asarray(cast(SimpleARTMAP, self.layers[-1]).labels_a)
         refreshed = []
         for layer in reversed(self.layers):
-            labels = np.asarray([layer.map[int(category)] for category in labels])
+            labels = _map_labels(layer.map, labels)
             classes = np.unique(np.asarray(list(layer.map.values())))
             refreshed.append((layer, labels, classes))
         for layer, labels, classes in refreshed:

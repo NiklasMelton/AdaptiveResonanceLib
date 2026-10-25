@@ -1,12 +1,14 @@
 import numpy as np
-from matplotlib.axes import Axes
-from typing import Optional, Iterable, List, Tuple, Dict, Callable
+from typing import TYPE_CHECKING, Optional, Iterable, List, Tuple, Dict, Callable
 from warnings import warn
 from pyalphashape import plot_polygon_edges, AlphaShape
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
 import operator
 from copy import deepcopy
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 class AlphaART(BaseART):
     """
@@ -232,7 +234,7 @@ class AlphaART(BaseART):
         return centers
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: Iterable, linewidth: int = 1
+        self, ax: "Axes", colors: Iterable, linewidth: int = 1
     ):
         """
         Visualize the bounds of each cluster.
@@ -258,7 +260,7 @@ class AlphaART(BaseART):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         marker_size: int = 10,
         linewidth: int = 1,
         colors: Optional[IndexableOrKeyable] = None,

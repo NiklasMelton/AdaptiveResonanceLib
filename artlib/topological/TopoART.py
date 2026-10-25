@@ -7,13 +7,14 @@
 # doi:10.1007/978-3-642-15825-4_21.
 
 import numpy as np
-from typing import Optional, Callable, List, Literal, Tuple, Union, Dict
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING, Optional, Callable, List, Literal, Tuple, Union, Dict
 from warnings import warn
-from copy import deepcopy
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
 import operator
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class TopoART(BaseART):
@@ -186,6 +187,12 @@ class TopoART(BaseART):
         """
         return self.base_module.category_choice(i, w, params)
 
+    def _batch_category_choice(self, i: np.ndarray, params: dict):
+        """Score every cluster with the base module's batch hook, if it has one."""
+        if type(self).category_choice is not TopoART.category_choice:
+            return None
+        return self.base_module._batch_category_choice(i, params)
+
     def match_criterion(
         self,
         i: np.ndarray,
@@ -335,20 +342,21 @@ class TopoART(BaseART):
         self.adjacency = self.adjacency[perm_labels][:, perm_labels]
         self._permanent_mask = self._permanent_mask[perm_labels]
 
-        label_map = {
-            label: np.where(perm_labels == label)[0][0]
-            for label in np.unique(self.labels_)
-            if label in perm_labels
-        }
-
-        for i, x in enumerate(X):
-            if self.labels_[i] in label_map:
-                self.labels_[i] = label_map[self.labels_[i]]
-            elif len(self.W) > 0:
+        # Map surviving clusters to their new indices in one lookup.
+        labels = self.labels_
+        n_old = int(perm_labels[-1]) + 1 if len(perm_labels) else 0
+        lookup = np.full(max(n_old, 1), -1, dtype=labels.dtype)
+        lookup[perm_labels] = np.arange(len(perm_labels))
+        in_range = (labels >= 0) & (labels < len(lookup))
+        mapped = np.where(in_range, lookup[np.where(in_range, labels, 0)], -1)
+        kept = mapped >= 0
+        labels[kept] = mapped[kept]
+        for i in np.flatnonzero(~kept):
+            if len(self.W) > 0:
                 # this is a more flexible approach than that described in the paper
-                self.labels_[i] = self.step_pred(x)
+                labels[i] = self.step_pred(X[i])
             else:
-                self.labels_[i] = -1
+                labels[i] = -1
 
     def post_step_fit(self, X: np.ndarray):
         """Perform post-fit operations, such as cluster pruning, after fitting each
@@ -420,16 +428,16 @@ class TopoART(BaseART):
         """
         self.base_module.params = new_params
 
-    def _deep_copy_params(self) -> dict:
-        """Create a deep copy of the parameters.
+    def _copy_params(self) -> dict:
+        """Copy the base module's params so match tracking can be undone.
 
         Returns
         -------
         dict
-            Deep copy of the parameters.
+            Shallow copy of the parameters.
 
         """
-        return deepcopy(self.base_module.params)
+        return dict(self.base_module.params)
 
     def step_fit(
         self,
@@ -457,9 +465,25 @@ class TopoART(BaseART):
             Cluster label of the input sample.
 
         """
-        base_params = self._deep_copy_params()
-        mt_operator = self._match_tracking_operator(match_tracking)
+        base_params = self._copy_params()
         self.sample_counter_ += 1
+        try:
+            return self._step_fit_topo(
+                x, match_reset_func, match_tracking, epsilon, base_params
+            )
+        finally:
+            self._set_params(base_params)
+
+    def _step_fit_topo(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable],
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+        epsilon: float,
+        base_params: dict,
+    ) -> int:
+        """Body of :meth:`step_fit`; the caller restores params afterwards."""
+        mt_operator = self._match_tracking_operator(match_tracking)
         resonant_c: int = -1
 
         if len(self.W) == 0:
@@ -468,70 +492,65 @@ class TopoART(BaseART):
             self.adjacency = np.zeros((1, 1), dtype=int)
             self._permanent_mask = np.zeros((1,), dtype=bool)
             return 0
-        else:
-            T_values, T_cache = zip(
-                *[
-                    self.category_choice(x, w, params=self.base_module.params)
-                    for w in self.W
-                ]
+
+        T, T_cache = self._category_choices(x, self.base_module.params)
+        # Visit candidates from highest to lowest activation, ties by index. The
+        # activations do not change during the search, so sort them once.
+        valid = ~np.isnan(T)
+        idx = np.flatnonzero(valid)
+        order = idx[np.lexsort((idx, -T[valid]))]
+        for c_ in order.tolist():
+            w = self.W[c_]
+            cache = T_cache[c_]
+            m, cache = self.match_criterion_bin(
+                x,
+                w,
+                params=self.base_module.params,
+                cache=cache,
+                op=mt_operator,
             )
-            T = np.array(T_values)
-            while any(~np.isnan(T)):
-                c_ = int(np.nanargmax(T))
-                w = self.W[c_]
-                cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(
+            # Unlike BaseART, the reset result is also used when vigilance fails.
+            no_match_reset = match_reset_func is None or match_reset_func(
+                x, w, c_, params=self.base_module.params, cache=cache
+            )
+
+            if m and no_match_reset:
+                if resonant_c < 0:
+                    params = self.base_module.params
+                else:
+                    params = dict(
+                        self.base_module.params,
+                        **{"beta": self.params["beta_lower"]},
+                    )
+                # TODO: make compatible with DualVigilanceART
+                new_w = self.update(
                     x,
                     w,
-                    params=self.base_module.params,
-                    cache=cache,
-                    op=mt_operator,
+                    params=params,
+                    cache=dict(
+                        (cache if cache else {}),
+                        **{"resonant_c": resonant_c, "current_c": c_},
+                    ),
                 )
-                no_match_reset = match_reset_func is None or match_reset_func(
-                    x, w, c_, params=self.base_module.params, cache=cache
-                )
-                if m and no_match_reset:
-                    if resonant_c < 0:
-                        params = self.base_module.params
-                    else:
-                        params = dict(
-                            self.base_module.params,
-                            **{"beta": self.params["beta_lower"]},
-                        )
-                    # TODO: make compatible with DualVigilanceART
-                    new_w = self.update(
-                        x,
-                        w,
-                        params=params,
-                        cache=dict(
-                            (cache if cache else {}),
-                            **{"resonant_c": resonant_c, "current_c": c_},
-                        ),
-                    )
-                    self.set_weight(c_, new_w)
-                    if resonant_c < 0:
-                        resonant_c = c_
-                        T[c_] = np.nan
-                    else:
-                        self._set_params(base_params)
-                        return resonant_c
+                self.set_weight(c_, new_w)
+                if resonant_c < 0:
+                    resonant_c = c_
                 else:
-                    T[c_] = np.nan
-                    if not no_match_reset:
-                        keep_searching = self._match_tracking(
-                            cache, epsilon, self.params, match_tracking
-                        )
-                        if not keep_searching:
-                            T[:] = np.nan
+                    return resonant_c
+            elif not no_match_reset:
+                keep_searching = self._match_tracking(
+                    cache, epsilon, self.params, match_tracking
+                )
+                if not keep_searching:
+                    break
 
+        if resonant_c < 0:
             self._set_params(base_params)
-            if resonant_c < 0:
-                c_new = len(self.W)
-                w_new = self.new_weight(x, self.params)
-                self.add_weight(w_new)
-                return c_new
-
-            return resonant_c
+            c_new = len(self.W)
+            w_new = self.new_weight(x, self.params)
+            self.add_weight(w_new)
+            return c_new
+        return resonant_c
 
     def get_cluster_centers(self) -> List[np.ndarray]:
         """Get the centers of each cluster.
@@ -545,13 +564,13 @@ class TopoART(BaseART):
         return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+        self, ax: "Axes", colors: IndexableOrKeyable, linewidth: int = 1
     ):
         """Visualize the boundaries of each cluster.
 
         Parameters
         ----------
-        ax : Axes
+        ax : "Axes"
             Figure axes.
         colors : IndexableOrKeyable
             Colors to use for each cluster.

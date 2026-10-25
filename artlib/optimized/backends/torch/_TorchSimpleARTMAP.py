@@ -19,6 +19,38 @@ def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> T
     raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
+def _append_rows(owner, n: int, **rows: Tensor) -> None:
+    """Append one row to each named tensor attribute of ``owner``.
+
+    Each attribute becomes a view of the first ``n + 1`` rows of a buffer with
+    spare capacity, so adding a category does not copy every existing row (as
+    ``torch.cat`` did). Existing rows can still be edited in place through the
+    view.
+
+    """
+    buffers = owner.__dict__.setdefault("_row_buffers", {})
+    for name, row in rows.items():
+        current = getattr(owner, name)
+        buf = buffers.get(name)
+        stale = (
+            buf is None
+            or n >= buf.shape[0]
+            or buf.shape[1:] != row.shape
+            or buf.dtype != row.dtype
+            or (n > 0 and current.data_ptr() != buf.data_ptr())
+        )
+        if stale:
+            new = torch.empty(
+                (max(16, 2 * n),) + tuple(row.shape), device=row.device, dtype=row.dtype
+            )
+            if n:
+                new[:n] = current[:n]
+            buf = new
+            buffers[name] = buf
+        buf[n] = row
+        setattr(owner, name, buf[: n + 1])
+
+
 class _TorchSimpleARTMAP(SimpleARTMAP):
     def _synchronize_torch_results(
         self,

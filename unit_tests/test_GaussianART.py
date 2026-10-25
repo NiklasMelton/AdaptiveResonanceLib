@@ -134,13 +134,11 @@ def test_predict(art_model):
 
 
 
-def _reference_choice(model, x, w):
-    # Activation as originally written, summing the counts on every call.
-    dist = w[: model.dim_] - x
-    inv_sig = w[2 * model.dim_ : 3 * model.dim_]
-    p_i_cj = np.exp(-0.5 * np.dot(dist, np.multiply(inv_sig, dist))) / (
-        model.params["alpha"] + w[-2]
-    )
+def _reference_choice(model, w, exp_dist_sig_dist):
+    # Activation as originally written, summing the counts on every call. The
+    # Gaussian term comes from the model, since a BLAS dot product can round it
+    # differently on some platforms; this test is about the cached count total.
+    p_i_cj = exp_dist_sig_dist / (model.params["alpha"] + w[-2])
     return p_i_cj * (w[-1] / sum(w_[-1] for w_ in model.W))
 
 
@@ -149,8 +147,9 @@ def test_cached_total_count_matches_reference(art_model):
 
     def check():
         for w in art_model.W:
-            got, _ = art_model.category_choice(X[-1], w, art_model.params)
-            assert got == _reference_choice(art_model, X[-1], w)
+            got, cache = art_model.category_choice(X[-1], w, art_model.params)
+            expected = _reference_choice(art_model, w, cache["exp_dist_sig_dist"])
+            assert got == expected
 
     art_model.fit(X[:20])
     check()

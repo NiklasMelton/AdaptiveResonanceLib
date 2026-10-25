@@ -6,9 +6,8 @@
 
 import numpy as np
 from numba import njit
-from typing import Optional, Iterable, List, Tuple, Dict
-from matplotlib.axes import Axes
-from artlib.common.BaseART import BaseART
+from typing import TYPE_CHECKING, Optional, Iterable, List, Tuple, Dict
+from artlib.common.BaseART import BaseART, stacked_weights, _NoCaches
 from artlib.common.utils import (
     normalize,
     complement_code,
@@ -16,6 +15,9 @@ from artlib.common.utils import (
     fuzzy_and,
     de_complement_code,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 def get_bounding_box(
@@ -54,7 +56,7 @@ def get_bounding_box(
     return ref_point, widths
 
 
-@njit
+@njit(cache=True)
 def _category_choice_numba(i: np.ndarray, w: np.ndarray, alpha: float) -> float:
     """Compute the category choice (activation) using Numba optimization.
 
@@ -76,7 +78,52 @@ def _category_choice_numba(i: np.ndarray, w: np.ndarray, alpha: float) -> float:
     return l1norm(fuzzy_and(i, w)) / (alpha + l1norm(w))
 
 
-@njit
+@njit(cache=True)
+def _category_choice_batch_numba(
+    i: np.ndarray, W: np.ndarray, row_is_f32: np.ndarray, i_is_f32: bool, alpha: float
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Score every row of ``W`` exactly as ``_category_choice_numba`` would.
+
+    The per-cluster kernel sums sequentially in the dtype numpy would give each
+    term, so rows that were float32 weights are summed in float32 here as well.
+
+    Returns
+    -------
+    tuple
+        The activations and the fuzzy AND sums ``|i ^ w|``.
+
+    """
+    n_rows, n_cols = W.shape
+    out = np.empty(n_rows, dtype=np.float64)
+    nums = np.empty(n_rows, dtype=np.float64)
+    for k in range(n_rows):
+        if row_is_f32[k]:
+            den32 = np.float32(0.0)
+            for j in range(n_cols):
+                den32 += np.float32(abs(W[k, j]))
+            den = np.float64(den32)
+            if i_is_f32:
+                num32 = np.float32(0.0)
+                for j in range(n_cols):
+                    num32 += np.float32(abs(np.minimum(np.float64(i[j]), W[k, j])))
+                num = np.float64(num32)
+            else:
+                num = 0.0
+                for j in range(n_cols):
+                    num += abs(np.minimum(np.float64(i[j]), W[k, j]))
+        else:
+            den = 0.0
+            num = 0.0
+            for j in range(n_cols):
+                den += abs(W[k, j])
+            for j in range(n_cols):
+                num += abs(np.minimum(np.float64(i[j]), W[k, j]))
+        nums[k] = num
+        out[k] = num / (alpha + den)
+    return out, nums
+
+
+@njit(cache=True)
 def _match_criterion_numba(i: np.ndarray, w: np.ndarray, dim_original: float) -> float:
     """Compute the match criterion using Numba optimization.
 
@@ -98,7 +145,7 @@ def _match_criterion_numba(i: np.ndarray, w: np.ndarray, dim_original: float) ->
     return l1norm(fuzzy_and(i, w)) / dim_original
 
 
-@njit
+@njit(cache=True)
 def _update_numba(i: np.ndarray, w: np.ndarray, b: Optional[float]) -> np.ndarray:
     """Compute the updated cluster weight using Numba optimization.
 
@@ -270,6 +317,24 @@ class FuzzyART(BaseART):
         """
         return _category_choice_numba(i, w, params["alpha"]), None
 
+    def _batch_category_choice(self, i: np.ndarray, params: dict):
+        """Score every cluster in one compiled call (see BaseART)."""
+        if type(self).category_choice is not FuzzyART.category_choice:
+            return None
+        if i.dtype.char not in "fd":
+            return None
+        M, kinds = stacked_weights(self)
+        row_is_f32 = kinds == "f"
+        if not np.all(row_is_f32 | (kinds == "d")):
+            return None
+        T, nums = _category_choice_batch_numba(
+            i, M, row_is_f32, i.dtype.char == "f", params["alpha"]
+        )
+        match = None
+        if type(self).match_criterion is FuzzyART.match_criterion:
+            match = nums / self.dim_original  # same as _match_criterion_numba
+        return T, _NoCaches(len(T), match=match)
+
     def match_criterion(
         self,
         i: np.ndarray,
@@ -411,7 +476,7 @@ class FuzzyART(BaseART):
         self.W = new_W
         return self
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: "Axes", colors: Iterable, linewidth: int = 1):
         """Visualize the bounds of each cluster.
 
         Parameters

@@ -122,7 +122,7 @@ def de_complement_code(data: np.ndarray) -> np.ndarray:
     return mean_array
 
 
-@njit
+@njit(cache=True)
 def l1norm(x: np.ndarray) -> float:
     """Get the L1 norm of a vector using Numba.
 
@@ -157,7 +157,7 @@ def l2norm2(data: np.ndarray) -> float:
     return float(np.matmul(data, data))
 
 
-@njit
+@njit(cache=True)
 def fuzzy_and(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """Get the fuzzy AND operation between two vectors.
 

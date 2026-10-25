@@ -5,10 +5,35 @@
 # (pp. 59–64). volume 6. doi:10.1109/IJCNN.2000.859373.
 
 import numpy as np
-from typing import Optional, Iterable, List
-from matplotlib.axes import Axes
-from artlib.common.BaseART import BaseART
-from artlib.common.utils import l2norm2
+from numba import njit
+from typing import TYPE_CHECKING, Optional, Iterable, List
+from artlib.common.BaseART import BaseART, LazyCaches, stacked_weights
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+
+@njit(cache=True)
+def _euclidean_numba(i: np.ndarray, centroid: np.ndarray) -> float:
+    """Euclidean distance, summed in order in float64 like the C++ backend."""
+    s = 0.0
+    for j in range(centroid.shape[0]):
+        d = np.float64(i[j]) - np.float64(centroid[j])
+        s += d * d
+    return np.sqrt(s)
+
+
+@njit(cache=True)
+def _euclidean_batch_numba(i: np.ndarray, W: np.ndarray, dim: int) -> np.ndarray:
+    """``_euclidean_numba`` from ``i`` to the first ``dim`` columns of each row."""
+    out = np.empty(W.shape[0], dtype=np.float64)
+    for k in range(W.shape[0]):
+        s = 0.0
+        for j in range(dim):
+            d = np.float64(i[j]) - W[k, j]
+            s += d * d
+        out[k] = np.sqrt(s)
+    return out
 
 
 class HypersphereART(BaseART):
@@ -95,7 +120,7 @@ class HypersphereART(BaseART):
             Category distance.
 
         """
-        return np.sqrt(l2norm2(i - centroid))
+        return _euclidean_numba(i, centroid)
 
     def category_choice(
         self, i: np.ndarray, w: np.ndarray, params: dict
@@ -132,6 +157,31 @@ class HypersphereART(BaseART):
         return (params["r_hat"] - max_radius) / (
             params["r_hat"] - radius + params["alpha"]
         ), cache
+
+    def _batch_category_choice(self, i: np.ndarray, params: dict):
+        """Score every cluster in one compiled call (see BaseART)."""
+        cls = type(self)
+        if (
+            cls.category_choice is not HypersphereART.category_choice
+            or cls.category_distance is not HypersphereART.category_distance
+        ):
+            return None
+        M, kinds = stacked_weights(self)
+        if not np.all(kinds == "d"):
+            return None
+        radius = M[:, -1]
+        i_radius = _euclidean_batch_numba(i, M, M.shape[1] - 1)
+        # Same as Python's max(radius, i_radius) element by element.
+        max_radius = np.where(i_radius > radius, i_radius, radius)
+        T = (params["r_hat"] - max_radius) / (
+            params["r_hat"] - radius + params["alpha"]
+        )
+        match = None
+        if cls.match_criterion is HypersphereART.match_criterion:
+            # match_criterion uses max(radius, max_radius), which is max_radius.
+            match = 1 - (max_radius / params["r_hat"])
+        caches = {"max_radius": max_radius, "i_radius": i_radius}
+        return T, LazyCaches(caches, match=match)
 
     def match_criterion(
         self,
@@ -259,7 +309,7 @@ class HypersphereART(BaseART):
         """
         return [w[:-1] for w in self.W]
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: "Axes", colors: Iterable, linewidth: int = 1):
         """Visualize the bounds of each cluster.
 
         Parameters

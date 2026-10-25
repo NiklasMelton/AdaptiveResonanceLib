@@ -5,11 +5,42 @@
 # Neural Networks, 9, 881 – 897. doi:10.1016/0893-6080(95)00115-8.
 
 import numpy as np
-from typing import Optional, Iterable, List, Tuple, Dict
-from matplotlib.axes import Axes
-from artlib.common.BaseART import BaseART
+from numba import njit
+from typing import TYPE_CHECKING, Optional, Iterable, List, Tuple, Dict
+from artlib.common.BaseART import BaseART, LazyCaches, stacked_weights
 from artlib.common.utils import CategoryCountPriorMixin
 from artlib.common.visualization import plot_gaussian_contours_fading
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+
+@njit(cache=True)
+def _gaussian_exp_numba(i: np.ndarray, w: np.ndarray, dim: int) -> float:
+    """``exp(-0.5 * (i - mean)^T inv_sig (i - mean))`` for one weight.
+
+    Uses the same products as the original numpy expression
+    ``dist @ (inv_sig * dist)``, summed in order in float64.
+
+    """
+    q = 0.0
+    for j in range(dim):
+        d = np.float64(w[j]) - np.float64(i[j])
+        q += d * (np.float64(w[2 * dim + j]) * d)
+    return np.exp(-0.5 * q)
+
+
+@njit(cache=True)
+def _gaussian_exp_batch_numba(i: np.ndarray, W: np.ndarray, dim: int) -> np.ndarray:
+    """``_gaussian_exp_numba`` for every row of ``W``."""
+    out = np.empty(W.shape[0], dtype=np.float64)
+    for k in range(W.shape[0]):
+        q = 0.0
+        for j in range(dim):
+            d = W[k, j] - np.float64(i[j])
+            q += d * (W[k, 2 * dim + j] * d)
+        out[k] = np.exp(-0.5 * q)
+    return out
 
 
 class GaussianART(CategoryCountPriorMixin, BaseART):
@@ -87,14 +118,10 @@ class GaussianART(CategoryCountPriorMixin, BaseART):
             Cache used for later processing.
 
         """
-        mean = w[: self.dim_]
-        # sigma = w[self.dim_:2*self.dim]
-        inv_sig = w[2 * self.dim_ : 3 * self.dim_]
+        # weight layout: mean, sigma, inv_sig (dim_ each), sqrt(det(sigma)), n
         sqrt_det_sig = w[-2]
         n = w[-1]
-
-        dist = mean - i
-        exp_dist_sig_dist = np.exp(-0.5 * np.dot(dist, np.multiply(inv_sig, dist)))
+        exp_dist_sig_dist = _gaussian_exp_numba(i, w, self.dim_)
 
         cache = {"exp_dist_sig_dist": exp_dist_sig_dist}
         # ignore the (2*pi)^d term as that is constant
@@ -104,6 +131,23 @@ class GaussianART(CategoryCountPriorMixin, BaseART):
         activation = p_i_cj * p_cj
 
         return activation, cache
+
+    def _batch_category_choice(self, i: np.ndarray, params: dict):
+        """Score every cluster in one compiled call (see BaseART)."""
+        if type(self).category_choice is not GaussianART.category_choice:
+            return None
+        M, kinds = stacked_weights(self)
+        if not np.all(kinds == "d"):
+            return None
+        exp_dist_sig_dist = _gaussian_exp_batch_numba(i, M, self.dim_)
+        p_i_cj = exp_dist_sig_dist / (params["alpha"] + M[:, -2])
+        p_cj = M[:, -1] / self._total_count()
+        T = p_i_cj * p_cj
+        match = None
+        if type(self).match_criterion is GaussianART.match_criterion:
+            match = exp_dist_sig_dist
+        caches = {"exp_dist_sig_dist": exp_dist_sig_dist}
+        return T, LazyCaches(caches, match=match)
 
     def match_criterion(
         self,
@@ -257,7 +301,7 @@ class GaussianART(CategoryCountPriorMixin, BaseART):
         """
         return [w[: self.dim_] for w in self.W]
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: "Axes", colors: Iterable, linewidth: int = 1):
         """Visualize the bounds of each cluster.
 
         Parameters

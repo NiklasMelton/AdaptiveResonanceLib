@@ -6,11 +6,13 @@
 # doi:10.1109/ICNN.1994.374307.
 
 import numpy as np
-from typing import Union, Type, Optional, Literal, Tuple
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING, Union, Type, Optional, Literal, Tuple
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
 from artlib.hierarchical.DeepARTMAP import DeepARTMAP
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class SMART(DeepARTMAP):
@@ -179,13 +181,13 @@ class SMART(DeepARTMAP):
         )
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+        self, ax: "Axes", colors: IndexableOrKeyable, linewidth: int = 1
     ):
         """Visualize the cluster boundaries.
 
         Parameters
         ----------
-        ax : Axes
+        ax : "Axes"
             The matplotlib axes on which to plot the cluster boundaries.
         colors : IndexableOrKeyable
             The colors to use for each cluster.
@@ -210,7 +212,7 @@ class SMART(DeepARTMAP):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         marker_size: int = 10,
         linewidth: int = 1,
         colors: Optional[IndexableOrKeyable] = None,
@@ -223,7 +225,7 @@ class SMART(DeepARTMAP):
             The dataset to visualize.
         y : np.ndarray
             The cluster labels for the data points.
-        ax : Axes, optional
+        ax : "Axes", optional
             The matplotlib axes on which to plot the visualization.
         marker_size : int, optional
             The size of the data points in the plot.

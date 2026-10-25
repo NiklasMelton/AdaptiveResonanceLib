@@ -1,10 +1,11 @@
 """CVIART."""
 import numpy as np
-from copy import deepcopy
 import sklearn.metrics as metrics
-from typing import Optional, List, Callable, Literal, Iterable
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING, Optional, List, Callable, Literal, Iterable
 from artlib.common.BaseART import BaseART
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class CVIART(BaseART):
@@ -136,7 +137,9 @@ class CVIART(BaseART):
         params : dict
             Parameters for the algorithm.
         extra : dict
-            Extra information including index and validity type.
+            Extra information including index and validity type. An optional
+            "memo" dict, shared by all candidates of one sample, stores the
+            validity index before the sample is assigned.
         cache : dict
             Cache containing values from previous calculations.
 
@@ -158,7 +161,14 @@ class CVIART(BaseART):
         else:
             raise ValueError(f"Invalid Validity Parameter: {extra['validity']}")
 
-        old_VI = valid_func(self.data, self.labels_)
+        # The index before assigning the sample is the same for every candidate.
+        memo = extra.get("memo")
+        if memo is not None and "old_VI" in memo:
+            old_VI = memo["old_VI"]
+        else:
+            old_VI = valid_func(self.data, self.labels_)
+            if memo is not None:
+                memo["old_VI"] = old_VI
         new_labels = np.copy(self.labels_)
         new_labels[extra["index"]] = c_
         new_VI = valid_func(self.data, new_labels)
@@ -214,8 +224,8 @@ class CVIART(BaseART):
     def _set_params(self, new_params):
         self.base_module.params = new_params
 
-    def _deep_copy_params(self) -> dict:
-        return deepcopy(self.base_module.params)
+    def _copy_params(self) -> dict:
+        return dict(self.base_module.params)
 
     def fit(
         self,
@@ -257,33 +267,22 @@ class CVIART(BaseART):
         for _ in range(max_iter):
             for index, x in enumerate(X):
                 self.pre_step_fit(X)
+                extra = {
+                    "index": index,
+                    "validity": self.params["validity"],
+                    "memo": {},
+                }
                 if match_reset_func is None:
                     cvi_match_reset_func = (
-                        lambda i, w, cluster_a, params, cache: self.CVI_match(
-                            i,
-                            w,
-                            cluster_a,
-                            params,
-                            {
-                                "index": index,
-                                "validity": self.params["validity"],
-                            },
-                            cache,
+                        lambda i, w, cluster_a, params, cache, extra=extra: (
+                            self.CVI_match(i, w, cluster_a, params, extra, cache)
                         )
                     )
                 else:
-                    cvi_match_reset_func = lambda i, w, cluster_a, params, cache: (
-                        match_reset_func(i, w, cluster_a, params, cache)
-                        and self.CVI_match(
-                            i,
-                            w,
-                            cluster_a,
-                            params,
-                            {
-                                "index": index,
-                                "validity": self.params["validity"],
-                            },
-                            cache,
+                    cvi_match_reset_func = (
+                        lambda i, w, cluster_a, params, cache, extra=extra: (
+                            match_reset_func(i, w, cluster_a, params, cache)
+                            and self.CVI_match(i, w, cluster_a, params, extra, cache)
                         )
                     )
                 c = self.base_module.step_fit(
@@ -375,7 +374,7 @@ class CVIART(BaseART):
         """
         return self.base_module.get_cluster_centers()
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: "Axes", colors: Iterable, linewidth: int = 1):
         """Plot the boundaries of each cluster.
 
         Parameters

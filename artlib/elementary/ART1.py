@@ -13,7 +13,7 @@ from numba import njit
 from artlib.common.utils import complement_code, de_complement_code
 
 
-@njit
+@njit(cache=True)
 def match_criterion_numba(i, w_td, dim_):
     """Compute the match criterion for ART1 clustering.
 
@@ -45,7 +45,7 @@ def match_criterion_numba(i, w_td, dim_):
     return count / dim_
 
 
-@njit
+@njit(cache=True)
 def category_choice_numba(i, w_bu):
     """Compute the category choice activation for ART1.
 
@@ -73,7 +73,7 @@ def category_choice_numba(i, w_bu):
     return activation
 
 
-@njit
+@njit(cache=True)
 def update_numba(i, w, L, dim_):
     """Optimized update function for ART1 using Numba.
 

@@ -1,6 +1,5 @@
 import numpy as np
-from matplotlib.axes import Axes
-from typing import Optional, Iterable, Tuple, Dict
+from typing import TYPE_CHECKING, Optional, Iterable, Tuple, Dict
 from warnings import warn
 from pyalphashape import (
     SphericalAlphaShape,
@@ -9,6 +8,9 @@ from pyalphashape import (
 )
 from artlib.common.utils import IndexableOrKeyable
 from artlib.experimental.AlphaART import AlphaART
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 class SphericalAlphaART(AlphaART):
     """
@@ -167,7 +169,7 @@ class SphericalAlphaART(AlphaART):
 
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: Iterable, linewidth: int = 1
+        self, ax: "Axes", colors: Iterable, linewidth: int = 1
     ):
         """
         Visualize the bounds of each cluster.
@@ -191,7 +193,7 @@ class SphericalAlphaART(AlphaART):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         marker_size: int = 10,
         linewidth: int = 1,
         colors: Optional[IndexableOrKeyable] = None,

@@ -1,14 +1,123 @@
 """Base class for all ART objects."""
 import numpy as np
-from typing import Optional, Callable, Literal, List, Tuple, Union, Dict
-from copy import deepcopy
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+    Callable,
+    Literal,
+    List,
+    Tuple,
+    Union,
+    Dict,
+    Sequence,
+)
 from collections import defaultdict
-from matplotlib.axes import Axes
 from warnings import warn
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
 from artlib.common.utils import normalize, de_normalize, IndexableOrKeyable
 import operator
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+
+class LazyCaches(Sequence):
+    """Per-cluster cache dicts built on demand from arrays of scores.
+
+    Batch scoring computes every cluster's cache values at once, but only the few
+    clusters that are actually visited need a dict.
+
+    ``match``, when given, holds each cluster's :meth:`BaseART.match_criterion`
+    value, which lets the search skip clusters that fail vigilance.
+
+    """
+
+    __slots__ = ("_columns", "match")
+
+    def __init__(
+        self, columns: Dict[str, np.ndarray], match: Optional[np.ndarray] = None
+    ):
+        """Wrap per-cluster cache arrays, keyed by cache name."""
+        self._columns = columns
+        self.match = match
+
+    def __len__(self) -> int:
+        return len(next(iter(self._columns.values())))
+
+    def __getitem__(self, index):
+        return {key: values[index] for key, values in self._columns.items()}
+
+
+class _NoCaches(Sequence):
+    """A sequence of ``n`` empty (None) caches, with an optional ``match`` array (see
+    :class:`LazyCaches`)."""
+
+    __slots__ = ("_n", "match")
+
+    def __init__(self, n: int, match: Optional[np.ndarray] = None):
+        self._n = n
+        self.match = match
+
+    def __len__(self) -> int:
+        return self._n
+
+    def __getitem__(self, index):
+        if not -self._n <= index < self._n:
+            raise IndexError(index)
+        return None
+
+
+def stacked_weights(model, dtype=np.float64) -> Tuple[np.ndarray, np.ndarray]:
+    """Return ``model.W`` as one 2-D array, reusing rows that have not changed.
+
+    The rows are cached and refreshed by identity: a weight that was replaced (as
+    every artlib module does on update) is copied in again, and new weights are
+    appended. A weight array edited in place is not detected.
+
+    Returns
+    -------
+    tuple
+        The stacked weights, and the numpy dtype ``char`` of each original weight
+        (some kernels must reproduce float32 arithmetic for float32 weights).
+
+    """
+    W = model.W
+    n = len(W)
+    key = "_stacked_weights_cache_"
+    cached = model.__dict__.get(key)
+    if cached is not None and cached[0] is W and cached[2].dtype == dtype:
+        _, refs, M, kinds = cached
+        m = len(refs)
+        width = np.size(W[0]) if n else M.shape[1]
+        if m <= n and M.shape[1] == width:
+            if not all(map(operator.is_, refs, W)):
+                for c in [c for c in range(m) if refs[c] is not W[c]]:
+                    M[c] = W[c]
+                    kinds[c] = np.asarray(W[c]).dtype.char
+                    refs[c] = W[c]
+            if n > m:
+                if n > M.shape[0]:
+                    size = max(n, 2 * M.shape[0])
+                    grown = np.empty((size, width), dtype=dtype)
+                    grown[:m] = M[:m]
+                    grown_kinds = np.empty(size, dtype="U1")
+                    grown_kinds[:m] = kinds[:m]
+                    M, kinds = grown, grown_kinds
+                for c in range(m, n):
+                    M[c] = W[c]
+                    kinds[c] = np.asarray(W[c]).dtype.char
+                refs.extend(W[m:n])
+                model.__dict__[key] = (W, refs, M, kinds)
+            return M[:n], kinds[:n]
+    width = np.size(W[0]) if n else 0
+    M = np.empty((n, width), dtype=dtype)
+    kinds = np.empty(n, dtype="U1")
+    for c in range(n):
+        M[c] = W[c]
+        kinds[c] = np.asarray(W[c]).dtype.char
+    model.__dict__[key] = (W, list(W), M, kinds)
+    return M, kinds
 
 
 class BaseART(BaseEstimator, ClusterMixin):
@@ -49,6 +158,12 @@ class BaseART(BaseEstimator, ClusterMixin):
         else:
             # Otherwise, proceed with normal attribute setting
             super().__setattr__(key, value)
+
+    def __getstate__(self):
+        # The stacked-weight cache is rebuilt on demand; do not pickle a copy.
+        state = dict(super().__getstate__())
+        state.pop("_stacked_weights_cache_", None)
+        return state
 
     def get_params(self, deep: bool = True) -> Dict:
         """
@@ -526,8 +641,49 @@ class BaseART(BaseEstimator, ClusterMixin):
     def _set_params(self, new_params):
         self.params = new_params
 
-    def _deep_copy_params(self) -> Dict:
-        return deepcopy(self.params)
+    def _copy_params(self) -> Dict:
+        """Copy the params so match tracking can be undone after a sample.
+
+        Match tracking only replaces values in the dict, so a shallow copy is enough.
+
+        """
+        return dict(self.params)
+
+    def _batch_category_choice(
+        self, i: np.ndarray, params: Dict
+    ) -> Optional[Tuple[np.ndarray, Sequence[Optional[Dict]]]]:
+        """Score every cluster in one call.
+
+        Modules with a vectorized activation override this. It must return exactly
+        what calling :meth:`category_choice` on each weight would, or None to fall
+        back to those calls.
+
+        Parameters
+        ----------
+        i : np.ndarray
+            Data sample.
+        params : dict
+            Dictionary containing parameters for the algorithm.
+
+        Returns
+        -------
+        tuple or None
+            Activations as a float array and a sequence of per-cluster caches.
+
+        """
+        return None
+
+    def _category_choices(
+        self, i: np.ndarray, params: Dict
+    ) -> Tuple[np.ndarray, Sequence[Optional[Dict]]]:
+        """Score every cluster, using the batch hook when the module has one."""
+        batch = self._batch_category_choice(i, params)
+        if batch is not None:
+            return batch
+        T_values, T_cache = zip(
+            *[self.category_choice(i, w, params=params) for w in self.W]
+        )
+        return np.array(T_values), T_cache
 
     def step_fit(
         self,
@@ -556,72 +712,101 @@ class BaseART(BaseEstimator, ClusterMixin):
 
         """
         self.sample_counter_ += 1
-        base_params = self._deep_copy_params()
+        base_params = self._copy_params()
+        try:
+            return self._step_fit(x, match_reset_func, match_tracking, epsilon)
+        finally:
+            self._set_params(base_params)
+
+    def _step_fit(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable],
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+        epsilon: float,
+    ) -> int:
+        """Body of :meth:`step_fit`; the caller restores params afterwards."""
         mt_operator = self._match_tracking_operator(match_tracking)
         if len(self.W) == 0:
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
             return 0
+
+        T, T_cache = self._category_choices(x, self.params)
+        reset_first = match_tracking in ["MT~"] and match_reset_func is not None
+        if reset_first:
+            # MT~ checks the reset before choice. Choice has no side effects, so
+            # computing it for every cluster first gives the same result.
+            assert match_reset_func is not None
+            T = np.array(T, dtype=float)
+            for c_, w in enumerate(self.W):
+                if not match_reset_func(x, w, c_, params=self.params, cache=None):
+                    T[c_] = np.nan
+
+        # Sort candidates once:
+        # primary = -T (descending T), secondary = index (ascending)
+        valid = ~np.isnan(T)
+        if np.any(valid):
+            idx = np.arange(T.shape[0])[valid]
+            T_valid = T[valid]
+            order = idx[np.lexsort((idx, -T_valid))]  # lexsort uses last key as primary
         else:
-            if match_tracking in ["MT~"] and match_reset_func is not None:
-                T_values, T_cache = zip(
-                    *[
-                        self.category_choice(x, w, params=self.params)
-                        if match_reset_func(x, w, c_, params=self.params, cache=None)
-                        else (np.nan, None)
-                        for c_, w in enumerate(self.W)
-                    ]
-                )
-            else:
-                T_values, T_cache = zip(
-                    *[self.category_choice(x, w, params=self.params) for w in self.W]
-                )
-            T = np.array(T_values)
+            order = np.array([], dtype=int)
 
-            # Sort candidates once:
-            # primary = -T (descending T), secondary = index (ascending)
-            valid = ~np.isnan(T)
-            if np.any(valid):
-                idx = np.arange(T.shape[0])[valid]
-                T_valid = T[valid]
-                order = idx[
-                    np.lexsort((idx, -T_valid))
-                ]  # lexsort uses last key as primary
-            else:
-                order = np.array([], dtype=int)
+        match = getattr(T_cache, "match", None)
+        if match is not None and (
+            type(self).match_criterion_bin is BaseART.match_criterion_bin
+        ):
+            candidates = self._vigilant_candidates(order, match[order], mt_operator)
+        else:
+            candidates = iter(order)
 
-            for c_ in order:
-                w = self.W[c_]
-                cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(
-                    x, w, params=self.params, cache=cache, op=mt_operator
-                )
+        for c_ in candidates:
+            w = self.W[c_]
+            cache = T_cache[c_]
+            m, cache = self.match_criterion_bin(
+                x, w, params=self.params, cache=cache, op=mt_operator
+            )
+            if not m:
+                # The reset only matters once vigilance passes, so skip the call.
+                continue
+            no_match_reset = (
+                reset_first
+                or match_reset_func is None
+                or match_reset_func(x, w, c_, params=self.params, cache=cache)
+            )
+            if no_match_reset:
+                self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                self._post_weight_update(x, w, c_)
+                return c_
+            keep_searching = self._match_tracking(
+                cache, epsilon, self.params, match_tracking
+            )
+            if not keep_searching:
+                break
 
-                if match_tracking in ["MT~"] and match_reset_func is not None:
-                    no_match_reset = True
-                else:
-                    no_match_reset = match_reset_func is None or match_reset_func(
-                        x, w, c_, params=self.params, cache=cache
-                    )
+        c_new = len(self.W)
+        w_new = self.new_weight(x, self.params)
+        self.add_weight(w_new)
+        return c_new
 
-                if m and no_match_reset:
-                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
-                    self._post_weight_update(x, w, c_)
-                    self._set_params(base_params)
-                    return c_
-                else:
-                    if m and not no_match_reset:
-                        keep_searching = self._match_tracking(
-                            cache, epsilon, self.params, match_tracking
-                        )
-                        if not keep_searching:
-                            break
+    def _vigilant_candidates(self, order: np.ndarray, match: np.ndarray, op: Callable):
+        """Yield ``order`` but skip clusters whose match fails vigilance.
 
-            c_new = len(self.W)
-            w_new = self.new_weight(x, self.params)
-            self.add_weight(w_new)
-            self._set_params(base_params)
-            return c_new
+        ``match`` holds the match criterion of each cluster in ``order``. The
+        vigilance is read again after each yield because match tracking can change
+        it. Skipped clusters would only have failed ``match_criterion_bin``, which
+        has no side effects.
+
+        """
+        pos = 0
+        while pos < len(order):
+            passing = np.flatnonzero(op(match[pos:], self.params["rho"]))
+            if passing.size == 0:
+                return
+            pos += int(passing[0])
+            yield order[pos]
+            pos += 1
 
     def step_pred(self, x) -> int:
         """Predict the label for a single sample.
@@ -639,7 +824,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         """
         assert len(self.W) > 0, "ART module is not fit."
 
-        T, _ = zip(*[self.category_choice(x, w, params=self.params) for w in self.W])
+        T, _ = self._category_choices(x, self.params)
         c_ = int(np.argmax(T))
         return c_
 
@@ -801,7 +986,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         epsilon: float = 0.0,
         verbose: bool = False,
         leave_progress_bar: bool = True,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         filename: Optional[str] = None,
         colors: Optional[IndexableOrKeyable] = None,
         n_cluster_estimate: int = 20,
@@ -957,7 +1142,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         return self
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+        self, ax: "Axes", colors: IndexableOrKeyable, linewidth: int = 1
     ):
         """Undefined function for visualizing the bounds of each cluster.
 
@@ -988,7 +1173,7 @@ class BaseART(BaseEstimator, ClusterMixin):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         marker_size: int = 10,
         linewidth: int = 1,
         colors: Optional[IndexableOrKeyable] = None,

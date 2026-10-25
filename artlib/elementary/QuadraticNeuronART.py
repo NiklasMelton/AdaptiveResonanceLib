@@ -8,11 +8,13 @@
 # Pattern Recognition, 38, 1887 – 1901. doi:10.1016/j.patcog.2005.04.010.
 
 import numpy as np
-from typing import Optional, Iterable, List, Tuple, Dict
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING, Optional, Iterable, List, Tuple, Dict
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2
 from artlib.common.visualization import plot_weight_matrix_as_ellipse
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class QuadraticNeuronART(BaseART):
@@ -234,7 +236,7 @@ class QuadraticNeuronART(BaseART):
         dim2 = self.dim_ * self.dim_
         return [w[dim2:-1] for w in self.W]
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: "Axes", colors: Iterable, linewidth: int = 1):
         """Visualize the bounds of each cluster.
 
         Parameters

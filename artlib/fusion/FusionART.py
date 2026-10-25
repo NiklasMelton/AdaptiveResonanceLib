@@ -7,11 +7,29 @@
 # doi:10.1007/ 978-3-540-72383-7_128.
 
 import numpy as np
-from typing import Optional, Union, Callable, List, Literal, Tuple, Dict
-from copy import deepcopy
+from typing import Optional, Union, Callable, List, Literal, Tuple, Dict, Sequence
 from artlib.common.BaseART import BaseART
 from sklearn.utils.validation import check_is_fitted
 import operator
+
+
+class _FusionCaches(Sequence):
+    """Per-cluster FusionART caches assembled on demand from channel caches."""
+
+    __slots__ = ("_channels", "_skip")
+
+    def __init__(self, channels: List[Sequence], skip: List[bool]):
+        self._channels = channels
+        self._skip = skip
+
+    def __len__(self) -> int:
+        return len(self._channels[0])
+
+    def __getitem__(self, index):
+        return {
+            k: (dict() if skip else caches[index])
+            for k, (caches, skip) in enumerate(zip(self._channels, self._skip))
+        }
 
 
 def get_channel_position_tuples(
@@ -441,17 +459,55 @@ class FusionART(BaseART):
         for i in range(self.n):
             self.modules[i].params = new_params[i]
 
-    def _deep_copy_params(self) -> Dict:
-        """Create a deep copy of the parameters for each module.
+    def _copy_params(self) -> Dict:
+        """Copy each module's params so match tracking can be undone.
 
         Returns
         -------
         dict
-            A dictionary with module indices as keys and their deep-copied parameters
-            as values.
+            A dictionary with module indices as keys and shallow copies of their
+            parameters as values.
 
         """
-        return {i: deepcopy(module.params) for i, module in enumerate(self.modules)}
+        return {i: dict(module.params) for i, module in enumerate(self.modules)}
+
+    def _category_choices(
+        self, i: np.ndarray, params: Dict, skip_channels: List[int] = []
+    ) -> Tuple[np.ndarray, Sequence[Dict]]:
+        """Score every cluster, combining each channel's scores in one pass.
+
+        The result matches calling :meth:`category_choice` on every cluster.
+
+        """
+        if type(self).category_choice is not FusionART.category_choice:
+            T_values, T_cache = zip(
+                *[
+                    self.category_choice(
+                        i, w, params=params, skip_channels=skip_channels
+                    )
+                    for w in self.W
+                ]
+            )
+            return np.array(T_values), T_cache
+        n_clusters = self.n_clusters
+        gamma = self.params["gamma_values"]
+        activation = 0
+        channel_caches: List[Sequence] = []
+        skip = []
+        for k in range(self.n):
+            if k in skip_channels:
+                a_k = np.ones(n_clusters)
+                caches_k: Sequence = ()
+            else:
+                a_k, caches_k = self.modules[k]._category_choices(
+                    i[self._channel_indices[k][0] : self._channel_indices[k][1]],
+                    self.modules[k].params,
+                )
+            # Same sum, in the same order, as category_choice.
+            activation = activation + a_k * gamma[k]
+            channel_caches.append(caches_k)
+            skip.append(k in skip_channels)
+        return np.asarray(activation), _FusionCaches(channel_caches, skip)
 
     def step_fit(
         self,
@@ -480,70 +536,72 @@ class FusionART(BaseART):
 
         """
         self.sample_counter_ += 1
-        base_params = self._deep_copy_params()
+        base_params = self._copy_params()
+        try:
+            return self._step_fit_fusion(x, match_reset_func, match_tracking, epsilon)
+        finally:
+            self._set_params(base_params)
+
+    def _step_fit_fusion(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable],
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+        epsilon: float,
+    ) -> int:
+        """Body of :meth:`step_fit`; the caller restores params afterwards."""
         mt_operator = self._match_tracking_operator(match_tracking)
-        if len(self.W) == 0:
+        if self.n_clusters == 0:
             w_new = self.new_weight(x, self.params)
             self.add_weight(w_new)
             return 0
+
+        # The W property rebuilds the cluster list, so build it once per sample.
+        W = self.W
+        T, T_cache = self._category_choices(x, self.params)
+        reset_first = match_tracking in ["MT~"] and match_reset_func is not None
+        if reset_first:
+            assert match_reset_func is not None
+            T = np.array(T, dtype=float)
+            for c_, w in enumerate(W):
+                if not match_reset_func(x, w, c_, params=self.params, cache=None):
+                    T[c_] = np.nan
+
+        # Sort candidates once:
+        # primary = -T (descending T), secondary = index (ascending)
+        valid = ~np.isnan(T)
+        if np.any(valid):
+            idx = np.arange(T.shape[0])[valid]
+            T_valid = T[valid]
+            order = idx[np.lexsort((idx, -T_valid))]  # last key is primary
         else:
-            if match_tracking in ["MT~"] and match_reset_func is not None:
-                T_values, T_cache = zip(
-                    *[
-                        self.category_choice(x, w, params=self.params)
-                        if match_reset_func(x, w, c_, params=self.params, cache=None)
-                        else (np.nan, None)
-                        for c_, w in enumerate(self.W)
-                    ]
-                )
-            else:
-                T_values, T_cache = zip(
-                    *[self.category_choice(x, w, params=self.params) for w in self.W]
-                )
-            T = np.array(T_values)
+            order = np.array([], dtype=int)
 
-            # Sort candidates once:
-            # primary = -T (descending T), secondary = index (ascending)
-            valid = ~np.isnan(T)
-            if np.any(valid):
-                idx = np.arange(T.shape[0])[valid]
-                T_valid = T[valid]
-                order = idx[np.lexsort((idx, -T_valid))]  # last key is primary
-            else:
-                order = np.array([], dtype=int)
+        for c_ in order:
+            w = W[c_]
+            cache = T_cache[c_]
+            m, cache = self.match_criterion_bin(
+                x, w, params=self.params, cache=cache, op=mt_operator
+            )
+            # The reset only matters once vigilance passes, so skip it otherwise.
+            if m and (
+                reset_first
+                or match_reset_func is None
+                or match_reset_func(x, w, c_, params=self.params, cache=cache)
+            ):
+                self.set_weight(c_, self.update(x, w, self.params, cache=cache))
+                return c_
+            params = {i: self.modules[i].params for i in range(len(cache))}
+            keep_searching = self._match_tracking(
+                cache, epsilon, params, match_tracking
+            )
+            if not keep_searching:
+                break
 
-            for c_ in order:
-                w = self.W[c_]
-                cache = T_cache[c_]
-                m, cache = self.match_criterion_bin(
-                    x, w, params=self.params, cache=cache, op=mt_operator
-                )
-
-                if match_tracking in ["MT~"] and match_reset_func is not None:
-                    no_match_reset = True
-                else:
-                    no_match_reset = match_reset_func is None or match_reset_func(
-                        x, w, c_, params=self.params, cache=cache
-                    )
-
-                if m and no_match_reset:
-                    self.set_weight(c_, self.update(x, w, self.params, cache=cache))
-                    self._set_params(base_params)
-                    return c_
-                else:
-                    if not (m and no_match_reset):
-                        params = {i: self.modules[i].params for i in range(len(cache))}
-                        keep_searching = self._match_tracking(
-                            cache, epsilon, params, match_tracking
-                        )
-                        if not keep_searching:
-                            break
-
-            c_new = len(self.W)
-            w_new = self.new_weight(x, self.params)
-            self.add_weight(w_new)
-            self._set_params(base_params)
-            return c_new
+        c_new = self.n_clusters
+        w_new = self.new_weight(x, self.params)
+        self.add_weight(w_new)
+        return c_new
 
     def partial_fit(
         self,
@@ -603,16 +661,8 @@ class FusionART(BaseART):
             Predicted cluster label for the input sample.
 
         """
-        assert len(self.W) > 0, "ART module is not fit."
-
-        T, _ = zip(
-            *[
-                self.category_choice(
-                    x, w, params=self.params, skip_channels=skip_channels
-                )
-                for w in self.W
-            ]
-        )
+        assert self.n_clusters > 0, "ART module is not fit."
+        T, _ = self._category_choices(x, self.params, skip_channels=skip_channels)
         c_ = int(np.argmax(T))
         return c_
 

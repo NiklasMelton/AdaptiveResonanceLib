@@ -10,10 +10,12 @@
 # International Society for Optics and Photonics. doi:10.1117/12.421180.
 
 import numpy as np
-from typing import Optional, List, Tuple, Dict
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING, Optional, List, Tuple, Dict
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import l2norm2, IndexableOrKeyable
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class EllipsoidART(BaseART):
@@ -299,7 +301,7 @@ class EllipsoidART(BaseART):
         return [w[: self.dim_] for w in self.W]
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+        self, ax: "Axes", colors: IndexableOrKeyable, linewidth: int = 1
     ):
         """Visualize the bounds of each cluster.
 

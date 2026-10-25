@@ -1,0 +1,197 @@
+,Sno,Capital City,Country,Continent,Latitude,Longitude,normalzed_continent
+0,1,Abu Dhabi,United Arab Emirates,Asia,24.28,54.22,Asia
+1,2,Abuja,Nigeria,Africa,9.05,7.32,Africa
+2,3,Accra,Ghana,Africa,5.35,-0.06,Africa
+3,4,Addis Ababa,Ethiopia,Africa,9.02,38.42,Africa
+4,5,Algiers,Algeria,Africa,36.42,3.08,Africa
+5,6,Amman,Jordan,Asia,31.57,35.52,
+6,7,Amsterdam,Netherlands,Europe,12.05,-69.0,
+7,8,Andorra la Vella,Andorra,Europe,42.31,1.32,Europe
+8,9,Ankara,Türkiye (Turkey),Asia,39.57,32.54,Asia
+9,10,Antananarivo,Madagascar,Africa,-18.55,47.31,Africa
+10,11,Apia,Samoa,Oceania and Australia,-14.16,-170.43,Oceania
+11,12,Ashgabat,Turkmenistan,Asia,38.0,57.5,Asia
+12,13,Asmara,Eritrea,Africa,15.19,38.55,Africa
+13,14,Astana,Kazakhstan,Asia,51.1,71.3,Asia
+14,15,Asuncion,Paraguay,South America,-25.1,-57.3,Americas
+15,16,Athens,Greece,Europe,37.58,23.46,Europe
+16,17,Baghdad,Iraq,Asia,33.2,44.3,Asia
+17,18,Baku,Azerbaijan,Asia,40.29,49.56,Asia
+18,19,Bamako,Mali,Africa,12.34,-7.55,Africa
+19,20,Bandar Seri Begawan,Brunei,Asia,4.52,115.0,Asia
+20,21,Bangkok,Thailand,Asia,13.45,100.35,Asia
+21,22,Bangui,Central African Republic,Africa,4.23,18.35,Africa
+22,23,Banjul,Gambia,Africa,13.28,-16.4,Africa
+23,24,Basseterre,Saint Kitts and Nevis,North America,17.17,-62.43,Americas
+24,25,Beijing,China,Asia,39.55,116.2,Asia
+25,26,Beirut,Lebanon,Asia,33.53,35.31,Asia
+26,27,Belfast,Northern Ireland,Europe,54.59,-5.93,Europe
+27,28,Belgrade,Serbia,Europe,44.81,20.46,
+28,29,Belmopan,Belize,North America,17.18,-88.3,Americas
+29,30,Berlin,Germany,Europe,52.3,13.25,Europe
+30,31,Bern,Switzerland,Europe,46.57,7.28,Europe
+31,32,Bishkek,Kyrgyzstan,Asia,42.54,74.46,Asia
+32,33,Bissau,Guinea-Bissau,Africa,11.45,-15.45,Africa
+33,34,Bogota,Colombia,South America,4.34,-74.0,Americas
+34,35,Brasilia,Brazil,South America,-15.47,-47.55,Americas
+35,36,Bratislava,Slovakia,Europe,48.1,17.07,Europe
+36,37,Brazzaville,"Congo, Republic of the",Africa,-4.09,15.12,Africa
+37,38,Bridgetown,Barbados,North America,13.05,-59.3,Americas
+38,39,Brussels,Belgium,Europe,50.51,4.21,Europe
+39,40,Bucharest,Romania,Europe,44.27,26.1,Europe
+40,41,Budapest,Hungary,Europe,47.29,19.05,Europe
+41,42,Buenos Aires,Argentina,South America,-36.3,-60.0,Americas
+42,43,Cairo,Egypt,Africa,30.01,31.14,Africa
+43,44,Canberra,Australia,Oceania and Australia,-35.15,149.08,Oceania
+44,45,Caracas,Venezuela,South America,10.3,-66.55,Americas
+45,46,Cardiff,Wales,Europe,51.48,-3.16,Europe
+46,47,Castries,Saint Lucia,North America,14.02,-60.58,Americas
+47,48,Chisinau,Moldova,Europe,47.02,28.5,Europe
+48,49,Conakry,Guinea,Africa,9.29,-13.49,Africa
+49,50,Copenhagen,Denmark,Europe,55.41,12.34,Europe
+50,51,Dakar,Senegal,Africa,14.34,-17.29,Africa
+51,52,Damascus,Syria,Asia,33.3,36.18,Asia
+52,53,Dhaka,Bangladesh,Asia,23.43,90.26,Asia
+53,54,Dili,East Timor,Asia,-8.29,125.34,Asia
+54,55,Djibouti,Djibouti,Africa,11.08,42.2,Africa
+55,56,Dodoma,Tanzania,Africa,-6.18,35.74,Africa
+56,57,Doha,Qatar,Asia,25.15,51.35,Asia
+57,58,Dublin,Ireland,Europe,53.21,-6.15,Europe
+58,59,Dushanbe,Tajikistan,Asia,38.33,68.48,Asia
+59,60,Edinburgh,Scotland,Europe,55.95,-3.18,Europe
+60,61,Freetown,Sierra Leone,Africa,8.3,-13.17,Africa
+61,62,Funafuti,Tuvalu,Oceania and Australia,-8.31,179.13,Oceania
+62,63,Gaborone,Botswana,Africa,-24.45,25.57,Africa
+63,64,Georgetown,Guyana,South America,6.5,-58.12,Americas
+64,65,Gitega,Burundi,Africa,-3.16,29.18,Africa
+65,66,Guatemala City,Guatemala,North America,14.4,-90.22,Americas
+66,67,Hanoi,Vietnam,Asia,21.05,105.55,Asia
+67,68,Harare,Zimbabwe,Africa,-17.43,31.02,Africa
+68,69,Havana,Cuba,North America,23.08,-82.22,Americas
+69,70,Helsinki,Finland,Europe,60.15,25.03,Europe
+70,71,Honiara,Solomon Islands,Oceania and Australia,-9.27,159.57,Oceania
+71,72,Islamabad,Pakistan,Asia,33.4,73.1,Asia
+72,73,Jakarta,Indonesia,Asia,-6.09,106.49,Asia
+73,75,Jerusalem (very limited international recognition),Palestine,Asia,31.76,35.21,Asia
+74,74,Jerusalem (very limited international recognition),Israel,Asia,31.71,-35.1,Europe
+75,76,Juba,South Sudan,Africa,4.85,31.58,Africa
+76,77,Kabul,Afghanistan,Asia,34.28,69.11,Asia
+77,78,Kampala,Uganda,Africa,0.2,32.3,Africa
+78,79,Kathmandu,Nepal,Asia,27.45,85.2,Asia
+79,80,Khartoum,Sudan,Africa,15.31,32.35,Africa
+80,81,Kigali,Rwanda,Africa,-1.59,30.04,Africa
+81,82,Kingston,Jamaica,North America,18.0,-76.5,Americas
+82,83,Kingstown,Saint Vincent and the Grenadines,North America,13.1,-61.1,Americas
+83,84,Kinshasa,"Congo, Democratic Republic of the",Africa,-4.2,15.15,Africa
+84,85,Kuala Lumpur,Malaysia,Asia,3.09,101.41,Asia
+85,86,Kuwait City,Kuwait,Asia,29.3,48.0,Asia
+86,87,Kyiv or Kiev,Ukraine,Europe,50.3,30.28,Europe
+87,88,"La Paz (administrative), Sucre (official)",Bolivia,South America,-16.2,-68.1,Americas
+88,89,Libreville,Gabon,Africa,0.25,9.26,Africa
+89,90,Lilongwe,Malawi,Africa,-14.0,33.48,Africa
+90,91,Lima,Peru,South America,-12.0,-77.0,Americas
+91,92,Lisbon,Portugal,Europe,38.42,-9.1,Europe
+92,93,Ljubljana,Slovenia,Europe,46.04,14.33,Europe
+93,94,Lome,Togo,Africa,6.09,1.2,Africa
+94,96,London,United Kingdom,Europe,51.36,-0.05,Europe
+95,97,Luanda,Angola,Africa,-8.5,13.15,Africa
+96,98,Lusaka,Zambia,Africa,-15.28,28.16,Africa
+97,99,Luxembourg,Luxembourg,Europe,49.37,6.09,Europe
+98,100,Madrid,Spain,Europe,40.25,-3.45,Europe
+99,101,Majuro,Marshall Islands,Oceania and Australia,7.06,171.26,Oceania
+100,102,Malabo,Equatorial Guinea,Africa,3.45,8.5,Africa
+101,103,Male,Maldives,Asia,4.0,73.28,Asia
+102,104,Managua,Nicaragua,North America,12.06,-86.2,Americas
+103,105,Manama,Bahrain,Asia,26.1,50.3,Asia
+104,106,Manila,Philippines,Asia,14.4,121.03,Asia
+105,107,Maputo,Mozambique,Africa,-25.58,32.32,Africa
+106,108,Maseru,Lesotho,Africa,-29.18,27.3,Africa
+107,109,Melekeok,Palau,Oceania and Australia,7.5004,134.6243,Oceania
+108,110,Mexico City,Mexico,North America,19.2,-99.1,Americas
+109,111,Minsk,Belarus,Europe,53.52,27.3,Europe
+110,112,Mogadishu,Somalia,Africa,2.02,45.25,Africa
+111,113,Monaco,Monaco,Europe,43.73,7.42,Europe
+112,114,Monrovia,Liberia,Africa,6.18,-10.47,Africa
+113,115,Montevideo,Uruguay,South America,-34.5,-56.11,Americas
+114,116,Moroni,Comoros,Africa,-11.4,43.16,Africa
+115,117,Moscow,Russia,Asia,55.45,37.35,Europe
+116,118,Muscat,Oman,Asia,23.37,58.36,Asia
+117,119,Nairobi,Kenya,Africa,-1.17,36.48,Africa
+118,120,Nassau,Bahamas,North America,25.05,-77.2,Americas
+119,121,Nay Pyi Taw,Myanmar (Burma),Asia,16.45,96.2,
+120,122,N'Djamena,Chad,Africa,12.1,14.59,Africa
+121,123,New Delhi,India,Asia,28.37,77.13,Asia
+122,124,Niamey,Niger,Africa,13.27,2.06,Africa
+123,125,Nicosia,Cyprus,Asia,35.1,33.25,Europe
+124,127,Nouakchott,Mauritania,Africa,-20.1,57.3,Africa
+125,128,Nuku'alofa,Tonga,Oceania and Australia,-21.1,-174.0,Oceania
+126,129,Oslo,Norway,Europe,59.55,10.45,Europe
+127,130,Ottawa,Canada,North America,45.27,-75.42,Americas
+128,131,Ouagadougou,Burkina Faso,Africa,12.15,-1.3,Africa
+129,133,Panama City,Panama,North America,9.0,-79.25,Americas
+130,134,Paramaribo,Suriname,South America,5.5,-55.1,Americas
+131,135,Paris,France,Europe,48.5,2.2,Europe
+132,136,Phnom Penh,Cambodia,Asia,11.33,104.55,Asia
+133,137,Podgorica,Montenegro,Europe,42.43,19.25,
+134,138,Port au Prince,Haiti,North America,18.4,-72.2,Americas
+135,139,Port Louis,Mauritius,Africa,-20.16,57.5,Africa
+136,140,Port Moresby,Papua New Guinea,Oceania and Australia,-9.24,147.08,Oceania
+137,141,Port of Spain,Trinidad and Tobago,South America,10.66,-61.5,Americas
+138,142,Port Vila,Vanuatu,Oceania and Australia,-17.45,168.18,Oceania
+139,143,Porto Novo,Benin,Africa,6.23,2.42,Africa
+140,144,Prague,Czech Republic,Europe,50.05,14.22,Europe
+141,145,Praia,Cape Verde,Africa,15.02,-23.34,Africa
+142,146,"Pretoria, Bloemfontein, Cape Town",South Africa,Africa,-25.44,28.12,Africa
+143,147,Pristina,Kosovo,Europe,42.66,21.16,
+144,148,Pyongyang,North Korea,Asia,39.07,125.81,Asia
+145,149,Quito,Ecuador,Oceania and Australia,-0.15,-78.35,Americas
+146,150,Rabat,Morocco,Africa,34.0,-6.85,Africa
+147,151,Reykjavik,Iceland,Europe,64.1,-21.57,Europe
+148,152,Riga,Latvia,Europe,56.53,24.08,Europe
+149,153,Riyadh,Saudi Arabia,Asia,24.41,46.42,Asia
+150,154,Rome,Italy,Europe,41.54,12.29,Europe
+151,155,Roseau,Dominica,North America,15.2,-61.24,Americas
+152,156,Saint George's,Grenada,North America,32.38,-64.67,Americas
+153,157,Saint John's,Antigua and Barbuda,North America,17.127,-61.846,Americas
+154,158,San Jose,Costa Rica,North America,9.55,-84.02,Americas
+155,159,San Marino,San Marino,Europe,43.55,12.3,Europe
+156,160,San Salvador,El Salvador,North America,13.4,-89.1,Americas
+157,161,Sana'a,Yemen,Asia,15.35,44.2,Asia
+158,162,Santiago,Chile,South America,-33.24,-70.4,Americas
+159,163,Santo Domingo,Dominican Republic,North America,18.3,-69.59,Americas
+160,164,Sao Tome,Sao Tome and Principe,Africa,0.1,6.39,Africa
+161,165,Sarajevo,Bosnia and Herzegovina,Europe,43.52,18.26,Europe
+162,166,Seoul,South Korea,Asia,37.31,126.58,Asia
+163,167,Singapore,Singapore,Asia,1.35,103.81,Asia
+164,168,Skopje,North Macedonia (Macedonia),Europe,41.99,21.42,Europe
+165,169,Sofia,Bulgaria,Europe,42.45,23.2,Europe
+166,170,Sri Jayawardenapura Kotte,Sri Lanka,Asia,6.88,79.91,Asia
+167,171,Stockholm,Sweden,Europe,59.2,18.03,Europe
+168,172,Suva,Fiji,Oceania and Australia,-18.06,178.3,Oceania
+169,173,Taipei,Taiwan,Asia,25.03,121.56,Asia
+170,174,Tallinn,Estonia,Europe,59.22,24.48,Europe
+171,175,Tarawa Atoll,Kiribati,Oceania and Australia,1.3,173.0,Oceania
+172,176,Tashkent,Uzbekistan,Asia,41.2,69.1,Asia
+173,177,Tbilisi,Georgia,Asia,41.43,44.5,Asia
+174,178,Tegucigalpa,Honduras,North America,14.05,-87.14,Americas
+175,179,Tehran,Iran,Asia,35.44,51.3,Asia
+176,180,Thimphu,Bhutan,Asia,27.31,89.45,Asia
+177,181,Tirana (Tirane),Albania,Europe,41.18,19.49,Europe
+178,182,Tokyo,Japan,Asia,35.67,139.65,Asia
+179,183,Tripoli,Libya,Africa,32.49,13.07,Africa
+180,184,Tunis,Tunisia,Africa,36.5,10.11,Africa
+181,185,Ulaanbaatar,Mongolia,Asia,47.92,106.91,Asia
+182,186,Vaduz,Liechtenstein,Europe,47.08,9.31,Europe
+183,187,Valletta,Malta,Europe,35.54,14.31,Europe
+184,188,Vatican City,Vatican City,Europe,41.9,12.45,
+185,190,Vienna,Austria,Europe,48.12,16.22,Europe
+186,191,Vientiane,Laos,Asia,17.58,102.36,Asia
+187,192,Vilnius,Lithuania,Europe,54.38,25.19,Europe
+188,193,Warsaw,Poland,Europe,52.13,21.0,Europe
+189,194,Washington D.C.,United States,North America,39.91,-77.02,Americas
+190,195,Wellington,New Zealand,Oceania and Australia,-41.19,174.46,Oceania
+191,196,Windhoek,Namibia,Africa,-22.35,17.04,Africa
+192,197,Yamoussoukro,Côte d'Ivoire (Ivory Coast),Africa,6.49,-5.17,Africa
+193,198,Yaounde,Cameroon,Africa,3.5,11.35,Africa
+194,199,Yerevan,Armenia,Asia,40.1,44.31,Asia
+195,200,Zagreb,Croatia,Europe,45.5,15.58,Europe

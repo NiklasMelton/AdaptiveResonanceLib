@@ -5,13 +5,25 @@
 # Networks, 18, 1628–1644. doi:10.1109/TNN.2007.900234.
 
 import numpy as np
-from typing import Optional, Iterable, List, Callable, Literal, Tuple, Union, Dict
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+    Iterable,
+    List,
+    Callable,
+    Literal,
+    Tuple,
+    Union,
+    Dict,
+)
 import operator
 import weakref
-from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import CategoryCountPriorMixin
 from artlib.common.visualization import plot_gaussian_contours_covariance
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class BayesianART(CategoryCountPriorMixin, BaseART):
@@ -401,7 +413,7 @@ class BayesianART(CategoryCountPriorMixin, BaseART):
         """
         return [w[: self.dim_] for w in self.W]
 
-    def plot_cluster_bounds(self, ax: Axes, colors: Iterable, linewidth: int = 1):
+    def plot_cluster_bounds(self, ax: "Axes", colors: Iterable, linewidth: int = 1):
         """Visualize the bounds of each cluster.
 
         Parameters

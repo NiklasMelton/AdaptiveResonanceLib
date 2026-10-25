@@ -4,13 +4,15 @@
 # Norwell, MA, USA: Kluwer Academic Publishers.
 import numpy as np
 from collections.abc import Mapping
-from typing import Optional, Literal, Dict, Union, Tuple
-from matplotlib.axes import Axes
+from typing import TYPE_CHECKING, Optional, Literal, Dict, Union, Tuple
 from artlib.common.BaseART import BaseART
 from artlib.common.BaseARTMAP import BaseARTMAP
 from artlib.common.utils import IndexableOrKeyable
 from sklearn.utils.validation import check_is_fitted, check_X_y
 from sklearn.utils.multiclass import unique_labels
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class SimpleARTMAP(BaseARTMAP):
@@ -433,7 +435,7 @@ class SimpleARTMAP(BaseARTMAP):
         epsilon: float = 1e-10,
         verbose: bool = False,
         leave_progress_bar: bool = True,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         filename: Optional[str] = None,
         fps: int = 5,
         final_hold_secs: float = 0.0,
@@ -779,13 +781,13 @@ class SimpleARTMAP(BaseARTMAP):
         return y_a, y_b
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+        self, ax: "Axes", colors: IndexableOrKeyable, linewidth: int = 1
     ):
         """Visualize the cluster boundaries.
 
         Parameters
         ----------
-        ax : Axes
+        ax : "Axes"
             Figure axes.
         colors : IndexableOrKeyable
             Colors to use for each cluster.
@@ -802,7 +804,7 @@ class SimpleARTMAP(BaseARTMAP):
         self,
         X: np.ndarray,
         y: np.ndarray,
-        ax: Optional[Axes] = None,
+        ax: Optional["Axes"] = None,
         marker_size: int = 10,
         linewidth: int = 1,
         colors: Optional[IndexableOrKeyable] = None,
@@ -815,7 +817,7 @@ class SimpleARTMAP(BaseARTMAP):
             Data set.
         y : np.ndarray
             Sample labels.
-        ax : Optional[Axes], default=None
+        ax : Optional["Axes"], default=None
             Figure axes.
         marker_size : int, default=10
             Size used for data points.

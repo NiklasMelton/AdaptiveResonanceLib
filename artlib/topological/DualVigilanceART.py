@@ -3,12 +3,13 @@
 # Dual vigilance fuzzy adaptive resonance theory.
 # Neural Networks, 109, 1–5. doi:10.1016/j.neunet.2018.09.015.
 import numpy as np
-from typing import Optional, Callable, List, Literal, Union, Dict
+from typing import TYPE_CHECKING, Optional, Callable, List, Literal, Union, Dict
 from warnings import warn
-from copy import deepcopy
-from matplotlib.axes import Axes
 from artlib.common.BaseART import BaseART
 from artlib.common.utils import IndexableOrKeyable
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 
 class DualVigilanceART(BaseART):
@@ -395,8 +396,8 @@ class DualVigilanceART(BaseART):
     def _set_params(self, new_params):
         self.base_module.params = new_params
 
-    def _deep_copy_params(self) -> dict:
-        return deepcopy(self.base_module.params)
+    def _copy_params(self) -> dict:
+        return dict(self.base_module.params)
 
     def step_fit(
         self,
@@ -426,7 +427,23 @@ class DualVigilanceART(BaseART):
             Cluster label of the input sample.
 
         """
-        base_params = self._deep_copy_params()
+        base_params = self._copy_params()
+        try:
+            return self._step_fit_dual(
+                x, match_reset_func, match_tracking, epsilon, base_params
+            )
+        finally:
+            self._set_params(base_params)
+
+    def _step_fit_dual(
+        self,
+        x: np.ndarray,
+        match_reset_func: Optional[Callable],
+        match_tracking: Literal["MT+", "MT-", "MT0", "MT1", "MT~"],
+        epsilon: float,
+        base_params: dict,
+    ) -> int:
+        """Body of :meth:`step_fit`; the caller restores params afterwards."""
         mt_operator = self._match_tracking_operator(match_tracking)
         self.sample_counter_ += 1
         if len(self.base_module.W) == 0:
@@ -436,15 +453,7 @@ class DualVigilanceART(BaseART):
             self._prototype_labels_.append(0)
             return 0
         else:
-            T_values, T_cache = zip(
-                *[
-                    self.base_module.category_choice(
-                        x, w, params=self.base_module.params
-                    )
-                    for w in self.base_module.W
-                ]
-            )
-            T = np.array(T_values)
+            T, T_cache = self.base_module._category_choices(x, self.base_module.params)
 
             # Candidates are those with positive T (and not NaN)
             valid = ~np.isnan(T)
@@ -531,12 +540,7 @@ class DualVigilanceART(BaseART):
 
         """
         assert len(self.base_module.W) > 0, "ART module is not fit."
-        T, _ = zip(
-            *[
-                self.base_module.category_choice(x, w, params=self.base_module.params)
-                for w in self.base_module.W
-            ]
-        )
+        T, _ = self.base_module._category_choices(x, self.base_module.params)
         c_ = int(np.argmax(T))
         return self.map[c_]
 
@@ -552,7 +556,7 @@ class DualVigilanceART(BaseART):
         return self.base_module.get_cluster_centers()
 
     def plot_cluster_bounds(
-        self, ax: Axes, colors: IndexableOrKeyable, linewidth: int = 1
+        self, ax: "Axes", colors: IndexableOrKeyable, linewidth: int = 1
     ):
         """Visualize the bounds of each cluster.
 

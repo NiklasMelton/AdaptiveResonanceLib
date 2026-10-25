@@ -10,7 +10,10 @@ from torch import Tensor
 from artlib.elementary.GaussianART import (
     GaussianART,
 )  # uses params: rho, sigma_init, alpha
-from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
+from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
+    _TorchSimpleARTMAP,
+    _append_rows,
+)
 
 
 # ------------------------------
@@ -66,6 +69,7 @@ class _TorchGaussianARTMAP:
         self.sqrt_det: Optional[Tensor] = None  # [K]       (prod(sigma))
         self.counts: Optional[Tensor] = None  # [K]       (n; float)
         self.map_y: Optional[Tensor] = None  # [K]       (labels; long)
+        self._map_list: list[int] = []  # map_y as Python ints, avoids device syncs
 
         # Preprocessed sigma_init (vector length D)
         if isinstance(cfg.sigma_init, (float, int)):
@@ -193,17 +197,17 @@ class _TorchGaussianARTMAP:
         inv_var_init = 1.0 / (si * si)
         sqrt_det_init = si.prod()
 
-        self.mean = torch.cat([self.mean, I.unsqueeze(0)], dim=0)
-        self.sigma = torch.cat([self.sigma, si.unsqueeze(0)], dim=0)
-        self.inv_var = torch.cat([self.inv_var, inv_var_init.unsqueeze(0)], dim=0)
-        self.sqrt_det = torch.cat([self.sqrt_det, sqrt_det_init.view(1)], dim=0)
-        self.counts = torch.cat(
-            [self.counts, torch.tensor([1.0], device=self.device, dtype=self.dtype)],
-            dim=0,
+        _append_rows(
+            self,
+            self.n_cat,
+            mean=I,
+            sigma=si,
+            inv_var=inv_var_init,
+            sqrt_det=sqrt_det_init,
+            counts=torch.tensor(1.0, device=self.device, dtype=self.dtype),
+            map_y=torch.tensor(y, device=self.device, dtype=torch.long),
         )
-        self.map_y = torch.cat(
-            [self.map_y, torch.tensor([y], device=self.device, dtype=torch.long)], dim=0
-        )
+        self._map_list.append(int(y))
 
     def _learn_in_category(self, j: int, I: Tensor):
         """Update mean, sigma, inv_var, sqrt_det, counts; replicate numpy reference."""
@@ -261,9 +265,10 @@ class _TorchGaussianARTMAP:
         self._validate_prepared(Xp)
 
         la: list[int] = []
+        y_list = y.tolist()
         for i in range(Xp.shape[0]):
             Ii = Xp[i]
-            yi = int(y[i].item())
+            yi = int(y_list[i])
 
             if self.n_cat == 0:
                 self._commit_new_category(Ii, yi)
@@ -272,22 +277,24 @@ class _TorchGaussianARTMAP:
 
             T, m = self._choice_and_match(Ii)
             order = torch.argsort(T, descending=True, stable=True)
+            # One transfer per sample instead of one .item() per candidate.
+            m_list = m.tolist()
 
             rho_eff = float(self.cfg.rho)
             found = False
             chosen_idx: Optional[int] = None
 
             for idx in order.tolist():
-                if m[idx].item() < rho_eff:
+                if m_list[idx] < rho_eff:
                     continue
-                if int(cast(Tensor, self.map_y)[idx].item()) == yi:
+                if self._map_list[idx] == yi:
                     self._learn_in_category(idx, Ii)
                     found = True
                     chosen_idx = idx
                     break
                 else:
                     if match_tracking != "":
-                        rho_eff = float(m[idx].item()) + float(epsilon)
+                        rho_eff = float(m_list[idx]) + float(epsilon)
 
             if not found:
                 self._commit_new_category(Ii, yi)

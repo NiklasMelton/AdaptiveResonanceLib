@@ -7,7 +7,10 @@ import torch
 from torch import Tensor
 
 from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART  # type: ignore
-from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
+from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
+    _TorchSimpleARTMAP,
+    _append_rows,
+)
 
 
 # ------------------------------
@@ -60,6 +63,8 @@ class _TorchBinaryFuzzyARTMAP:
 
         self.W: Optional[Tensor] = None  # [K, D*2], bool
         self.map_y: Optional[Tensor] = None  # [K], long
+        self._W_count: Optional[Tensor] = None  # [K] cached |w|, int32
+        self._map_list: list[int] = []  # map_y as Python ints, avoids device syncs
         self._lower_bounds: Optional[Tensor] = None
         self._upper_bounds: Optional[Tensor] = None
         self._prep_tol: float = 1e-6
@@ -74,6 +79,7 @@ class _TorchBinaryFuzzyARTMAP:
                 (0, self.code_dim), device=self.device, dtype=torch.bool
             )
             self.map_y = torch.empty((0,), device=self.device, dtype=torch.long)
+            self._W_count = torch.empty((0,), device=self.device, dtype=torch.int32)
 
     # ---------- preparing / validation ----------
     def set_data_bounds(
@@ -180,7 +186,7 @@ class _TorchBinaryFuzzyARTMAP:
         # bool AND then count
         IandW = I.unsqueeze(0) & self.W  # [K, D]
         w1 = IandW.sum(dim=1, dtype=torch.int32)  # [K] int
-        w_sum = self.W.sum(dim=1, dtype=torch.int32)  # [K] int
+        w_sum = cast(Tensor, self._W_count)  # [K] int, kept in step with W
 
         # Convert to float for ratios
         w1f = w1.to(torch.float64)
@@ -194,11 +200,15 @@ class _TorchBinaryFuzzyARTMAP:
 
     def _commit_new_category(self, I: Tensor, y: int):
         self._ensure_capacity()
-        w_new = I.unsqueeze(0)  # β = 1.0 -> new = input
-        self.W = torch.cat([self.W, w_new], dim=0)
-        self.map_y = torch.cat(
-            [self.map_y, torch.tensor([y], device=self.device, dtype=torch.long)], dim=0
+        # β = 1.0 -> new = input
+        _append_rows(
+            self,
+            self.n_cat,
+            W=I,
+            map_y=torch.tensor(y, device=self.device, dtype=torch.long),
+            _W_count=I.sum(dtype=torch.int32),
         )
+        self._map_list.append(int(y))
 
     def partial_fit_and_export(
         self,
@@ -221,9 +231,10 @@ class _TorchBinaryFuzzyARTMAP:
         self._validate_prepared(Xp)
 
         la: list[int] = []
+        y_list = y.tolist()
         for i in range(Xp.shape[0]):
             Ii = Xp[i]
-            yi = int(y[i].item())
+            yi = int(y_list[i])
 
             if self.n_cat == 0:
                 self._commit_new_category(Ii, yi)
@@ -233,24 +244,29 @@ class _TorchBinaryFuzzyARTMAP:
             assert self.map_y is not None and self.W is not None
             T, m, _ = self._choice_and_match(Ii)
             order = torch.argsort(T, descending=True, stable=True)
+            # One transfer per sample instead of one .item() per candidate.
+            m_list = m.tolist()
 
             rho_eff = float(self.cfg.rho)
             found = False
             chosen_idx: Optional[int] = None
 
             for idx in order.tolist():
-                if m[idx].item() < rho_eff:
+                if m_list[idx] < rho_eff:
                     continue
 
-                if int(self.map_y[idx].item()) == yi:
+                if self._map_list[idx] == yi:
                     # resonance + learn (β=1 => w := I & w)
                     self.W[idx] = Ii & self.W[idx]
+                    cast(Tensor, self._W_count)[idx] = self.W[idx].sum(
+                        dtype=torch.int32
+                    )
                     found = True
                     chosen_idx = idx
                     break
                 else:
                     if match_tracking != "":
-                        rho_eff = float(m[idx].item()) + float(epsilon)
+                        rho_eff = float(m_list[idx]) + float(epsilon)
 
             if not found:
                 self._commit_new_category(Ii, yi)

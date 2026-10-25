@@ -7,7 +7,10 @@ import torch
 from torch import Tensor
 
 from artlib.elementary.FuzzyART import FuzzyART
-from artlib.optimized.backends.torch._TorchSimpleARTMAP import _TorchSimpleARTMAP
+from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
+    _TorchSimpleARTMAP,
+    _append_rows,
+)
 
 
 # ------------------------------
@@ -58,6 +61,8 @@ class _TorchFuzzyARTMAP:
 
         self.W: Optional[Tensor] = None  # [K, D]
         self.map_y: Optional[Tensor] = None  # [K]
+        self._W_sum: Optional[Tensor] = None  # [K] cached W.sum(dim=1)
+        self._map_list: list[int] = []  # map_y as Python ints, avoids device syncs
         self._lower_bounds: Optional[Tensor] = None
         self._upper_bounds: Optional[Tensor] = None
         self._prep_tol: float = 1e-6
@@ -72,6 +77,7 @@ class _TorchFuzzyARTMAP:
                 (0, self.code_dim), device=self.device, dtype=self.dtype
             )
             self.map_y = torch.empty((0,), device=self.device, dtype=torch.long)
+            self._W_sum = torch.empty((0,), device=self.device, dtype=self.dtype)
 
     def _validate_prepared(self, X: Tensor):
         if X.ndim != 2:
@@ -161,7 +167,7 @@ class _TorchFuzzyARTMAP:
             )
         IandW = torch.minimum(I.unsqueeze(0), self.W)  # [K, D]
         IandW_sum = IandW.sum(dim=1)  # [K]
-        W_sum = self.W.sum(dim=1)  # [K]
+        W_sum = cast(Tensor, self._W_sum)  # [K], kept in step with W
         I_sum = I.sum()  # scalar
         T = IandW_sum / (self.cfg.alpha + W_sum)
         m = IandW_sum / I_sum.clamp_min(1e-12)
@@ -177,10 +183,14 @@ class _TorchFuzzyARTMAP:
             )
         else:
             w_new = I.unsqueeze(0)
-        self.W = torch.cat([self.W, w_new], dim=0)
-        self.map_y = torch.cat(
-            [self.map_y, torch.tensor([y], device=self.device, dtype=torch.long)], dim=0
+        _append_rows(
+            self,
+            self.n_cat,
+            W=w_new[0],
+            map_y=torch.tensor(y, device=self.device, dtype=torch.long),
+            _W_sum=w_new.sum(dim=1)[0],
         )
+        self._map_list.append(int(y))
 
     def partial_fit_and_export(
         self,
@@ -203,9 +213,10 @@ class _TorchFuzzyARTMAP:
 
         # training
         la: list[int] = []
+        y_list = y.tolist()
         for i in range(Xp.shape[0]):
             Ii = Xp[i]
-            yi = int(y[i].item())
+            yi = int(y_list[i])
 
             if self.n_cat == 0:
                 self._commit_new_category(Ii, yi)
@@ -214,21 +225,24 @@ class _TorchFuzzyARTMAP:
             assert self.map_y is not None and self.W is not None
             T, m, _, _ = self._choice_and_match(Ii)
             order = torch.argsort(T, descending=True, stable=True)
+            # One transfer per sample instead of one .item() per candidate.
+            m_list = m.tolist()
 
             rho_eff = float(self.cfg.rho)
             found = False
             chosen_idx = None
 
             for idx in order.tolist():
-                if m[idx].item() < rho_eff:
+                if m_list[idx] < rho_eff:
                     continue
 
-                if int(self.map_y[idx].item()) == yi:
+                if self._map_list[idx] == yi:
                     # resonance + learn
                     wj = self.W[idx]
                     I_and_w = torch.minimum(Ii, wj)
                     beta = self.cfg.beta
                     self.W[idx] = beta * I_and_w + (1.0 - beta) * wj
+                    cast(Tensor, self._W_sum)[idx] = self.W[idx : idx + 1].sum(dim=1)[0]
                     found = True
                     chosen_idx = idx
                     break
@@ -236,7 +250,7 @@ class _TorchFuzzyARTMAP:
                     if (
                         match_tracking != ""
                     ):  # mimic MT variants simply by enabling/disabling
-                        rho_eff = float(m[idx].item()) + float(epsilon)
+                        rho_eff = float(m_list[idx]) + float(epsilon)
 
             if not found:
                 self._commit_new_category(Ii, yi)

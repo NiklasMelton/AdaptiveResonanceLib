@@ -473,6 +473,73 @@ with these specific compound models.
 While the current selection remains limited, future releases will expand the native C++
 implementation as user demand for them increases.
 
+### Choosing a backend
+
+The four optimized ARTMAP models (`FuzzyARTMAP`, `HypersphereARTMAP`, `GaussianARTMAP`
+and `BinaryFuzzyARTMAP`) can run on three backends:
+
+```python
+from artlib import FuzzyARTMAP
+
+model = FuzzyARTMAP(rho=0.7, alpha=0.0, beta=1.0)  # C++, the default
+model = FuzzyARTMAP(rho=0.7, alpha=0.0, beta=1.0, backend="torch", device="cuda")
+model = FuzzyARTMAP(rho=0.7, alpha=0.0, beta=1.0, backend="python")
+```
+
+The backend is never switched automatically. Use C++ unless the model is large and you
+have an NVIDIA GPU:
+
+| Situation | Backend |
+|-----------|---------|
+| Default, CPU only, or small and medium models | `backend="c++"` |
+| Large Fuzzy or Hypersphere models with an NVIDIA GPU, especially when predicting on large test sets | `backend="torch", device="cuda"` |
+| PyTorch on CPU, or on an Apple GPU (`device="mps"`) | Not recommended: slower than C++ in every benchmark |
+
+Model size here is the number of weight entries: categories × features (twice the
+features for Fuzzy ARTMAP, which complement-codes its input). In our benchmarks, CUDA
+prediction was faster than C++ for Fuzzy and Hypersphere models from about 2 million
+weight entries, and CUDA training from about 10 million. For Binary Fuzzy ARTMAP, C++
+was faster at every size tested.
+
+Times in seconds on an Intel Xeon Gold 6248 (16 threads) and an NVIDIA V100, both
+torch columns in float32:
+
+| Model and size | Fit: C++ | Fit: torch CPU | Fit: torch CUDA | Predict: C++ | Predict: torch CPU | Predict: torch CUDA |
+|----------------|---------:|---------------:|----------------:|-------------:|-------------------:|--------------------:|
+| Any model, about 40 categories, 16–256 features, 2,000 samples | 0.002–0.015 | 0.17–0.55 | 0.50–1.4 | < 0.02 | < 0.02 | < 0.01 |
+| Fuzzy, 1,100 categories, 2,048 features | 0.90 | 0.80 | 0.96 | 0.28 | 1.05 | 0.17 |
+| Fuzzy, 1,100 categories, 16,384 features | 6.0 | 6.5 | 1.6 | 2.5 | 8.5 | 1.4 |
+| Fuzzy, 4,400 categories, 2,048 features (8,000 train, 4,000 test) | 8.5 | 12.1 | 4.6 | 1.9 | 8.3 | 1.1 |
+| Hypersphere, 1,100 categories, 16,384 features | 2.7 | 3.7 | 1.4 | 1.1 | 2.8 | 0.24 |
+| Binary Fuzzy, 1,100 categories, 2,048 features | 0.38 | 0.62 | 0.72 | 0.10 | 1.14 | 0.17 |
+
+Unless noted, each row trains on 2,000 samples and predicts 2,000. On an Apple M3 Pro,
+C++ was also faster than PyTorch on CPU and on the Apple GPU at every size tested.
+
+Things to know:
+
+- **Fixed GPU cost.** The torch backend trains one sample at a time and synchronizes
+  with the GPU after each one, so CUDA training costs a few hundred microseconds per
+  sample even for tiny models.
+- **Precision.** C++ always uses float64. The torch backend defaults to float64 too,
+  except on Apple GPUs, which only support float32. float32 is faster on a GPU but can
+  learn a slightly different model, most noticeably for Gaussian ARTMAP. Consumer
+  GPUs run float64 much more slowly than data-center GPUs such as the V100 (not
+  benchmarked).
+- **Threads.** C++ uses every hardware thread for prediction and half of them for
+  training. On a cluster or in a container that gives you fewer cores than the machine
+  has, set `ARTLIB_NUM_THREADS` to the number of cores you were given. The default can
+  start too many threads and make training up to 2x slower.
+- **Warnings.** The torch backend raises a `BackendPerformanceWarning` when it runs on
+  CPU or an Apple GPU, or when a model trained on CUDA is small. To silence it:
+
+  ```python
+  import warnings
+  from artlib import BackendPerformanceWarning
+
+  warnings.filterwarnings("ignore", category=BackendPerformanceWarning)
+  ```
+
 <!-- END cpp -->
 
 <!-- START documentation -->

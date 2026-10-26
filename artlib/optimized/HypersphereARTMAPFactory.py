@@ -31,9 +31,12 @@ class HypersphereARTMAPFactory:
         r_hat : float
             Global upper bound on cluster radius (must be > 0).
         backend: str
-            torch, c++, or python. Defaults to c++
+            "c++" (default), "torch", or "python". C++ is the fastest choice except
+            for large models on an NVIDIA GPU; see "Choosing a backend" in the README.
         device: str
-            "cuda" or "cpu". Only applied when backend=torch. Defaults to "cpu".
+            "cuda", "cpu" or "mps". Only applied when backend="torch". Defaults to
+            "cpu". The torch backend on "cpu" or "mps" is slower than the C++ backend
+            and raises a BackendPerformanceWarning.
 
         """
         b = backend.lower()

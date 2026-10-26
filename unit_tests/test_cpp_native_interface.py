@@ -312,25 +312,39 @@ _DEFAULT_THREADS = (
     "import os, json; "
     "from artlib.optimized.backends.cpp import cppFuzzyARTMAP as m; "
     "{setup}"
-    "print(json.dumps([os.cpu_count()] + list(m._default_threads())))"
+    "print(json.dumps([m.__file__, os.cpu_count()] + list(m._default_threads())))"
 )
 
 
 def _default_threads(setup="", env_threads=None):
     """(machine CPUs, default fit threads, default predict threads) in a fresh
-    process, optionally after ``setup`` code such as a CPU affinity change."""
+    process, optionally after ``setup`` code such as a CPU affinity change.
+
+    The defaults are read once per process, so each case needs its own. The
+    process runs in an empty directory: ``python -c`` puts its working directory
+    first on sys.path, and from the repository root that would import the
+    uncompiled source tree instead of the installed package.
+    """
     import json
     import os
+    import tempfile
+
+    from artlib.optimized.backends.cpp import cppFuzzyARTMAP
 
     env = dict(os.environ)
     env.pop("ARTLIB_NUM_THREADS", None)
     if env_threads is not None:
         env["ARTLIB_NUM_THREADS"] = env_threads
-    out = subprocess.run(
-        [sys.executable, "-c", _DEFAULT_THREADS.format(setup=setup)],
-        capture_output=True, text=True, env=env, check=True,
-    )
-    return tuple(json.loads(out.stdout))
+    with tempfile.TemporaryDirectory() as empty:
+        out = subprocess.run(
+            [sys.executable, "-c", _DEFAULT_THREADS.format(setup=setup)],
+            capture_output=True, text=True, env=env, cwd=empty,
+        )
+    assert out.returncode == 0, out.stderr
+    module_file, *counts = json.loads(out.stdout)
+    # The child must load the same build as this test process.
+    assert os.path.samefile(module_file, cppFuzzyARTMAP.__file__)
+    return tuple(counts)
 
 
 def test_default_threads_use_all_cpus_to_predict_and_half_to_fit():

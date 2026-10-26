@@ -65,6 +65,7 @@ from artlib.optimized.HypersphereARTMAPFactory import (
 from artlib.optimized.GaussianARTMAPFactory import (
     GaussianARTMAPFactory as GaussianARTMAP,
 )
+from artlib.optimized.backend_warnings import BackendPerformanceWarning
 
 __all__ = [
     "__version__",
@@ -100,4 +101,5 @@ __all__ = [
     "FuzzyARTMAP",
     "HypersphereARTMAP",
     "GaussianARTMAP",
+    "BackendPerformanceWarning",
 ]

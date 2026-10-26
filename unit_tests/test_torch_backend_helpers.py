@@ -3,12 +3,37 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
+from artlib import BackendPerformanceWarning  # noqa: E402
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (  # noqa: E402
+    _SMALL_CUDA_MODEL,
+    _backend_advice,
     _resolve_float_dtype,
     _scratch,
 )
 
 HAS_MPS = torch.backends.mps.is_available()
+
+
+def test_backend_advice_by_device_and_model_size():
+    assert "C++" in _backend_advice("cpu", 10**9)
+    assert "C++" in _backend_advice("mps", 10**9)
+    assert "small" in _backend_advice("cuda", _SMALL_CUDA_MODEL - 1)
+    assert _backend_advice("cuda", _SMALL_CUDA_MODEL) is None
+    assert _backend_advice("cuda:0", 10**9) is None
+
+
+def test_torch_fit_on_cpu_warns_and_points_at_caller():
+    from artlib import FuzzyARTMAP
+
+    rng = np.random.default_rng(0)
+    X = rng.random((20, 3))
+    m = FuzzyARTMAP(0.5, 1e-3, 1.0, backend="torch", device="cpu")
+    Xp = m.prepare_data(X)
+    with pytest.warns(BackendPerformanceWarning, match="on CPU") as record:
+        m.fit(Xp, np.arange(20) % 2)
+    assert record[0].filename == __file__
+    with pytest.warns(BackendPerformanceWarning):
+        m.partial_fit(Xp, np.arange(20) % 2)
 
 
 def test_float_dtype_defaults_to_float32_only_on_mps():

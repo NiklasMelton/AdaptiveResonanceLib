@@ -5,11 +5,11 @@
 //  ‑ real‑valued inputs in ℝ^d  (NO complement coding here)
 // ----------------------------------------------------------
 #include "art_core.hpp"
+#include "batch_fit.hpp"
 #include "batch_predict.hpp"
 #include "native_arrays.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring>
@@ -19,19 +19,32 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <stdexcept>
-#include <unordered_map>
 #include <vector>
 
 namespace py = pybind11;
+
+namespace {
+// Squared Euclidean distance ∑(x-c)^2, matching the old scalar loop bit for bit;
+// see art_predict::fused_tail_start for why there are two steps.
+struct SquareBody {
+    double operator()(double acc, double x, const double* w, std::size_t lane) const {
+        const double d = x - w[lane];
+        const double square = d * d;
+        return acc + square;
+    }
+};
+struct SquareTail {
+    double operator()(double acc, double x, const double* w, std::size_t lane) const {
+        const double d = x - w[lane];
+        return acc + d * d;
+    }
+};
+} // namespace
 
 // ────────────────────────────────────────────────────────────
 class NativeHypersphereARTMAP {
 public:
     // *** weight: centroid (d doubles)  +  radius (1 double) ***
-    struct Cluster {
-        std::vector<double> weight; // length d+1
-    };
-
     NativeHypersphereARTMAP(double rho, double alpha, double beta, double r_hat,
                             const std::string& MT, double epsilon, py::object weights = py::none(),
                             py::object cluster_labels = py::none())
@@ -56,7 +69,6 @@ public:
             if (static_cast<std::size_t>(cl_b.shape[0]) != n_clusters)
                 throw std::invalid_argument("weights / cluster_labels size mismatch");
 
-            clusters_.resize(n_clusters);
             const int* cl_ptr = static_cast<const int*>(cl_b.ptr);
 
             for (std::size_t k = 0; k < n_clusters; ++k) {
@@ -67,12 +79,20 @@ public:
                 if (w_b.shape[0] < 2)
                     throw std::invalid_argument("weight must be at least 2 elements (d ≥1)");
 
-                clusters_[k].weight.resize(static_cast<std::size_t>(w_b.shape[0]));
-                std::memcpy(clusters_[k].weight.data(), w_b.ptr, sizeof(double) * w_b.shape[0]);
-                cluster_map_[static_cast<int>(k)] = cl_ptr[k];
-
-                if (dim_ == 0)
-                    dim_ = static_cast<int>(w_b.shape[0] - 1);
+                const std::size_t width = static_cast<std::size_t>(w_b.shape[0] - 1);
+                if (dim_ == 0) {
+                    dim_ = static_cast<int>(width);
+                    centroids_.reset(width, 1);
+                }
+                if (width != centroids_.dim)
+                    throw std::invalid_argument("inconsistent weight dimensions");
+                const double* w = static_cast<const double*>(w_b.ptr);
+                const std::size_t c = centroids_.append();
+                double* out = centroids_.values(c, 0);
+                for (std::size_t j = 0; j < width; ++j)
+                    out[j * centroids_.feature_stride()] = w[j];
+                radii_.push_back(w[width]);
+                labels_.push_back(cl_ptr[k]);
             }
         }
     }
@@ -82,7 +102,7 @@ public:
     // returns (labels_a, weights_vec<ndarray>, cluster_labels)
     // ────────────────────────────────────────────────────────
     std::tuple<py::array_t<int>, std::vector<py::array_t<double>>, py::array_t<int>>
-    fit(py::array_t<double> X, py::array_t<int> y) {
+    fit(py::array_t<double> X, py::array_t<int> y, int n_threads = 0) {
         auto xb = X.request();
         auto yb = y.request();
 
@@ -95,27 +115,40 @@ public:
             dim_ = n_features;
         if (n_features != dim_)
             throw std::invalid_argument("feature dimension mismatch");
+        if (centroids_.count == 0)
+            centroids_.reset(static_cast<std::size_t>(n_features), 1);
 
         const double* Xptr = static_cast<const double*>(xb.ptr);
         const int* yptr = static_cast<const int*>(yb.ptr);
 
         std::vector<int> labels_a(n_samples);
 
-        for (int i = 0; i < n_samples; ++i)
-            labels_a[i] = step_fit(Xptr + static_cast<std::size_t>(i) * n_features, yptr[i]);
+        if (n_samples > 0) {
+            mode_ = art_core::parse_match_tracking(match_tracking_);
+            prefilter_ = art_core::vigilance_only_rises(mode_, epsilon_);
+            pool_.set_limit(art_fit::resolve_threads(n_threads));
+            py::gil_scoped_release release;
+            for (int i = 0; i < n_samples; ++i)
+                labels_a[i] = step_fit(Xptr + static_cast<std::size_t>(i) * n_features, yptr[i]);
+            pool_.stop();
+        }
 
         /* -------- pack output -------- */
-        auto labels_out = art_bind::output(labels_a);
+        const std::size_t width = centroids_.dim;
+        const std::size_t stride = centroids_.feature_stride();
+        std::vector<py::array_t<double>> weight_out;
+        weight_out.reserve(centroids_.count);
+        for (std::size_t c = 0; c < centroids_.count; ++c) {
+            py::array_t<double> array(width + 1);
+            double* out = array.mutable_data();
+            const double* w = centroids_.values(c, 0);
+            for (std::size_t j = 0; j < width; ++j)
+                out[j] = w[j * stride];
+            out[width] = radii_[c];
+            weight_out.push_back(std::move(array));
+        }
 
-        auto weight_out = art_bind::pack_weights<double>(
-            clusters_, [](const Cluster& cluster) -> const auto& { return cluster.weight; });
-
-        std::vector<int> clabels_vec(clusters_.size());
-        for (const auto& kv : cluster_map_)
-            clabels_vec[kv.first] = kv.second;
-        auto clabels_out = art_bind::output(clabels_vec);
-
-        return {labels_out, weight_out, clabels_out};
+        return {art_bind::output(labels_a), weight_out, art_bind::output(labels_)};
     }
 
     // ────────────────────────────────────────────────────────
@@ -123,7 +156,7 @@ public:
     // ────────────────────────────────────────────────────────
     std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X,
                                                            int n_threads = 0) {
-        if (clusters_.empty())
+        if (centroids_.count == 0)
             throw std::runtime_error("Model has no clusters");
 
         auto xb = X.request();
@@ -135,46 +168,28 @@ public:
             throw std::invalid_argument("feature dimension mismatch");
 
         const double* Xptr = static_cast<const double*>(xb.ptr);
-        const std::size_t count = clusters_.size();
+        const std::size_t count = centroids_.count;
         const std::size_t width = static_cast<std::size_t>(dim);
 
-        art_predict::Panels panels;
-        panels.pack(count, width, 1,
-                    [&](std::size_t c, std::size_t) { return clusters_[c].weight.data(); });
-        std::vector<double> radii(count), denominators(count);
-        std::vector<int> labels(count);
-        for (std::size_t c = 0; c < count; ++c) {
-            radii[c] = clusters_[c].weight.back();
-            denominators[c] = r_hat_ - radii[c] + alpha_;
-            labels[c] = cluster_map_.at(static_cast<int>(c));
-        }
+        std::vector<double> denominators(count);
+        for (std::size_t c = 0; c < count; ++c)
+            denominators[c] = r_hat_ - radii_[c] + alpha_;
 
         std::vector<int> y_a(n), y_b(n);
         {
             py::gil_scoped_release release;
-            // Squared distance, matching euclidean() bit for bit; see
-            // art_predict::fused_tail_start for why there are two steps.
-            auto body = [](double acc, double x, const double* w, std::size_t lane) {
-                const double d = x - w[lane];
-                const double square = d * d;
-                return acc + square;
-            };
-            auto tail = [](double acc, double x, const double* w, std::size_t lane) {
-                const double d = x - w[lane];
-                return acc + d * d;
-            };
-            art_predict::accumulate(Xptr, n, width, panels, art_predict::resolve_threads(n_threads),
-                                    art_predict::fused_tail_start(width), body, tail,
-                                    [&](std::size_t i, const double* squares) {
-                                        const std::size_t best =
-                                            art_predict::argmax_first(count, [&](std::size_t c) {
-                                                const double i_rad = std::sqrt(squares[c]);
-                                                const double max_r = std::max(radii[c], i_rad);
-                                                return (r_hat_ - max_r) / denominators[c];
-                                            });
-                                        y_a[i] = static_cast<int>(best);
-                                        y_b[i] = labels[best];
-                                    });
+            art_predict::accumulate(
+                Xptr, n, width, centroids_, art_predict::resolve_threads(n_threads),
+                art_predict::fused_tail_start(width), SquareBody{}, SquareTail{},
+                [&](std::size_t i, const double* squares) {
+                    const std::size_t best = art_predict::argmax_first(count, [&](std::size_t c) {
+                        const double i_rad = std::sqrt(squares[c]);
+                        const double max_r = std::max(radii_[c], i_rad);
+                        return (r_hat_ - max_r) / denominators[c];
+                    });
+                    y_a[i] = static_cast<int>(best);
+                    y_b[i] = labels_[best];
+                });
         }
         return {art_bind::output(y_a), art_bind::output(y_b)};
     }
@@ -183,108 +198,89 @@ private:
     /* ───── hyper‑parameters ───── */
     double base_rho_, alpha_, beta_, r_hat_, epsilon_;
     std::string match_tracking_;
+    art_core::MatchTracking mode_ = art_core::MatchTracking::Plus;
+    bool prefilter_ = false;
 
     /* ───── state ───── */
     int dim_;
     double rho_;
-    std::vector<Cluster> clusters_;
-    std::unordered_map<int, int> cluster_map_;
+    art_predict::Panels centroids_; // d doubles per category
+    std::vector<double> radii_;
+    std::vector<int> labels_; // category -> class label
 
     /* ───── per-sample scratch, reused between samples ───── */
-    std::vector<std::array<double, 2>> caches_; // {input radius, max radius}
-    art_core::LazySearchScratch<double> scratch_;
+    std::vector<double> scores_, matches_;
+    std::vector<double> input_radii_, max_radii_;
+    std::vector<std::size_t> order_;
+    art_fit::Pool pool_;
 
     /* ─────────────────────────────────────────────────── */
-    void reset_rho() { rho_ = base_rho_; }
+    void update_weight(const double* i, std::size_t c) {
+        const double i_radius = input_radii_[c];
+        const double max_r = max_radii_[c];
+        const double radius = radii_[c];
 
-    // *** Euclidean distance helper (√(∑(x-c)^2)) ***
-    double euclidean(const double* x, const std::vector<double>& w_centroid) const {
-        double s = 0.0;
-        for (int j = 0; j < dim_; ++j) {
-            double d = x[j] - w_centroid[j];
-            s += d * d;
-        }
-        return std::sqrt(s);
-    }
-
-    /* ─────────────────────────────────────────────────── */
-    double category_choice(const double* sample, const std::vector<double>& w) const {
-        const double radius = w.back();
-        const double i_rad = euclidean(sample, w);
-        const double max_r = std::max(radius, i_rad);
-        return (r_hat_ - max_r) / (r_hat_ - radius + alpha_);
-    }
-
-    double match(const double* sample, const std::vector<double>& w) const {
-        const double radius = w.back();
-        const double i_rad = euclidean(sample, w);
-        const double max_r = std::max(radius, i_rad);
-        return 1.0 - (max_r / r_hat_);
-    }
-
-    std::vector<double> update_weight(const double* i, const std::vector<double>& w,
-                                      const std::array<double, 2>& cache) const {
-        // cache = {i_radius, max_radius}
-        double i_radius = cache[0];
-        double max_r = cache[1];
-        double radius = w.back();
-
-        double radius_new = radius + (beta_ / 2.0) * (max_r - radius);
+        const double radius_new = radius + (beta_ / 2.0) * (max_r - radius);
 
         // With alpha == 0 and the sample on the centroid this ratio is 0/0. Use its
         // limit as alpha -> 0, which is 0.
         const double denom = i_radius + alpha_;
         const double ratio = denom > 0.0 ? std::min(radius, i_radius) / denom : 0.0;
 
-        std::vector<double> out(dim_ + 1);
+        double* w = centroids_.values(c, 0);
+        const std::size_t stride = centroids_.feature_stride();
         for (int j = 0; j < dim_; ++j) {
-            double centroid = w[j];
-            out[j] = centroid + (beta_ / 2.0) * (i[j] - centroid) * (1.0 - ratio);
+            const double centroid = w[j * stride];
+            w[j * stride] = centroid + (beta_ / 2.0) * (i[j] - centroid) * (1.0 - ratio);
         }
-        out.back() = radius_new;
-        return out;
+        radii_[c] = radius_new;
     }
 
     /* ─────────────────────────────────────────────────── */
     int step_fit(const double* sample, int c_b) {
-        reset_rho();
-        const auto mode = art_core::parse_match_tracking(match_tracking_);
-        auto& caches = caches_;
-        caches.resize(clusters_.size());
-        auto state = art_core::state_view(clusters_, cluster_map_, dim_);
-        return static_cast<int>(art_core::fit_one_lazy(
-            state,
-            [&](std::size_t c) {
-                const double radius = clusters_[c].weight.back();
-                const double input_radius = euclidean(sample, clusters_[c].weight);
-                const double max_radius = std::max(radius, input_radius);
-                caches[c] = {input_radius, max_radius};
-                return (r_hat_ - max_radius) / (r_hat_ - radius + alpha_);
+        rho_ = base_rho_;
+        const std::size_t count = centroids_.count;
+        scores_.resize(count);
+        matches_.resize(count);
+        input_radii_.resize(count);
+        max_radii_.resize(count);
+        art_fit::score_sample(
+            sample, centroids_, art_predict::fused_tail_start(centroids_.dim), SquareBody{},
+            SquareTail{},
+            [&](std::size_t p, const double* squares) {
+                const std::size_t first = p * art_fit::kLanes;
+                const std::size_t last = std::min(count, first + art_fit::kLanes);
+                for (std::size_t c = first; c < last; ++c) {
+                    const double radius = radii_[c];
+                    const double input_radius = std::sqrt(squares[c - first]);
+                    const double max_radius = std::max(radius, input_radius);
+                    input_radii_[c] = input_radius;
+                    max_radii_[c] = max_radius;
+                    scores_[c] = (r_hat_ - max_radius) / (r_hat_ - radius + alpha_);
+                    matches_[c] = 1.0 - max_radius / r_hat_;
+                }
             },
-            [&](std::size_t c) { return 1.0 - caches[c][1] / r_hat_; },
-            [&](double value) { return art_core::passes_match(value, rho_, mode); },
+            pool_);
+
+        return static_cast<int>(art_core::fit_one_scored(
+            count, scores_.data(), matches_.data(), prefilter_,
+            [&](double value) { return art_core::passes_match(value, rho_, mode_); },
+            [&](std::size_t c) { return labels_[c] == c_b; },
+            [&](double value) { return art_core::track_match(value, rho_, epsilon_, mode_); },
             [&](std::size_t c) {
-                auto found = cluster_map_.find(static_cast<int>(c));
-                return found == cluster_map_.end() || found->second == c_b;
-            },
-            [&](double value) { return art_core::track_match(value, rho_, epsilon_, mode); },
-            [&](std::size_t c) {
-                clusters_[c].weight = update_weight(sample, clusters_[c].weight, caches[c]);
-                cluster_map_[static_cast<int>(c)] = c_b;
+                update_weight(sample, c);
+                labels_[c] = c_b;
             },
             [&]() {
-                const auto index = clusters_.size();
-                clusters_.push_back({new_weight(sample)});
-                cluster_map_[static_cast<int>(index)] = c_b;
-                return index;
+                const std::size_t c = centroids_.append();
+                double* w = centroids_.values(c, 0);
+                for (std::size_t j = 0; j < centroids_.dim; ++j)
+                    w[j * centroids_.feature_stride()] = sample[j];
+                radii_.push_back(0.0); // initial radius
+                labels_.push_back(c_b);
+                return c;
             },
-            scratch_));
-    }
-
-    std::vector<double> new_weight(const double* i) const {
-        std::vector<double> w(i, i + dim_);
-        w.push_back(0.0); // initial radius
-        return w;
+            order_));
     }
 };
 
@@ -293,13 +289,13 @@ private:
 // ────────────────────────────────────────────────────────────
 auto native_fit(py::object X, py::object y, double rho, double alpha, double beta, double r_hat,
                 const std::string& MT, double epsilon, py::object weights = py::none(),
-                py::object cluster_labels = py::none()) {
+                py::object cluster_labels = py::none(), int n_threads = 0) {
     auto data = art_bind::matrix<double>(X);
     auto target = art_bind::labels<int>(y, data.shape(0));
     NativeHypersphereARTMAP model(rho, alpha, beta, r_hat, MT, epsilon,
                                   art_bind::weights<double>(weights),
                                   art_bind::cluster_labels(cluster_labels));
-    return model.fit(data, target);
+    return model.fit(data, target, n_threads);
 }
 
 auto native_predict(py::object X, double rho, double alpha, double beta, double r_hat,
@@ -318,7 +314,8 @@ auto native_predict(py::object X, double rho, double alpha, double beta, double 
 PYBIND11_MODULE(cppHypersphereARTMAP, m) {
     m.def("fit", &native_fit, py::arg("X"), py::arg("y"), py::arg("rho"), py::arg("alpha"),
           py::arg("beta"), py::arg("r_hat"), py::arg("MT"), py::arg("epsilon"),
-          py::arg("weights") = py::none(), py::arg("cluster_labels") = py::none());
+          py::arg("weights") = py::none(), py::arg("cluster_labels") = py::none(),
+          py::arg("n_threads") = 0);
 
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("alpha"),
           py::arg("beta"), py::arg("r_hat"), py::arg("MT"), py::arg("epsilon"),

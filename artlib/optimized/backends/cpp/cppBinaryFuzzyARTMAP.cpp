@@ -1,4 +1,5 @@
 #include "art_core.hpp"
+#include "batch_fit.hpp"
 #include "batch_predict.hpp"
 #include "native_arrays.hpp"
 
@@ -14,7 +15,6 @@
 #include <pybind11/stl.h>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 // Use the shared exact fraction ordering core.
@@ -24,10 +24,6 @@ namespace py = pybind11;
 
 class NativeBinaryFuzzyARTMAP {
 public:
-    struct Cluster {
-        std::vector<uint32_t> weight; // binary 0/1
-    };
-
     NativeBinaryFuzzyARTMAP(double rho, std::string MT, uint32_t epsilon,
                             py::object weights = py::none(), py::object cluster_labels = py::none())
         : base_rho_(rho), match_tracking_(std::move(MT)), epsilon_(epsilon) {
@@ -65,11 +61,11 @@ public:
 
         const int* c_ptr = static_cast<const int*>(c_info.ptr);
 
-        clusters_.clear();
-        clusters_.resize(static_cast<size_t>(n_clusters));
+        bits_.clear();
         w_count_cache_.clear();
-        w_count_cache_.resize(static_cast<size_t>(n_clusters), 0u);
-        cluster_map_.clear();
+        w_count_cache_.reserve(static_cast<size_t>(n_clusters));
+        labels_.clear();
+        labels_.reserve(static_cast<size_t>(n_clusters));
 
         uint32_t inferred_dim = 0;
 
@@ -92,27 +88,23 @@ public:
 
             const uint32_t weight_size = static_cast<uint32_t>(weight_size_ssize);
             const uint32_t dim_here = weight_size / 2u;
-            if (inferred_dim == 0)
+            if (inferred_dim == 0) {
                 inferred_dim = dim_here;
+                words_ = art_predict::bit_words(weight_size);
+            }
             if (dim_here != inferred_dim) {
                 throw std::invalid_argument("All weight vectors must have the same length.");
             }
 
-            clusters_[static_cast<size_t>(i)].weight.resize(static_cast<size_t>(weight_size));
+            // Pack as bits (preserving the nonzero-is-one input convention) and
+            // cache |w|.
             const int* w_ptr = static_cast<const int*>(w_info.ptr);
+            bits_.resize(bits_.size() + words_);
+            std::uint64_t* w = bits_.data() + bits_.size() - words_;
+            art_predict::pack_bits(w_ptr, weight_size, w);
+            w_count_cache_.push_back(ones_count(w));
 
-            // Convert to uint32_t 0/1 and compute cached |w|
-            uint32_t w_count = 0u;
-            for (uint32_t j = 0u; j < weight_size; ++j) {
-                const int v = w_ptr[j];
-                // Preserve the existing nonzero-is-one input convention.
-                const uint32_t u = (v != 0) ? 1u : 0u;
-                clusters_[static_cast<size_t>(i)].weight[static_cast<size_t>(j)] = u;
-                w_count += u;
-            }
-            w_count_cache_[static_cast<size_t>(i)] = w_count;
-
-            cluster_map_[static_cast<uint32_t>(i)] = c_ptr[i];
+            labels_.push_back(c_ptr[i]);
         }
 
         // Now we can set dim_original_ and rho thresholds
@@ -125,7 +117,7 @@ public:
     // FIT
     // ============================================
     std::tuple<py::array_t<int>, std::vector<py::array_t<int>>, py::array_t<int>>
-    fit(py::array_t<int> X, py::array_t<int> y) {
+    fit(py::array_t<int> X, py::array_t<int> y, int n_threads = 0) {
         py::buffer_info x_buf = X.request();
         py::buffer_info y_buf = y.request();
 
@@ -159,6 +151,7 @@ public:
         if (num_features != 2u * dim_original_) {
             throw std::invalid_argument("Number of features do not match existing weights.");
         }
+        words_ = art_predict::bit_words(num_features);
 
         const int* x_ptr = static_cast<const int*>(x_buf.ptr);
         const int* y_ptr = static_cast<const int*>(y_buf.ptr);
@@ -166,38 +159,39 @@ public:
         std::vector<int> labels_out_vec;
         labels_out_vec.resize(static_cast<size_t>(num_samples));
 
-        for (uint32_t i = 0u; i < num_samples; ++i) {
-            const int* row_ptr = x_ptr + static_cast<size_t>(i) * static_cast<size_t>(num_features);
+        if (num_samples > 0u) {
+            mode_ = art_core::parse_match_tracking(match_tracking_);
+            pool_.set_limit(art_fit::resolve_threads(n_threads));
+            py::gil_scoped_release release;
+            std::vector<std::uint64_t> sample(words_);
+            for (uint32_t i = 0u; i < num_samples; ++i) {
+                const int* row_ptr =
+                    x_ptr + static_cast<size_t>(i) * static_cast<size_t>(num_features);
+                art_predict::pack_bits(row_ptr, num_features, sample.data());
 
-            std::vector<uint32_t> sample;
-            sample.resize(static_cast<size_t>(num_features));
-            for (uint32_t j = 0u; j < num_features; ++j) {
-                sample[static_cast<size_t>(j)] = (row_ptr[j] != 0) ? 1u : 0u;
+                const int c_b = y_ptr[i];
+                const uint32_t chosen = step_fit(sample.data(), c_b);
+                labels_out_vec[static_cast<size_t>(i)] = static_cast<int>(chosen);
             }
-
-            const int c_b = y_ptr[i];
-            const uint32_t chosen = step_fit(sample, c_b);
-            labels_out_vec[static_cast<size_t>(i)] = static_cast<int>(chosen);
+            pool_.stop();
         }
 
         auto labels_py = art_bind::output(labels_out_vec);
 
         // Export weights as int arrays for compatibility
-        auto weight_arrays = art_bind::pack_weights<int>(
-            clusters_, [](const Cluster& cluster) -> const auto& { return cluster.weight; });
-
-        // Export cluster labels (cluster_id -> label)
-        std::vector<int> cluster_labels_vec;
-        cluster_labels_vec.resize(clusters_.size(), 0);
-        for (const auto& kv : cluster_map_) {
-            const uint32_t cluster_id = kv.first;
-            const int label = kv.second;
-            if (cluster_id < cluster_labels_vec.size()) {
-                cluster_labels_vec[static_cast<size_t>(cluster_id)] = label;
-            }
+        std::vector<py::array_t<int>> weight_arrays;
+        weight_arrays.reserve(labels_.size());
+        for (std::size_t c = 0; c < labels_.size(); ++c) {
+            py::array_t<int> array(num_features);
+            int* out = array.mutable_data();
+            const std::uint64_t* w = bits_.data() + c * words_;
+            for (uint32_t j = 0u; j < num_features; ++j)
+                out[j] = static_cast<int>((w[j / 64] >> (j % 64)) & 1u);
+            weight_arrays.push_back(std::move(array));
         }
 
-        auto cluster_labels_py = art_bind::output(cluster_labels_vec);
+        // Export cluster labels (cluster_id -> label)
+        auto cluster_labels_py = art_bind::output(labels_);
 
         return std::make_tuple(labels_py, weight_arrays, cluster_labels_py);
     }
@@ -206,7 +200,7 @@ public:
     // PREDICT
     // ============================================
     std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<int> X, int n_threads = 0) {
-        if (clusters_.empty()) {
+        if (labels_.empty()) {
             throw std::runtime_error("Cannot call predict() because the model has no clusters. "
                                      "Call fit() or provide existing weights.");
         }
@@ -241,20 +235,15 @@ public:
         }
 
         const int* x_ptr = static_cast<const int*>(x_buf.ptr);
-        const std::size_t count = clusters_.size();
+        const std::size_t count = labels_.size();
         const std::size_t width = static_cast<std::size_t>(num_features);
-        const std::size_t words = art_predict::bit_words(width);
+        const std::size_t words = words_;
 
         // Intersection counts by popcount over 64-feature words. Counts are
-        // integers, so this matches intersection_count() exactly.
-        std::vector<std::uint64_t> weight_bits(count * words);
+        // integers, so this matches a feature-by-feature count exactly.
         std::vector<uint32_t> denominators(count);
-        std::vector<int> labels(count);
-        for (std::size_t c = 0; c < count; ++c) {
-            art_predict::pack_bits(clusters_[c].weight.data(), width, &weight_bits[c * words]);
+        for (std::size_t c = 0; c < count; ++c)
             denominators[c] = std::max<uint32_t>(1u, w_count_cache_[c]);
-            labels[c] = cluster_map_.at(static_cast<uint32_t>(c));
-        }
 
         std::vector<int> pred_a_vec(num_samples), pred_b_vec(num_samples);
         {
@@ -270,8 +259,8 @@ public:
                 for (std::size_t i = task * block; i < end; ++i) {
                     art_predict::pack_bits(x_ptr + i * width, width, sample_bits.data());
                     auto choice = [&](std::size_t c) {
-                        const uint32_t hits = art_predict::and_count(
-                            sample_bits.data(), &weight_bits[c * words], words);
+                        const uint32_t hits =
+                            art_predict::and_count(sample_bits.data(), &bits_[c * words], words);
                         fracsort::Item<uint32_t> item{hits, denominators[c], 0, 1, c};
                         fracsort::reduce_item_inplace(item);
                         return item;
@@ -288,7 +277,7 @@ public:
                         }
                     }
                     pred_a_vec[i] = static_cast<int>(best);
-                    pred_b_vec[i] = labels[best];
+                    pred_b_vec[i] = labels_[best];
                 }
             });
         }
@@ -304,66 +293,61 @@ private:
     double base_rho_; // float input (converted to int thresholds when dim known)
     std::string match_tracking_;
     uint32_t epsilon_; // integer epsilon
+    art_core::MatchTracking mode_ = art_core::MatchTracking::Plus;
 
     // Derived/internals
     uint32_t dim_original_; // original dimension (half of input length)
     uint32_t rho_w1_;       // ceil(base_rho * dim_original_)
     uint32_t rho_int_;      // current vigilance threshold (integer)
 
-    std::vector<Cluster> clusters_;
-    std::vector<uint32_t> w_count_cache_;           // cached |w| per cluster
-    std::unordered_map<uint32_t, int> cluster_map_; // cluster_id -> label
+    // Binary weights, words_ 64-bit words per category (64 features per word,
+    // unused high bits zero), one category after another.
+    std::size_t words_ = 0;
+    std::vector<std::uint64_t> bits_;
+    std::vector<uint32_t> w_count_cache_; // cached |w| per cluster
+    std::vector<int> labels_;             // cluster_id -> label
     std::vector<uint32_t> intersection_cache_;
     std::vector<fracsort::Item<uint32_t>> candidate_items_;
     std::vector<std::size_t> candidate_order_;
     art_core::SearchScratch<fracsort::Item<uint32_t>, uint32_t> search_scratch_;
+    art_fit::Pool pool_;
 
     // ---- helpers ----
 
     void reset_rho() { rho_int_ = rho_w1_; }
 
-    static uint32_t intersection_count(const std::vector<uint32_t>& i,
-                                       const std::vector<uint32_t>& w) {
-        // i and w are binary 0/1; intersection count is sum(i[j] & w[j])
+    uint32_t ones_count(const std::uint64_t* bits) const {
         uint32_t c = 0u;
-        const size_t n = i.size();
-        for (size_t j = 0; j < n; ++j)
-            c += (i[j] & w[j]);
-        return c;
-    }
-
-    static uint32_t ones_count(const std::vector<uint32_t>& v) {
-        uint32_t c = 0u;
-        for (uint32_t x : v)
-            c += x;
+        for (std::size_t k = 0; k < words_; ++k)
+            c += art_predict::popcount64(bits[k]);
         return c;
     }
 
     bool validate_hypothesis(uint32_t cluster_id, int c_b) const {
-        auto it = cluster_map_.find(cluster_id);
-        return (it == cluster_map_.end()) || (it->second == c_b);
+        return labels_[cluster_id] == c_b;
     }
 
-    // Weight update: new_w = i & w (binary vectors)
-    static void update_inplace(std::vector<uint32_t>& w, const std::vector<uint32_t>& i) {
-        const size_t n = w.size();
-        for (size_t j = 0; j < n; ++j) {
-            w[j] = (w[j] & i[j]);
-        }
-    }
-
-    uint32_t step_fit(const std::vector<uint32_t>& sample, int c_b) {
+    uint32_t step_fit(const std::uint64_t* sample, int c_b) {
         reset_rho();
-        const auto mode = art_core::parse_match_tracking(match_tracking_);
-        intersection_cache_.resize(clusters_.size());
-        auto state = art_core::state_view(clusters_, cluster_map_, dim_original_);
+        const auto mode = mode_;
+        const std::size_t count = labels_.size();
+        const std::size_t words = words_;
+        intersection_cache_.resize(count);
+        // A 64-bit word of AND and popcount costs about as much as 4 lane updates.
+        art_fit::parallel_range(
+            count, count * words * 4, pool_, [&](std::size_t first, std::size_t last) {
+                for (std::size_t c = first; c < last; ++c)
+                    intersection_cache_[c] =
+                        art_predict::and_count(sample, &bits_[c * words], words);
+            });
+        // w_count_cache_ has one entry per category, which is all the search
+        // needs from the weights.
+        auto state = art_core::state_view(w_count_cache_, labels_, dim_original_);
         return static_cast<uint32_t>(art_core::fit_one_cached(
             state,
             [&](std::size_t c) {
-                const auto count = intersection_count(sample, clusters_[c].weight);
-                intersection_cache_[c] = count;
-                return fracsort::Item<uint32_t>{count, std::max<uint32_t>(1u, w_count_cache_[c]), 0,
-                                                1, c};
+                return fracsort::Item<uint32_t>{intersection_cache_[c],
+                                                std::max<uint32_t>(1u, w_count_cache_[c]), 0, 1, c};
             },
             [&](std::size_t c) { return intersection_cache_[c]; },
             [&](const auto& scores, const auto& matches) -> const std::vector<std::size_t>& {
@@ -391,15 +375,18 @@ private:
                 return art_core::track_match(value, rho_int_, epsilon_, dim_original_, mode);
             },
             [&](std::size_t c) {
-                update_inplace(clusters_[c].weight, sample);
+                // Weight update: new_w = i & w (binary vectors)
+                std::uint64_t* w = bits_.data() + c * words;
+                for (std::size_t k = 0; k < words; ++k)
+                    w[k] &= sample[k];
                 w_count_cache_[c] = intersection_cache_[c];
-                cluster_map_[static_cast<uint32_t>(c)] = c_b;
+                labels_[c] = c_b;
             },
             [&]() {
-                const auto index = clusters_.size();
-                clusters_.push_back(Cluster{sample});
+                const auto index = labels_.size();
+                bits_.insert(bits_.end(), sample, sample + words);
                 w_count_cache_.push_back(ones_count(sample));
-                cluster_map_[static_cast<uint32_t>(index)] = c_b;
+                labels_.push_back(c_b);
                 return index;
             },
             search_scratch_));
@@ -411,12 +398,13 @@ private:
 // =======================================================================
 std::tuple<py::array_t<int>, std::vector<py::array_t<int>>, py::array_t<int>>
 native_fit(py::object X, py::object y, double rho, std::string MT, uint32_t epsilon,
-           py::object weights = py::none(), py::object cluster_labels = py::none()) {
+           py::object weights = py::none(), py::object cluster_labels = py::none(),
+           int n_threads = 0) {
     auto data = art_bind::binary_matrix<int>(X);
     auto target = art_bind::labels<int>(y, data.shape(0));
     NativeBinaryFuzzyARTMAP model(rho, MT, epsilon, art_bind::binary_weights<int>(weights),
                                   art_bind::cluster_labels(cluster_labels));
-    return model.fit(data, target);
+    return model.fit(data, target, n_threads);
 }
 
 // =======================================================================
@@ -438,12 +426,13 @@ native_predict(py::object X, double rho, std::string MT, uint32_t epsilon,
 PYBIND11_MODULE(cppBinaryFuzzyARTMAP, m) {
     m.def("fit", &native_fit, py::arg("X"), py::arg("y"), py::arg("rho"), py::arg("MT"),
           py::arg("epsilon"), py::arg("weights") = py::none(),
-          py::arg("cluster_labels") = py::none(),
+          py::arg("cluster_labels") = py::none(), py::arg("n_threads") = 0,
           R"doc(
 Fit cppBinaryFuzzyARTMAP in a single function call.
 Optionally re-initialize from existing weights/cluster_labels for partial fits.
 Either provide BOTH 'weights' (a list of 1D arrays) and 'cluster_labels' (1D array)
-or leave both as None.
+or leave both as None. n_threads caps the threads that score each sample; 0 (the
+default) uses ARTLIB_NUM_THREADS when set, else every hardware thread.
 )doc");
 
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("MT"),

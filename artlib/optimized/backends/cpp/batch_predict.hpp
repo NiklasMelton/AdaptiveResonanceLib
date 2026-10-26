@@ -144,6 +144,31 @@ struct Panels {
     std::size_t feature_stride() const { return streams * kLanes; }
     const double* panel(std::size_t p) const { return data.data() + p * dim * feature_stride(); }
 
+    // Removes every category and sets the shape.
+    void reset(std::size_t n_features, std::size_t n_streams) {
+        count = 0;
+        dim = n_features;
+        streams = n_streams;
+        data.clear();
+    }
+
+    // Adds a category with every value zero and returns its index. A full last
+    // panel gets a new one after it; std::vector keeps spare capacity, so this is
+    // amortized O(dim).
+    std::size_t append() {
+        if (count % kLanes == 0)
+            data.resize(data.size() + dim * feature_stride(), 0.0);
+        return count++;
+    }
+
+    // Stream s of category c: feature j is at values(c, s)[j * feature_stride()].
+    double* values(std::size_t c, std::size_t s) {
+        return data.data() + (c / kLanes) * dim * feature_stride() + s * kLanes + c % kLanes;
+    }
+    const double* values(std::size_t c, std::size_t s) const {
+        return data.data() + (c / kLanes) * dim * feature_stride() + s * kLanes + c % kLanes;
+    }
+
     // ``source(c, s)`` returns a pointer to ``dim`` doubles: stream s of category c.
     template <typename Source>
     void pack(std::size_t n_categories, std::size_t n_features, std::size_t n_streams,
@@ -208,7 +233,7 @@ inline void split_kernel(const double* const* rows, const double* panel, std::si
 // a fused multiply-add. Distance kernels reproduce that split, writing the
 // multiply and the add as separate statements before this index and as one
 // contractible expression after it, so their results stay bit-identical to the
-// scalar loops (which fit still uses). Where the target has no FMA, or the
+// scalar loops that fit and predict used before. Where the target has no FMA, or the
 // compiler fuses across statements (GCC's default), both halves compile alike
 // and still match the scalar loop built by the same compiler.
 inline std::size_t fused_tail_start(std::size_t dim) { return dim - dim % 8; }

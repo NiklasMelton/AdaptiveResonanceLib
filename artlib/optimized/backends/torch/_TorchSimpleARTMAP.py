@@ -1,7 +1,10 @@
+import warnings
+
 import numpy as np
 import torch
 from typing import Literal, Optional, Union, Tuple
 
+from artlib.optimized.backend_warnings import BackendPerformanceWarning
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_is_fitted
@@ -248,7 +251,48 @@ def _append_rows(owner, n: int, **rows: Tensor) -> None:
         setattr(owner, name, buf[: n + 1])
 
 
+# Below this many weight entries (categories x weight length), a model trained on
+# CUDA is small enough that the C++ backend is usually much faster. Training on
+# CUDA costs a few hundred microseconds per sample at any size; on a V100 with 16
+# CPU threads, C++ trained 40-category models 100-500x faster, while CUDA only
+# started to win around a few million entries. 100,000 is a conservative point
+# in between.
+_SMALL_CUDA_MODEL = 100_000
+
+
+def _backend_advice(device, n_weights: int) -> Optional[str]:
+    """Why this torch device is a poor choice for a model this size, or None."""
+    kind = torch.device(device).type
+    if kind == "mps":
+        return (
+            "The torch backend on an Apple GPU (device='mps') was slower than the "
+            "C++ backend in every benchmark. Use backend='c++'."
+        )
+    if kind == "cpu":
+        return (
+            "The torch backend on CPU was slower than, or at best about as fast as, "
+            "the C++ backend in every benchmark. Use backend='c++', or "
+            "device='cuda' for large models."
+        )
+    if kind == "cuda" and n_weights < _SMALL_CUDA_MODEL:
+        return (
+            f"This model is small ({n_weights:,} weight entries). Training on CUDA "
+            "has a fixed cost per sample, so the C++ backend is usually much faster "
+            "for models this size. Use backend='c++'."
+        )
+    return None
+
+
 class _TorchSimpleARTMAP(SimpleARTMAP):
+    def _warn_on_slow_backend(self) -> None:
+        """Warn when another backend is likely much faster for this model."""
+        W = self.module_a.W
+        n_weights = len(W) * (len(W[0]) if len(W) else 0)
+        advice = _backend_advice(self._backend.device, n_weights)
+        if advice is not None:
+            # stacklevel=3 points at the caller of fit / partial_fit.
+            warnings.warn(advice, BackendPerformanceWarning, stacklevel=3)
+
     def _synchronize_torch_results(
         self,
         labels_a_out: np.ndarray,
@@ -338,6 +382,7 @@ class _TorchSimpleARTMAP(SimpleARTMAP):
         )
         self._synchronize_torch_results(la, W, cl, incremental=False)
         self.module_a.is_fitted_ = True
+        self._warn_on_slow_backend()
         return self
 
     def partial_fit(
@@ -383,6 +428,7 @@ class _TorchSimpleARTMAP(SimpleARTMAP):
         )
         self._synchronize_torch_results(la, W, cl, incremental=True)
         self.module_a.is_fitted_ = True
+        self._warn_on_slow_backend()
         return self
 
     def predict(self, X: np.ndarray, clip: bool = False) -> np.ndarray:

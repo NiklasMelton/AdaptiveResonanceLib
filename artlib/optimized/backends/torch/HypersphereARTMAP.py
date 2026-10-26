@@ -12,6 +12,7 @@ from torch import Tensor
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _predict_budget_bytes,
     _resolve_float_dtype,
     _scratch,
     _to_device,
@@ -87,28 +88,6 @@ class _TorchHypersphereARTMAP:
             raise ValueError(
                 f"Expected raw dimensionality {self.input_dim}, got {X.shape[1]}"
             )
-
-    def _free_mem_bytes(self) -> int:
-        if self.device.type == "cuda" and torch.cuda.is_available():
-            try:
-                with torch.cuda.device(self.device):
-                    free_b, _ = torch.cuda.mem_get_info()
-                return int(free_b)
-            except Exception:
-                pass
-        try:
-            import psutil  # type: ignore
-
-            return int(psutil.virtual_memory().available)
-        except Exception:
-            try:
-                with open("/proc/meminfo") as f:
-                    for line in f:
-                        if line.startswith("MemAvailable:"):
-                            return int(line.split()[1]) * 1024
-            except Exception:
-                pass
-        return 512 * 1024 * 1024
 
     # ---- core ops (Hypersphere choice/match)
     def _choice_and_match(self, I: Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
@@ -261,7 +240,7 @@ class _TorchHypersphereARTMAP:
         r_hat = float(self.cfg.r_hat)
         alpha = float(self.cfg.alpha)
 
-        budget_bytes = max(int(0.25 * self._free_mem_bytes()), 512 * 1024 * 1024)
+        budget_bytes = _predict_budget_bytes(self.device)
 
         def k_chunk_for(B_chunk: int) -> int:
             # Approximate memory for (B*K*D) intermediates

@@ -46,21 +46,27 @@ constexpr std::size_t kTasksPerThread = 4;
 constexpr std::size_t kSpinsBeforeYield = std::size_t{1} << 14;
 
 // Thread limit for fit: ``requested`` when positive, else ARTLIB_NUM_THREADS
-// when set to a positive integer, else half the hardware threads. Unlike
-// predict, every sample waits for its slowest thread, so a default that leaves
-// cores free does better: it skips SMT siblings and, on Apple chips, about
-// matches the performance cores (6 of 12 on an M3 Pro was fastest; 12 was
-// 15-60% slower than 6).
+// when set to a positive integer, else a default from the CPUs this process may
+// run on.
+//
+// On an unrestricted machine the default is half the hardware threads. Unlike
+// predict, every sample waits for its slowest thread, so leaving cores free does
+// better: it skips SMT siblings and, on Apple chips, about matches the
+// performance cores (6 of 12 on an M3 Pro was fastest; 12 was 15-60% slower).
+//
+// When the affinity mask is restricted (Slurm, taskset, a container cpuset),
+// the scheduler has handed out exactly those CPUs, so fit uses all of them. On
+// 16 allocated cores of a 40-core Xeon node, 16 threads trained 6.8x faster than
+// one, while the old default (half of 40 = 20 threads) was up to 2x slower.
 inline std::size_t resolve_threads(int requested) {
     if (requested > 0)
         return static_cast<std::size_t>(requested);
-    if (const char* env = std::getenv("ARTLIB_NUM_THREADS")) {
-        char* end = nullptr;
-        const long value = std::strtol(env, &end, 10);
-        if (end != env && value > 0)
-            return static_cast<std::size_t>(value);
-    }
-    return std::max<unsigned>(1, std::thread::hardware_concurrency() / 2);
+    if (const std::size_t env = art_predict::env_threads())
+        return env;
+    const std::size_t allowed = art_predict::available_cpus();
+    if (allowed < art_predict::hardware_threads())
+        return allowed;
+    return std::max<std::size_t>(1, allowed / 2);
 }
 
 inline void spin_pause() {

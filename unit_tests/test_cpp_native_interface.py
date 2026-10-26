@@ -306,3 +306,60 @@ def test_threaded_fit_matches_single_thread(name):
         np.testing.assert_array_equal(threaded[2], partial[2])
         for actual, expected in zip(threaded[1], partial[1]):
             np.testing.assert_array_equal(actual, expected)
+
+
+_DEFAULT_THREADS = (
+    "import os, json; "
+    "from artlib.optimized.backends.cpp import cppFuzzyARTMAP as m; "
+    "{setup}"
+    "print(json.dumps([os.cpu_count()] + list(m._default_threads())))"
+)
+
+
+def _default_threads(setup="", env_threads=None):
+    """(machine CPUs, default fit threads, default predict threads) in a fresh
+    process, optionally after ``setup`` code such as a CPU affinity change."""
+    import json
+    import os
+
+    env = dict(os.environ)
+    env.pop("ARTLIB_NUM_THREADS", None)
+    if env_threads is not None:
+        env["ARTLIB_NUM_THREADS"] = env_threads
+    out = subprocess.run(
+        [sys.executable, "-c", _DEFAULT_THREADS.format(setup=setup)],
+        capture_output=True, text=True, env=env, check=True,
+    )
+    return tuple(json.loads(out.stdout))
+
+
+def test_default_threads_use_all_cpus_to_predict_and_half_to_fit():
+    import os
+
+    if hasattr(os, "sched_getaffinity") and len(os.sched_getaffinity(0)) < os.cpu_count():
+        pytest.skip("this process already runs with a restricted CPU affinity mask")
+    cpus, fit, predict = _default_threads()
+    assert predict == cpus
+    assert fit == max(1, cpus // 2)
+
+
+def test_env_threads_override_the_defaults():
+    assert _default_threads(env_threads="3")[1:] == (3, 3)
+    # Invalid values fall back to the defaults.
+    assert _default_threads(env_threads="zero")[1:] == _default_threads()[1:]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="needs sched_setaffinity")
+def test_default_threads_follow_the_cpu_affinity_mask():
+    """Slurm, taskset and container cpusets restrict the affinity mask; the
+    defaults must count only the CPUs this process may run on."""
+    import os
+
+    allowed = sorted(os.sched_getaffinity(0))
+    if len(allowed) < 2:
+        pytest.skip("needs at least two CPUs")
+    for n in sorted({1, len(allowed) // 2}):
+        cpus = set(allowed[:n])
+        _, fit, predict = _default_threads(setup=f"os.sched_setaffinity(0, {cpus!r}); ")
+        # A restricted mask is an allocation: fit and predict both use all of it.
+        assert (fit, predict) == (n, n)

@@ -193,3 +193,59 @@ def test_first_partial_fit_uses_training_and_keeps_label_length():
         model.partial_fit(X[2:])
         assert len(model.labels_) == len(X)
         assert len(model.W) > 0
+
+
+def _threaded_predict_case(name, rng):
+    """Inputs big enough for predict to split the samples across threads.
+
+    The feature count is not a multiple of 8, so the distance kernels' fused
+    tail runs too.
+    """
+    n, k, d = 600, 64, 301
+    if name == "BinaryFuzzyARTMAP":
+        Xh = rng.random((n, d)) < 0.5
+        X = np.hstack([Xh, ~Xh]).astype(np.int32)
+        W = (rng.random((k, 2 * d)) < 0.4).astype(np.int32)
+        params = {"rho": 0.5, "MT": "MT+", "epsilon": 1}
+    elif name == "FuzzyARTMAP":
+        Xh = rng.random((n, d))
+        X = np.hstack([Xh, 1 - Xh])
+        Wh = rng.random((k, d))
+        W = np.hstack([0.9 * Wh, 0.9 * (1 - Wh)])
+        params = {"rho": 0.5, "alpha": 1e-3, "beta": 1.0, "MT": "", "epsilon": 0.0}
+    elif name == "GaussianARTMAP":
+        X = rng.random((n, d))
+        sigma = 0.5 + rng.random((k, d))
+        W = np.hstack([
+            rng.random((k, d)), sigma, 1 / sigma**2, np.ones((k, 1)),
+            rng.integers(1, 10, (k, 1)).astype(float),
+        ])
+        params = {"rho": 0.5, "alpha": 1e-10, "sigma_init": np.full(d, 0.5),
+                  "MT": "", "epsilon": 0.0}
+    else:
+        X = rng.random((n, d))
+        W = np.hstack([rng.random((k, d)), 0.2 * rng.random((k, 1))])
+        params = {"rho": 0.5, "alpha": 1e-3, "beta": 1.0,
+                  "r_hat": float(np.sqrt(d)) + 1, "MT": "", "epsilon": 0.0}
+    return X, W, params
+
+
+@pytest.mark.parametrize(
+    "name", ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "GaussianARTMAP", "HypersphereARTMAP"]
+)
+def test_threaded_predict_matches_single_thread(name):
+    module = importlib.import_module(f"artlib.optimized.backends.cpp.cpp{name}")
+    X, W, params = _threaded_predict_case(name, np.random.default_rng(0))
+    k = len(W)
+    # Every category twice: a duplicate ties its original and must never win.
+    weights = list(np.vstack([W, W]))
+    cluster_labels = np.tile(np.arange(k, dtype=np.int32) % 3, 2)
+    single = module.predict(X, **params, weights=weights, cluster_labels=cluster_labels,
+                            n_threads=1)
+    assert single[0].max() < k
+    assert len(np.unique(single[0])) > 1
+    for threads in (2, 5):
+        threaded = module.predict(X, **params, weights=weights,
+                                  cluster_labels=cluster_labels, n_threads=threads)
+        np.testing.assert_array_equal(threaded[0], single[0])
+        np.testing.assert_array_equal(threaded[1], single[1])

@@ -1,4 +1,5 @@
 #include "art_core.hpp"
+#include "batch_predict.hpp"
 #include "native_arrays.hpp"
 
 #include <algorithm>
@@ -204,7 +205,7 @@ public:
     // ============================================
     // PREDICT
     // ============================================
-    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<int> X) {
+    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<int> X, int n_threads = 0) {
         if (clusters_.empty()) {
             throw std::runtime_error("Cannot call predict() because the model has no clusters. "
                                      "Call fit() or provide existing weights.");
@@ -240,44 +241,60 @@ public:
         }
 
         const int* x_ptr = static_cast<const int*>(x_buf.ptr);
+        const std::size_t count = clusters_.size();
+        const std::size_t width = static_cast<std::size_t>(num_features);
+        const std::size_t words = art_predict::bit_words(width);
 
-        std::vector<int> pred_a_vec;
-        std::vector<int> pred_b_vec;
-        pred_a_vec.resize(static_cast<size_t>(num_samples));
-        pred_b_vec.resize(static_cast<size_t>(num_samples));
-
-        for (uint32_t i = 0u; i < num_samples; ++i) {
-            const int* row_ptr = x_ptr + static_cast<size_t>(i) * static_cast<size_t>(num_features);
-
-            std::vector<uint32_t> sample;
-            sample.resize(static_cast<size_t>(num_features));
-            for (uint32_t j = 0u; j < num_features; ++j) {
-                sample[static_cast<size_t>(j)] = (row_ptr[j] != 0) ? 1u : 0u;
-            }
-
-            auto state = art_core::state_view(clusters_, cluster_map_, dim_original_);
-            const size_t best_cluster = art_core::predict_one(
-                state,
-                [&](std::size_t c) {
-                    const uint32_t count = intersection_count(sample, clusters_[c].weight);
-                    fracsort::Item<uint32_t> item{count, std::max<uint32_t>(1u, w_count_cache_[c]),
-                                                  0, 1, c};
-                    fracsort::reduce_item_inplace(item);
-                    return item;
-                },
-                [](const auto& a, const auto& b) { return fracsort::frac_greater_item(a, b); });
-
-            pred_a_vec[static_cast<size_t>(i)] = static_cast<int>(best_cluster);
-
-            pred_b_vec[static_cast<size_t>(i)] =
-                cluster_map_.at(static_cast<uint32_t>(best_cluster));
+        // Intersection counts by popcount over 64-feature words. Counts are
+        // integers, so this matches intersection_count() exactly.
+        std::vector<std::uint64_t> weight_bits(count * words);
+        std::vector<uint32_t> denominators(count);
+        std::vector<int> labels(count);
+        for (std::size_t c = 0; c < count; ++c) {
+            art_predict::pack_bits(clusters_[c].weight.data(), width, &weight_bits[c * words]);
+            denominators[c] = std::max<uint32_t>(1u, w_count_cache_[c]);
+            labels[c] = cluster_map_.at(static_cast<uint32_t>(c));
         }
 
-        py::array_t<int> pred_a_py(pred_a_vec.size());
-        std::memcpy(pred_a_py.mutable_data(), pred_a_vec.data(), pred_a_vec.size() * sizeof(int));
+        std::vector<int> pred_a_vec(num_samples), pred_b_vec(num_samples);
+        {
+            py::gil_scoped_release release;
+            const std::size_t n = num_samples;
+            // Each category also costs a gcd and an exact fraction comparison.
+            const std::size_t threads = art_predict::useful_threads(
+                art_predict::resolve_threads(n_threads), n * count * (words + 16) * 8);
+            const std::size_t block = art_predict::block_size(n, threads);
+            art_predict::parallel_tasks((n + block - 1) / block, threads, [&](std::size_t task) {
+                std::vector<std::uint64_t> sample_bits(words);
+                const std::size_t end = std::min(n, (task + 1) * block);
+                for (std::size_t i = task * block; i < end; ++i) {
+                    art_predict::pack_bits(x_ptr + i * width, width, sample_bits.data());
+                    auto choice = [&](std::size_t c) {
+                        const uint32_t hits = art_predict::and_count(
+                            sample_bits.data(), &weight_bits[c * words], words);
+                        fracsort::Item<uint32_t> item{hits, denominators[c], 0, 1, c};
+                        fracsort::reduce_item_inplace(item);
+                        return item;
+                    };
+                    // Same scan as art_core::predict_one: replace only on a
+                    // strictly better fraction, so ties keep the lowest index.
+                    std::size_t best = 0;
+                    auto best_item = choice(0);
+                    for (std::size_t c = 1; c < count; ++c) {
+                        const auto item = choice(c);
+                        if (fracsort::frac_greater_item(item, best_item)) {
+                            best = c;
+                            best_item = item;
+                        }
+                    }
+                    pred_a_vec[i] = static_cast<int>(best);
+                    pred_b_vec[i] = labels[best];
+                }
+            });
+        }
 
-        py::array_t<int> pred_b_py(pred_b_vec.size());
-        std::memcpy(pred_b_py.mutable_data(), pred_b_vec.data(), pred_b_vec.size() * sizeof(int));
+        auto pred_a_py = art_bind::output(pred_a_vec);
+        auto pred_b_py = art_bind::output(pred_b_vec);
 
         return std::make_tuple(pred_a_py, pred_b_py);
     }
@@ -407,11 +424,12 @@ native_fit(py::object X, py::object y, double rho, std::string MT, uint32_t epsi
 // =======================================================================
 std::tuple<py::array_t<int>, py::array_t<int>>
 native_predict(py::object X, double rho, std::string MT, uint32_t epsilon,
-               py::object weights = py::none(), py::object cluster_labels = py::none()) {
+               py::object weights = py::none(), py::object cluster_labels = py::none(),
+               int n_threads = 0) {
     auto data = art_bind::binary_matrix<int>(X);
     NativeBinaryFuzzyARTMAP model(rho, MT, epsilon, art_bind::binary_weights<int>(weights),
                                   art_bind::cluster_labels(cluster_labels));
-    return model.predict(data);
+    return model.predict(data, n_threads);
 }
 
 // =======================================================================
@@ -430,7 +448,7 @@ or leave both as None.
 
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("MT"),
           py::arg("epsilon"), py::arg("weights") = py::none(),
-          py::arg("cluster_labels") = py::none(),
+          py::arg("cluster_labels") = py::none(), py::arg("n_threads") = 0,
           R"doc(
 Predict labels using a temporary NativeBinaryFuzzyARTMAP model.
 
@@ -446,6 +464,9 @@ epsilon : int
     Integer epsilon for match tracking adjustments.
 weights : list of 1D np.ndarray, optional
 cluster_labels : np.ndarray, optional
+n_threads : int, optional
+    Worker threads. 0 (the default) uses ARTLIB_NUM_THREADS when set, else
+    every hardware thread.
 
 Returns
 -------

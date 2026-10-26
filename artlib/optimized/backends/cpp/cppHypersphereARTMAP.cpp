@@ -5,6 +5,7 @@
 //  ‑ real‑valued inputs in ℝ^d  (NO complement coding here)
 // ----------------------------------------------------------
 #include "art_core.hpp"
+#include "batch_predict.hpp"
 #include "native_arrays.hpp"
 
 #include <algorithm>
@@ -120,12 +121,13 @@ public:
     // ────────────────────────────────────────────────────────
     // PREDICT  (returns y_a, y_b)
     // ────────────────────────────────────────────────────────
-    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X) {
+    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X,
+                                                           int n_threads = 0) {
         if (clusters_.empty())
             throw std::runtime_error("Model has no clusters");
 
         auto xb = X.request();
-        const int n = static_cast<int>(xb.shape[0]);
+        const std::size_t n = static_cast<std::size_t>(xb.shape[0]);
         const int dim = static_cast<int>(xb.shape[1]);
         if (dim_ == 0)
             dim_ = dim;
@@ -133,24 +135,48 @@ public:
             throw std::invalid_argument("feature dimension mismatch");
 
         const double* Xptr = static_cast<const double*>(xb.ptr);
+        const std::size_t count = clusters_.size();
+        const std::size_t width = static_cast<std::size_t>(dim);
 
-        std::vector<int> y_a(n), y_b(n);
-
-        for (int i = 0; i < n; ++i) {
-            const double* row = Xptr + i * dim;
-
-            auto state = art_core::state_view(clusters_, cluster_map_, dim_);
-            const int best_id = static_cast<int>(art_core::predict_one(
-                state, [&](std::size_t c) { return category_choice(row, clusters_[c].weight); },
-                std::greater<double>{})); // fallback
-            y_a[i] = best_id;
-            y_b[i] = cluster_map_.at(best_id);
+        art_predict::Panels panels;
+        panels.pack(count, width, 1,
+                    [&](std::size_t c, std::size_t) { return clusters_[c].weight.data(); });
+        std::vector<double> radii(count), denominators(count);
+        std::vector<int> labels(count);
+        for (std::size_t c = 0; c < count; ++c) {
+            radii[c] = clusters_[c].weight.back();
+            denominators[c] = r_hat_ - radii[c] + alpha_;
+            labels[c] = cluster_map_.at(static_cast<int>(c));
         }
 
-        py::array_t<int> ya_out(y_a.size()), yb_out(y_b.size());
-        std::memcpy(ya_out.mutable_data(), y_a.data(), sizeof(int) * y_a.size());
-        std::memcpy(yb_out.mutable_data(), y_b.data(), sizeof(int) * y_b.size());
-        return {ya_out, yb_out};
+        std::vector<int> y_a(n), y_b(n);
+        {
+            py::gil_scoped_release release;
+            // Squared distance, matching euclidean() bit for bit; see
+            // art_predict::fused_tail_start for why there are two steps.
+            auto body = [](double acc, double x, const double* w, std::size_t lane) {
+                const double d = x - w[lane];
+                const double square = d * d;
+                return acc + square;
+            };
+            auto tail = [](double acc, double x, const double* w, std::size_t lane) {
+                const double d = x - w[lane];
+                return acc + d * d;
+            };
+            art_predict::accumulate(Xptr, n, width, panels, art_predict::resolve_threads(n_threads),
+                                    art_predict::fused_tail_start(width), body, tail,
+                                    [&](std::size_t i, const double* squares) {
+                                        const std::size_t best =
+                                            art_predict::argmax_first(count, [&](std::size_t c) {
+                                                const double i_rad = std::sqrt(squares[c]);
+                                                const double max_r = std::max(radii[c], i_rad);
+                                                return (r_hat_ - max_r) / denominators[c];
+                                            });
+                                        y_a[i] = static_cast<int>(best);
+                                        y_b[i] = labels[best];
+                                    });
+        }
+        return {art_bind::output(y_a), art_bind::output(y_b)};
     }
 
 private:
@@ -278,12 +304,12 @@ auto native_fit(py::object X, py::object y, double rho, double alpha, double bet
 
 auto native_predict(py::object X, double rho, double alpha, double beta, double r_hat,
                     const std::string& MT, double epsilon, py::object weights = py::none(),
-                    py::object cluster_labels = py::none()) {
+                    py::object cluster_labels = py::none(), int n_threads = 0) {
     auto data = art_bind::matrix<double>(X);
     NativeHypersphereARTMAP model(rho, alpha, beta, r_hat, MT, epsilon,
                                   art_bind::weights<double>(weights),
                                   art_bind::cluster_labels(cluster_labels));
-    return model.predict(data);
+    return model.predict(data, n_threads);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -296,5 +322,6 @@ PYBIND11_MODULE(cppHypersphereARTMAP, m) {
 
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("alpha"),
           py::arg("beta"), py::arg("r_hat"), py::arg("MT"), py::arg("epsilon"),
-          py::arg("weights") = py::none(), py::arg("cluster_labels") = py::none());
+          py::arg("weights") = py::none(), py::arg("cluster_labels") = py::none(),
+          py::arg("n_threads") = 0);
 }

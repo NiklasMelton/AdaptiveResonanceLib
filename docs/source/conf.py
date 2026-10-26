@@ -3,8 +3,24 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+from pathlib import Path
+import re
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+
+
+def read_version():
+    version_file = Path(__file__).resolve().parents[2] / "artlib" / "_version.py"
+    version_match = re.search(
+        r'^__version__ = ["\']([^"\']+)["\']',
+        version_file.read_text(),
+        re.MULTILINE,
+    )
+    if version_match is None:
+        raise RuntimeError("Unable to determine artlib version.")
+    return version_match.group(1)
+
 
 def skip(app, what, name, obj, would_skip, options):
     if name == "__init__":
@@ -17,7 +33,7 @@ def setup(app):
 project = 'AdaptiveResonanceLib'
 copyright = '2025, Niklas Melton'
 author = 'Niklas Melton'
-release = '0.1.9'
+release = read_version()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -70,7 +86,6 @@ suppress_warnings = ['ref.duplicate', 'duplicate.object', 'myst.duplicate_def', 
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['../_static']
-
 
 
 

@@ -127,20 +127,20 @@ class Base_iCVI(ABC):
         self.mu = params['mu']
         self.criterion_value = params['criterion_value']
 
+        # CPdiff already holds the full change in compactness, including the
+        # removal of an emptied cluster's compactness.
         if params['CD']['n'] == 0:
             del self.CD[params['label']]
-            self.WGSS -= params['CD']['CP']
         else:
             self.CD[params['label']] = params['CD']
-            self.WGSS += params['CPdiff']
+        self.WGSS += params['CPdiff']
 
         if 'label2' in params:
             if params['CD2']['n'] == 0:
                 del self.CD[params['label2']]
-                self.WGSS -= params['CD2']['CP']
             else:
                 self.CD[params['label2']] = params['CD2']
-                self.WGSS += params['CPdiff2']
+            self.WGSS += params['CPdiff2']
 
     def switch_label(self, x, label_old, label_new):
         """Calculates the parameters if a sample has its label changed.
@@ -253,6 +253,8 @@ class Base_iCVI(ABC):
         diff_v = delete_data['v'] - merge_data['v']
         newP['CPdiff2'] = delete_data['CP'] + (diff_v @ diff_v.T) * delete_data['n'] * merge_data['n'] / CD['n']
         CD['CP'] = merge_data['CP'] + newP['CPdiff2']
+
+        self.calculate_criterion(newP)
         return newP
 
     def clustering_improved(self, newP, vigilence=0) -> bool:

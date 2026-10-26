@@ -570,7 +570,7 @@ Thank you to the people who have contributed code, examples, and documentation t
 AdaptiveResonanceLib:
 
 - **[Niklas Melton](https://github.com/NiklasMelton)** — project creator and maintainer.
-- **[Dustin Tanksley](https://github.com/DustinTanksley)** — contributed the initial CVI ART modules in [pull request #70](https://github.com/NiklasMelton/AdaptiveResonanceLib/pull/70).
+- **[Dustin Tanksley](https://github.com/DustinTanksley)** — contributed the initial CVI ART modules in [pull request #70](https://github.com/NiklasMelton/AdaptiveResonanceLib/pull/70) and the incremental CVI base class in [pull request #84](https://github.com/NiklasMelton/AdaptiveResonanceLib/pull/84).
 - **[Marcel Stimberg](https://github.com/mstimberg)** — improved the paper and bibliography.
 - **[Iwan Sandjaja](https://github.com/inyoot)** — improved the examples.
 

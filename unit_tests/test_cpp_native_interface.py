@@ -249,3 +249,60 @@ def test_threaded_predict_matches_single_thread(name):
                                   cluster_labels=cluster_labels, n_threads=threads)
         np.testing.assert_array_equal(threaded[0], single[0])
         np.testing.assert_array_equal(threaded[1], single[1])
+
+
+def _threaded_fit_case(name, rng):
+    """Training data where scoring one sample is big enough to split across threads.
+
+    About 400 categories form, and the feature counts are not multiples of 8, so
+    the distance kernels' fused tail runs too.
+    """
+    n, d = 800, 301
+    centres = rng.random((400, d))
+    lab = rng.integers(0, 400, n)
+    Xh = np.clip(centres[lab] + 0.02 * rng.standard_normal((n, d)), 0, 1)
+    y = (lab % 3).astype(np.int32)
+    if name == "BinaryFuzzyARTMAP":
+        Xb = np.tile(Xh > 0.5, 7)
+        X = np.hstack([Xb, ~Xb]).astype(np.int32)
+        params = {"rho": 0.9, "MT": "MT+", "epsilon": 1}
+    elif name == "FuzzyARTMAP":
+        X = np.hstack([Xh, 1 - Xh])
+        params = {"rho": 0.9, "alpha": 1e-3, "beta": 1.0, "MT": "MT+", "epsilon": 1e-10}
+    elif name == "GaussianARTMAP":
+        X = Xh
+        params = {"rho": 1e-60, "alpha": 1e-10, "sigma_init": np.full(d, 0.1),
+                  "MT": "MT+", "epsilon": 1e-10}
+    else:
+        X = Xh
+        params = {"rho": 0.9, "alpha": 1e-3, "beta": 0.5, "r_hat": float(np.sqrt(d)),
+                  "MT": "MT+", "epsilon": 1e-10}
+    return X, y, params
+
+
+@pytest.mark.parametrize(
+    "name", ["BinaryFuzzyARTMAP", "FuzzyARTMAP", "GaussianARTMAP", "HypersphereARTMAP"]
+)
+def test_threaded_fit_matches_single_thread(name):
+    module = importlib.import_module(f"artlib.optimized.backends.cpp.cpp{name}")
+    X, y, params = _threaded_fit_case(name, np.random.default_rng(0))
+    labels, W, cluster_labels = module.fit(X, y, **params, n_threads=1)
+    assert len(W) > 200
+    cut = len(X) // 2
+    _, W_half, cl_half = module.fit(X[:cut], y[:cut], **params, n_threads=1)
+    partial = module.fit(X[cut:], y[cut:], **params, weights=W_half,
+                         cluster_labels=cl_half, n_threads=1)
+    for threads in (2, 5):
+        threaded = module.fit(X, y, **params, n_threads=threads)
+        np.testing.assert_array_equal(threaded[0], labels)
+        np.testing.assert_array_equal(threaded[2], cluster_labels)
+        assert len(threaded[1]) == len(W)
+        for actual, expected in zip(threaded[1], W):
+            np.testing.assert_array_equal(actual, expected)
+
+        threaded = module.fit(X[cut:], y[cut:], **params, weights=W_half,
+                              cluster_labels=cl_half, n_threads=threads)
+        np.testing.assert_array_equal(threaded[0], partial[0])
+        np.testing.assert_array_equal(threaded[2], partial[2])
+        for actual, expected in zip(threaded[1], partial[1]):
+            np.testing.assert_array_equal(actual, expected)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -189,6 +190,75 @@ std::size_t fit_one_lazy(State state, Choice choice, Match match, Pass pass, Acc
 
     for (std::size_t index : scratch.order) {
         const auto value = match(index);
+        if (!pass(value))
+            continue;
+        if (!accept(index)) {
+            if (!track(value))
+                break;
+            continue;
+        }
+        learn(index);
+        return index;
+    }
+    return create();
+}
+
+// True when match tracking can only raise the vigilance during one sample's
+// search: then a category whose match fails the starting vigilance fails every
+// later check too, and can be dropped before the search sorts the candidates.
+inline bool vigilance_only_rises(MatchTracking mode, double epsilon) {
+    switch (mode) {
+    case MatchTracking::Plus:
+        return epsilon >= 0.0; // vigilance = match + epsilon, and match >= vigilance
+    case MatchTracking::Minus:
+        return epsilon <= 0.0; // vigilance = match - epsilon
+    case MatchTracking::Zero:  // vigilance = match, and match > vigilance
+    case MatchTracking::One:   // the search stops
+    case MatchTracking::Leave: // vigilance is unchanged
+        return true;
+    }
+    return false;
+}
+
+// The search of fit_one_lazy, given the choice score and match value of every
+// one of ``count`` categories (computed in bulk, so match no longer has to be
+// lazy). Categories are visited by descending score, ties to the lowest index.
+//
+// With ``prefilter`` (see vigilance_only_rises), only categories that pass the
+// starting vigilance are sorted: the others would be skipped wherever they fell
+// in the order, and with no NaN score the order is a strict total order, so the
+// visited categories come in the same order as before. A NaN score makes the
+// comparison inconsistent, so then every category is sorted exactly as
+// fit_one_lazy sorts them.
+template <typename Pass, typename Accept, typename Track, typename Learn, typename Create>
+std::size_t fit_one_scored(std::size_t count, const double* scores, const double* matches,
+                           bool prefilter, Pass pass, Accept accept, Track track, Learn learn,
+                           Create create, std::vector<std::size_t>& order) {
+    if (count == 0)
+        return create();
+
+    auto descending = [scores](std::size_t a, std::size_t b) {
+        if (scores[a] != scores[b])
+            return scores[a] > scores[b];
+        return a < b;
+    };
+    bool filter = prefilter;
+    for (std::size_t index = 0; filter && index < count; ++index)
+        filter = !std::isnan(scores[index]);
+    if (filter) {
+        order.clear();
+        for (std::size_t index = 0; index < count; ++index) {
+            if (pass(matches[index]))
+                order.push_back(index);
+        }
+    } else {
+        order.resize(count);
+        std::iota(order.begin(), order.end(), std::size_t{0});
+    }
+    std::sort(order.begin(), order.end(), descending);
+
+    for (std::size_t index : order) {
+        const double value = matches[index];
         if (!pass(value))
             continue;
         if (!accept(index)) {

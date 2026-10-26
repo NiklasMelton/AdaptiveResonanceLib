@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from typing import Literal, Union, Tuple
+from typing import Literal, Optional, Union, Tuple
 
 from artlib.supervised.SimpleARTMAP import SimpleARTMAP
 from sklearn.utils.multiclass import unique_labels
@@ -10,13 +10,60 @@ from torch import Tensor
 
 
 def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> Tensor:
-    if isinstance(x, torch.Tensor):
-        return x.to(device=device, dtype=dtype, non_blocking=True)
-    import numpy as np
+    """Copy ``x`` to ``device`` as ``dtype``.
 
+    The copy is blocking. An asynchronous copy can read its source after it is freed
+    (for example the temporary made by a dtype change), and on MPS that returns garbage
+    values.
+
+    """
+    if isinstance(x, torch.Tensor):
+        return x.to(device=device, dtype=dtype)
     if isinstance(x, np.ndarray):
-        return torch.from_numpy(x).to(device=device, dtype=dtype, non_blocking=True)
+        return torch.from_numpy(x).to(device=device, dtype=dtype)
     raise TypeError("Expected torch.Tensor or numpy.ndarray")
+
+
+def _resolve_float_dtype(device, dtype: Optional[torch.dtype]) -> torch.dtype:
+    """Pick the floating point dtype for ``device``.
+
+    ``None`` means float64, except on MPS, which has no float64 and gets float32.
+
+    """
+    is_mps = torch.device(device).type == "mps"
+    if dtype is None:
+        return torch.float32 if is_mps else torch.float64
+    if is_mps and dtype == torch.float64:
+        raise ValueError(
+            "MPS does not support float64. Pass dtype=torch.float32 or leave it unset."
+        )
+    return dtype
+
+
+def _scratch(owner, name: str, rows: int, like: Tensor) -> Tensor:
+    """Return a ``[rows, *like.shape[1:]]`` view of a reusable buffer.
+
+    Fit makes one ``[K, D]`` temporary per sample while K grows one category at
+    a time. Allocating it fresh asks the caching allocator for a new, slightly
+    larger size each step, and MPS keeps every old block cached, so held memory
+    grows with K^2 * D. A buffer that grows by doubling needs only a few sizes.
+
+    """
+    buffers = owner.__dict__.setdefault("_scratch_buffers", {})
+    tail = tuple(like.shape[1:])
+    buf = buffers.get(name)
+    if (
+        buf is None
+        or buf.shape[0] < rows
+        or tuple(buf.shape[1:]) != tail
+        or buf.dtype != like.dtype
+    ):
+        buffers.pop(name, None)  # release the old buffer before allocating
+        buf = torch.empty(
+            (max(16, 2 * rows),) + tail, device=like.device, dtype=like.dtype
+        )
+        buffers[name] = buf
+    return buf[:rows]
 
 
 def _append_rows(owner, n: int, **rows: Tensor) -> None:

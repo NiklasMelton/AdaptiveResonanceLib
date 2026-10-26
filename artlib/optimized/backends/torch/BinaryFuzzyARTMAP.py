@@ -10,20 +10,15 @@ from artlib.elementary.BinaryFuzzyART import BinaryFuzzyART  # type: ignore
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _resolve_float_dtype,
+    _scratch,
+    _to_device,
 )
 
 
 # ------------------------------
 # utilities
 # ------------------------------
-def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.bool) -> Tensor:
-    if isinstance(x, torch.Tensor):
-        return x.to(device=device, dtype=dtype, non_blocking=True)
-    import numpy as np
-
-    if isinstance(x, np.ndarray):
-        return torch.from_numpy(x).to(device=device, dtype=dtype, non_blocking=True)
-    raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
 def _complement_code_any(x: Tensor) -> Tensor:
@@ -56,6 +51,8 @@ class _TorchBinaryFuzzyARTMAP:
     def __init__(self, cfg: _TorchBinaryFuzzyARTMAPConfig):
         self.cfg = cfg
         self.device = torch.device(cfg.device)
+        # Float dtype for ratios and bounds; MPS has no float64.
+        self._float = _resolve_float_dtype(self.device, None)
         self.dtype = cfg.dtype
 
         self.input_dim = int(cfg.input_dim)  # original D
@@ -86,8 +83,8 @@ class _TorchBinaryFuzzyARTMAP:
         self, lower: Union[Tensor, "np.ndarray"], upper: Union[Tensor, "np.ndarray"]
     ):
         # Bounds stored. only used if you call prepare_data on continuous inputs
-        lb = _to_device(lower, self.device, torch.float64).view(-1)
-        ub = _to_device(upper, self.device, torch.float64).view(-1)
+        lb = _to_device(lower, self.device, self._float).view(-1)
+        ub = _to_device(upper, self.device, self._float).view(-1)
         if lb.numel() != self.input_dim or ub.numel() != self.input_dim:
             raise ValueError(f"lower/upper must have length input_dim={self.input_dim}")
         if not torch.all(ub > lb):
@@ -106,7 +103,7 @@ class _TorchBinaryFuzzyARTMAP:
                 "Call set_data_bounds(lower, upper) before prepare_data()."
             )
 
-        Xf = _to_device(X, self.device, torch.float64)
+        Xf = _to_device(X, self.device, self._float)
         if Xf.ndim == 1:
             Xf = Xf.unsqueeze(0)
         if Xf.shape[1] != self.input_dim:
@@ -176,21 +173,26 @@ class _TorchBinaryFuzzyARTMAP:
 
         T: [K] choice values
         m: [K] match values
-        w_sum: [K] |w| (as float64)
+        w_sum: [K] |w| (as float64, or float32 on MPS)
 
         """
         if self.W is None or self.W.shape[0] == 0:
-            empty = torch.empty(0, device=self.device, dtype=torch.float64)
+            empty = torch.empty(0, device=self.device, dtype=self._float)
             return empty, empty, empty
 
         # bool AND then count
-        IandW = I.unsqueeze(0) & self.W  # [K, D]
+        K = self.W.shape[0]
+        # logical_and, not bitwise_and: on MPS bitwise_and allocates a hidden
+        # temporary for bool tensors even with out=.
+        IandW = torch.logical_and(
+            I.unsqueeze(0), self.W, out=_scratch(self, "IandW", K, self.W)
+        )  # [K, D]
         w1 = IandW.sum(dim=1, dtype=torch.int32)  # [K] int
         w_sum = cast(Tensor, self._W_count)  # [K] int, kept in step with W
 
         # Convert to float for ratios
-        w1f = w1.to(torch.float64)
-        wsumf = w_sum.to(torch.float64)
+        w1f = w1.to(self._float)
+        wsumf = w_sum.to(self._float)
 
         # Choice: w1 / (alpha + |w|)
         T = w1f / (float(self.cfg.alpha) + wsumf)
@@ -298,7 +300,7 @@ class _TorchBinaryFuzzyARTMAP:
         N = Xp.shape[0]
 
         # Precompute |w| counts
-        W_sum = W.sum(dim=1, dtype=torch.int32).to(torch.float64)  # [K]
+        W_sum = W.sum(dim=1, dtype=torch.int32).to(self._float)  # [K]
         alpha = float(self.cfg.alpha)
 
         # Memory-aware chunking like the float version
@@ -321,7 +323,7 @@ class _TorchBinaryFuzzyARTMAP:
             B_cur = I.shape[0]
 
             best_T = torch.full(
-                (B_cur,), -float("inf"), device=I.device, dtype=torch.float64
+                (B_cur,), -float("inf"), device=I.device, dtype=self._float
             )
             best_idx = torch.zeros((B_cur,), device="cpu", dtype=torch.long)
 
@@ -330,11 +332,11 @@ class _TorchBinaryFuzzyARTMAP:
                 k1 = min(K, k0 + K_block)
                 Wc = W[k0:k1]  # [Kc, D], bool
 
-                # [B_cur, Kc, D] -> AND -> sum over D -> counts -> float64
+                # [B_cur, Kc, D] -> AND -> sum over D -> counts -> float
                 IandW_cnt = (
                     (I.unsqueeze(1) & Wc.unsqueeze(0))
                     .sum(dim=2, dtype=torch.int32)
-                    .to(torch.float64)
+                    .to(self._float)
                 )
                 Tc = IandW_cnt / (alpha + W_sum[k0:k1].unsqueeze(0))  # [B_cur, Kc]
 

@@ -12,20 +12,15 @@ from torch import Tensor
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _resolve_float_dtype,
+    _scratch,
+    _to_device,
 )
 
 
 # ---------
 # utilities
 # ---------
-def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> Tensor:
-    if isinstance(x, torch.Tensor):
-        return x.to(device=device, dtype=dtype, non_blocking=True)
-    import numpy as np
-
-    if isinstance(x, np.ndarray):
-        return torch.from_numpy(x).to(device=device, dtype=dtype, non_blocking=True)
-    raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
 def _euclidean(X: Tensor, C: Tensor) -> Tensor:
@@ -49,7 +44,7 @@ class _TorchHypersphereARTMAPConfig:
     beta: float = 1.0
     r_hat: float = 1.0
     device: str = "cuda"
-    dtype: torch.dtype = torch.float64
+    dtype: Optional[torch.dtype] = None  # None: float64, or float32 on MPS
     clamp_inputs: bool = False  # optional; Hypersphere doesn’t require [0,1]
 
 
@@ -60,7 +55,7 @@ class _TorchHypersphereARTMAP:
     def __init__(self, cfg: _TorchHypersphereARTMAPConfig):
         self.cfg = cfg
         self.device = torch.device(cfg.device)
-        self.dtype = cfg.dtype
+        self.dtype = _resolve_float_dtype(self.device, cfg.dtype)
 
         self.input_dim = int(cfg.input_dim)
         # Each weight is [centroid (D), radius (1)]
@@ -131,7 +126,12 @@ class _TorchHypersphereARTMAP:
         centroids = W[:, : self.input_dim]  # [K, D]
         radii = W[:, self.input_dim]  # [K]
 
-        I_radius = _euclidean(I.unsqueeze(0), centroids).squeeze(0)  # [K]
+        # sqrt(sum((c - x)^2)) in a reused [K, D] buffer; cdist allocates a new
+        # temporary each call, which grows held memory on MPS as K grows.
+        sq = torch.sub(
+            centroids, I.unsqueeze(0), out=_scratch(self, "diff", W.shape[0], centroids)
+        )
+        I_radius = sq.mul_(sq).sum(dim=1).sqrt_()  # [K]
 
         max_radius = torch.maximum(radii, I_radius)  # [K]
         T = (r_hat - max_radius) / (r_hat - radii + alpha)
@@ -330,7 +330,7 @@ class HypersphereARTMAP(_TorchSimpleARTMAP):
         r_hat: float,
         input_dim: Optional[int] = None,
         device: str = "cuda",
-        dtype: torch.dtype = torch.float64,
+        dtype: Optional[torch.dtype] = None,
         clamp_inputs: bool = False,
     ):
         """
@@ -348,8 +348,9 @@ class HypersphereARTMAP(_TorchSimpleARTMAP):
             Raw input dimensionality (if known a priori).
         device : str
             Torch device string (e.g., 'cuda', 'cpu', 'mps').
-        dtype : torch.dtype
-            Torch dtype; default float64 for numerical stability.
+        dtype : Optional[torch.dtype]
+            Floating point dtype. Defaults to float64, or float32 on MPS, which has
+            no float64.
         """
         module_a = HypersphereART(rho=rho, alpha=alpha, beta=beta, r_hat=r_hat)
         super().__init__(module_a)

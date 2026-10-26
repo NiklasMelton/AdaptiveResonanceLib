@@ -10,20 +10,15 @@ from artlib.elementary.FuzzyART import FuzzyART
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _resolve_float_dtype,
+    _scratch,
+    _to_device,
 )
 
 
 # ------------------------------
 # utilities
 # ------------------------------
-def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> Tensor:
-    if isinstance(x, torch.Tensor):
-        return x.to(device=device, dtype=dtype, non_blocking=True)
-    import numpy as np
-
-    if isinstance(x, np.ndarray):
-        return torch.from_numpy(x).to(device=device, dtype=dtype, non_blocking=True)
-    raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
 def _complement_code(x: Tensor) -> Tensor:
@@ -43,7 +38,7 @@ class _TorchFuzzyARTMAPConfig:
     epsilon: float = 1e-7
     match_tracking: bool = True
     device: str = "cuda"
-    dtype: torch.dtype = torch.float64
+    dtype: Optional[torch.dtype] = None  # None: float64, or float32 on MPS
     clamp_inputs: bool = True
     fallback_to_choice_on_fail: bool = True
 
@@ -54,7 +49,7 @@ class _TorchFuzzyARTMAP:
     def __init__(self, cfg: _TorchFuzzyARTMAPConfig):
         self.cfg = cfg
         self.device = torch.device(cfg.device)
-        self.dtype = cfg.dtype
+        self.dtype = _resolve_float_dtype(self.device, cfg.dtype)
 
         self.input_dim = int(cfg.input_dim)
         self.code_dim = self.input_dim * 2
@@ -165,7 +160,10 @@ class _TorchFuzzyARTMAP:
                 torch.tensor(0.0, device=self.device, dtype=self.dtype),
                 empty,
             )
-        IandW = torch.minimum(I.unsqueeze(0), self.W)  # [K, D]
+        K = self.W.shape[0]
+        IandW = torch.minimum(
+            I.unsqueeze(0), self.W, out=_scratch(self, "IandW", K, self.W)
+        )  # [K, D]
         IandW_sum = IandW.sum(dim=1)  # [K]
         W_sum = cast(Tensor, self._W_sum)  # [K], kept in step with W
         I_sum = I.sum()  # scalar
@@ -355,7 +353,7 @@ class FuzzyARTMAP(_TorchSimpleARTMAP):
         beta: float,
         input_dim: Optional[int] = None,
         device: str = "cuda",
-        dtype: torch.dtype = torch.float64,
+        dtype: Optional[torch.dtype] = None,
     ):
         """Initialize the Fuzzy ARTMAP model.
 
@@ -370,7 +368,10 @@ class FuzzyARTMAP(_TorchSimpleARTMAP):
         input_dim: Optional[int]
             number of features
         device: str
-            "cuda" or "cpu". Only applied when backend=torch. Defaults to "cpu".
+            "cuda", "mps" or "cpu". Defaults to "cuda".
+        dtype : Optional[torch.dtype]
+            Floating point dtype. Defaults to float64, or float32 on MPS, which has
+            no float64.
 
         """
         module_a = FuzzyART(rho=rho, alpha=alpha, beta=beta)

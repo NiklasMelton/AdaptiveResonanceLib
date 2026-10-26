@@ -13,20 +13,10 @@ from artlib.elementary.GaussianART import (
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _resolve_float_dtype,
+    _scratch,
+    _to_device,
 )
-
-
-# ------------------------------
-# utilities
-# ------------------------------
-def _to_device(x: Union[Tensor, "np.ndarray"], device, dtype=torch.float32) -> Tensor:
-    if isinstance(x, torch.Tensor):
-        return x.to(device=device, dtype=dtype, non_blocking=True)
-    import numpy as np
-
-    if isinstance(x, np.ndarray):
-        return torch.from_numpy(x).to(device=device, dtype=dtype, non_blocking=True)
-    raise TypeError("Expected torch.Tensor or numpy.ndarray")
 
 
 # -----------------
@@ -42,7 +32,7 @@ class _TorchGaussianARTMAPConfig:
     epsilon: float = 1e-7
     match_tracking: bool = True
     device: str = "cuda"
-    dtype: torch.dtype = torch.float64
+    dtype: Optional[torch.dtype] = None  # None: float64, or float32 on MPS
     clamp_inputs: bool = False  # kept for parity; unused
     fallback_to_choice_on_fail: bool = True  # parity; unused
 
@@ -58,7 +48,7 @@ class _TorchGaussianARTMAP:
     def __init__(self, cfg: _TorchGaussianARTMAPConfig):
         self.cfg = cfg
         self.device = torch.device(cfg.device)
-        self.dtype = cfg.dtype
+        self.dtype = _resolve_float_dtype(self.device, cfg.dtype)
 
         self.input_dim = int(cfg.input_dim)
 
@@ -161,8 +151,13 @@ class _TorchGaussianARTMAP:
             and self.inv_var is not None
             and self.counts is not None
         )
-        diff = I.unsqueeze(0) - self.mean  # [K, D]
-        quad = (diff * diff * self.inv_var).sum(dim=1)  # [K]
+        # (x - mu)^2 * inv_var, built in a reused [K, D] buffer
+        K = self.mean.shape[0]
+        diff = torch.sub(
+            I.unsqueeze(0), self.mean, out=_scratch(self, "diff", K, self.mean)
+        )
+        diff.mul_(diff).mul_(self.inv_var)
+        quad = diff.sum(dim=1)  # [K]
         exp_term = torch.exp(-0.5 * quad)  # [K]
         sum_counts = self.counts.sum()
         if sum_counts.item() <= 0:
@@ -426,7 +421,7 @@ class GaussianARTMAP(_TorchSimpleARTMAP):
         alpha: float = 1e-10,
         input_dim: Optional[int] = None,
         device: str = "cuda",
-        dtype: torch.dtype = torch.float64,
+        dtype: Optional[torch.dtype] = None,
     ):
         """Initialize the Gaussian ARTMAP model.
 
@@ -442,8 +437,9 @@ class GaussianARTMAP(_TorchSimpleARTMAP):
             Raw input dimensionality (if known a priori).
         device : str
             Torch device string (e.g., 'cuda', 'cpu', 'mps').
-        dtype : torch.dtype
-            Torch dtype; default float64 for numerical stability.
+        dtype : Optional[torch.dtype]
+            Floating point dtype. Defaults to float64, or float32 on MPS, which has
+            no float64.
 
         """
         module_a = GaussianART(rho=rho, sigma_init=np.asarray(sigma_init), alpha=alpha)

@@ -5,6 +5,7 @@
 //  ‑ real‑valued inputs in [0,1] (already normalised & complement‑coded)
 // ----------------------------------------------------------
 #include "art_core.hpp"
+#include "batch_predict.hpp"
 #include "native_arrays.hpp"
 
 #include <algorithm>
@@ -117,12 +118,13 @@ public:
     // ────────────────────────────────────────────────────────
     // PREDICT  (returns y_a, y_b)
     // ────────────────────────────────────────────────────────
-    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X) {
+    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X,
+                                                           int n_threads = 0) {
         if (clusters_.empty())
             throw std::runtime_error("Model has no clusters");
 
         auto xb = X.request();
-        const int n = static_cast<int>(xb.shape[0]);
+        const std::size_t n = static_cast<std::size_t>(xb.shape[0]);
         const int dim = static_cast<int>(xb.shape[1]);
         if (dim_original_ == 0)
             dim_original_ = dim / 2;
@@ -130,24 +132,37 @@ public:
             throw std::invalid_argument("feature dimension mismatch");
 
         const double* Xptr = static_cast<const double*>(xb.ptr);
+        const std::size_t count = clusters_.size();
+        const std::size_t width = static_cast<std::size_t>(dim);
 
-        std::vector<int> y_a(n), y_b(n);
-
-        for (int i = 0; i < n; ++i) {
-            const double* row = Xptr + i * dim;
-
-            auto state = art_core::state_view(clusters_, cluster_map_, dim_original_);
-            const int best_id = static_cast<int>(art_core::predict_one(
-                state, [&](std::size_t c) { return category_choice(row, clusters_[c]); },
-                std::greater<double>{})); // fallback
-            y_a[i] = best_id;
-            y_b[i] = cluster_map_.at(best_id);
+        art_predict::Panels panels;
+        panels.pack(count, width, 1,
+                    [&](std::size_t c, std::size_t) { return clusters_[c].weight.data(); });
+        std::vector<double> denominators(count);
+        std::vector<int> labels(count);
+        for (std::size_t c = 0; c < count; ++c) {
+            denominators[c] = alpha_ + clusters_[c].sum;
+            labels[c] = cluster_map_.at(static_cast<int>(c));
         }
 
-        py::array_t<int> ya_out(y_a.size()), yb_out(y_b.size());
-        std::memcpy(ya_out.mutable_data(), y_a.data(), sizeof(int) * y_a.size());
-        std::memcpy(yb_out.mutable_data(), y_b.data(), sizeof(int) * y_b.size());
-        return {ya_out, yb_out};
+        std::vector<int> y_a(n), y_b(n);
+        {
+            py::gil_scoped_release release;
+            // Fuzzy AND sum; there is no multiply, so the whole range is one step.
+            auto step = [](double acc, double x, const double* w, std::size_t lane) {
+                return acc + std::min(x, w[lane]);
+            };
+            art_predict::accumulate(Xptr, n, width, panels, art_predict::resolve_threads(n_threads),
+                                    width, step, step, [&](std::size_t i, const double* and_sums) {
+                                        const std::size_t best =
+                                            art_predict::argmax_first(count, [&](std::size_t c) {
+                                                return and_sums[c] / denominators[c];
+                                            });
+                                        y_a[i] = static_cast<int>(best);
+                                        y_b[i] = labels[best];
+                                    });
+        }
+        return {art_bind::output(y_a), art_bind::output(y_b)};
     }
 
 private:
@@ -245,11 +260,11 @@ auto native_fit(py::object X, py::object y, double rho, double alpha, double bet
 
 auto native_predict(py::object X, double rho, double alpha, double beta, const std::string& MT,
                     double epsilon, py::object weights = py::none(),
-                    py::object cluster_labels = py::none()) {
+                    py::object cluster_labels = py::none(), int n_threads = 0) {
     auto data = art_bind::matrix<double>(X);
     NativeFuzzyARTMAP model(rho, alpha, beta, MT, epsilon, art_bind::weights<double>(weights),
                             art_bind::cluster_labels(cluster_labels));
-    return model.predict(data);
+    return model.predict(data, n_threads);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -262,5 +277,5 @@ PYBIND11_MODULE(cppFuzzyARTMAP, m) {
 
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("alpha"),
           py::arg("beta"), py::arg("MT"), py::arg("epsilon"), py::arg("weights") = py::none(),
-          py::arg("cluster_labels") = py::none());
+          py::arg("cluster_labels") = py::none(), py::arg("n_threads") = 0);
 }

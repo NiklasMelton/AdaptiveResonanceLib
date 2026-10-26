@@ -5,6 +5,7 @@
 //  ‑ real‑valued inputs in ℝd  (no complement coding)
 // ----------------------------------------------------------
 #include "art_core.hpp"
+#include "batch_predict.hpp"
 #include "native_arrays.hpp"
 
 #include <algorithm>
@@ -132,12 +133,13 @@ public:
     // ────────────────────────────────────────────────────────
     // PREDICT  (returns y_a, y_b)
     // ────────────────────────────────────────────────────────
-    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X) {
+    std::tuple<py::array_t<int>, py::array_t<int>> predict(py::array_t<double> X,
+                                                           int n_threads = 0) {
         if (clusters_.empty())
             throw std::runtime_error("Model has no clusters");
 
         auto xb = X.request();
-        const int n = static_cast<int>(xb.shape[0]);
+        const std::size_t n = static_cast<std::size_t>(xb.shape[0]);
         const int dim = static_cast<int>(xb.shape[1]);
         if (dim_ == 0)
             dim_ = dim;
@@ -145,30 +147,56 @@ public:
             throw std::invalid_argument("feature dimension mismatch");
 
         const double* Xptr = static_cast<const double*>(xb.ptr);
-
-        std::vector<int> y_a(n), y_b(n);
+        const std::size_t count = clusters_.size();
+        const std::size_t width = static_cast<std::size_t>(dim);
 
         // total sample count for p(c_j)
         double total_n = 0.0;
         for (const auto& c : clusters_)
             total_n += c.weight.back();
 
-        for (int i = 0; i < n; ++i) {
-            const double* row = Xptr + i * dim;
-
-            auto state = art_core::state_view(clusters_, cluster_map_, dim_);
-            const int best_id = static_cast<int>(art_core::predict_one(
-                state,
-                [&](std::size_t c) { return category_choice(row, clusters_[c].weight, total_n); },
-                std::greater<double>{})); // fallback
-            y_a[i] = best_id;
-            y_b[i] = cluster_map_.at(best_id);
+        // Streams: the mean, then the inverse variance (at 2 * dim in the weight).
+        art_predict::Panels panels;
+        panels.pack(count, width, 2, [&](std::size_t c, std::size_t stream) {
+            return clusters_[c].weight.data() + (stream == 0 ? 0 : 2 * width);
+        });
+        std::vector<double> denominators(count), priors(count);
+        std::vector<int> labels(count);
+        for (std::size_t c = 0; c < count; ++c) {
+            const auto& w = clusters_[c].weight;
+            denominators[c] = alpha_ + w[3 * width];
+            priors[c] = w[3 * width + 1] / std::max(total_n, 1e-12);
+            labels[c] = cluster_map_.at(static_cast<int>(c));
         }
 
-        py::array_t<int> ya_out(y_a.size()), yb_out(y_b.size());
-        std::memcpy(ya_out.mutable_data(), y_a.data(), sizeof(int) * y_a.size());
-        std::memcpy(yb_out.mutable_data(), y_b.data(), sizeof(int) * y_b.size());
-        return {ya_out, yb_out};
+        std::vector<int> y_a(n), y_b(n);
+        {
+            py::gil_scoped_release release;
+            // Mahalanobis term of gaussian_exp(), matching it bit for bit; see
+            // art_predict::fused_tail_start for why there are two steps.
+            auto body = [](double acc, double x, const double* w, std::size_t lane) {
+                const double d = x - w[lane];
+                const double term = d * d * w[art_predict::kLanes + lane];
+                return acc + term;
+            };
+            auto tail = [](double acc, double x, const double* w, std::size_t lane) {
+                const double d = x - w[lane];
+                return acc + d * d * w[art_predict::kLanes + lane];
+            };
+            art_predict::accumulate(Xptr, n, width, panels, art_predict::resolve_threads(n_threads),
+                                    art_predict::fused_tail_start(width), body, tail,
+                                    [&](std::size_t i, const double* q) {
+                                        const std::size_t best =
+                                            art_predict::argmax_first(count, [&](std::size_t c) {
+                                                const double p_i_cj =
+                                                    std::exp(-0.5 * q[c]) / denominators[c];
+                                                return p_i_cj * priors[c];
+                                            });
+                                        y_a[i] = static_cast<int>(best);
+                                        y_b[i] = labels[best];
+                                    });
+        }
+        return {art_bind::output(y_a), art_bind::output(y_b)};
     }
 
 private:
@@ -333,12 +361,12 @@ auto native_fit(py::object X, py::object y, double rho, double alpha,
 
 auto native_predict(py::object X, double rho, double alpha, py::array_t<double> sigma_init,
                     const std::string& MT, double epsilon, py::object weights = py::none(),
-                    py::object cluster_labels = py::none()) {
+                    py::object cluster_labels = py::none(), int n_threads = 0) {
     auto data = art_bind::matrix<double>(X);
     NativeGaussianARTMAP model(rho, alpha, art_bind::vector<double>(sigma_init, "sigma_init"), MT,
                                epsilon, art_bind::weights<double>(weights),
                                art_bind::cluster_labels(cluster_labels));
-    return model.predict(data);
+    return model.predict(data, n_threads);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -351,5 +379,5 @@ PYBIND11_MODULE(cppGaussianARTMAP, m) {
 
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("alpha"),
           py::arg("sigma_init"), py::arg("MT"), py::arg("epsilon"), py::arg("weights") = py::none(),
-          py::arg("cluster_labels") = py::none());
+          py::arg("cluster_labels") = py::none(), py::arg("n_threads") = 0);
 }

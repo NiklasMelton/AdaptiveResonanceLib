@@ -281,4 +281,10 @@ PYBIND11_MODULE(cppFuzzyARTMAP, m) {
     m.def("predict", &native_predict, py::arg("X"), py::arg("rho"), py::arg("alpha"),
           py::arg("beta"), py::arg("MT"), py::arg("epsilon"), py::arg("weights") = py::none(),
           py::arg("cluster_labels") = py::none(), py::arg("n_threads") = 0);
+
+    // The thread counts fit and predict use when n_threads is 0, shared by every
+    // native ARTMAP model. Private; used by the tests.
+    m.def("_default_threads", []() {
+        return py::make_tuple(art_fit::resolve_threads(0), art_predict::resolve_threads(0));
+    });
 }

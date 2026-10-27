@@ -10,6 +10,7 @@ from artlib.elementary.FuzzyART import FuzzyART
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _predict_budget_bytes,
     _resolve_float_dtype,
     _scratch,
     _to_device,
@@ -93,31 +94,6 @@ class _TorchFuzzyARTMAP:
             raise ValueError("Prepared inputs must be in [0,1].")
         if not torch.allclose(b, 1.0 - a, atol=1e-5, rtol=0):
             raise ValueError("Second half must be 1 - first half (complement coding).")
-
-    def _free_mem_bytes(self) -> int:
-        if self.device.type == "cuda" and torch.cuda.is_available():
-            try:
-                with torch.cuda.device(self.device):
-                    free_b, _ = torch.cuda.mem_get_info()
-                return int(free_b)
-            except Exception:
-                pass
-        # CPU path
-        try:
-            import psutil  # type: ignore
-
-            return int(psutil.virtual_memory().available)
-        except Exception:
-            # Linux fallback
-            try:
-                with open("/proc/meminfo") as f:
-                    for line in f:
-                        if line.startswith("MemAvailable:"):
-                            return int(line.split()[1]) * 1024
-            except Exception:
-                pass
-        # Last-resort conservative default
-        return 512 * 1024 * 1024
 
     def set_data_bounds(
         self, lower: Union[Tensor, "np.ndarray"], upper: Union[Tensor, "np.ndarray"]
@@ -284,7 +260,7 @@ class _TorchFuzzyARTMAP:
         W_sum = W.sum(dim=1)  # [K]
         alpha = float(self.cfg.alpha)
 
-        budget_bytes = max(int(0.25 * self._free_mem_bytes()), 512 * 1024 * 1024)
+        budget_bytes = _predict_budget_bytes(self.device)
 
         def k_chunk_for(B_chunk: int) -> int:
             # max K_chunk so that B_chunk*K_chunk*D*elem_size <= budget

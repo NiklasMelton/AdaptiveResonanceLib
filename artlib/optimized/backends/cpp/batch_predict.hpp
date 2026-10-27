@@ -22,6 +22,10 @@
 #include <thread>
 #include <vector>
 
+#if defined(__linux__)
+#include <sched.h>
+#endif
+
 namespace art_predict {
 
 // Categories per panel. Eight doubles fill one 64-byte cache line.
@@ -46,20 +50,49 @@ constexpr std::size_t kMaxBlock = 64;
 // small to be worth starting a thread for.
 constexpr std::size_t kWorkPerThread = std::size_t{1} << 22;
 
-// Worker count: ``requested`` when positive, else the ARTLIB_NUM_THREADS
-// environment variable when set to a positive integer, else the hardware
-// thread count.
-inline std::size_t resolve_threads(int requested) {
-    if (requested > 0)
-        return static_cast<std::size_t>(requested);
+// Hardware threads in the machine (at least 1).
+inline std::size_t hardware_threads() {
+    const unsigned hardware = std::thread::hardware_concurrency();
+    return hardware > 0 ? hardware : 1;
+}
+
+// CPUs this process may run on. On Linux that is the CPU affinity mask, which
+// Slurm, taskset and container cpusets restrict; hardware_concurrency() counts
+// every CPU in the machine, so a job given 16 of 40 cores would start 40 threads.
+// Elsewhere (and if the mask cannot be read) it is the hardware thread count.
+inline std::size_t available_cpus() {
+#if defined(__linux__)
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    if (sched_getaffinity(0, sizeof(set), &set) == 0) {
+        const int count = CPU_COUNT(&set);
+        if (count > 0)
+            return static_cast<std::size_t>(count);
+    }
+#endif
+    return hardware_threads();
+}
+
+// Positive ARTLIB_NUM_THREADS, or 0 when unset or invalid.
+inline std::size_t env_threads() {
     if (const char* env = std::getenv("ARTLIB_NUM_THREADS")) {
         char* end = nullptr;
         const long value = std::strtol(env, &end, 10);
         if (end != env && value > 0)
             return static_cast<std::size_t>(value);
     }
-    const unsigned hardware = std::thread::hardware_concurrency();
-    return hardware > 0 ? hardware : 1;
+    return 0;
+}
+
+// Worker count: ``requested`` when positive, else the ARTLIB_NUM_THREADS
+// environment variable when set to a positive integer, else every CPU this
+// process may run on.
+inline std::size_t resolve_threads(int requested) {
+    if (requested > 0)
+        return static_cast<std::size_t>(requested);
+    if (const std::size_t env = env_threads())
+        return env;
+    return available_cpus();
 }
 
 // Caps the worker count so each thread gets a useful share of the work.

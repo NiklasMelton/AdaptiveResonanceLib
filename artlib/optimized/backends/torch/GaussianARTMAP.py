@@ -13,6 +13,7 @@ from artlib.elementary.GaussianART import (
 from artlib.optimized.backends.torch._TorchSimpleARTMAP import (
     _TorchSimpleARTMAP,
     _append_rows,
+    _predict_budget_bytes,
     _resolve_float_dtype,
     _scratch,
     _to_device,
@@ -106,29 +107,6 @@ class _TorchGaussianARTMAP:
             raise ValueError(
                 f"Expected dimensionality D={self.input_dim}, got {X.shape[1]}"
             )
-
-    def _free_mem_bytes(self) -> int:
-        if self.device.type == "cuda" and torch.cuda.is_available():
-            try:
-                with torch.cuda.device(self.device):
-                    free_b, _ = torch.cuda.mem_get_info()
-                return int(free_b)
-            except Exception:
-                pass
-        # CPU path
-        try:
-            import psutil  # type: ignore
-
-            return int(psutil.virtual_memory().available)
-        except Exception:
-            try:
-                with open("/proc/meminfo") as f:
-                    for line in f:
-                        if line.startswith("MemAvailable:"):
-                            return int(line.split()[1]) * 1024
-            except Exception:
-                pass
-        return 512 * 1024 * 1024
 
     # --- data prep (Gaussian ART uses raw inputs; no complement coding)
     def prepare_data(self, X: Union[Tensor, "np.ndarray"]) -> Tensor:
@@ -349,7 +327,7 @@ class _TorchGaussianARTMAP:
         priors = (self.counts / self.counts.sum().clamp_min(1e-30)).to(
             self.dtype
         )  # [K]
-        budget_bytes = max(int(0.25 * self._free_mem_bytes()), 512 * 1024 * 1024)
+        budget_bytes = _predict_budget_bytes(self.device)
 
         def k_chunk_for(B_chunk: int) -> int:
             # we will allocate an intermediate [B_chunk, K_chunk, D]
@@ -377,9 +355,13 @@ class _TorchGaussianARTMAP:
                 sd = self.sqrt_det[k0:k1]  # [Kc]
                 pr = priors[k0:k1]  # [Kc]
 
-                # [B, Kc, D]
+                # One [B, Kc, D] temporary, squared and scaled in place (same
+                # operations and order as (diff * diff * iv), so the same result).
+                # The out-of-place form kept three such tensors alive, three times
+                # the memory budget.
                 diff = I.unsqueeze(1) - mu.unsqueeze(0)
-                quad = (diff * diff * iv.unsqueeze(0)).sum(dim=2)  # [B, Kc]
+                diff.mul_(diff).mul_(iv.unsqueeze(0))
+                quad = diff.sum(dim=2)  # [B, Kc]
                 exp_term = torch.exp(-0.5 * quad)  # [B, Kc]
                 denom = (self.cfg.alpha + sd).unsqueeze(0).clamp_min(1e-30)  # [1, Kc]
                 T_chunk = (exp_term / denom) * pr.unsqueeze(0)  # [B, Kc]
